@@ -1,3 +1,5 @@
+# From # From mikel-brostrom, Borda, hdnh2006, gkeechin [Yolov5 + StrongSORT with OSNet
+](https://github.com/mikel-brostrom/Yolov5_StrongSORT_OSNet)
 # Yolov5 + StrongSORT with OSNet
 
 
