@@ -1,0 +1,5 @@
+downloads/*
+data/*
+__pycache__
+baselines/data/*
+baselines/outputs/*
