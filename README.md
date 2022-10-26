@@ -10,13 +10,13 @@ Repo sources:
 
 ## Installation
 
-TODO: verify if everything is ok
+*TODO: verify if everything is ok*
 
 1. Clone this repo
 
     ```git clone "https://github.com/bstandaert/reconn.ai.ssance.git"```
 
-2. Install the requirements.
+2. Install the requirements. *TODO: clean requirements.txt*
 
     ```pip install -r requirements.txt```
 
@@ -52,7 +52,7 @@ TODO: verify if everything is ok
     ├── download_dataset.py
     ├── ...
     ```
-5. Weights from ```strong_sort/``` folder should be downloaded automatically. TODO: check if this is correct. The structure of the folder should looks like:
+5. Weights from ```strong_sort/``` folder should be downloaded automatically. The structure of the folder should looks like:
     ```
     strong_sort/
     ├── configs/
@@ -74,8 +74,9 @@ TODO: verify if everything is ok
     ├── strong_sort.py
     ├── ...
     ```
+*TODO: check if this is correct.*
 
-6. Yolov5 is not yet been implemented. TODO: implement yolov5 module for track.py and val.py.
+6. YOLOv5 is not yet been implemented. *TODO: implement yolov5 module for track.py and val.py.*
 
 ## Repo structure
 
