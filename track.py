@@ -1,30 +1,14 @@
-import argparse
-from pathlib import Path
 import os
-import cv2
+import argparse
 
-import numpy as np
+import cv2
 import torch
-import torch.utils.data
+import numpy as np
 
 from datasets import ImageFolder
 from dekr2detections import DEKR2detections
+from strong_sort2detections import StrongSORT2detections
 
-#import os
-#import sys
-#FILE = Path(__file__).resolve()
-#ROOT = FILE.parents[0]  # yolov5 strongsort root directory
-#WEIGHTS = ROOT / 'weights'
-#
-#if str(ROOT) not in sys.path:
-#    sys.path.append(str(ROOT))  # add ROOT to PATH
-#if str(ROOT / 'yolov5') not in sys.path:
-#    sys.path.append(str(ROOT / 'yolov5'))  # add yolov5 ROOT to PATH
-#if str(ROOT / 'strong_sort') not in sys.path:
-#    sys.path.append(str(ROOT / 'strong_sort'))  # add strong_sort ROOT to PATH
-#ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
-from strong_sort.utils.parser import get_config # TODOs in here
-from strong_sort.strong_sort import StrongSORT
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -39,6 +23,7 @@ def parse_args():
     parser.add_argument('--config-strongsort', type=str, default='strong_sort/configs/track.yaml')
     args = parser.parse_args()
     return args
+
 
 @torch.no_grad()
 def track(
@@ -69,30 +54,21 @@ def track(
     # select device
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     
-    # load pose extractor # TODO use this as a module, not always DEKR but whatever we want
+    # TODO use this as a module, not always DEKR but whatever we want
+    # load pose extractor 
     model_pose = DEKR2detections(
         config_dekr, 
         device,
         vis_threshold=0.3 # TODO maybe add to .yaml file ?
     )
     
+    # TODO replace by Re-ID framework and make it modulable
+    # TODO use this as a module, not always StrongSORT but whatever we want
     # load strongsort
-    cfg = get_config()
-    cfg.merge_from_file(config_strongsort)
-    weights = Path(cfg.STRONGSORT.WEIGHTS).resolve()
-    
-    model_tracking = StrongSORT(
-        weights,
-        device,
-        cfg.STRONGSORT.HALF,
-        max_dist=cfg.STRONGSORT.MAX_DIST,
-        max_iou_distance=cfg.STRONGSORT.MAX_IOU_DISTANCE,
-        max_age=cfg.STRONGSORT.MAX_AGE,
-        n_init=cfg.STRONGSORT.N_INIT,
-        nn_budget=cfg.STRONGSORT.NN_BUDGET,
-        mc_lambda=cfg.STRONGSORT.MC_LAMBDA,
-        ema_alpha=cfg.STRONGSORT.EMA_ALPHA,
-    ) # TODO use this as a module, not always StrongSORT but whatever we want
+    model_track = StrongSORT2detections(
+            config_strongsort,
+            device
+        )
     
     # load dataloader
     dataset = ImageFolder(input_folder)
@@ -102,43 +78,17 @@ def track(
         shuffle=False
     )
     
-    curr_frame, prev_frame = None, None
     # process images
     for i, image in enumerate(dataloader): # image is Tensor RGB (1, 3, H, W)
-        
         # pose estimation part -> create detections object
-        input2detect = model_pose.image2input(image) # -> (h, w, 3)
-        detections = model_pose.estimate(input2detect)
+        detections = model_pose.run(image)
         
         # tracking part -> update detections object
-        # TODO replace by @Vlad framwork and make it modulable
-        
-        # preprocess input
-        input2tracking = image[0].cpu().numpy() # -> (3, H, W)
-        input2tracking = np.transpose(input2tracking, (1, 2, 0)) # -> (H, W, 3)
-        input2tracking = input2tracking*255.0
-        input2tracking = input2tracking.astype(np.uint8) # -> to uint8
-        
-        # camera compensation stuff
-        # TODO not sure about utility
-        curr_frame = input2tracking
-        if cfg.STRONGSORT.ECC:  # camera motion compensation
-            model_tracking.tracker.camera_update(prev_frame, curr_frame)
-        
-        # do tracking
-        H, W = input2tracking.shape[:2]
-        detections.update_HW(H, W)
-        outputs = []
-        if detections.scores: # check if instance(s) is detected
-            Bboxes, confidences, classes = detections.get_StrongSORT_inputs()
-            outputs = model_tracking.update(Bboxes,
-                                            confidences,
-                                            classes,
-                                            input2tracking)
+        detections = model_track.run(image, detections)
             
         print(f"Frame {i}/{len(dataloader)-1}:")
         print(f"Pose extractor detected {len(detections.scores)} person(s)")
-        print(f"Tracking detected {len(outputs)} person(s)\n")
+        print(f"Tracking detected {len(detections.Tracks)} person(s)\n")
         
         if save_imgs or save_vid:
             detections.show_image(image)
@@ -147,7 +97,7 @@ def track(
                 detections.show_Poses()
                 detections.show_Bboxes()
             if show_tracks:
-                detections.show_Tracks(outputs)
+                detections.show_Tracks()
             
             img = detections.get_image()
             if save_imgs:
@@ -157,12 +107,13 @@ def track(
             if save_vid:
                 if not vid_name:
                     vid_name = os.path.join(save_path, 'results.mp4')
+                    W = image.shape[3]
+                    H = image.shape[2]
                     video = cv2.VideoWriter(vid_name, 
                                             cv2.VideoWriter_fourcc(*'mp4v'), 
                                             10,
                                             (W, H))
                 video.write(img)
-        prev_frame = curr_frame
     
     if save_vid:
         video.release()

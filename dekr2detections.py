@@ -22,7 +22,7 @@ from utils.transforms import get_final_preds
 from utils.transforms import get_multi_scale_size
 from utils.rescore import rescore_valid
 
-
+@torch.no_grad()
 class DEKR2detections():
     def __init__(self, p_cfg, device, vis_threshold=0.3):
         args = SimpleNamespace(cfg=p_cfg, opts=[])
@@ -53,7 +53,7 @@ class DEKR2detections():
         self.max_img_size = cfg.DATASET.INPUT_SIZE
         self.vis_threshold =vis_threshold
         
-    def image2input(self, image):
+    def _image2input(self, image):
         assert 1 == image.shape[0], "Test batch size should be 1"
         x = image[0].cpu().numpy() # (1, 3, H, W) -> (3, H, W)
         input = np.transpose(x, (1, 2, 0)) # -> (H, W, 3)
@@ -68,25 +68,19 @@ class DEKR2detections():
             input = cv2.resize(input, dim, interpolation=cv2.INTER_LINEAR) # -> (h, w, 3)
         return input
         
-    @torch.no_grad()
-    def estimate(self, image):
-        assert isinstance(image, np.ndarray), f"Image must be a np.array, here: {type(image)}"
-        assert image.ndim == 3, f"Image must be of dim = 3, here: {image.ndim}"
-        assert image.shape[2] == 3, f"Image dims must be (h, w, 3), here: {image.shape}"
-        assert image.shape[0] <= self.max_img_size and image.shape[1] <= self.max_img_size,\
-            f"Image must be resized lower than {self.max_img_size}, here: {image.shape}"
-        
+    def run(self, image):
+        input = self._image2input(image)
         
         # make inference and extract results
         base_size, center, scale = get_multi_scale_size(
-            image, self.cfg.DATASET.INPUT_SIZE, 1.0, 1.0
+            input, self.cfg.DATASET.INPUT_SIZE, 1.0, 1.0
         )
         heatmap_sum = 0
         poses = []
 
         for scale in sorted(self.cfg.TEST.SCALE_FACTOR, reverse=True):
             image_resized, center, scale_resized = resize_align_multi_scale(
-                image, self.cfg.DATASET.INPUT_SIZE, scale, 1.0
+                input, self.cfg.DATASET.INPUT_SIZE, scale, 1.0
             )
 
             image_resized = self.transforms(image_resized)
@@ -118,22 +112,26 @@ class DEKR2detections():
                 if score >= self.vis_threshold:
                     results_scores.append(score)
                     results_poses.append(pose)            
-            
+        
+        h, w = input.shape[:2]
+        H, W = image.shape[2:]
         # converts results to detection
-        detections = self._results2detections(image,
-                                              results_poses,
-                                              results_scores)
+        detections = self._results2detections(results_poses,
+                                              results_scores,
+                                              h, w, H, W)
         return detections
         
-    def _results2detections(self, image, results_poses, results_scores):
-        height, width = image.shape[:2]
+    def _results2detections(self, results_poses, results_scores, h, w, H, W):
         detections = Detections(
-            poses=results_poses,
-            scores=results_scores,
-            h=height,
-            w=width
+            poses=results_poses, 
+            scores=results_scores, 
+            h=h, 
+            w=w
         )
         detections.update_bboxes()
+        detections.add_HW(H, W)
+        detections.update_Bboxes()
+        detections.update_Poses()
         return detections
         
 
@@ -150,5 +148,4 @@ if __name__ == '__main__': # testing function
     )
     
     for i, image in enumerate(dataloader):
-        input2detect = model.image2input(image)
-        detections = model.estimate(input2detect)
+        detections = model.run(image)

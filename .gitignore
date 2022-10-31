@@ -1,6 +1,7 @@
 runs/
 data/
 slurm/
+PoseTrack21/eval/posetrack21/posetrack21/error_log.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

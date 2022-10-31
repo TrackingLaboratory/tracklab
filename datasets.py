@@ -5,57 +5,49 @@ import json
 import torch
 import torchvision.transforms as T
 
-# TODO modify this
+
 class PoseTrack(torch.utils.data.Dataset):
     """
-        This dataset is only for inference.
+        Not for training.
+        This dataset is only for inference and testing.
         Annotations agnostic. 
     """
-    def __init__(self, path, train=False, im1_max_size=512):
+    def __init__(self, path, train=False):
         self.path = path
-        subset = "train" if train else "val"
-        self.im1_max_size = im1_max_size
+        #subset = "train" if train else "val" # FIXME
+        subset = "tiny_val" # for testing purposes
         self.transform = T.ToTensor()
-        self.metadatas = []
+        self.images = []
         
-        p_posetrack_data = os.path.join(path, "posetrack_data", subset)        
-        files = os.listdir(p_posetrack_data)
+        posetrack = os.path.join(path, "posetrack_data", subset)        
+        files = os.listdir(posetrack)
         for file in files:
-            file_path = os.path.join(p_posetrack_data, file)
+            file_path = os.path.join(posetrack, file)
             with open(file_path) as f:
-                metadata = json.load(f)
+                data = json.load(f)
                 file_name = file.split('.')[0]
-                for image in metadata['images']:
-                    # convert vid_id from str to int
-                    image['vid_id'] = int(image['vid_id'])
-                    # add file_name to the metadata
+                for frame, image in enumerate(data['images']):
                     image['folder'] = file_name
-                self.metadatas.extend(metadata['images'])
+                    image['frame'] = frame+1
+                self.images.extend(data['images'])
             
     def __len__(self):
-        return len(self.metadatas)
+        return len(self.images)
     
     def __getitem__(self, index):
-        metadata = self.metadatas[index]
-        path = os.path.join(self.path, metadata['file_name'])
-        img = cv2.imread(path) # (H, W, 3)
+        data = self.images[index]
+        path = os.path.join(self.path, data['file_name'])
+        img = cv2.imread(path) # (H, W, 3) BGR
         assert img is not None, "Error while reading image"
-        im0 = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # (H, W, 3)
-        H, W = im0.shape[:2]
-        if W > H:
-            ratio = float(self.im1_max_size)/float(W)
-            dim = (self.im1_max_size, int(ratio*H))
-            im1 = cv2.resize(im0, dim, interpolation=cv2.INTER_LINEAR) # (h, w, 3)
-        else:
-            ratio = float(self.im1_max_size)/float(H)
-            dim = (int(ratio*W), self.im1_max_size)
-            im1 = cv2.resize(im0, dim, interpolation=cv2.INTER_LINEAR) # (h, w, 3)
-        im1 = self.transform(im1) # (3, H, W)
-        im0 = self.transform(im0) # (3, h, w)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # (H, W, 3) RGB
+        img = self.transform(img) # (3, H, W) RGB Tensor float 0 -> 1
         return {
-            "metadata": metadata,
-            "im0": im0,
-            "im1": im1
+            "image": img,
+            "folder": data['folder'],
+            "file_name": data['file_name'],
+            "image_id": data['image_id'],
+            "frame": data['frame'],
+            "nframes": data['nframes']
         }
         
         

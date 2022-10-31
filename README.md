@@ -21,13 +21,15 @@ Repo sources:
     ```pip install -r requirements.txt```
 
 3. Manage DEKR folder
-    1. Download the pretrainded models from this [URL](https://mailustceducn-my.sharepoint.com/:f:/g/personal/aa397601_mail_ustc_edu_cn/EmoNwNpq4L1FgUsC9KbWezABSotd3BGOlcWCdkBi91l50g?e=HWuluh)
+    1. Download the pretrainded models from this [URL](https://mailustceducn-my.sharepoint.com/:f:/g/personal/aa397601_mail_ustc_edu_cn/EmoNwNpq4L1FgUsC9KbWezABSotd3BGOlcWCdkBi91l50g?e=HWuluh).
     2. Move the downloaded models to the right place. The structure of the folder should looks like:
 
         ```
         DEKR/
         ├── experiments/
+            ├── ...
         ├── lib/
+            ├── ...
         ├── model/
             ├── imagenet/
                 ├── *.pth
@@ -38,6 +40,7 @@ Repo sources:
             ├── rescore/
                 ├── *.pth
         ├── tools/
+            ├── ...
         ├── ...
         ```
 4. Download [PoseTrack21](https://github.com/anDoer/PoseTrack21) dataset. You can refer to [their documentation](https://github.com/anDoer/PoseTrack21#how-to-get-the-dataset) for the instructions. The structure of the folder should looks like:
