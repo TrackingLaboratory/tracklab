@@ -1,7 +1,7 @@
 runs/
 data/
 slurm/
-PoseTrack21/eval/posetrack21/posetrack21/error_log.txt
+error_log.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -131,3 +131,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+.idea/
