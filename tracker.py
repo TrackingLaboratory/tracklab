@@ -36,7 +36,6 @@ class Keypoint:
 @dataclass
 class Detection:
     filename: Optional[str] = None
-    metadata_id: Optional[int] = None
     source: Optional[Source] = None
     bbox_id: Optional[int] = None
     keypoint_id: Optional[int] = None
@@ -57,14 +56,13 @@ class Detection:
     @property
     def metadata(self):
         assert hasattr(self, "tracker")
-        return self.tracker.metadata[self.metadata_id]
+        return self.tracker.metadata[self.filename]
     
     @metadata.setter
     def metadata(self, metadata: Metadata):
         assert hasattr(self, "tracker")
-        self.metadata_id = len(self.tracker.metadata)
         self.filename = metadata.filename
-        self.tracker.metadata.append(metadata)
+        self.tracker.metadata[self.filename] = metadata
         self.tracker._dirty = True
 
     @property
@@ -75,21 +73,26 @@ class Detection:
     @bbox.setter
     def bbox(self, bbox: Bbox):
         assert hasattr(self, "tracker")
-        self.bbox_id = len(self.tracker.bboxes)
-        self.tracker.bboxes.append(bbox)
+        self.bbox_id = id(bbox)
+        self.tracker.bboxes[self.bbox_id] = bbox
         self.tracker._dirty = True
     
+    # @property
+    # def keypoints(self):
+    #     return self.tracker.keypoints[self.keypoint_id-self.keypoint_part:self.keypoint_id-self.keypoint_part+17]
+
     @property
     def keypoint(self):
         assert hasattr(self, "tracker")
         return self.tracker.keypoints[self.keypoint_id]
     
+
     @keypoint.setter
     def keypoint(self, keypoint: Keypoint):
         assert hasattr(self, "tracker")
-        self.keypoint_id = len(self.tracker.keypoints)
+        self.keypoint_id = id(keypoint)
         self.keypoint_part = keypoint.part
-        self.tracker.keypoints.append(keypoint)
+        self.tracker.keypoints[self.keypoint_id] = keypoint
         self.tracker._dirty = True
     
     @property
@@ -100,17 +103,17 @@ class Detection:
     @person_id.setter
     def person_id(self, reid_feature):
         assert hasattr(self, "tracker")
-        self.personid_id = len(self.tracker.reid_features)
-        self.tracker.reid_features.append(reid_feature)
+        self.personid_id = id(reid_feature)
+        self.tracker.reid_features[self.personid_id] = reid_feature
         self.tracker._dirty = True
 
 @dataclass
 class Tracker:
     detections: list[Detection] = field(default_factory=list)
-    metadata: list[Metadata] = field(default_factory=list)
-    bboxes: list[Bbox] = field(default_factory=list)
-    keypoints: list[Keypoint] = field(default_factory=list)
-    reid_features: list[np.ndarray] = field(default_factory=list)
+    metadata: list[Metadata] = field(default_factory=dict)
+    bboxes: list[Bbox] = field(default_factory=dict)
+    keypoints: list[Keypoint] = field(default_factory=dict)
+    reid_features: list[np.ndarray] = field(default_factory=dict)
 
     _dataframe: Optional[pd.DataFrame] = None
     _dirty: bool = True
@@ -123,16 +126,13 @@ class Tracker:
 
         return self._dataframe
     
-    @property
-    def full_dataframe(self):
-        if self._dirty:
-            self._full_dataframe = pd.DataFrame(self.detections)
-
     def add_detection(self, detection: Detection):
         detection.add_tracker(self)
         self.detections.append(detection)
         self._dirty = True
 
+    def filter_detections(self, df):
+        return np.array(self.detections)[df.index]
 
 
 def main():
@@ -164,8 +164,10 @@ def main():
             detection.person_id = reid_array
 
 
-
-
+    # print(tracker.detections[99].keypoints)
+    df = tracker.dataframe
+    print(df[df["filename"]=="file_5"].index)
+    print(tracker.filter_detections(df[df["filename"]=="file_5"]))
     
     return tracker
     
