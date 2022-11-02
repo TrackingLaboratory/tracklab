@@ -48,6 +48,7 @@ class Detection:
     
     def asdict(self):
         return {
+            "source": self.source,
             **asdict(self.metadata),
             **{f"bb_{k}":v for k,v in asdict(self.bbox).items()},
             **{f"kp_{k}":v for k,v in asdict(self.keypoint).items()},}
