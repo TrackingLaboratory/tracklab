@@ -1,51 +1,34 @@
 import numpy as np
 import torch
-import sys
-import cv2
-import gdown
-from os.path import exists as file_exists, join
-import torchvision.transforms as transforms
 
 from .sort.nn_matching import NearestNeighborDistanceMetric
 from .sort.detection import Detection
 from .sort.tracker import Tracker
 
-from .deep.reid.torchreid.utils import FeatureExtractor
-from .deep.reid_model_factory import show_downloadeable_models, get_model_url, get_model_name
-
-from .deep.reid.torchreid.utils.tools import download_url
 from .reid_multibackend import ReIDDetectMultiBackend
 
 __all__ = ['StrongSORT']
 
 
 class StrongSORT(object):
-    def __init__(self, 
-                 model_weights,
-                 device,
-                 fp16,
+    def __init__(self,
                  max_dist=0.2,
                  max_iou_distance=0.7,
                  max_age=70, n_init=3,
                  nn_budget=100,
-                 mc_lambda=0.995,
-                 ema_alpha=0.9
                 ):
 
-        self.model = ReIDDetectMultiBackend(weights=model_weights, device=device, fp16=fp16)
-        
         self.max_dist = max_dist
         metric = NearestNeighborDistanceMetric(
             "cosine", self.max_dist, nn_budget)
         self.tracker = Tracker(
             metric, max_iou_distance=max_iou_distance, max_age=max_age, n_init=n_init)
 
-    def update(self, bbox_xywh, confidences, classes, ori_img):
+    def update(self, bbox_xywh, reid_features, confidences, classes, ori_img):
         self.height, self.width = ori_img.shape[:2]
         # generate detections
-        features = self._get_features(bbox_xywh, ori_img)
         bbox_tlwh = self._xywh_to_tlwh(bbox_xywh)
-        detections = [Detection(bbox_tlwh[i], conf, features[i]) for i, conf in enumerate(
+        detections = [Detection(bbox_tlwh[i], conf, reid_features[i]) for i, conf in enumerate(
             confidences)]
 
         # run on non-maximum supression
@@ -120,15 +103,3 @@ class StrongSORT(object):
         w = int(x2 - x1)
         h = int(y2 - y1)
         return t, l, w, h
-
-    def _get_features(self, bbox_xywh, ori_img):
-        im_crops = []
-        for box in bbox_xywh:
-            x1, y1, x2, y2 = self._xywh_to_xyxy(box)
-            im = ori_img[y1:y2, x1:x2]
-            im_crops.append(im)
-        if im_crops:
-            features = self.model(im_crops)
-        else:
-            features = np.array([])
-        return features

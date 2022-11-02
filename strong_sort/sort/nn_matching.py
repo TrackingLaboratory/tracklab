@@ -2,8 +2,10 @@
 import numpy as np
 import sys
 import torch
-sys.path.append('strong_sort/deep/reid')
-from torchreid.metrics.distance import compute_distance_matrix
+
+sys.path.append('reid')  # TODO ugly
+from torchreid.metrics import compute_distance_matrix
+
 
 
 def _pdist(a, b):

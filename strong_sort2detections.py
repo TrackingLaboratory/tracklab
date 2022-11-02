@@ -13,16 +13,11 @@ class StrongSORT2detections():
         weights = Path(self.cfg.STRONGSORT.WEIGHTS).resolve()
         
         self.model = StrongSORT(
-            weights,
-            device,
-            self.cfg.STRONGSORT.HALF,
             max_dist=self.cfg.STRONGSORT.MAX_DIST,
             max_iou_distance=self.cfg.STRONGSORT.MAX_IOU_DISTANCE,
             max_age=self.cfg.STRONGSORT.MAX_AGE,
             n_init=self.cfg.STRONGSORT.N_INIT,
             nn_budget=self.cfg.STRONGSORT.NN_BUDGET,
-            mc_lambda=self.cfg.STRONGSORT.MC_LAMBDA,
-            ema_alpha=self.cfg.STRONGSORT.EMA_ALPHA,
         )
         # For camera compensation
         # TODO not sure about utility
@@ -35,7 +30,7 @@ class StrongSORT2detections():
         input = input*255.0
         input = input.astype(np.uint8) # -> to uint8
         return input
-    
+
     def _camera_compensation(self, curr_frame):
         if self.cfg.STRONGSORT.ECC:  # camera motion compensation
             self.model.tracker.camera_update(self.prev_frame, curr_frame)
@@ -51,23 +46,25 @@ class StrongSORT2detections():
             xywhs.append(np.array([x, y, w, h]))
         
         xywhs = torch.Tensor(np.asarray(xywhs))
+        reid_features = torch.Tensor(detections.reid_features)
         scores = torch.Tensor(detections.scores)
         classes = torch.Tensor([0.]*len(detections.scores))
-        return xywhs, scores, classes
+        return xywhs, reid_features, scores, classes
         
-    def run(self, image, detections):
-        input = self._image2input(image)
-        self._camera_compensation(input)
+    def run(self, detections, image):
+        image = self._image2input(image)
+        self._camera_compensation(image)
         
         results = []
          # check if instance(s) has been detected
          # by pose detector
         if detections.scores:
-            xywhs, scores, classes = self._detections2inputs(detections)
+            xywhs, reid_features, scores, classes = self._detections2inputs(detections)
             results = self.model.update(xywhs,
+                                        reid_features,
                                         scores,
                                         classes,
-                                        input)
+                                        image)
         
         detections = self._update_detections(results, detections)
         return detections

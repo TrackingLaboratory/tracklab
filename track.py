@@ -3,11 +3,11 @@ import argparse
 
 import cv2
 import torch
-import numpy as np
 
 from datasets import ImageFolder
 from dekr2detections import DEKR2detections
 from strong_sort2detections import StrongSORT2detections
+from torchreid2detections import Torchreid2detections
 
 
 def parse_args():
@@ -55,11 +55,16 @@ def track(
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     
     # TODO use this as a module, not always DEKR but whatever we want
-    # load pose extractor 
+    # load pose extractor
     model_pose = DEKR2detections(
         config_dekr, 
         device,
         vis_threshold=0.3 # TODO maybe add to .yaml file ?
+    )
+
+    # load reid
+    model_reid = Torchreid2detections(
+        device
     )
     
     # TODO replace by Re-ID framework and make it modulable
@@ -82,9 +87,12 @@ def track(
     for i, image in enumerate(dataloader): # image is Tensor RGB (1, 3, H, W)
         # pose estimation part -> create detections object
         detections = model_pose.run(image)
-        
+
+        # reid part -> update detections object
+        detections = model_reid.run(detections, image)
+
         # tracking part -> update detections object
-        detections = model_track.run(image, detections)
+        detections = model_track.run(detections, image)
             
         print(f"Frame {i}/{len(dataloader)-1}:")
         print(f"Pose extractor detected {len(detections.scores)} person(s)")

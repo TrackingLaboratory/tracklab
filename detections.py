@@ -31,7 +31,11 @@ class Detections:
                 np.array([left_top[0], left_top[1],
                         right_bottom[0], right_bottom[1]])
             )
-    
+
+    def add_reid_features(self, reid_features):
+        # add high resolution sizes
+        self.reid_features = reid_features
+
     def add_HW(self, H, W):
         # add high resolution sizes
         self.H = H
