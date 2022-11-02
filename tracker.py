@@ -1,3 +1,4 @@
+from curses import meta
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
@@ -10,33 +11,70 @@ class Source(Enum):
     TRACK = 3
 
 @dataclass
+class Metadata:
+    filename: str
+    height: int
+    width: int
+    video_id: Optional[str] = None
+    frame: Optional[int] = None
+    frames: Optional[int] = None
+
+@dataclass
+class Bbox:
+    xc: float
+    yc: float
+    w: float
+    h: float
+    conf: float
+
+@dataclass
+class Keypoint:
+    x: float
+    y: float
+    conf: float
+
+@dataclass
 class Detection:
-    # Metadata
-    filename: str = ""
-    height: int = 0
-    width: int = 0
-    video_id: str = "" # or int ?
-    frame: int = 0
-    frames: int = 0
+    metadata_id: Optional[int] = None
     source: Optional[Source] = None
+    bbox_id: Optional[int] = None
+    keypoint_id: Optional[int] = None
+    personid_id: Optional[int] = None
+    
+    def add_tracker(self, tracker):
+        self.tracker = tracker
+    
+    @property
+    def metadata(self):
+        assert hasattr(self, "tracker")
+        return self.tracker.metadata[self.metadata_id]
+    
+    @metadata.setter
+    def metadata(self, metadata):
+        assert hasattr(self, "tracker")
+        self.tracker.metadata.append(metadata)
+        self.metadata_id = len(self.tracker.metadata)
 
-    # Bbox
-    bb_xc: float = np.nan
-    bb_yc: float = np.nan
-    bb_w: float = np.nan
-    bb_h: float = np.nan
-    bb_conf: float = np.nan
-
-    # Keypoint
-    keypoint : Optional[np.ndarray] = None
-
-    # ReID
-    id_features: Optional[np.ndarray] = None
+    @property
+    def bbox(self):
+        assert hasattr(self, "tracker")
+        return self.tracker.bboxes[self.bbox_id]
+    
+    @property
+    def keypoint(self):
+        assert hasattr(self, "tracker")
+        return self.tracker.keypoints[self.keypoint_id]
+    
+    @property
+    def person_id(self):
+        assert hasattr(self, "tracker")
+        return self.tracker.reid_features[self.personid_id]
 
 
 @dataclass
 class Tracker:
     detections: list[Detection] = field(default_factory=list)
+    metadata: list[Metadata] = field(default_factory=list)
     _dataframe: Optional[pd.DataFrame] = None
     _dirty: bool = True
 
@@ -48,7 +86,8 @@ class Tracker:
 
         return self._dataframe
 
-    def add_detection(self, detection):
+    def add_detection(self, detection: Detection):
+        detection.add_tracker(self)
         self.detections.append(detection)
         self._dirty = True
 
@@ -57,8 +96,11 @@ class Tracker:
 def main():
     tracker = Tracker()
     
-    for _ in range(100_000):
-        tracker.add_detection(Detection())
+    for i in range(100_000):
+        detection = Detection()
+        tracker.add_detection(detection)
+        detection.metadata = Metadata(filename=f"file_{i}", height=100, width=100)
+        print(detection)
     
     return tracker
     
