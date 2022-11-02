@@ -1,0 +1,4 @@
+[submodule "bpbreid"]
+	path = bpbreid
+	url = https://github.com/VlSomers/person-reid
+    branch = reconnaissance
