@@ -1,7 +1,8 @@
 from curses import meta
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from email.mime import image
 from enum import Enum
+from importlib.metadata import metadata
 from optparse import Option
 from typing import Optional
 import numpy as np
@@ -48,6 +49,13 @@ class Detection:
     
     def add_tracker(self, tracker: "Tracker"):
         self.tracker = tracker
+    
+    def asdict(self):
+        return {
+            **asdict(self.metadata),
+            **{f"bb_{k}":v for k,v in asdict(self.bbox).items()},
+            **{f"kp_{k}":v for k,v in asdict(self.keypoint).items()},}
+            # person_id=self.person_id, Too much information
     
     @property
     def metadata(self):
@@ -112,11 +120,16 @@ class Tracker:
 
     @property
     def dataframe(self):
-        if True: # self._dirty:
-            self._dataframe = pd.DataFrame(self.detections)
+        if self._dirty:
+            self._dataframe = pd.DataFrame([det.asdict() for det in self.detections])
             self._dirty = False
 
         return self._dataframe
+    
+    @property
+    def full_dataframe(self):
+        if self._dirty:
+            self._full_dataframe = pd.DataFrame(self.detections)
 
     def add_detection(self, detection: Detection):
         detection.add_tracker(self)
@@ -132,7 +145,7 @@ def main():
     tracker = Tracker()
     
     # For each image
-    for i in range(100000):
+    for i in range(1000):
         
         # 1. Run Detector
         
@@ -149,8 +162,9 @@ def main():
             image_detections.append(detection)
 
         # 2. Run Reid
+        reid_array = np.zeros((2048,))
         for detection in image_detections:
-            detection.person_id = np.zeros(0) # (2048,))
+            detection.person_id = reid_array
 
 
 
