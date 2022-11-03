@@ -6,8 +6,9 @@ import torch
 
 from datasets import ImageFolder
 from dekr2detections import DEKR2detections
+from torchreid2detections import Torchreid2detections  # need to import Torchreid2detections before
+# StrongSORT2detections, so that 'bpbreid' is added to system path first
 from strong_sort2detections import StrongSORT2detections
-from torchreid2detections import Torchreid2detections
 
 
 def parse_args():

@@ -1,14 +1,20 @@
 import os
+import sys
 import numpy as np
 import torch
+sys.path.append('bpbreid')
+# need that line to not break import of torchreid ('from torchreid... import ...') inside the bpbreid.torchreid module
+# to remove the 'from torchreid... import ...' error 'Unresolved reference 'torchreid' in PyCharm, right click
+# on 'bpbreid' folder, then choose 'Mark Directory as' -> 'Sources root'
 from bpbreid.scripts.default_config import get_default_config, display_config_diff
-from bpbreid.torchreid.utils import FeatureExtractor
+from torchreid.utils import FeatureExtractor
 
 
 @torch.no_grad()
 class Torchreid2detections():
     """
     TODO:
+        why bbox move after strongsort?
         training
         batch process
         save config + commit hash with model weights
