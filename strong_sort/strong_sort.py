@@ -5,8 +5,6 @@ from .sort.nn_matching import NearestNeighborDistanceMetric
 from .sort.detection import Detection
 from .sort.tracker import Tracker
 
-from .reid_multibackend import ReIDDetectMultiBackend
-
 __all__ = ['StrongSORT']
 
 
