@@ -21,8 +21,8 @@ class Metadata:
 
 @dataclass
 class Bbox:
-    xc: float
-    yc: float
+    x: float
+    y: float
     w: float
     h: float
     conf: float
@@ -41,6 +41,7 @@ class Detection:
     bbox: Optional[Bbox] = None
     keypoints: Optional[list[Keypoint]] = None
     reid_features : Optional[np.ndarray] = None
+    person_id: Optional[int] = None
 
     def asdict(self):
         keypoints = {}
@@ -52,13 +53,39 @@ class Detection:
             "source": self.source,
             **asdict(self.metadata),
             **{f"bb_{k}":v for k,v in asdict(self.bbox).items()},
-            **keypoints,}
-
+            **keypoints,
+            }
+        
+    def rescale_xy(self, coords, input_shape, output_shape=None):
+        if output_shape is None:
+            output_shape = (self.metadata.height, self.metadata.width)
+        x_ratio = output_shape[1]/input_shape[1]
+        y_ratio = output_shape[0]/input_shape[0]
+        coords[:, 0] *= x_ratio
+        coords[:, 1] *= y_ratio
+        return coords
+    
+    def bbox_xyxy(self, image_shape=None):
+        xyxy = [self.bbox.x, self.bbox.y, self.bbox.x+self.bbox.w, self.bbox.y+self.bbox.h]
+        if image_shape is not None:
+            x_ratio = image_shape[1]/self.metadata.width
+            y_ratio = image_shape[0]/self.metadata.height
+            xyxy[[0,2]] *= x_ratio
+            xyxy[[1,3]] *= y_ratio
+        return np.array(xyxy)
+    
+    def bbox_xywh(self, image_shape=None):
+        xywh = [self.bbox.x, self.bbox.y, self.bbox.w, self.bbox.h]
+        if image_shape is not None:
+            x_ratio = image_shape[1]/self.metadata.width
+            y_ratio = image_shape[0]/self.metadata.height
+            xywh[[0,2]] *= x_ratio
+            xywh[[1,3]] *= y_ratio
+        return np.array(xywh)
 
 class Tracker:
     def __init__(self, detections: list[Detection]):
         self.detections = pd.DataFrame([det.asdict() for det in detections])
-
 
 def main():
     """Example usage : """

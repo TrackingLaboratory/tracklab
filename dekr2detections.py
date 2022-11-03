@@ -6,7 +6,8 @@ import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 
-from detections import Detections
+#from detections import Detections
+from tracker import *
 
 from DEKR.lib.config import cfg
 from DEKR.lib.config import update_config
@@ -68,8 +69,8 @@ class DEKR2detections():
             input = cv2.resize(input, dim, interpolation=cv2.INTER_LINEAR) # -> (h, w, 3)
         return input
         
-    def run(self, image):
-        input = self._image2input(image)
+    def run(self, data):
+        input = self._image2input(data['image'])
         
         # make inference and extract results
         base_size, center, scale = get_multi_scale_size(
@@ -113,25 +114,39 @@ class DEKR2detections():
                     results_scores.append(score)
                     results_poses.append(pose)            
         
+        results_scores = np.asarray(results_scores)
+        results_poses = np.asarray(results_poses)
         h, w = input.shape[:2]
-        H, W = image.shape[2:]
         # converts results to detection
-        detections = self._results2detections(results_poses,
-                                              results_scores,
-                                              h, w, H, W)
-        return detections
+        detection = self._results2detections(results_poses,
+                                            results_scores,
+                                            data, h, w)
+        return detection
         
-    def _results2detections(self, results_poses, results_scores, h, w, H, W):
-        detections = Detections(
-            poses=results_poses, 
-            scores=results_scores, 
-            h=h, 
-            w=w
-        )
-        detections.update_bboxes()
-        detections.add_HW(H, W)
-        detections.update_Bboxes()
-        detections.update_Poses()
+    def _results2detections(self, results_poses, results_scores, data, h, w):        
+        detections = []
+        for score, pose in zip(results_scores, results_poses):
+            detection = Detection()
+            detection.metadata = Metadata(data["filename"][0],
+                                          data["height"][0].cpu().detach().numpy(),
+                                          data["width"][0].cpu().detach().numpy())
+            pose[:, :2] = detection.rescale_xy(pose[:, :2], (h, w))
+            keypoints = []
+            for part, keypoint in enumerate(pose):
+                keypoints.append(Keypoint(
+                    keypoint[0],
+                    keypoint[1],
+                    keypoint[2],
+                    part
+                ))
+            left_top = np.amin(pose, axis=0)
+            bottom_right = np.amax(pose, axis=0)
+            width = bottom_right[0] - left_top[0]
+            height = bottom_right[1] - left_top[1]
+            detection.keypoints = keypoints
+            detection.bbox = Bbox(left_top[0], left_top[1], width, height, score)
+            detection.source = 2
+            detections.append(detection)
         return detections
         
 

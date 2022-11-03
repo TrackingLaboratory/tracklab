@@ -43,26 +43,24 @@ class StrongSORT2detections():
             
     def _detections2inputs(self, detections):
         xywhs = []
-        for Bbox in detections.Bboxes:
-            x = (Bbox[0]+Bbox[2])/2
-            y = (Bbox[1]+Bbox[3])/2
-            w = Bbox[2] - Bbox[0]
-            h = Bbox[3] - Bbox[1]
-            xywhs.append(np.array([x, y, w, h]))
+        scores = []
+        for detection in detections:
+            xywhs.append(detection.bbox_xywh())
+            scores.append(detection.bbox.conf)
         
         xywhs = torch.Tensor(np.asarray(xywhs))
-        scores = torch.Tensor(detections.scores)
-        classes = torch.Tensor([0.]*len(detections.scores))
+        scores = torch.Tensor(scores)
+        classes = torch.Tensor([0]*len(scores))
         return xywhs, scores, classes
         
-    def run(self, image, detections):
-        input = self._image2input(image)
+    def run(self, data, detections):
+        input = self._image2input(data['image'])
         self._camera_compensation(input)
         
         results = []
          # check if instance(s) has been detected
          # by pose detector
-        if detections.scores:
+        if detections:
             xywhs, scores, classes = self._detections2inputs(detections)
             results = self.model.update(xywhs,
                                         scores,
@@ -73,20 +71,18 @@ class StrongSORT2detections():
         return detections
 
     def _update_detections(self, results, detections):
-        Bboxes = []
-        IDs = []
-        scores = []
-        Poses = []
         for result in results:
-            Keypoints = self._find_Keypoints(result[:4], detections)
-            Bboxes.append(result[:4])
-            IDs.append(result[4])
-            scores.append(result[6])
-            Poses.append(Keypoints)
-        detections.add_Tracks(Bboxes, IDs, scores, Poses)
+            detection = self._find_detection(result[:4], detections)
+            detection.bbox.x = result[0]
+            detection.bbox.y = result[1]
+            detection.bbox.w = result[2] - result[0]
+            detection.bbox.h = result[3] - result[1]
+            detection.bbox.conf = result[6]
+            detection.person_id = result[4]
+            detection.source = 3
         return detections
     
-    def _find_Keypoints(self, Bbox_track, detections):
+    def _find_detection(self, bbox_track, detections):
         """
             TODO rendre ça mieux car c'est vraiment degeulasse
             Comme les Bboxes en output de StrongSort sont différentes de celles
@@ -99,9 +95,9 @@ class StrongSORT2detections():
         # compute euclidean distance for each Bbox, select the smallest one
         # to return the Keypoints
         distances = []
-        for BBox_detect in detections.Bboxes:
+        for detection in detections:
             distances.append(
-                np.sum((Bbox_track - BBox_detect)**2)
+                np.sum((bbox_track - detection.bbox_xyxy())**2)
             )
         argmin = distances.index(min(distances))
-        return detections.Poses[argmin]
+        return detections[argmin]

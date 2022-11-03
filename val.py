@@ -149,7 +149,7 @@ def val(
         # if last frame -> write results to files (& load new model tracker)
         if data['frame'] == data['nframes']:
             ## TODO change this because it is ugly and not optimized
-            #if track_required: 
+            #if track_required:
             #    model_track = StrongSORT2detections(
             #        config_strongsort,
             #        device

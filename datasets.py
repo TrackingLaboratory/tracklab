@@ -74,8 +74,14 @@ class ImageFolder(torch.utils.data.Dataset):
         img = cv2.imread(path) # BGR (H, W, 3)
         assert img is not None, "Error while reading image"
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # -> RGB (H, W, 3) 
-        img = self.transform(img) # -> (1, H, W, 3)
-        return img
+        img = self.transform(img) # -> (H, W, 3)
+        return {
+            "image": img,
+            ""
+            "filename": os.path.basename(path),
+            "height": img.shape[1],
+            "width": img.shape[2]
+        }
 
 
 if __name__ == '__main__': # testing function

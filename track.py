@@ -9,6 +9,8 @@ from datasets import ImageFolder
 from dekr2detections import DEKR2detections
 from strong_sort2detections import StrongSORT2detections
 
+from tracker import *
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -78,45 +80,55 @@ def track(
         shuffle=False
     )
     
+    """
+        online framework
+    """
+    all_detections = []
     # process images
-    for i, image in enumerate(dataloader): # image is Tensor RGB (1, 3, H, W)
+    for i, data in enumerate(dataloader): # image is Tensor RGB (1, 3, H, W)
+        print(f"Frame {i}/{len(dataloader)-1}")
         # pose estimation part -> create detections object
-        detections = model_pose.run(image)
+        detections = model_pose.run(data)
         
         # tracking part -> update detections object
-        detections = model_track.run(image, detections)
-            
-        print(f"Frame {i}/{len(dataloader)-1}:")
-        print(f"Pose extractor detected {len(detections.scores)} person(s)")
-        print(f"Tracking detected {len(detections.Tracks)} person(s)\n")
-        
-        if save_imgs or save_vid:
-            detections.show_image(image)
-            
-            if show_poses:
-                detections.show_Poses()
-                detections.show_Bboxes()
-            if show_tracks:
-                detections.show_Tracks()
-            
-            img = detections.get_image()
-            if save_imgs:
-                path = os.path.join(imgs_name, f"{i}.jpg")
-                cv2.imwrite(path, img)
-            
-            if save_vid:
-                if not vid_name:
-                    vid_name = os.path.join(save_path, 'results.mp4')
-                    W = image.shape[3]
-                    H = image.shape[2]
-                    video = cv2.VideoWriter(vid_name, 
-                                            cv2.VideoWriter_fourcc(*'mp4v'), 
-                                            10,
-                                            (W, H))
-                video.write(img)
+        detections = model_track.run(data, detections)
+        all_detections.extend(detections)
     
-    if save_vid:
-        video.release()
+    tracker = Tracker(detections=all_detections)
+    df = tracker.detections
+    print(df.head(100))
+    
+    # for video in videos:
+    #   df.vis(video)
+    
+                    
+    #if save_imgs or save_vid:
+    #    detections.show_image(image)
+    #    
+    #    if show_poses:
+    #        detections.show_Poses()
+    #        detections.show_Bboxes()
+    #    if show_tracks:
+    #        detections.show_Tracks()
+    #    
+    #    img = detections.get_image()
+    #    if save_imgs:
+    #        path = os.path.join(imgs_name, f"{i}.jpg")
+    #        cv2.imwrite(path, img)
+    #    
+    #    if save_vid:
+    #        if not vid_name:
+    #            vid_name = os.path.join(save_path, 'results.mp4')
+    #            W = image.shape[3]
+    #            H = image.shape[2]
+    #            video = cv2.VideoWriter(vid_name, 
+    #                                    cv2.VideoWriter_fourcc(*'mp4v'), 
+    #                                    10,
+    #                                    (W, H))
+    #        video.write(img)
+
+    #if save_vid:
+    #    video.release()
     
 def main():
     args = parse_args()
