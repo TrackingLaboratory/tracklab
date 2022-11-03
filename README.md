@@ -56,11 +56,13 @@ Repo sources:
             ├── ...
         ├── ...
         ```
+8. Install BPBreID requirements.
+    ```pip install -r bpbreid/requirements.txt```
 
-6. Install Reconnaissance requirements.
+8. Install Reconnaissance requirements.
     ```pip install -r requirements.txt```
 
-7. Download [PoseTrack21](https://github.com/anDoer/PoseTrack21) dataset. You can refer to [their documentation](https://github.com/anDoer/PoseTrack21#how-to-get-the-dataset) for the instructions. The structure of the folder should looks like:
+9. Download [PoseTrack21](https://github.com/anDoer/PoseTrack21) dataset. You can refer to [their documentation](https://github.com/anDoer/PoseTrack21#how-to-get-the-dataset) for the instructions. The structure of the folder should looks like:
     ```
     PoseTrack21/
     ├── baselines/
@@ -72,28 +74,28 @@ Repo sources:
     ├── download_dataset.py
     ├── ...
     ```
-8. Weights from ```strong_sort/``` folder should be downloaded automatically. The structure of the folder should looks like:
-    ```
-    strong_sort/
-    ├── configs/
-        ├── ...
-    ├── deep/
-        ├── ...
-    ├── results/
-        ├── ...
-    ├── sort/
-        ├── ...
-    ├── utils/
-        ├── ...
-    ├── weights/
-        ├── *.pt
-    ├── results/
-        ├── ...
-    ├── __init__.py
-    ├── reid_multibackend.py
-    ├── strong_sort.py
-    ├── ...
-    ```
+10. Weights from ```strong_sort/``` folder should be downloaded automatically. The structure of the folder should looks like:
+     ```
+     strong_sort/
+     ├── configs/
+         ├── ...
+     ├── deep/
+         ├── ...
+     ├── results/
+         ├── ...
+     ├── sort/
+         ├── ...
+     ├── utils/
+         ├── ...
+     ├── weights/
+         ├── *.pt
+     ├── results/
+         ├── ...
+     ├── __init__.py
+     ├── reid_multibackend.py
+     ├── strong_sort.py
+     ├── ...
+     ```
 *TODO: check if this is correct.*
 
 9. YOLOv5 is not yet been implemented. *TODO: implement yolov5 module for track.py and val.py.*

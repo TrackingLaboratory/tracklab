@@ -20,16 +20,20 @@ class StrongSORT(object):
 
         self.max_dist = max_dist
         metric = NearestNeighborDistanceMetric(
-            "cosine", self.max_dist, nn_budget)
+            "part_based", self.max_dist, nn_budget)
         self.tracker = Tracker(
             metric, max_iou_distance=max_iou_distance, max_age=max_age, n_init=n_init)
 
-    def update(self, bbox_xywh, reid_features, confidences, classes, ori_img):
+    def update(self, bbox_xywh, reid_features, visibility_scores, confidences, classes, ori_img):
         self.height, self.width = ori_img.shape[:2]
         # generate detections
         bbox_tlwh = self._xywh_to_tlwh(bbox_xywh)
-        detections = [Detection(bbox_tlwh[i], conf, reid_features[i]) for i, conf in enumerate(
-            confidences)]
+        detections = [Detection(bbox_tlwh[i],
+                                conf,
+                                {"reid_features":  np.asarray(reid_features[i].cpu(), dtype=np.float32),
+                                 "visibility_scores": np.asarray(visibility_scores[i].cpu(), dtype=np.float32)}
+                                )
+                      for i, conf in enumerate(confidences)]
 
         # run on non-maximum supression
         boxes = np.array([d.tlwh for d in detections])

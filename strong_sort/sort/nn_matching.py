@@ -1,11 +1,9 @@
 # vim: expandtab:ts=4:sw=4
 import numpy as np
-import sys
 import torch
 
-sys.path.append('reid')  # TODO ugly
-from torchreid.metrics import compute_distance_matrix
-
+from bpbreid.torchreid.metrics import compute_distance_matrix
+from bpbreid.torchreid.metrics.distance import compute_distance_matrix_using_bp_features
 
 
 def _pdist(a, b):
@@ -94,6 +92,34 @@ def _nn_cosine_distance(x, y):
     distances = distances.cpu().detach().numpy()
     return distances.min(axis=0)
 
+def _nn_part_based(y, x):
+    """ Helper function for nearest neighbor distance metric (cosine).
+
+    Parameters
+    ----------
+    x : ndarray
+        A matrix of N row-vectors (sample points).
+    y : ndarray
+        A matrix of M row-vectors (query points).
+
+    Returns
+    -------
+    ndarray
+        A vector of length M that contains for each entry in `y` the
+        smallest cosine distance to a sample in `x`.
+
+    """
+    x_features = x['reid_features']
+    x_visibility_scores = x['visibility_scores']
+    y_features = y[-1]['reid_features']
+    y_visibility_scores = y[-1]['visibility_scores']
+
+    x_features /= np.linalg.norm(x_features, axis=-1, keepdims=True)
+    distances = compute_distance_matrix_using_bp_features(torch.from_numpy(y_features).unsqueeze(0), torch.from_numpy(x_features), torch.from_numpy(y_visibility_scores).unsqueeze(0), torch.from_numpy(x_visibility_scores))
+    distances = distances[0]
+    distances = 1 - distances.numpy()
+    return distances.mean(axis=0)
+
 
 class NearestNeighborDistanceMetric(object):
     """
@@ -121,6 +147,8 @@ class NearestNeighborDistanceMetric(object):
             self._metric = _nn_euclidean_distance
         elif metric == "cosine":
             self._metric = _nn_cosine_distance
+        elif metric == "part_based":
+            self._metric = _nn_part_based
         else:
             raise ValueError(
                 "Invalid metric; must be either 'euclidean' or 'cosine'")
@@ -160,7 +188,7 @@ class NearestNeighborDistanceMetric(object):
             element (i, j) contains the closest squared distance between
             `targets[i]` and `features[j]`.
         """
-        cost_matrix = np.zeros((len(targets), len(features)))
+        cost_matrix = np.zeros((len(targets), len(features['reid_features'])))
         for i, target in enumerate(targets):
             cost_matrix[i, :] = self._metric(self.samples[target], features)
         return cost_matrix

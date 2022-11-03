@@ -1,17 +1,38 @@
-from pathlib import Path
-
+import os
 import numpy as np
 import torch
-
-from strong_sort.reid_multibackend import ReIDDetectMultiBackend
+from bpbreid.scripts.default_config import get_default_config, display_config_diff
+from bpbreid.torchreid.utils import FeatureExtractor
 
 
 @torch.no_grad()
 class Torchreid2detections():
-    def __init__(self, device):
-        reid_weights = 'reid/weights/osnet_x0_25_msmt17.pt'
-        reid_weights = Path(reid_weights).resolve()
-        self.model = ReIDDetectMultiBackend(weights=reid_weights, device=device, fp16=False)
+    """
+    TODO:
+        training
+        batch process
+        save config + commit hash with model weights
+        model download from URL
+    """
+    def __init__(self, device, save_path):
+        model_path = '/Users/vladimirsomers/Models/BPBReID/hrnet_jobid_8728_model.pth.tar-120'
+        config_file_path = 'bpbreid/configs/bpbreid/remote_bpbreid_market1501_test.yaml'
+        cfg = get_default_config()
+        cfg.data.parts_num = 5
+        cfg.use_gpu = torch.cuda.is_available()
+        default_cfg_copy = cfg.clone()
+        cfg.merge_from_file(config_file_path)
+        cfg.project.config_file = os.path.basename(config_file_path)
+        display_config_diff(cfg, default_cfg_copy)
+        cfg.model.pretrained = False
+        num_classes = 702  # for model trained on DukeMTMC
+        cfg.data.save_dir = save_path
+        self.model = FeatureExtractor(
+            cfg,
+            model_path=model_path,
+            device=device,
+            num_classes=num_classes
+        )
 
     def _image2input(self, image): # Tensor RGB (1, 3, H, W)
         assert 1 == image.shape[0], "Test batch size should be 1"
@@ -31,10 +52,10 @@ class Torchreid2detections():
             crop = image[y1:y2, x1:x2]
             im_crops.append(crop)
         if im_crops:
-            features = self.model(im_crops)
-        else:
-            features = np.array([])
-        detections.add_reid_features(features)
+            embeddings, visibility_scores, body_masks, _ = self.model(im_crops)
+            detections.add_reid_features(embeddings)
+            detections.add_visibility_scores(visibility_scores)
+            detections.add_body_masks(body_masks)
         return detections
 
     def _xywh_to_xyxy(self, bbox_xywh, width, height):

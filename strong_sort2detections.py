@@ -47,9 +47,10 @@ class StrongSORT2detections():
         
         xywhs = torch.Tensor(np.asarray(xywhs))
         reid_features = torch.Tensor(detections.reid_features)
+        visibility_scores = torch.Tensor(detections.visibility_scores)
         scores = torch.Tensor(detections.scores)
         classes = torch.Tensor([0.]*len(detections.scores))
-        return xywhs, reid_features, scores, classes
+        return xywhs, reid_features, visibility_scores, scores, classes
         
     def run(self, detections, image):
         image = self._image2input(image)
@@ -59,9 +60,10 @@ class StrongSORT2detections():
          # check if instance(s) has been detected
          # by pose detector
         if detections.scores:
-            xywhs, reid_features, scores, classes = self._detections2inputs(detections)
+            xywhs, reid_features, visibility_scores, scores, classes = self._detections2inputs(detections)
             results = self.model.update(xywhs,
                                         reid_features,
+                                        visibility_scores,
                                         scores,
                                         classes,
                                         image)

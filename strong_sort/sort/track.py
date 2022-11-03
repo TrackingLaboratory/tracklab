@@ -78,7 +78,7 @@ class Track:
         self.state = TrackState.Tentative
         self.features = []
         if feature is not None:
-            feature /= np.linalg.norm(feature)
+            feature["reid_features"] /= np.linalg.norm(feature["reid_features"])
             self.features.append(feature)
 
         self.conf = conf
@@ -272,11 +272,26 @@ class Track:
         self.class_id = class_id.int()
         self.mean, self.covariance = self.kf.update(self.mean, self.covariance, detection.to_xyah(), detection.confidence)
 
-        feature = detection.feature / np.linalg.norm(detection.feature)
+        detection_features = detection.feature['reid_features']
+        detection_vis_scores = detection.feature['visibility_scores']
 
-        smooth_feat = self.ema_alpha * self.features[-1] + (1 - self.ema_alpha) * feature
-        smooth_feat /= np.linalg.norm(smooth_feat)
-        self.features = [smooth_feat]
+        tracklet_features = self.features[-1]['reid_features']
+        tracklet_vis_scores = self.features[-1]['visibility_scores']
+
+        xor = np.logical_xor(tracklet_vis_scores, detection_vis_scores)
+        ema_scores_tracklet = (tracklet_vis_scores * detection_vis_scores) * np.float32(
+            self.ema_alpha) + xor * tracklet_vis_scores
+        ema_scores_detection = (tracklet_vis_scores * detection_vis_scores) * np.float32(
+            1 - self.ema_alpha) + xor * detection_vis_scores
+        smooth_feat = np.expand_dims(ema_scores_tracklet, 1) * tracklet_features + np.expand_dims(
+            ema_scores_detection, 1) * detection_features
+        smooth_visibility_scores = np.maximum(tracklet_vis_scores, detection_vis_scores)
+        smooth_feat[np.logical_and(ema_scores_tracklet == 0., ema_scores_detection == 0.)] = 1
+        smooth_feat /= np.linalg.norm(smooth_feat, axis=-1, keepdims=True)
+        self.features = [{
+            'reid_features': smooth_feat,
+            'visibility_scores': smooth_visibility_scores
+        }]
 
         self.hits += 1
         self.time_since_update = 0

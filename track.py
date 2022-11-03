@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument('--name', default='exp', help='experience name')
     parser.add_argument('--show-poses', default=True, help='show keypoints')
     parser.add_argument('--show-tracks', default=True, help='show tracking results')
-    parser.add_argument('--save-imgs', default=True, help='save images')
+    parser.add_argument('--save-imgs', default=False, help='save images')
     parser.add_argument('--save-vid', default=True, help='save video')
     parser.add_argument('--config-dekr', type=str, default='DEKR/experiments/inference.yaml')
     parser.add_argument('--config-strongsort', type=str, default='strong_sort/configs/track.yaml')
@@ -64,7 +64,8 @@ def track(
 
     # load reid
     model_reid = Torchreid2detections(
-        device
+        device,
+        save_path
     )
     
     # TODO replace by Re-ID framework and make it modulable

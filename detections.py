@@ -33,8 +33,13 @@ class Detections:
             )
 
     def add_reid_features(self, reid_features):
-        # add high resolution sizes
         self.reid_features = reid_features
+
+    def add_visibility_scores(self, visibility_scores):
+        self.visibility_scores = visibility_scores
+
+    def add_body_masks(self, body_masks):
+        self.body_masks = body_masks
 
     def add_HW(self, H, W):
         # add high resolution sizes
