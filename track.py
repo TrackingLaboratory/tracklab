@@ -12,6 +12,7 @@ from dekr2detections import DEKR2detections
 from strong_sort2detections import StrongSORT2detections
 
 from tracker import *
+from vis_engine import Vis_Engine
 
 
 def parse_args():
@@ -40,6 +41,7 @@ def track(
     save_vid=True,
     config_dekr='DEKR/experiments/inference.yaml',
     config_strongsort='strong_sort/configs/track.yaml',
+    config_vis='vis.yaml'
 ):
     # handle paths
     if save_imgs or save_vid:
@@ -79,17 +81,20 @@ def track(
     
     all_detections = []
     # process images
-    for data in tqdm(dataset): # image is Tensor RGB (3, H, W)
+    for data in tqdm(dataset, desc='Inference'): # image is Tensor RGB (3, H, W)
         # pose estimation part -> create detections object
         detections = model_pose.run(data)
         
-        # tracking part -> update detecti  ons object
+        # tracking part -> update detections object
         detections = model_track.run(data, detections)
         all_detections.extend(detections)
     
     tracker = Tracker(detections=all_detections)
     df = tracker.detections
     
+    vis_engine = Vis_Engine(config_vis, tracker)
+    for data in tqdm(dataset, desc='Visualization'):
+        vis_engine.process(data)
     
 def main():
     args = parse_args()
