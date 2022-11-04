@@ -6,8 +6,9 @@ import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 
-#from detections import Detections
 from tracker import *
+import warnings
+warnings.filterwarnings("ignore")
 
 from DEKR.lib.config import cfg
 from DEKR.lib.config import update_config
@@ -54,10 +55,9 @@ class DEKR2detections():
         self.max_img_size = cfg.DATASET.INPUT_SIZE
         self.vis_threshold =vis_threshold
         
-    def _image2input(self, image):
-        assert 1 == image.shape[0], "Test batch size should be 1"
-        x = image[0].cpu().numpy() # (1, 3, H, W) -> (3, H, W)
-        input = np.transpose(x, (1, 2, 0)) # -> (H, W, 3)
+    def _image2input(self, image): # RGB| float 0 -> 1| tensor| (3, H, W)
+        input = image.detach().cpu().numpy() # tensor -> numpy
+        input = np.transpose(input, (1, 2, 0)) # -> (H, W, 3)
         H, W = input.shape[:2]
         if W > H:
             ratio = float(self.max_img_size)/float(W)
@@ -127,9 +127,9 @@ class DEKR2detections():
         detections = []
         for score, pose in zip(results_scores, results_poses):
             detection = Detection()
-            detection.metadata = Metadata(data["filename"][0],
-                                          data["height"][0].cpu().detach().numpy(),
-                                          data["width"][0].cpu().detach().numpy())
+            detection.metadata = Metadata(**{
+                k: v for k, v in data.items() if k != 'image'
+            })
             pose[:, :2] = detection.rescale_xy(pose[:, :2], (h, w))
             keypoints = []
             for part, keypoint in enumerate(pose):
@@ -148,6 +148,7 @@ class DEKR2detections():
             detection.source = 2
             detections.append(detection)
         return detections
+    
         
 
 if __name__ == '__main__': # testing function

@@ -12,9 +12,10 @@ class Source(Enum):
 
 @dataclass
 class Metadata:
-    filename: str
+    filepath: str
     height: int
     width: int
+    filename: Optional[str] = None
     video_id: Optional[str] = None
     frame: Optional[int] = None
     frames: Optional[int] = None

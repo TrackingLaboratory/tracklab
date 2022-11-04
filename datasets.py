@@ -74,23 +74,12 @@ class ImageFolder(torch.utils.data.Dataset):
         img = cv2.imread(path) # BGR (H, W, 3)
         assert img is not None, "Error while reading image"
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # -> RGB (H, W, 3) 
-        img = self.transform(img) # -> (H, W, 3)
+        img = self.transform(img) # -> RGB|float 0 -> 1|(3, H, W)
         return {
             "image": img,
-            ""
+            "filepath": path,
             "filename": os.path.basename(path),
-            "height": img.shape[1],
-            "width": img.shape[2]
+            "video_id": os.path.basename(os.path.dirname(path)),
+            "height": img.shape[1], # transform has not been applied yet
+            "width": img.shape[2] # transform has not been applied yet
         }
-
-
-if __name__ == '__main__': # testing function
-    dataset = ImageFolder("../Yolov5_StrongSORT_OSNet/data/test_images")
-    dataloader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=1,
-        shuffle=False
-    )
-    
-    for i, image in enumerate(dataloader):
-        pass

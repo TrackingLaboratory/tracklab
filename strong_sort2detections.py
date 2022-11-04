@@ -29,8 +29,7 @@ class StrongSORT2detections():
         self.prev_frame = None
         
     def _image2input(self, image): # Tensor RGB (1, 3, H, W)
-        assert 1 == image.shape[0], "Test batch size should be 1"
-        input = image[0].cpu().numpy() # -> (3, H, W)
+        input = image.detach().cpu().numpy() # tensor -> numpy
         input = np.transpose(input, (1, 2, 0)) # -> (H, W, 3)
         input = input*255.0
         input = input.astype(np.uint8) # -> to uint8
