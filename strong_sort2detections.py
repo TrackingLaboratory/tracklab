@@ -72,10 +72,12 @@ class StrongSORT2detections():
     def _update_detections(self, results, detections):
         for result in results:
             detection = self._find_detection(result[:4], detections)
-            detection.bbox.x = result[0]
-            detection.bbox.y = result[1]
-            detection.bbox.w = result[2] - result[0]
-            detection.bbox.h = result[3] - result[1]
+            w = result[2] - result[0]
+            h = result[3] - result[1]
+            detection.bbox.x = result[0] + w/2
+            detection.bbox.y = result[1] + h/2
+            detection.bbox.w = w
+            detection.bbox.h = h
             detection.bbox.conf = result[6]
             detection.person_id = result[4]
             detection.source = 3
