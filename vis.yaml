@@ -2,22 +2,23 @@ save_dir: 'exp'
 video:
   save: True
   fps: 10
-  name: 'result.mp4'
 images:
   save: True
-  name_dir: 'images'
 detection:
   bbox:
     show: True
     thickness: 2
-    color: (0,255,0)
-  poses:
+    color: [0,255,0]
+    print_conf: True
+  pose:
     show: True
+    radius: 1
     thickness: 2
-    color: (0,0,255)
+    color: [0,0,255]
     print_conf: True
 tracking:
   show: True
-  color: (255,0,0)
-  print_conf: True
+  thickness: 2
+  color: [255,0,0]
   print_id: True
+  print_conf: True
