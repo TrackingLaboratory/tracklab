@@ -89,8 +89,7 @@ def track(
         detections = model_track.run(data, detections)
         all_detections.extend(detections)
     
-    tracker = Tracker(detections=all_detections)
-    df = tracker.detections
+    tracker = Tracker([det.asdict() for det in all_detections])
     
     vis_engine = Vis_Engine(config_vis, tracker)
     for data in tqdm(dataset, desc='Visualization'):

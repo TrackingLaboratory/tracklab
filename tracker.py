@@ -52,6 +52,7 @@ class Detection:
             }
         return {
             "source": self.source,
+            "person_id": self.person_id,
             **asdict(self.metadata),
             **{f"bb_{k}":v for k,v in asdict(self.bbox).items()},
             **keypoints,
@@ -84,9 +85,49 @@ class Detection:
             xywh[[1,3]] *= y_ratio
         return np.array(xywh)
 
-class Tracker:
-    def __init__(self, detections: list[Detection]):
-        self.detections = pd.DataFrame([det.asdict() for det in detections])
+class Tracker(pd.DataFrame):
+    def __init__(self, *args, **kwargs):
+        super(Tracker, self).__init__(*args, **kwargs)
+    
+    @property
+    def _constructor(self):
+        return Tracker
+
+    @property
+    def _constructor_sliced(self):
+        return TrackerSeries
+    
+    def bbox_xywh(self, with_conf=False):
+        return self[['bb_x', 'bb_y', 'bb_w', 'bb_h']].values
+        if with_conf:
+            return self[['bb_x', 'bb_y', 'bb_w', 'bb_h', 'bb_conf']].values
+        else:
+            return self[['bb_x', 'bb_y', 'bb_w', 'bb_h']].values
+    
+    def bbox_xyxy(self, with_conf=False):
+        self['bb_x2'] = self.apply(lambda row: row.bb_x+row.bb_w, axis=1)
+        self['bb_y2'] = self.apply(lambda row: row.bb_y+row.bb_h, axis=1)
+        if with_conf:
+            return self[['bb_x', 'bb_y', 'bb_x2', 'bb_y2', 'bb_conf']].values
+        else:
+            return self[['bb_x', 'bb_y', 'bb_x2', 'bb_y2']].values
+    
+    def pose_xy(self, with_conf=False):
+        if with_conf:
+            return self.loc[:, self.columns.str.endswith(('x', 'y', 'conf')) & \
+                       self.columns.str.startswith('kp')].values.reshape((-1, 17, 3))
+        else:
+            return self.loc[:, self.columns.str.endswith(('x', 'y')) & \
+                       self.columns.str.startswith('kp')].values.reshape((-1, 17, 2))
+    
+class TrackerSeries(pd.Series):
+    @property
+    def _constructor(self):
+        return TrackerSeries
+
+    @property
+    def _constructor_expanddim(self):
+        return Tracker
 
 def main():
     """Example usage : """
