@@ -99,7 +99,7 @@ def val(
         print(f"Frame {i+1}/{len(dataloader)}")
         
         # pose estimation part -> create detections object
-        detections = model_pose.run(data['image'])
+        detections, _ = model_pose.run(data['image'])
         
         # tracking part
         # 1. update detections object

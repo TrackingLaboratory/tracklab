@@ -22,11 +22,11 @@ def parse_args():
     parser.add_argument('--save-vid', default=True, help='save video')
     parser.add_argument('--config-dekr', type=str, default='DEKR/experiments/inference.yaml')
     parser.add_argument('--config-strongsort', type=str, default='strong_sort/configs/track.yaml')
+    parser.add_argument('--config-bpbreid', type=str, default='')
     args = parser.parse_args()
     return args
 
 
-@torch.no_grad()
 def track(
     input_folder,
     project='track',
@@ -37,20 +37,20 @@ def track(
     save_vid=True,
     config_dekr='DEKR/experiments/inference.yaml',
     config_strongsort='strong_sort/configs/track.yaml',
+    config_bpbreid='configs/bpbreid/bpbreid_hrnet32_market1501_train.yaml',
 ):
     # handle paths
-    if save_imgs or save_vid:
-        save_path = os.path.join('runs', project, name)
-        i = 0
-        while os.path.exists(save_path + str(i)):
-            i += 1
-        save_path = save_path + str(i)
-        os.makedirs(save_path, exist_ok=True)
-        if save_imgs:
-            imgs_name = os.path.join(save_path, 'imgs')
-            os.makedirs(imgs_name, exist_ok=True)
-        if save_vid:
-            vid_name = None
+    save_path = os.path.join('runs', project, name)
+    i = 0
+    while os.path.exists(save_path + str(i)):
+        i += 1
+    save_path = save_path + str(i)
+    os.makedirs(save_path, exist_ok=True)
+    if save_imgs:
+        imgs_name = os.path.join(save_path, 'imgs')
+        os.makedirs(imgs_name, exist_ok=True)
+    if save_vid:
+        vid_name = None
     
     # select device
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -66,7 +66,9 @@ def track(
     # load reid
     model_reid = Torchreid2detections(
         device,
-        save_path
+        save_path,
+        config_bpbreid,
+        model_pose
     )
     
     # TODO replace by Re-ID framework and make it modulable
@@ -84,11 +86,14 @@ def track(
         batch_size=1,
         shuffle=False
     )
-    
+
+    if model_reid.training_enabled:
+        model_reid.train()
+
     # process images
     for i, image in enumerate(dataloader): # image is Tensor RGB (1, 3, H, W)
         # pose estimation part -> create detections object
-        detections = model_pose.run(image)
+        detections, _ = model_pose.run(image)
 
         # reid part -> update detections object
         detections = model_reid.run(detections, image)
@@ -104,8 +109,9 @@ def track(
             detections.show_image(image)
             
             if show_poses:
-                detections.show_Poses()
+                detections.show_masks()
                 detections.show_Bboxes()
+                detections.show_Poses()
             if show_tracks:
                 detections.show_Tracks()
             
