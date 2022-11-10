@@ -26,7 +26,8 @@ class StrongSORT(object):
         self.height, self.width = ori_img.shape[:2]
         # generate detections
         bbox_tlwh = self._xywh_to_tlwh(bbox_xywh)
-        detections = [Detection(bbox_tlwh[i],
+        detections = [Detection(i,
+                                bbox_tlwh[i],
                                 conf,
                                 {"reid_features":  np.asarray(reid_features[i].cpu(), dtype=np.float32),
                                  "visibility_scores": np.asarray(visibility_scores[i].cpu(), dtype=np.float32)}
@@ -47,13 +48,13 @@ class StrongSORT(object):
             if not track.is_confirmed() or track.time_since_update > 1:
                 continue
 
-            box = track.to_tlwh()
-            x1, y1, x2, y2 = self._tlwh_to_xyxy(box)
+            det = track.last_detection_to_tlwh()
+            x1, y1, x2, y2 = self._tlwh_to_xyxy(det.tlwh)
             
             track_id = track.track_id
             class_id = track.class_id
             conf = track.conf
-            outputs.append(np.array([x1, y1, x2, y2, track_id, class_id, conf]))
+            outputs.append(np.array([x1, y1, x2, y2, track_id, class_id, conf, det.idx]))
         if len(outputs) > 0:
             outputs = np.stack(outputs, axis=0)
         return outputs

@@ -87,6 +87,7 @@ class Track:
 
         self.kf = KalmanFilter()
         self.mean, self.covariance = self.kf.initiate(detection)
+        self.last_detection = detection
 
     def to_tlwh(self):
         """Get current position in bounding box format `(top left x, top left y,
@@ -102,6 +103,11 @@ class Track:
         ret[2] *= ret[3]
         ret[:2] -= ret[2:] / 2
         return ret
+
+    def last_detection_to_tlwh(self):
+        """Get last detection
+        """
+        return self.last_detection
 
     def to_tlbr(self):
         """Get kf estimated current position in bounding box format `(min x, miny, max x,
@@ -270,6 +276,7 @@ class Track:
         """
         self.conf = conf
         self.class_id = class_id.int()
+        self.last_detection = detection
         self.mean, self.covariance = self.kf.update(self.mean, self.covariance, detection.to_xyah(), detection.confidence)
 
         detection_features = detection.feature['reid_features']
