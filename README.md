@@ -56,8 +56,12 @@ Repo sources:
             ├── ...
         ├── ...
         ```
-8. Install BPBreID requirements.
+6. Install BPBreID requirements.
     ```pip install -r bpbreid/requirements.txt```
+
+7. To remove the IDE-level error 'Unresolved reference 'torchreid'' when using the 'from torchreid... import ...' statement inside BPBreID python files:
+   1. In PyCharm, right click on 'bpbreid' folder, then choose 'Mark Directory as' -> 'Sources root'
+   2. In VSCode, ...
 
 8. Install Reconnaissance requirements.
     ```pip install -r requirements.txt```
@@ -98,7 +102,7 @@ Repo sources:
      ```
 *TODO: check if this is correct.*
 
-9. YOLOv5 is not yet been implemented. *TODO: implement yolov5 module for track.py and val.py.*
+11. YOLOv5 is not yet been implemented. *TODO: implement yolov5 module for track.py and val.py.*
 
 ## Repo structure
 
