@@ -1,18 +1,15 @@
 from types import SimpleNamespace
 import numpy as np
 import cv2
-
 import torch
-import torch.nn as nn
 import torchvision.transforms as transforms
 
 from detections import Detections
-
 from DEKR.lib.config import cfg
 from DEKR.lib.config import update_config
 
 import DEKR.tools._init_paths
-import models
+import models  # FIXME why is it needed to not break imports after?
 from core.inference import get_multi_stage_outputs
 from core.inference import aggregate_results
 from core.nms import pose_nms
@@ -67,7 +64,8 @@ class DEKR2detections():
             dim = (int(ratio*W), self.max_img_size)
             input = cv2.resize(input, dim, interpolation=cv2.INTER_LINEAR) # -> (h, w, 3)
         return input
-        
+
+    @torch.no_grad()
     def run(self, image):
         input = self._image2input(image)
         
@@ -111,15 +109,15 @@ class DEKR2detections():
             for score, pose in zip(scores, poses):
                 if score >= self.vis_threshold:
                     results_scores.append(score)
-                    results_poses.append(pose)            
-        
+                    results_poses.append(pose)
+
         h, w = input.shape[:2]
         H, W = image.shape[2:]
         # converts results to detection
         detections = self._results2detections(results_poses,
                                               results_scores,
                                               h, w, H, W)
-        return detections
+        return detections, heatmap_avg
         
     def _results2detections(self, results_poses, results_scores, h, w, H, W):
         detections = Detections(
@@ -135,7 +133,7 @@ class DEKR2detections():
         return detections
         
 
-if __name__ == '__main__': # testing function
+if __name__ == '__main__':  # testing function
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = DEKR2detections("DEKR/experiments/inference.yaml", device)    
     
@@ -148,4 +146,4 @@ if __name__ == '__main__': # testing function
     )
     
     for i, image in enumerate(dataloader):
-        detections = model.run(image)
+        detections, _ = model.run(image)
