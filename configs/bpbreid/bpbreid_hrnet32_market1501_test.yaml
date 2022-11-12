@@ -18,7 +18,7 @@ data:
   combineall: False
   transforms: ['rc', 're']
   masks:
-    preprocess: 'five_v'  # 'none', 'full', 'id', 'ids', 'bs_fu', 'bs_fu_bb', 'mu_sc', 'four', 'four_no', 'four_v', 'four_v_pif', 'five_v', 'six', 'six_no', 'eight'
+    preprocess: 'eight'  # 'none', 'full', 'id', 'ids', 'bs_fu', 'bs_fu_bb', 'mu_sc', 'four', 'four_no', 'four_v', 'four_v_pif', 'five_v', 'six', 'six_no', 'eight'
     background_computation_strategy: 'threshold'  # threshold, diff_from_max
     softmax_weight: 15
     mask_filtering_threshold: 0.5
