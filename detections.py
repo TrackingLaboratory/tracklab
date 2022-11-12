@@ -107,10 +107,12 @@ class Detections:
     
     def show_image(self, img):
         # img : Tensor RGB (1, 3, H, W) (0 -> 1)
-        self.img = 255*img[0].cpu().numpy().transpose(1, 2, 0)
+        img = 255*img[0].cpu().numpy().transpose(1, 2, 0)
         # -> RGB (H, W, 3)
+        # OpenCV uses BGR
+        self.img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         # float 0 -> 255
-        
+
     def show_Bboxes(self):
         self._check_assertions()
         for i, Bbox in enumerate(self.Bboxes):
@@ -162,6 +164,5 @@ class Detections:
     
     def get_image(self):
         self._check_assertions()
-        img = cv2.cvtColor(self.img, cv2.COLOR_RGB2BGR).astype(np.uint8)
-        return img
+        return self.img.astype(np.uint8)
         
