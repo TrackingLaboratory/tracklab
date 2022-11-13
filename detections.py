@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-from reconnaissance.utils.images_operations import overlay_heatmap
+from reconnaissance.utils.images import overlay_heatmap
 
 cmap = [(0,0,255), (0,128,255), (0,255,255), (0,255,128), (0,255,0), (128,255,0),
         (255,255,0), (255,128,0), (255,0,0), (255,0,128), (255,0,255), (128,0,255),
@@ -130,7 +130,7 @@ class Detections:
             l, t, r, b = int(Bbox[0]), int(Bbox[1]), int(Bbox[2]), int(Bbox[3])
             body_masks = self.body_masks[i]
             img_crop = self.img[t:b, l:r]
-            img_crop_with_mask = overlay_heatmap(img_crop, body_masks[0].numpy())
+            img_crop_with_mask = overlay_heatmap(img_crop, body_masks[0].numpy(), weight=-1)
             self.img[t:b, l:r] = img_crop_with_mask
 
     def show_Poses(self):
