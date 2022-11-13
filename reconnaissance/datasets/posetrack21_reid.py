@@ -16,6 +16,7 @@ from scipy import signal
 from skimage.transform import resize
 from tqdm import tqdm
 
+from reconnaissance.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints, clip_to_img_dim
 from reconnaissance.utils.images import overlay_heatmap
 from torchreid.data import ImageDataset
 
@@ -51,15 +52,6 @@ def random_sampling_per_pid(df, ratio=1.0):
     return queries, galleries
 
 
-def clip_to_img_dim(bbox_ltwh, img_w, img_h):  # TODO put in utils
-    l, t, w, h = bbox_ltwh.copy()
-    l = max(l, 0)
-    t = max(t, 0)
-    w = min(l+w, img_w) - l
-    h = min(t+h, img_h) - t
-    return np.array([l, t, w, h])
-
-
 class PoseTrack21ReID(ImageDataset):
     dataset_dir = 'Posetrack21'
     eval_metric = 'mot_inter_video'
@@ -80,8 +72,10 @@ class PoseTrack21ReID(ImageDataset):
         else:
             return PoseTrack21ReID.masks_dirs[masks_dir]
 
+        # TODO run it on Belldev
         # ----
-        # TODO fix all todos in code
+        # TODO remove 'self.'
+        # TODO generic code for train and test
         # TODO filter FIRST: generate reid data only for filtered detections
         # TODO get changes from other BPBreID branch
         # TODO bootstrap general purpose dataset class for MOT datasets (will be improved later when integrating with other datasets)
@@ -90,8 +84,6 @@ class PoseTrack21ReID(ImageDataset):
         # TODO load HRNet and other pretrained weights from URLs
         # TODO cfg.data.masks_dir not used + refactor folder structure
         # TODO fix 'none' in masks_preprocess_transforms: should be able to use none to indicate to use raw masks, load_masks should come from 'disk' vs 'stripes'
-        # ----
-        # TODO run it on Belldev
         # ----
         # TODO add pifpaf to the pipeline
         # TODO batch processing of heatmaps
@@ -119,7 +111,6 @@ class PoseTrack21ReID(ImageDataset):
         images_anns_filename = 'images_anns.json'
         masks_anns_filename = 'masks_anns.json'
 
-        # TODO remove 'self.'
         self.reid_path = Path(self.dataset_dir, reid_dir)
         self.reid_img_path = self.reid_path / reid_images_dir
         self.reid_mask_path = self.reid_path / reid_masks_dir
@@ -226,24 +217,32 @@ class PoseTrack21ReID(ImageDataset):
         gt_dets.bbox = gt_dets.bbox.apply(lambda x: np.array(x))
         gt_dets.bbox_head = gt_dets.bbox_head.apply(lambda x: np.array(x))
 
-        def reshape_keypoints(keypoints):
-            return np.array(keypoints).reshape(-1, 3)
+        # reshape keypoints to (n, 3) array
+        gt_dets.keypoints = gt_dets.keypoints.apply(lambda kp: np.array(kp).reshape(-1, 3))
 
-        gt_dets.keypoints = gt_dets.keypoints.apply(reshape_keypoints)
-        # compute detection visiblity as average keypoints visibility
-        gt_dets['visibility'] = gt_dets.keypoints.apply(
-            lambda x: x[:, 2].mean()
-        )
-
+        # keep global index as reference for further slicing operations
         gt_dets['global_index'] = gt_dets.index
 
-        gt_dets = gt_dets.merge(images[['image_id', 'vid_id']], on='image_id', how='left')
-        gt_dets.rename(columns={'vid_id': 'video_id'}, inplace=True)
-        # TODO :
-        # - bbox: bbox_tlwh, bbox_tlbr, cycxhw,
-        # - keypoints: keypoints_xyc, keypoints_bbox_xyc
-        # function to compute keypints in rescaled bbox
+        # rename base 'vid_id' to 'video_id', to be consistent with 'image_id'
+        images.rename(columns={'vid_id': 'video_id'}, inplace=True)
+
+        # add video_id to gt_dets, will be used for torchreid 'camid' paremeter
+        gt_dets = gt_dets.merge(images[['image_id', 'video_id']], on='image_id', how='left')
+
+        # compute detection visiblity as average keypoints visibility
+        gt_dets['visibility'] = gt_dets.keypoints.apply(lambda x: x[:, 2].mean())
+
+        # precompute various bbox formats
+        gt_dets.rename(columns={'bbox': 'bbox_ltwh'}, inplace=True)
+        gt_dets['bbox_ltrb'] = gt_dets.bbox_ltwh.apply(lambda ltwh: np.concatenate((ltwh[:2], ltwh[:2]+ltwh[2:])))
+        gt_dets['bbox_cxcywh'] = gt_dets.bbox_ltwh.apply(lambda ltwh: np.concatenate((ltwh[:2]+ltwh[2:]/2, ltwh[2:])))
+
+        # precompute various keypoints formats
+        gt_dets.rename(columns={'keypoints': 'keypoints_xyc'}, inplace=True)
+        gt_dets['keypoints_bbox_xyc'] = gt_dets.apply(lambda r: kp_img_to_kp_bbox(r.keypoints_xyc, r.bbox_ltwh), axis=1)
+
         return categories, gt_dets, images
+
 
     def build_reid_set(self, save_path, set_name, reid_anns_filepath, gt_dets_df, images_df, crop_dim):
         """
@@ -256,9 +255,9 @@ class PoseTrack21ReID(ImageDataset):
         with tqdm(total=len(gt_dets_df)) as pbar:
             pbar.set_description('Extracting all {} bboxes crops'.format(set_name))
             # loop on videos
-            for vid_id in images_df.vid_id.unique():
+            for video_id in images_df.video_id.unique():
                 # loop on video frames
-                for img_metadata in images_df[images_df.vid_id == vid_id].itertuples():
+                for img_metadata in images_df[images_df.video_id == video_id].itertuples():
                     if not img_metadata.is_labeled:
                         continue
                     filename = img_metadata.file_name
@@ -266,17 +265,17 @@ class PoseTrack21ReID(ImageDataset):
                     # loop on detections in frame
                     for det_metadata in gt_dets_df[gt_dets_df.image_id == img_metadata.image_id].itertuples():
                         # crop and resize bbox from image
-                        bbox = np.array(det_metadata.bbox)
-                        bbox = clip_to_img_dim(bbox, img.shape[1], img.shape[0])
+                        bbox_ltwh = np.array(det_metadata.bbox_ltwh)
+                        bbox_ltwh = clip_to_img_dim(bbox_ltwh, img.shape[1], img.shape[0])
                         pid = det_metadata.person_id
-                        l, t, w, h = bbox.astype(int)
+                        l, t, w, h = bbox_ltwh.astype(int)
                         img_crop = img[t:t + h, l:l + w]
                         if h > max_h or w > max_w:
                             img_crop = cv2.resize(img_crop, (max_w, max_h), cv2.INTER_CUBIC)
 
                         # save crop to disk
-                        filename = "{}_{}_{}{}".format(pid, vid_id, img_metadata.image_id, self.img_ext)
-                        rel_filepath = Path(vid_id, filename)
+                        filename = "{}_{}_{}{}".format(pid, video_id, img_metadata.image_id, self.img_ext)
+                        rel_filepath = Path(video_id, filename)
                         abs_filepath = Path(save_path, rel_filepath)
                         abs_filepath.parent.mkdir(parents=True, exist_ok=True)
                         cv2.imwrite(str(abs_filepath), img_crop)
@@ -303,7 +302,6 @@ class PoseTrack21ReID(ImageDataset):
         fig_save_path = fig_save_path / set_name
         crop_h, crop_w = crop_dim
         mask_h, mask_w = masks_dim
-        total_discarded_keypoints = 0
         reid_hp_anns = []
         g_scale = 6
         g_radius = int(mask_w / g_scale)
@@ -311,10 +309,10 @@ class PoseTrack21ReID(ImageDataset):
         with tqdm(total=len(gt_dets_df)) as pbar:
             pbar.set_description('Extracting all {} human parsing labels'.format(set_name))
             # loop on videos
-            for vid_id in images_df.vid_id.unique():
+            for video_id in images_df.video_id.unique():
                 img_shape = None
                 # loop on video frames
-                for img_metadata in images_df[images_df.vid_id == vid_id].itertuples():
+                for img_metadata in images_df[images_df.video_id == video_id].itertuples():
                     filename = img_metadata.file_name
                     img_id = img_metadata.image_id
                     img_detections = gt_dets_df[gt_dets_df.image_id == img_id]
@@ -330,16 +328,15 @@ class PoseTrack21ReID(ImageDataset):
                         hp_gt = resize(hp_gt_or, (img.shape[0], img.shape[1], hp_gt_or.shape[2]))
                     # loop on detections in frame
                     for det_metadata in img_detections.itertuples():
-                        bbox = clip_to_img_dim(det_metadata.bbox, img_shape[1], img_shape[0]).astype(int)
-                        keypoints = det_metadata.keypoints
-                        l, t, w, h = bbox
+                        bbox_ltwh = clip_to_img_dim(det_metadata.bbox_ltwh, img_shape[1], img_shape[0]).astype(int)
+                        l, t, w, h = bbox_ltwh
                         if mode == 'gaussian_keypoints':
                             # compute human parsing heatmaps as gaussian on each visible keypoint
                             img_crop = cv2.imread(det_metadata.reid_crop_path)
                             img_crop = cv2.resize(img_crop, (crop_w, crop_h), cv2.INTER_CUBIC)
-                            rf_keypoints, discarded_keypoints = self.rescale_and_filter_keypoints(keypoints, bbox, mask_w, mask_h)
-                            hp_gt_crop = self.build_gaussian_heatmaps(rf_keypoints, len(keypoints), mask_w, mask_h, gaussian=gaussian)
-                            total_discarded_keypoints += discarded_keypoints
+                            bbox_xyc = rescale_keypoints(det_metadata.keypoints_bbox_xyc, (w, h), (mask_w, mask_h))
+                            hp_gt_crop = self.build_gaussian_heatmaps(bbox_xyc, len(det_metadata.keypoints_xyc), mask_w,
+                                                                      mask_h, gaussian=gaussian)
                         elif mode == 'pose_on_img':
                             # compute human parsing heatmaps using output of pose model on full image
                             img_crop = cv2.imread(det_metadata.reid_crop_path)
@@ -358,14 +355,14 @@ class PoseTrack21ReID(ImageDataset):
 
                         # save human parsing heatmaps on disk
                         pid = det_metadata.person_id
-                        filename = "{}_{}_{}".format(pid, vid_id, img_id)
-                        abs_filepath = Path(hp_save_path, Path(vid_id, filename + self.masks_ext))
+                        filename = "{}_{}_{}".format(pid, video_id, img_id)
+                        abs_filepath = Path(hp_save_path, Path(video_id, filename + self.masks_ext))
                         abs_filepath.parent.mkdir(parents=True, exist_ok=True)
                         np.save(str(abs_filepath), hp_gt_crop)
 
                         # save image crop with human parsing heatmaps overlayed on disk for visualization/debug purpose
                         img_with_heatmap = overlay_heatmap(img_crop, hp_gt_crop.max(axis=0), weight=0.3)
-                        figure_filepath = Path(fig_save_path, vid_id, filename + self.img_ext)
+                        figure_filepath = Path(fig_save_path, video_id, filename + self.img_ext)
                         figure_filepath.parent.mkdir(parents=True, exist_ok=True)
                         cv2.imwrite(str(figure_filepath), img_with_heatmap)
 
@@ -376,7 +373,6 @@ class PoseTrack21ReID(ImageDataset):
                         })
                         pbar.update(1)
 
-        print("Discarded {} keypoints because out of bbox".format(total_discarded_keypoints))
         print('Saving reid human parsing annotations as json to "{}"'.format(reid_anns_filepath))
         reid_anns_filepath.parent.mkdir(parents=True, exist_ok=True)
         pd.DataFrame(reid_hp_anns).to_json(reid_anns_filepath)
@@ -388,8 +384,8 @@ class PoseTrack21ReID(ImageDataset):
         merged_df.drop('index', axis=1, inplace=True)
         return merged_df
 
-    def rescale_and_filter_keypoints(self, keypoints, bbox, new_w, new_h):
-        l, t, w, h = bbox.astype(int)
+    def rescale_and_filter_keypoints(self, keypoints, bbox_ltwh, new_w, new_h):
+        l, t, w, h = bbox_ltwh.astype(int)
         discarded_keypoints = 0
         rescaled_keypoints = {}
         for i, kp in enumerate(keypoints):
@@ -419,9 +415,13 @@ class PoseTrack21ReID(ImageDataset):
         gkern2d = np.outer(gkern1d, gkern1d)
         return gkern2d
 
-    def build_gaussian_heatmaps(self, keypoints, k, w, h, gaussian=None):
+    def build_gaussian_heatmaps(self, kp_xyc, k, w, h, gaussian=None):
         gaussian_heatmaps = np.zeros((k, h, w))
-        for i, kp in keypoints.items():
+        for i, kp in enumerate(kp_xyc):
+            # do not use invisible keypoints
+            if kp[2] == 0:
+                continue
+
             kpx, kpy = kp[:2].astype(int)
 
             if gaussian is None:
