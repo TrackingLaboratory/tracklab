@@ -38,10 +38,6 @@ def relabel_ids(df):
     return df
 
 
-def to_dict_list(df):
-    return df.to_dict('records')
-
-
 def random_sampling_per_pid(df, ratio=1.0):
     def uniform_tracklet_sampling(_df):
         x = list(_df.index)
@@ -196,28 +192,23 @@ class PoseTrack21ReID(ImageDataset):
         test_df = relabel_ids(test_df)
         query_df, gallery_df = self.split_query_gallery(test_df, self.cfg.test.ratio_query_per_id)
 
-        # use video id as camera id: camid is used at inference to filter out gallery samples given a query sample
-        train_df['camid'] = train_df['video_id']
-        query_df['camid'] = query_df['video_id']
-        gallery_df['camid'] = gallery_df['video_id']
-
-        # train_df.rename(columns={'person_id': 'pid'}, inplace=True)
-        # query_df.rename(columns={'person_id': 'pid'}, inplace=True)
-        # gallery_df.rename(columns={'person_id': 'pid'}, inplace=True)
-
-        train_df.rename(columns={'reid_crop_path': 'img_path'}, inplace=True)
-        query_df.rename(columns={'reid_crop_path': 'img_path'}, inplace=True)
-        gallery_df.rename(columns={'reid_crop_path': 'img_path'}, inplace=True)
-
-        train_df.drop(columns='bbox_head', inplace=True)
-        query_df.drop(columns='bbox_head', inplace=True)
-        gallery_df.drop(columns='bbox_head', inplace=True)
-
-        train = to_dict_list(train_df)
-        query = to_dict_list(query_df)
-        gallery = to_dict_list(gallery_df)
+        # get train/query/gallery sets as torchreid list format
+        gallery, query, train = self.to_torchreid_dataset_format([train_df, query_df, gallery_df])
 
         super(PoseTrack21ReID, self).__init__(train, query, gallery, **kwargs)
+
+    def to_torchreid_dataset_format(self, dataframes):
+        results = []
+        for df in dataframes:
+            # use video id as camera id: camid is used at inference to filter out gallery samples given a query sample
+            df['camid'] = df['video_id']
+            df['img_path'] = df['reid_crop_path']
+            # remove bbox_head as it is not available for each sample
+            df.drop(columns='bbox_head', inplace=True)
+            # df to list of dict
+            data_list = df.to_dict('records')
+            results.append(data_list)
+        return results
 
     def build_annotations_df(self, anns_path):
         annotations_list = []
