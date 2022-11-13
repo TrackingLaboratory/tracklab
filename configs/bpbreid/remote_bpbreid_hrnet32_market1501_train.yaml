@@ -35,7 +35,6 @@ model:
   name: 'bpbreid'
   pretrained: True
   save_model_flag: False
-  load_weights: 'bpbreid/pretrained_models/job-10289_120_model.pth.tar'
   bpbreid:
     pooling: 'gwap'  # ['gap', 'gmp', 'gwap', 'gwap2']
     normalization: 'identity' # 'batch_norm_2d' 'identity'
