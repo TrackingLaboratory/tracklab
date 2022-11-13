@@ -16,7 +16,7 @@ from scipy import signal
 from skimage.transform import resize
 from tqdm import tqdm
 
-from reconnaissance.utils.images_operations import overlay_heatmap
+from reconnaissance.utils.images import overlay_heatmap
 from torchreid.data import ImageDataset
 
 
@@ -84,21 +84,24 @@ class PoseTrack21ReID(ImageDataset):
         else:
             return PoseTrack21ReID.masks_dirs[masks_dir]
 
-        # TODO fix 'none' in masks_preprocess_transforms: should be able to use none to indicate to use raw masks, load_masks should come from 'disk' vs 'stripes'
         # TODO run it on Belldev
-        # TODO cfg.data.masks_dir not used + refactor folder structure
+        # ----
         # TODO refactor filter config
         # TODO filter FIRST: generate reid data only for filtered detections
-        # TODO code to download model weights (hrnet)
-        # TODO add pifpaf to the pipeline
-        # TODO batch processing of heatmaps
         # TODO keeps person_id and use pid as index from 0
-        # todo add nice prints
         # TODO add config to tell if identities holds across videos or not
         # TODO create general purpose eval metric for MOT datasets
-        # TODO add a occlusion score to each detection = visibility = average keyoints visibility
-        # make sure format is good: RGB vs BGR, etc
-        # make this class dataset independant
+        # TODO fix all todos in code
+        # TODO bootstrap general purpose dataset class for MOT datasets (will be improved later when integrating with other datasets)
+        # todo add nice prints + docstring
+        # TODO load HRNet and other pretrained weights from URLs
+        # TODO cfg.data.masks_dir not used + refactor folder structure
+        # TODO fix 'none' in masks_preprocess_transforms: should be able to use none to indicate to use raw masks, load_masks should come from 'disk' vs 'stripes'
+        # ----
+        # TODO add pifpaf to the pipeline
+        # TODO batch processing of heatmaps
+        # TODO make sure format is good: RGB vs BGR, etc
+        # TODO make this class dataset independant
         # TODO: make different config for query and gallery?
 
 
@@ -109,6 +112,9 @@ class PoseTrack21ReID(ImageDataset):
         self.dataset_dir = Path(datasets_root, self.dataset_dir)
         self.train_anns_path = Path(self.dataset_dir, self.annotations_dir, 'train')
         self.val_anns_path = Path(self.dataset_dir, self.annotations_dir, 'val')
+        self.cfg = config.data.mot
+        assert self.cfg.max_samples_per_id >= self.cfg.min_samples_per_id, "max_samples_per_id must be >= min_samples_per_id"
+
         reid_dir = 'reid'
         reid_images_dir = 'images'
         reid_masks_dir = 'masks'
@@ -127,7 +133,6 @@ class PoseTrack21ReID(ImageDataset):
         self.reid_train_path = self.reid_img_path / 'train'
         self.reid_val_path = self.reid_img_path / 'val'
         self.pose_model = pose_model
-
 
         # Load annotations into Pandas dataframes
         self.train_categories, self.train_gt_dets, self.train_images = self.build_annotations_df(self.train_anns_path)
@@ -169,41 +174,26 @@ class PoseTrack21ReID(ImageDataset):
         else:
             self.masks_parts_numbers, self.has_background, self.masks_suffix, self.masks_parts_names = None, None, None, None
 
-        # priority to:
-        # occlusions
-        # ids with multiple vid
-        # id from different videos
-        self.min_vis = config.data.motchallenge.min_vis
-        self.min_vis = 0.5
-        self.min_h = config.data.motchallenge.min_h
-        self.min_w = config.data.motchallenge.min_w
-        # self.max_ids = config.data.motchallenge.max_ids
-        self.max_ids = 5
-        self.min_samples_per_id = config.data.motchallenge.min_samples_per_id
-        self.max_samples_per_id = config.data.motchallenge.max_samples_per_id
-        self.ratio_query_per_id = config.data.motchallenge.ratio_query_per_id
-        self.ratio_gallery_per_id = config.data.motchallenge.ratio_gallery_per_id
-
-        assert self.max_samples_per_id >= self.min_samples_per_id
-
         train_df = self.filter_reid_samples(self.train_gt_dets,
-                                            max_ids=self.max_ids,
-                                            min_vis=self.min_vis,
-                                            min_h=self.min_h,
-                                            min_w=self.min_w,
-                                            min_samples=self.min_samples_per_id,
-                                            max_samples_per_id=self.max_samples_per_id)
+                                            max_ids=self.cfg.max_ids,
+                                            min_vis=self.cfg.min_vis,
+                                            min_h=self.cfg.min_h,
+                                            min_w=self.cfg.min_w,
+                                            min_samples=self.cfg.min_samples_per_id,
+                                            max_samples_per_id=self.cfg.max_samples_per_id)
 
         test_df = self.filter_reid_samples(self.val_gt_dets,
-                                           max_ids=self.max_ids,
-                                           min_samples=self.min_samples_per_id,
-                                           max_samples_per_id=self.max_samples_per_id)
+                                           max_ids=self.cfg.max_ids,
+                                           min_samples=self.cfg.min_samples_per_id,
+                                           max_samples_per_id=self.cfg.max_samples_per_id)
 
+        # FIXME mark detetions as query/gallery with a new columns instead of using a new dataframe
+        # -> that will also fix warning
         train_df = relabel_ids(train_df)
         test_df = relabel_ids(test_df)
         query_df, gallery_df = self.split_query_gallery(test_df, self.ratio_query_per_id)
 
-        train_df['camid'] = 0
+        train_df['camid'] = 0 # TODO put video id + explain why
         query_df['camid'] = 1
         gallery_df['camid'] = 2
 
@@ -247,7 +237,7 @@ class PoseTrack21ReID(ImageDataset):
 
         gt_dets.keypoints = gt_dets.keypoints.apply(reshape_keypoints)
         # compute detection visiblity as average keypoints visibility
-        gt_dets['vis'] = gt_dets.keypoints.apply(
+        gt_dets['visibility'] = gt_dets.keypoints.apply(
             lambda x: x[:, 2].mean()
         )
 
@@ -329,11 +319,11 @@ class PoseTrack21ReID(ImageDataset):
                         img_shape = cv2.imread(str(self.dataset_dir / filename)).shape  # Image loaded once to get video frame size
                     if from_model_on_img:
                         img = cv2.imread(str(self.dataset_dir / filename))
-                        _, hp_gt_or = self.pose_model.run(torch.from_numpy(img).permute((2, 0, 1)).unsqueeze(0))
-                        hp_gt_or = hp_gt_or.squeeze(0).permute((1, 2, 0)).numpy()
+                        _, hp_gt_or = self.pose_model.run(torch.from_numpy(img).permute((2, 0, 1)).unsqueeze(0))  # TODO check if pose_model need BRG or RGB
+                        hp_gt_or = hp_gt_or.squeeze(0).permute((1, 2, 0)).numpy()  # TODO why that permute needed? for old resize?
                         # cv2.imwrite("/Users/vladimirsomers/Downloads/test_hp_gt_1.jpg", overlay_heatmap(img, hp_gt_or.max(axis=2)))
                         hp_gt = resize(hp_gt_or, (img.shape[0], img.shape[1], hp_gt_or.shape[2]))
-                        cv2.imwrite("/Users/vladimirsomers/Downloads/test_hp_gt.jpg", overlay_heatmap(img, hp_gt.max(axis=2)))
+                        cv2.imwrite("/Users/vladimirsomers/Downloads/test_hp_gt.jpg", overlay_heatmap(img, hp_gt.max(axis=2)))  # FIXME
                     for det_metadata in img_detections.itertuples():
                         bbox = clip_to_img_dim(det_metadata.bbox, img_shape[1], img_shape[0]).astype(int)
                         keypoints = det_metadata.keypoints
@@ -440,7 +430,7 @@ class PoseTrack21ReID(ImageDataset):
 
     def filter_reid_samples(self, dets_df, max_ids=-1, min_vis=-1, min_h=0, min_w=0, min_samples=0, max_samples_per_id=10000):
         # filter detections by visibility
-        dets_df_f1 = dets_df[dets_df['vis'] >= min_vis]
+        dets_df_f1 = dets_df[dets_df['visibility'] >= min_vis]
 
         keep = (dets_df_f1['reid_crop_height'] >= min_h) & (dets_df_f1['reid_crop_width'] >= min_w)
         dets_df_f2 = dets_df_f1[keep]
