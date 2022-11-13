@@ -20,7 +20,7 @@ Repo sources:
    ```
    pip install -r DEKR/requirements.txt
    ```
-3. Install [COCOAPI](https://github.com/cocodataset/cocoapi) (/!\ 'pip install cython' might be need to install cocoapi/crowdposeapi):
+3. Install [COCOAPI](https://github.com/cocodataset/cocoapi) (/!\ 'pip install cython' might be needed to install cocoapi/crowdposeapi):
    ```
    # COCOAPI=/path/to/clone/cocoapi
    git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
