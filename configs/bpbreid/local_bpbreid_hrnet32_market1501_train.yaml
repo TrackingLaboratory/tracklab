@@ -91,7 +91,7 @@ loss:
         ce: 0.35
 
 train:
-  batch_size: 64
+  batch_size: 20
   eval_freq: 0
   max_epoch: 1 # 45 120
   stepsize: [40, 70] # [40, 70] [25, 35]
