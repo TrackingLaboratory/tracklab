@@ -25,14 +25,6 @@ data:
   save_dir: '/home/vso/log/psoetrack/reid'
   masks_dir: 'gaussian' # 'pifpaf' 'pifpaf_maskrcnn_filtering' 'isp_6_parts'
   workers: 8
-  mot:
-    min_vis: 0.3
-    min_h: 50
-    min_w: 25
-    min_samples_per_id: 4
-    max_samples_per_id: 40
-    max_total_ids: 500
-    ratio_query_per_id: 0.2
 
 sampler:
   train_sampler: RandomIdentitySampler # sampler for source train loader

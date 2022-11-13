@@ -26,13 +26,21 @@ data:
   masks_dir: 'gaussian' # 'pifpaf' 'pifpaf_maskrcnn_filtering' 'isp_6_parts'
   workers: 0
   mot:
-    min_vis: 0.3
-    min_h: 50
-    min_w: 25
-    min_samples_per_id: 4
-    max_samples_per_id: 40
-    max_total_ids: 10
-    ratio_query_per_id: 0.2
+    train:
+      min_vis: 0.3
+      min_h: 50
+      min_w: 25
+      min_samples_per_id: 4
+      max_samples_per_id: 4
+      max_total_ids: 6
+    test:
+      min_vis: 0.3
+      min_h: 50
+      min_w: 25
+      min_samples_per_id: 4
+      max_samples_per_id: 4
+      max_total_ids: 16
+      ratio_query_per_id: 0.2
 
 sampler:
   train_sampler: RandomIdentitySampler # sampler for source train loader
@@ -86,7 +94,7 @@ loss:
 train:
   batch_size: 64
   eval_freq: 0
-  max_epoch: 10 # 45 120
+  max_epoch: 1 # 45 120
   stepsize: [40, 70] # [40, 70] [25, 35]
   optim: 'adam' # 'adam', 'amsgrad', 'sgd', 'rmsprop', 'radam'
   lr: 0.00035
