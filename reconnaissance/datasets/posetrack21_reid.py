@@ -74,6 +74,7 @@ class PoseTrack21ReID(ImageDataset):
 
     masks_dirs = {
         # dir_name: (masks_stack_size, contains_background_mask)
+        'gaussian': (17, False, '.npy', ["p{}".format(p) for p in range(1, 5+1)]),
     }
 
     @staticmethod
@@ -81,9 +82,11 @@ class PoseTrack21ReID(ImageDataset):
         if masks_dir not in PoseTrack21ReID.masks_dirs:
             return None
         else:
-            return masks_dir[masks_dir]
+            return PoseTrack21ReID.masks_dirs[masks_dir]
 
+        # TODO fix 'none' in masks_preprocess_transforms: should be able to use none to indicate to use raw masks, load_masks should come from 'disk' vs 'stripes'
         # TODO run it on Belldev
+        # TODO cfg.data.masks_dir not used + refactor folder structure
         # TODO refactor filter config
         # TODO filter FIRST: generate reid data only for filtered detections
         # TODO code to download model weights (hrnet)
@@ -91,10 +94,13 @@ class PoseTrack21ReID(ImageDataset):
         # TODO batch processing of heatmaps
         # TODO keeps person_id and use pid as index from 0
         # todo add nice prints
+        # TODO add config to tell if identities holds across videos or not
         # TODO create general purpose eval metric for MOT datasets
         # TODO add a occlusion score to each detection = visibility = average keyoints visibility
         # make sure format is good: RGB vs BGR, etc
         # make this class dataset independant
+        # TODO: make different config for query and gallery?
+
 
     def __init__(self, config, datasets_root='', masks_dir='', crop_dim=(384, 128), pose_model=None, **kwargs):
 
@@ -139,8 +145,8 @@ class PoseTrack21ReID(ImageDataset):
             self.build_reid_set(self.reid_img_path, 'val', val_reid_anns_filepath, self.val_gt_dets, self.val_images, crop_dim)
 
         # Load reid crops metadata into existing ground truth detections dataframe
-        self.train_gt_dets = self.load_reid_crops_annotations(train_reid_anns_filepath, self.train_gt_dets)
-        self.val_gt_dets = self.load_reid_crops_annotations(val_reid_anns_filepath, self.val_gt_dets)
+        self.train_gt_dets = self.load_reid_annotations(train_reid_anns_filepath, self.train_gt_dets)
+        self.val_gt_dets = self.load_reid_annotations(val_reid_anns_filepath, self.val_gt_dets)
 
         # Build human parsing pseudo ground truth using the pose model
         existing_train_files = list(self.reid_mask_train_path.glob('*/*{}'.format(self.masks_ext)))
@@ -153,11 +159,15 @@ class PoseTrack21ReID(ImageDataset):
         if len(existing_val_files) != len(self.val_gt_dets) or not val_masks_anns_filepath.exists():
             self.build_human_parsing_gt(self.reid_mask_path, self.reid_fig_path, 'val', val_masks_anns_filepath, self.val_gt_dets, self.val_images, (128, 64), (32, 16))
 
+        # Load reid masks metadata into existing ground truth detections dataframe
+        self.train_gt_dets = self.load_reid_annotations(train_masks_anns_filepath, self.train_gt_dets)
+        self.val_gt_dets = self.load_reid_annotations(val_masks_anns_filepath, self.val_gt_dets)
+
         self.masks_dir = masks_dir
         if self.masks_dir in self.masks_dirs:
-            self.masks_parts_numbers, self.has_background, self.masks_suffix = self.masks_dirs[self.masks_dir]
+            self.masks_parts_numbers, self.has_background, self.masks_suffix, self.masks_parts_names = self.masks_dirs[self.masks_dir]
         else:
-            self.masks_parts_numbers, self.has_background, self.masks_suffix = None, None, None
+            self.masks_parts_numbers, self.has_background, self.masks_suffix, self.masks_parts_names = None, None, None, None
 
         # priority to:
         # occlusions
@@ -354,13 +364,14 @@ class PoseTrack21ReID(ImageDataset):
                         abs_filepath.parent.mkdir(parents=True, exist_ok=True)
                         np.save(str(abs_filepath), hp_gt_crop)
 
-                        img_with_heatmap = overlay_heatmap(img_crop, hp_gt_crop.max(axis=2), weight=0.3)
+                        img_with_heatmap = overlay_heatmap(img_crop, hp_gt_crop.max(axis=0), weight=0.3)
                         figure_filepath = Path(fig_save_path, vid_id, filename + self.img_ext)
                         figure_filepath.parent.mkdir(parents=True, exist_ok=True)
                         cv2.imwrite(str(figure_filepath), img_with_heatmap)
 
                         reid_hp_anns.append({
-                            'reid_crop_path': str(abs_filepath),
+                            'index': det_metadata.global_index,
+                            'masks_path': str(abs_filepath),
                         })
                         pbar.update(1)
 
@@ -369,7 +380,7 @@ class PoseTrack21ReID(ImageDataset):
         reid_anns_filepath.parent.mkdir(parents=True, exist_ok=True)
         pd.DataFrame(reid_hp_anns).to_json(reid_anns_filepath)
 
-    def load_reid_crops_annotations(self, reid_anns_filepath, gt_dets):
+    def load_reid_annotations(self, reid_anns_filepath, gt_dets):
         reid_anns = pd.read_json(reid_anns_filepath)
         assert len(reid_anns) == len(gt_dets), "reid_anns_filepath and gt_dets must have the same length"
         merged_df = pd.merge(gt_dets, reid_anns, left_index=False, right_index=False, left_on='global_index', right_on='index', validate='one_to_one')
@@ -379,7 +390,7 @@ class PoseTrack21ReID(ImageDataset):
     def rescale_and_filter_keypoints(self, keypoints, bbox, new_w, new_h):
         l, t, w, h = bbox.astype(int)
         discarded_keypoints = 0
-        rescaled_keypoints = []
+        rescaled_keypoints = {}
         for i, kp in enumerate(keypoints):
             # remove unvisible keypoints
             if kp[2] == 0:
@@ -396,8 +407,8 @@ class PoseTrack21ReID(ImageDataset):
             # put keypoints in resized image coord space
             kpx, kpy = kpx * new_w / w , kpy * new_h / h
 
-            rescaled_keypoints.append([int(kpx), int(kpy), 1])
-        return np.array(rescaled_keypoints), discarded_keypoints
+            rescaled_keypoints[i] = np.array([int(kpx), int(kpy), 1])
+        return rescaled_keypoints, discarded_keypoints
 
     def gkern(self, kernlen=21, std=None):
         """Returns a 2D Gaussian kernel array."""
@@ -408,8 +419,8 @@ class PoseTrack21ReID(ImageDataset):
         return gkern2d
 
     def build_gaussian_heatmaps(self, keypoints, k, w, h, gaussian=None):
-        gaussian_heatmaps = np.zeros((h, w, k))
-        for i, kp in enumerate(keypoints):
+        gaussian_heatmaps = np.zeros((k, h, w))
+        for i, kp in keypoints.items():
             kpx, kpy = kp[:2].astype(int)
 
             if gaussian is None:
@@ -422,7 +433,7 @@ class PoseTrack21ReID(ImageDataset):
             rt, rb = min(g_radius, kpy), min(g_radius, h - 1 - kpy)
             rl, rr = min(g_radius, kpx), min(g_radius, w - 1 - kpx)
 
-            gaussian_heatmaps[kpy - rt:kpy + rb + 1, kpx - rl:kpx + rr + 1, i] = gaussian[
+            gaussian_heatmaps[i, kpy - rt:kpy + rb + 1, kpx - rl:kpx + rr + 1] = gaussian[
                                                                           g_radius - rt:g_radius + rb + 1,
                                                                           g_radius - rl:g_radius + rr + 1]
         return gaussian_heatmaps
