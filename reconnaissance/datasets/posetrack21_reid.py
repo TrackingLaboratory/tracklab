@@ -186,20 +186,19 @@ class PoseTrack21ReID(ImageDataset):
                                             min_samples=self.cfg.test.min_samples_per_id,
                                             max_samples_per_id=self.cfg.test.max_samples_per_id)
 
-        # FIXME mark detetions as query/gallery with a new columns instead of using a new dataframe
-        # -> that will also fix warning
         train_df = relabel_ids(train_df)
         test_df = relabel_ids(test_df)
-        query_df, gallery_df = self.split_query_gallery(test_df, self.cfg.test.ratio_query_per_id)
+        query_df, gallery_df = self.query_gallery_split(test_df, self.cfg.test.ratio_query_per_id)
 
         # get train/query/gallery sets as torchreid list format
-        gallery, query, train = self.to_torchreid_dataset_format([train_df, query_df, gallery_df])
+        train, query, gallery = self.to_torchreid_dataset_format([train_df, query_df, gallery_df])
 
         super(PoseTrack21ReID, self).__init__(train, query, gallery, **kwargs)
 
     def to_torchreid_dataset_format(self, dataframes):
         results = []
         for df in dataframes:
+            df = df.copy()  # to avoid SettingWithCopyWarning
             # use video id as camera id: camid is used at inference to filter out gallery samples given a query sample
             df['camid'] = df['video_id']
             df['img_path'] = df['reid_crop_path']
@@ -468,14 +467,17 @@ class PoseTrack21ReID(ImageDataset):
 
         return dets_df_f5
 
-    def split_query_gallery(self, df, ratio):
+    def query_gallery_split(self, df, ratio):
         def uniform_tracklet_sampling(_df):
             x = list(_df.index)
             size = ceil(len(x) * ratio)
             result = list(np.random.choice(x, size=size, replace=False))
             return _df.loc[result]
 
-        per_pid = df.groupby('person_id').apply(uniform_tracklet_sampling)
-        query_df = df[df.id.isin(per_pid.id)]
-        gallery_df = df[~df.id.isin(per_pid.id)]
+        queries_per_pid = df.groupby('person_id').apply(uniform_tracklet_sampling)
+        df.loc[df.id.isin(queries_per_pid.id), 'split'] = 'query'
+        df.loc[~df.id.isin(queries_per_pid.id), 'split'] = 'gallery'
+        query_df = df[df['split'] == 'query']
+        gallery_df = df[df['split'] == 'gallery']
         return query_df, gallery_df
+
