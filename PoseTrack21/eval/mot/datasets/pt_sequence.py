@@ -150,7 +150,7 @@ class PTSequence():
         sample['dets'] = np.array([det[:4] for det in data['dets']])
         sample['img_path'] = data['im_path']
         sample['gt'] = data['gt']
-        sample['vis'] = data['vis']
+        sample['visibility'] = data['visibility']
 
         return sample
 
@@ -229,7 +229,7 @@ class PTSequence():
 
             sample = {'gt':boxes[frame_index],
                       'im_path':im_path,
-                      'vis':visibility[frame_index],
+                      'visibility':visibility[frame_index],
                       'dets':dets[frame_index]}
 
             total.append(sample)
