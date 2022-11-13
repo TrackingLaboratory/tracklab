@@ -37,7 +37,7 @@ def track(
     save_vid=True,
     config_dekr='DEKR/experiments/inference.yaml',
     config_strongsort='strong_sort/configs/track.yaml',
-    config_bpbreid='configs/bpbreid/bpbreid_hrnet32_market1501_train.yaml',
+    config_bpbreid='configs/bpbreid/local_bpbreid_hrnet32_market1501_train.yaml',
 ):
     # handle paths
     save_path = os.path.join('runs', project, name)
