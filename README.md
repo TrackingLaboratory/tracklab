@@ -33,7 +33,7 @@ Repo sources:
    ```
    Note that instructions like # COCOAPI=/path/to/install/cocoapi indicate that you should pick a path where you'd like to have the software cloned and then set an environment variable (COCOAPI in this case) accordingly.
 4. Install [CrowdPoseAPI](https://github.com/Jeff-sjtu/CrowdPose) exactly the same as COCOAPI.
-5. Manage DEKR folder
+5. Manage DEKR folder:
     1. Download the pretrainded models from this [URL](https://mailustceducn-my.sharepoint.com/:f:/g/personal/aa397601_mail_ustc_edu_cn/EmoNwNpq4L1FgUsC9KbWezABSotd3BGOlcWCdkBi91l50g?e=HWuluh).
     2. Move the downloaded models to the right place. The structure of the folder should looks like:
 
@@ -56,29 +56,34 @@ Repo sources:
             ├── ...
         ├── ...
         ```
-6. Install BPBreID requirements.
+6. Install BPBreID requirements:
     ```pip install -r bpbreid/requirements.txt```
 
-7. To remove the IDE-level error 'Unresolved reference 'torchreid'' when using the 'from torchreid... import ...' statement inside BPBreID python files:
+7. Setup BPBreID (required for fast Cython evaluation):
+    ```
+    cd bpbreid
+    python setup.py develop
+    ``` 
+9. To remove the IDE-level error 'Unresolved reference 'torchreid'' when using the 'from torchreid... import ...' statement inside BPBreID python files:
    1. In PyCharm, right click on 'bpbreid' folder, then choose 'Mark Directory as' -> 'Sources root'
    2. In VSCode, ...
 
-8. Install Reconnaissance requirements.
-    ```pip install -r requirements.txt```
+10. Install Reconnaissance requirements:
+     ```pip install -r requirements.txt```
 
-9. Download [PoseTrack21](https://github.com/anDoer/PoseTrack21) dataset. You can refer to [their documentation](https://github.com/anDoer/PoseTrack21#how-to-get-the-dataset) for the instructions. The structure of the folder should looks like:
-    ```
-    PoseTrack21/
-    ├── baselines/
-        ├── ...
-    ├── doc/
-        ├── ...
-    ├── eval/
-        ├── ...
-    ├── download_dataset.py
-    ├── ...
-    ```
-10. Weights from ```strong_sort/``` folder should be downloaded automatically. The structure of the folder should looks like:
+11. Download [PoseTrack21](https://github.com/anDoer/PoseTrack21) dataset. You can refer to [their documentation](https://github.com/anDoer/PoseTrack21#how-to-get-the-dataset) for the instructions. The structure of the folder should looks like:
+     ```
+     PoseTrack21/
+     ├── baselines/
+         ├── ...
+     ├── doc/
+         ├── ...
+     ├── eval/
+         ├── ...
+     ├── download_dataset.py
+     ├── ...
+     ```
+12. Weights from ```strong_sort/``` folder should be downloaded automatically. The structure of the folder should looks like:
      ```
      strong_sort/
      ├── configs/
