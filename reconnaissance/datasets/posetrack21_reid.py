@@ -24,10 +24,10 @@ from torchreid.data import ImageDataset
 # TODO run it on Belldev
 # ----
 # TODO filter FIRST: generate reid data only for filtered detections
-# TODO get changes from other BPBreID branch
-# TODO bootstrap general purpose dataset class for MOT datasets (will be improved later when integrating with other datasets)
+# TODO make generic MOT dataset
 # TODO print stats from posetrack test
-# todo add nice prints + docstring
+# TODO add nice prints + docstring
+# TODO get changes from other BPBreID branch
 # TODO load HRNet and other pretrained weights from URLs
 # TODO cfg.data.masks_dir not used + refactor folder structure
 # TODO fix 'none' in masks_preprocess_transforms: should be able to use none to indicate to use raw masks, load_masks should come from 'disk' vs 'stripes'
@@ -35,8 +35,6 @@ from torchreid.data import ImageDataset
 # TODO add pifpaf to the pipeline
 # TODO batch processing of heatmaps
 # TODO make sure format is good: RGB vs BGR, etc
-# TODO make this class dataset independant
-# TODO: make different config for query and gallery?
 
 
 def uniform_tracklet_sampling(_df, max_samples_per_id, column):
@@ -97,8 +95,7 @@ class PoseTrack21ReID(ImageDataset):
         else:
             return PoseTrack21ReID.masks_dirs[masks_dir]
 
-    def __init__(self, config, datasets_root='', masks_dir='', crop_dim=(384, 128), pose_model=None, **kwargs):
-
+    def __init__(self, config, datasets_root='', masks_dir='', max_crop_size=(384, 128), pose_model=None, **kwargs):
         # Init
         self.config = config
         mot_cfg = config.data.mot
@@ -114,8 +111,8 @@ class PoseTrack21ReID(ImageDataset):
             self.masks_parts_numbers, self.has_background, self.masks_suffix, self.masks_parts_names = None, None, None, None
 
         # Load Posetrack21 dataset and build ReID variant
-        self.train_gt_dets, self.train_images, self.train_categories = self.build_dataset(crop_dim, mot_cfg.train, 'train', is_test_set=False)
-        self.val_gt_dets, self.val_images, self.val_categories = self.build_dataset(crop_dim, mot_cfg.test, 'val', is_test_set=False)
+        self.train_gt_dets, self.train_images, self.train_categories = self.build_dataset(max_crop_size, mot_cfg.fig_size, mot_cfg.mask_size, mot_cfg.train, 'train', is_test_set=False)
+        self.val_gt_dets, self.val_images, self.val_categories = self.build_dataset(max_crop_size, mot_cfg.fig_size, mot_cfg.mask_size, mot_cfg.test, 'val', is_test_set=False)
 
         # Get train/query/gallery sets as torchreid list format
         train_df = self.train_gt_dets
@@ -125,11 +122,7 @@ class PoseTrack21ReID(ImageDataset):
 
         super(PoseTrack21ReID, self).__init__(train, query, gallery, **kwargs)
 
-    def build_dataset(self, crop_dim, mot_cfg, set_name, is_test_set):
-        # anns_path reid_set_path
-        crop_size = (128, 64)  # vs crop_dim
-        mask_size = (32, 16)
-
+    def build_dataset(self, max_crop_size, fig_size, mask_size, mot_cfg, set_name, is_test_set):
         # Precompute all paths
         anns_path = Path(self.dataset_dir, self.annotations_dir, set_name)
         reid_path = Path(self.dataset_dir, self.reid_dir)
@@ -144,7 +137,7 @@ class PoseTrack21ReID(ImageDataset):
         # Save detections crops and related metadata on disk to build ReID dataset
         existing_files = list(reid_img_path.glob('*/*{}'.format(self.img_ext)))
         if len(existing_files) != len(gt_dets) or not reid_anns_filepath.exists():
-            self.build_reid_set(reid_img_path, set_name, reid_anns_filepath, gt_dets, images, crop_dim)
+            self.build_reid_set(reid_img_path, set_name, reid_anns_filepath, gt_dets, images, max_crop_size)
 
         # Load reid crops metadata into existing ground truth detections dataframe
         gt_dets = self.load_reid_annotations(reid_anns_filepath, gt_dets)
@@ -154,7 +147,7 @@ class PoseTrack21ReID(ImageDataset):
         masks_anns_filepath = reid_mask_path / self.reid_anns_dir / (set_name + '_' + self.masks_anns_filename)
         if len(existing_files) != len(gt_dets) or not masks_anns_filepath.exists():
             self.build_human_parsing_gt(reid_mask_path, reid_fig_path, set_name, masks_anns_filepath, gt_dets, images,
-                                        crop_size, mask_size)
+                                        fig_size, mask_size)
 
         # Load reid masks metadata into existing ground truth detections dataframe
         gt_dets = self.load_reid_annotations(masks_anns_filepath, gt_dets)
@@ -235,13 +228,13 @@ class PoseTrack21ReID(ImageDataset):
         return categories, gt_dets, images
 
 
-    def build_reid_set(self, save_path, set_name, reid_anns_filepath, gt_dets_df, images_df, crop_dim):
+    def build_reid_set(self, save_path, set_name, reid_anns_filepath, gt_dets_df, images_df, max_crop_size):
         """
         Save on disk all detections image crops from the ground truth dataset to build the reid dataset.
         Create a json annotation file with crops metadata.
         """
         save_path = save_path / set_name
-        max_h, max_w = crop_dim
+        max_h, max_w = max_crop_size
         reid_crops_anns = []
         with tqdm(total=len(gt_dets_df)) as pbar:
             pbar.set_description('Extracting all {} bboxes crops'.format(set_name))
@@ -284,13 +277,13 @@ class PoseTrack21ReID(ImageDataset):
         reid_anns_filepath.parent.mkdir(parents=True, exist_ok=True)
         pd.DataFrame(reid_crops_anns).to_json(reid_anns_filepath)
 
-    def build_human_parsing_gt(self, masks_save_path, fig_save_path, set_name, reid_anns_filepath, gt_dets_df, images_df, crop_dim, masks_dim, mode='gaussian_keypoints'):
+    def build_human_parsing_gt(self, masks_save_path, fig_save_path, set_name, reid_anns_filepath, gt_dets_df, images_df, fig_size, masks_size, mode='gaussian_keypoints'):
         """
         Save on disk all human parsing gt for each reid crop.
         Create a json annotation file with human parsing metadata.
         """
-        crop_h, crop_w = crop_dim
-        mask_h, mask_w = masks_dim
+        fig_h, fig_w = fig_size
+        mask_h, mask_w = masks_size
         reid_masks_anns = []
         g_scale = 6
         g_radius = int(mask_w / g_scale)
@@ -322,23 +315,23 @@ class PoseTrack21ReID(ImageDataset):
                         if mode == 'gaussian_keypoints':
                             # compute human parsing heatmaps as gaussian on each visible keypoint
                             img_crop = cv2.imread(det_metadata.reid_crop_path)
-                            img_crop = cv2.resize(img_crop, (crop_w, crop_h), cv2.INTER_CUBIC)
+                            img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
                             bbox_xyc = rescale_keypoints(det_metadata.keypoints_bbox_xyc, (w, h), (mask_w, mask_h))
                             masks_gt_crop = self.build_gaussian_heatmaps(bbox_xyc, len(det_metadata.keypoints_xyc), mask_w,
                                                                       mask_h, gaussian=gaussian)
                         elif mode == 'pose_on_img_crops':
                             # compute human parsing heatmaps using output of pose model on full image
                             img_crop = cv2.imread(det_metadata.reid_crop_path)
-                            img_crop = cv2.resize(img_crop, (crop_w, crop_h), cv2.INTER_CUBIC)
+                            img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
                             _, masks_gt_crop = self.pose_model.run(torch.from_numpy(img_crop).permute((2, 0, 1)).unsqueeze(0))
                             masks_gt_crop = masks_gt_crop.squeeze().permute((1, 2, 0)).numpy()
-                            masks_gt_crop = resize(masks_gt_crop, (crop_h, crop_w, masks_gt_crop.shape[2]))
+                            masks_gt_crop = resize(masks_gt_crop, (fig_h, fig_w, masks_gt_crop.shape[2]))
                         elif mode == 'pose_on_img':
                             # compute human parsing heatmaps using output of pose model on cropped person image
                             img_crop = img[t:t + h, l:l + w]
-                            img_crop = cv2.resize(img_crop, (crop_w, crop_h), cv2.INTER_CUBIC)
+                            img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
                             masks_gt_crop = masks_gt[t:t + h, l:l + w]
-                            masks_gt_crop = resize(masks_gt_crop, (crop_h, crop_w, masks_gt_crop.shape[2]))
+                            masks_gt_crop = resize(masks_gt_crop, (fig_h, fig_w, masks_gt_crop.shape[2]))
                         else:
                             raise ValueError('Invalid human parsing method')
 
