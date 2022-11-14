@@ -1,4 +1,4 @@
-import os
+import os.path as op
 import yaml
 import argparse
 from tqdm import tqdm
@@ -40,12 +40,12 @@ def val(
     # handle eval_cfg and paths
     with open(eval_cfg, 'r') as f:
         eval_cfg = yaml.load(f, Loader=yaml.FullLoader)
-    save_dir = os.path.join('runs', eval_cfg['save_dir'])
-    if os.path.exists(save_dir):
+    save_dir = osp.join('runs', eval_cfg['save_dir'])
+    if osp.exists(save_dir):
         i = 0
-        while os.path.exists(save_dir + str(i)): i += 1
+        while osp.exists(save_dir + str(i)): i += 1
         save_dir = save_dir + str(i)
-        print(f"Save directory ({os.path.join('runs', eval_cfg['save_dir'])}) already exists.")
+        print(f"Save directory ({osp.join('runs', eval_cfg['save_dir'])}) already exists.")
         print(f"New save directory replaced by ({save_dir}).")
     os.makedirs(save_dir, exist_ok=True)
     
@@ -87,12 +87,13 @@ def val(
     # PoseTrack21 evaluation scripts
     # FIXME clean a bit
     if eval_cfg['MOT']['eval']:
-        mot_dir = os.path.join(save_dir, 'mot')
+        mot_dir = osp.join(save_dir, 'mot')
         os.makedirs(mot_dir, exist_ok=True)
         tracker.save_mot(mot_dir)
         
-        eval_cfg['MOT']['EVAL_CFG']['LOG_ON_ERROR'] = os.path.join(mot_dir, 'error_log.txt')
-        eval_cfg['MOT']['DATASET_CFG']['GT_FOLDER'] = os.path.join(eval_cfg['posetrack_dir'], 'posetrack_mot', 'mot', eval_cfg['subset'])
+        eval_cfg['MOT']['EVAL_CFG']['LOG_ON_ERROR'] = osp.join(mot_dir, 'error_log.txt')
+        eval_cfg['MOT']['DATASET_CFG']['GT_FOLDER'] = osp.join(eval_cfg['posetrack_dir'], 
+                                                               'posetrack_mot', 'mot', eval_cfg['subset'])
         eval_cfg['MOT']['DATASET_CFG']['TRACKERS_FOLDER'] = save_dir # ! not mot_dir
         evaluator = trackeval.EvaluatorMOT(eval_cfg['MOT']['EVAL_CFG'])
         dataset_list = [trackeval.datasets.PoseTrackMOT(eval_cfg['MOT']['DATASET_CFG'])]
@@ -103,14 +104,16 @@ def val(
         if len(metrics_list) == 0:
             raise Exception('No metrics selected for evaluation')
         evaluator.evaluate(dataset_list, metrics_list)
-        
+            
     if eval_cfg['pose_estimation']['eval']:
-        pose_estimation_dir = os.path.join(save_dir, 'pose_estimation')
+        pose_estimation_dir = osp.join(save_dir, 'pose_estimation')
         os.makedirs(pose_estimation_dir, exist_ok=True)
         tracker.save_pose_estimation(pose_estimation_dir)
         
-        eval_cfg['pose_estimation']['EVAL_CFG']['LOG_ON_ERROR'] = os.path.join(pose_estimation_dir, 'error_log.txt')
-        eval_cfg['pose_estimation']['DATASET_CFG']['GT_FOLDER'] = os.path.join(eval_cfg['posetrack_dir'], 'posetrack_data', eval_cfg['subset'])
+        eval_cfg['pose_estimation']['EVAL_CFG']['LOG_ON_ERROR'] = osp.join(pose_estimation_dir, 
+                                                                           'error_log.txt')
+        eval_cfg['pose_estimation']['DATASET_CFG']['GT_FOLDER'] = osp.join(eval_cfg['posetrack_dir'], 
+                                                                           'posetrack_data', eval_cfg['subset'])
         eval_cfg['pose_estimation']['DATASET_CFG']['TRACKERS_FOLDER'] = pose_estimation_dir
         evaluator = trackeval.PoseEvaluator(eval_cfg['pose_estimation']['EVAL_CFG'])
         dataset_list = [trackeval.datasets.PoseTrack(eval_cfg['pose_estimation']['DATASET_CFG'])]
@@ -121,14 +124,17 @@ def val(
         if len(metrics_list) == 0:
             raise Exception('No metrics selected for evaluation')
         evaluator.evaluate(dataset_list, metrics_list)
-        
-    if eval_cfg['pose_tracking']['eval']:
-        pose_tracking_dir = os.path.join(save_dir, 'pose_tracking')
+    
+    if any((eval_cfg['pose_tracking']['eval'], eval_cfg['reid_pose_tracking']['eval'])):
+        pose_tracking_dir = osp.join(save_dir, 'pose_tracking')
         os.makedirs(pose_tracking_dir, exist_ok=True)
         tracker.save_pose_tracking(pose_tracking_dir)
-        
-        eval_cfg['pose_tracking']['EVAL_CFG']['LOG_ON_ERROR'] = os.path.join(pose_tracking_dir, 'error_log.txt')
-        eval_cfg['pose_tracking']['DATASET_CFG']['GT_FOLDER'] = os.path.join(eval_cfg['posetrack_dir'], 'posetrack_data', eval_cfg['subset'])
+    
+    if eval_cfg['pose_tracking']['eval']:
+        eval_cfg['pose_tracking']['EVAL_CFG']['LOG_ON_ERROR'] = osp.join(pose_tracking_dir, 
+                                                                         'error_log_track.txt')
+        eval_cfg['pose_tracking']['DATASET_CFG']['GT_FOLDER'] = osp.join(eval_cfg['posetrack_dir'], 
+                                                                         'posetrack_data', eval_cfg['subset'])
         eval_cfg['pose_tracking']['DATASET_CFG']['TRACKERS_FOLDER'] = pose_tracking_dir
         evaluator = trackeval.Evaluator(eval_cfg['pose_tracking']['EVAL_CFG'])
         dataset_list = [trackeval.datasets.PoseTrack(eval_cfg['pose_tracking']['DATASET_CFG'])]
@@ -140,7 +146,22 @@ def val(
             raise Exception('No metrics selected for evaluation')
         evaluator.evaluate(dataset_list, metrics_list)
     
-    # TODO add reid_pose_tracking
+    # FIXME does not work
+    if eval_cfg['reid_pose_tracking']['eval']:
+        eval_cfg['reid_pose_tracking']['EVAL_CFG']['LOG_ON_ERROR'] = osp.join(pose_tracking_dir, 
+                                                                              'error_log_reid_track.txt')
+        eval_cfg['reid_pose_tracking']['DATASET_CFG']['GT_FOLDER'] = osp.join(eval_cfg['posetrack_dir'], 
+                                                                              'posetrack_data', eval_cfg['subset'])
+        eval_cfg['reid_pose_tracking']['DATASET_CFG']['TRACKERS_FOLDER'] = pose_tracking_dir
+        evaluator = trackeval.EvaluatorReid(eval_cfg['reid_pose_tracking']['EVAL_CFG'])
+        dataset_list = [trackeval.datasets.PoseTrackReID(eval_cfg['reid_pose_tracking']['DATASET_CFG'])]
+        metrics_list = []
+        for metric in [trackeval.metrics.HOTAReidKeypoints]:
+            if metric.get_name() in eval_cfg['reid_pose_tracking']['METRICS_CFG']:
+                metrics_list.append(metric())
+        if len(metrics_list) == 0:
+            raise Exception('No metrics selected for evaluation')
+        evaluator.evaluate(dataset_list, metrics_list)
 
 def main():
     args = parse_args()

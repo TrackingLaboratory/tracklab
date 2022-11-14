@@ -1,11 +1,12 @@
 save_dir: 'exp_val'
 posetrack_dir: 'data'
 subset: 'tiny_val'
+
 MOT:
   eval: True
   EVAL_CFG:
     USE_PARALLEL: True
-    NUM_PARALLEL_CORES: 4  
+    NUM_PARALLEL_CORES: 4
     BREAK_ON_ERROR: True
     RETURN_ON_ERROR: False
     PRINT_RESULTS: False
@@ -20,6 +21,7 @@ MOT:
     PRINT_CONFIG: True
     ASSURE_SINGLE_TRACKER: False
   METRICS_CFG: ['HOTA']
+
 pose_estimation:
   eval: True
   EVAL_CFG:
@@ -39,6 +41,7 @@ pose_estimation:
     PRINT_CONFIG: True
     ASSURE_SINGLE_TRACKER: False
   METRICS_CFG: ['PosemAP']
+
 pose_tracking:
   eval: True
   EVAL_CFG:
@@ -58,3 +61,21 @@ pose_tracking:
     PRINT_CONFIG: True
     ASSURE_SINGLE_TRACKER: False
   METRICS_CFG: ['HOTAeypoints']
+
+reid_pose_tracking:
+  eval: True
+  EVAL_CFG:
+    BREAK_ON_ERROR: True
+    RETURN_ON_ERROR: False
+    PRINT_RESULTS: False
+    PRINT_COMBINED_SUMMARY_ONLY: False
+    PRINT_PAPER_SUMMARY: False
+    TIME_PROGRESS: True
+    DISPLAY_LESS_PROGRESS: True
+    OUTPUT_PAPER_SUMMARY: True
+    OUTPUT_EMPTY_CLASSES: True
+    OUTPUT_DETAILED: False
+  DATASET_CFG:
+    PRINT_CONFIG: True
+    ASSURE_SINGLE_TRACKER: False
+  METRICS_CFG: ['HOTAReidKeypoints']
