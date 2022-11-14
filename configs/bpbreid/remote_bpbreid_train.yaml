@@ -22,7 +22,7 @@ data:
     background_computation_strategy: 'threshold'  # threshold, diff_from_max
     softmax_weight: 15
     mask_filtering_threshold: 0.5
-  save_dir: '/home/vso/log/psoetrack/reid'
+  save_dir: '/home/vso/log/posetrack/reid'
   masks_dir: 'gaussian' # 'pifpaf' 'pifpaf_maskrcnn_filtering' 'isp_6_parts'
   workers: 8
 
@@ -50,7 +50,7 @@ model:
     test_embeddings: ['bn_foreg', 'parts'] #  ['globl', 'foreg', 'conct', 'parts']
     test_use_target_segmentation: 'none' # 'none' 'hard' 'soft'
     shared_parts_id_classifier: False
-    hrnet_pretrained_path: 'bpbreid/pretrained_models/' # FIXME refactor model loading (use urls)
+    hrnet_pretrained_path: '/home/vso/models' # FIXME refactor model loading (use urls)
 
 loss:
   name: 'part_based'

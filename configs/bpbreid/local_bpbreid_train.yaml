@@ -2,7 +2,7 @@ project:
     name: "Person-Re-Identification"
     experiment_name: ""
     notes: ""
-    tags: ["test"]
+    tags: [""]
     logger:
       use_clearml: False
       use_neptune: False
@@ -18,13 +18,29 @@ data:
   combineall: False
   transforms: ['rc', 're']
   masks:
-    preprocess: 'eight'  # 'none', 'full', 'id', 'ids', 'bs_fu', 'bs_fu_bb', 'mu_sc', 'four', 'four_no', 'four_v', 'four_v_pif', 'five_v', 'six', 'six_no', 'eight'
+    preprocess: 'none'  # 'none', 'full', 'id', 'ids', 'bs_fu', 'bs_fu_bb', 'mu_sc', 'four', 'four_no', 'four_v', 'four_v_pif', 'five_v', 'six', 'six_no', 'eight'
     background_computation_strategy: 'threshold'  # threshold, diff_from_max
     softmax_weight: 15
     mask_filtering_threshold: 0.5
-  save_dir: '/home/vso/log/psoetrack/reid'
+  save_dir: '/Users/vladimirsomers/Code/logs/deep-person-reid/bot_synergy'
   masks_dir: 'gaussian' # 'pifpaf' 'pifpaf_maskrcnn_filtering' 'isp_6_parts'
-  workers: 8
+  workers: 0
+  mot:
+    train:
+      min_vis: 0.3
+      min_h: 50
+      min_w: 25
+      min_samples_per_id: 4
+      max_samples_per_id: 4
+      max_total_ids: 50
+    test:
+      min_vis: 0.3
+      min_h: 50
+      min_w: 25
+      min_samples_per_id: 4
+      max_samples_per_id: 4
+      max_total_ids: 16
+      ratio_query_per_id: 0.2
 
 sampler:
   train_sampler: RandomIdentitySampler # sampler for source train loader
@@ -35,7 +51,6 @@ model:
   name: 'bpbreid'
   pretrained: True
   save_model_flag: False
-  load_weights: 'bpbreid/pretrained_models/job-10289_120_model.pth.tar'
   bpbreid:
     pooling: 'gwap'  # ['gap', 'gmp', 'gwap', 'gwap2']
     normalization: 'identity' # 'batch_norm_2d' 'identity'
@@ -47,7 +62,7 @@ model:
     learnable_attention_enabled: True
     dim_reduce: 'after_pooling' # 'none', 'before_pooling', 'after_pooling', 'after_pooling_with_dropout'
     dim_reduce_output: 512
-    backbone: 'hrnet32' # 'hrnet32' 'resnet50' 'fastreid_resnet' 'fastreid_resnet_ibn' 'fastreid_resnet_nl' 'fastreid_resnet_ibn_nl'
+    backbone: 'resnet50' # 'hrnet32' 'resnet50' 'fastreid_resnet' 'fastreid_resnet_ibn' 'fastreid_resnet_nl' 'fastreid_resnet_ibn_nl'
     test_embeddings: ['bn_foreg', 'parts'] #  ['globl', 'foreg', 'conct', 'parts']
     test_use_target_segmentation: 'none' # 'none' 'hard' 'soft'
     shared_parts_id_classifier: False
@@ -76,9 +91,9 @@ loss:
         ce: 0.35
 
 train:
-  batch_size: 64
+  batch_size: 20
   eval_freq: 0
-  max_epoch: 120 # 45 120
+  max_epoch: 20 # 45 120
   stepsize: [40, 70] # [40, 70] [25, 35]
   optim: 'adam' # 'adam', 'amsgrad', 'sgd', 'rmsprop', 'radam'
   lr: 0.00035
@@ -86,7 +101,7 @@ train:
   fixbase_epoch: 0
 
 test:
-  evaluate: True # test only
+  evaluate: False # test only
   start_eval: 40
   batch_size: 128
   batch_size_pairwise_dist_matrix: 5000
