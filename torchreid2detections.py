@@ -2,10 +2,10 @@ import sys
 import numpy as np
 import torch
 
-import torchreid
 from reconnaissance.datasets.posetrack21_reid import PoseTrack21ReID
 from scripts.main import build_torchreid_model_engine, build_config
 sys.path.append('bpbreid')
+import torchreid
 # need that line to not break import of torchreid ('from torchreid... import ...') inside the bpbreid.torchreid module
 # to remove the 'from torchreid... import ...' error 'Unresolved reference 'torchreid' in PyCharm, right click
 # on 'bpbreid' folder, then choose 'Mark Directory as' -> 'Sources root'
@@ -38,7 +38,7 @@ class Torchreid2detections:
     def __init__(self, device, save_path, config_path, model_pose):
         config = {
             'crop_dim': (384, 128),
-            'datasets_root': '/Users/vladimirsomers/datasets/other',
+            'datasets_root': '~/datasets/other',
             'pose_model': model_pose
         }
         torchreid.data.register_image_dataset("posetrack21_reid", configure_dataset_class(PoseTrack21ReID, **config), "pt21")
