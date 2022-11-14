@@ -1,24 +1,26 @@
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from enum import Enum
-from optparse import Option
 from typing import Optional
 import numpy as np
 import pandas as pd
+import os
+import json
 
 class Source(Enum):
-    GT = 1
-    DET = 2
-    TRACK = 3
+    METADATA = 0 # just an image
+    DET = 1 # model detection
+    TRACK = 2 # model tracking
 
 @dataclass
 class Metadata:
-    filepath: str
+    file_path: str # path/video_name/file.jpg
     height: int
     width: int
-    filename: Optional[str] = None
-    video_id: Optional[str] = None
+    image_id: Optional[str] = None # for eval of posetrack
+    file_name: Optional[str] = None # file.jpg
+    video_name: Optional[str] = None # video_name
     frame: Optional[int] = None
-    frames: Optional[int] = None
+    nframes: Optional[int] = None
 
 @dataclass
 class Bbox:
@@ -38,26 +40,31 @@ class Keypoint:
 @dataclass
 class Detection:
     metadata: Optional[Metadata] = None
-    source: Optional[Source] = None
+    source: Optional[Source] = 0
     bbox: Optional[Bbox] = None
     keypoints: Optional[list[Keypoint]] = None
     reid_features : Optional[np.ndarray] = None
-    person_id: Optional[int] = None
+    person_id: Optional[int] = -1
 
-    def asdict(self):
+    def asdict(self): 
         keypoints = {}
-        for i, keypoint in enumerate(self.keypoints):
-            keypoints = {**keypoints,
-            **{f"kp{i}_{k}":v for k,v in asdict(keypoint).items()},
-            }
+        if self.keypoints:
+            for i, keypoint in enumerate(self.keypoints):
+                keypoints = {**keypoints,
+                **{f"kp{i}_{k}":v for k,v in asdict(keypoint).items()},
+                }
+        bboxes = {}
+        if self.bbox:
+            bboxes = {f"bb_{k}":v for k,v in asdict(self.bbox).items()}
         return {
-            "source": self.source,
-            "person_id": self.person_id,
+            'source': self.source,
+            'person_id': self.person_id,
             **asdict(self.metadata),
-            **{f"bb_{k}":v for k,v in asdict(self.bbox).items()},
+            **bboxes,
             **keypoints,
             }
-        
+    
+    # TODO change location of those functions
     def rescale_xy(self, coords, input_shape, output_shape=None):
         if output_shape is None:
             output_shape = (self.metadata.height, self.metadata.width)
@@ -119,6 +126,94 @@ class Tracker(pd.DataFrame):
         else:
             return self.loc[:, self.columns.str.endswith(('x', 'y')) & \
                        self.columns.str.startswith('kp')].values.reshape((-1, 17, 2))
+            
+    def save_mot(self, path):
+        videos = self.video_name.unique()
+        for video in videos:
+            output = ''
+            sub_df = self[(self['video_name'] == video) & (self['source'] == 2)].sort_values(by=['frame'])
+            for index, detection in sub_df.iterrows():
+                output += f"{detection['frame']}, {detection['person_id']}, {detection['bb_x']}, " + \
+                        f"{detection['bb_y']}, {detection['bb_w']}, " + \
+                        f"{detection['bb_h']}, {detection['bb_conf']}, -1, -1, -1\n"
+            file_name = os.path.join(path, video + '.txt')
+            with open(file_name, 'w+') as f:
+                f.write(output)
+        
+    # FIXME maybe merge with save_pose_tracking ?
+    def save_pose_estimation(self, path):
+        videos = self.video_name.unique()
+        for video in videos:
+            video_df = self[(self['video_name'] == video)].sort_values(by=['frame'])
+            detection_df = video_df[video_df['source'] >= 1]
+            
+            keypoints = detection_df.pose_xy(with_conf=True)
+            annotations = []
+            for ((index, detection), xys) in zip(detection_df.iterrows(), keypoints):
+                annotations.append({
+                    'bbox': [detection['bb_x'], detection['bb_y'], 
+                             detection['bb_w'], detection['bb_h']],
+                    'image_id': detection['image_id'],
+                    'keypoints': xys, # FIXME score -> visibility
+                    'scores': xys[:,2],
+                    'person_id': index, # This is a dummy variable
+                    'track_id': index, # This is a dummy variable
+                })
+            
+            file_paths = video_df['file_path'].unique()
+            image_ids = video_df['image_id'].unique()
+            images = []
+            for file_path, image_id in zip(file_paths, image_ids):
+                images.append({
+                    'file_name': file_path,
+                    'id': image_id,
+                    'image_id': image_id,
+                })
+            
+            file_name = os.path.join(path, video + '.json')
+            with open(file_name, 'w+') as f:
+                output = {
+                    'images': images,
+                    'annotations': annotations,
+                }
+                json.dump(output, f, cls=CustomEncoder)
+    
+    def save_pose_tracking(self, path):
+        videos = self.video_name.unique()
+        for video in videos:
+            video_df = self[(self['video_name'] == video)].sort_values(by=['frame'])
+            detection_df = video_df[video_df['source'] == 2]
+            
+            keypoints = detection_df.pose_xy(with_conf=True)
+            annotations = []
+            for ((_, detection), xys) in zip(detection_df.iterrows(), keypoints):
+                annotations.append({
+                    'bbox': [detection['bb_x'], detection['bb_y'], 
+                             detection['bb_w'], detection['bb_h']],
+                    'image_id': detection['image_id'],
+                    'keypoints': xys, # FIXME score -> visibility
+                    'scores': xys[:,2],
+                    'person_id': detection['person_id'],
+                    'track_id': detection['person_id'],
+                })
+            
+            file_paths = video_df['file_path'].unique()
+            image_ids = video_df['image_id'].unique()
+            images = []
+            for file_path, image_id in zip(file_paths, image_ids):
+                images.append({
+                    'file_name': file_path,
+                    'id': image_id,
+                    'image_id': image_id,
+                })
+            
+            file_name = os.path.join(path, video + '.json')
+            with open(file_name, 'w+') as f:
+                output = {
+                    'images': images,
+                    'annotations': annotations,
+                }
+                json.dump(output, f, cls=CustomEncoder)
     
 class TrackerSeries(pd.Series):
     @property
@@ -129,38 +224,19 @@ class TrackerSeries(pd.Series):
     def _constructor_expanddim(self):
         return Tracker
 
-def main():
-    """Example usage : """
-
-    # create tracker
-    detections = []
-    # For each image
-    for i in range(1000):
-        
-        # 1. Run Detector
-        
-        metadata = Metadata(filename=f"file_{i}", height=100, width=100)
-        bbox = Bbox(0,0,0,0,0)
-
-        keypoints: list[Keypoint] = []
-        for part in range(17):
-            keypoints.append(Keypoint(x=0,y=0,conf=0, part=part))
-        detection = Detection(metadata=metadata, bbox=bbox, keypoints=keypoints)
-        
-        # 2. Run Reid
-        reid_array = np.zeros((2048,))
-        for detection in detections:
-            detection.person_id = reid_array
-        
-        detections.append(detection)
-    
-    tracker = Tracker(detections=detections)
-
-    df = tracker.detections
-    print(df.head(10))
-    print(df[df["filename"]=="file_5"].index)
-    
-    return tracker
-    
-if __name__ == "__main__":
-    print(main().detections.head(100))
+# FIXME change my location
+class CustomEncoder(json.JSONEncoder):
+    """ 
+    Special json encoder for numpy and pandas types 
+    """
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif np.isnan(obj) or pd.isna(obj):
+            return -1
+        else:
+            return json.JSONEncoder.default(self, obj)

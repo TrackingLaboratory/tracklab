@@ -1,29 +1,22 @@
-import yaml
+import os
 import cv2
 import numpy as np
-import os
 
-class Vis_Engine():
-    def __init__(self, vis_cfg, tracker):
-        # handle args
-        with open(vis_cfg, "r") as yamlfile:
-            cfg = yaml.load(yamlfile, Loader=yaml.FullLoader)
-        self.cfg = cfg
+class VisEngine():
+    def __init__(self, vis_cfg, save_dir, tracker):
+        self.cfg = vis_cfg
+        self.save_dir = save_dir
         self.tracker = tracker
 
         self.save_img = self.cfg['images']['save']
         self.save_vid = self.cfg['video']['save']
         
         if self.save_img:
-            self.save_image_dir = os.path.join('runs', 
-                self.cfg['save_dir'],
-                'images')
+            self.save_image_dir = os.path.join(self.save_dir, 'images')
             os.makedirs(self.save_image_dir, exist_ok=True)
             
         if self.save_vid:
-            self.save_video_name = os.path.join('runs', 
-                self.cfg['save_dir'],
-                'results.mp4')
+            self.save_video_name = os.path.join(self.save_dir, 'results.mp4')
         
     def process(self, data):
         patch = self._process_img(data['image'])
@@ -39,7 +32,7 @@ class Vis_Engine():
         if self.save_img:
             filepath = os.path.join(
                 self.save_image_dir,
-                data['filename']
+                data['file_name']
             )
             assert cv2.imwrite(filepath, patch)
         # save video
@@ -47,8 +40,8 @@ class Vis_Engine():
             self._update_video(patch, (data['width'], data['height']))
             
     def _plot_bbox(self, data, patch):
-        detections = self.tracker[(self.tracker.filename == data['filename']) & \
-                                  (self.tracker.source == 2)]
+        detections = self.tracker[(self.tracker.file_name == data['file_name']) & \
+                                  (self.tracker.source == 1)]
         bboxes = detections.bbox_xyxy(with_conf=True)
         for bbox in bboxes:
             p1, p2 = (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]))
@@ -57,7 +50,7 @@ class Vis_Engine():
                           thickness=self.cfg['detection']['bbox']['thickness'])
             if self.cfg['detection']['bbox']['print_conf']:
                 p = (int(bbox[0]) + 1, int(bbox[1]) - 2)
-                cv2.putText(patch, f' {bbox[4]:.2}', p,
+                cv2.putText(patch, f" {bbox[4]:.2}", p,
                         fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL,
                         fontScale=0.75,
                         color=self.cfg['detection']['bbox']['color'],
@@ -65,7 +58,8 @@ class Vis_Engine():
         return patch
     
     def _plot_pose(self, data, patch):
-        detections = self.tracker[(self.tracker.filename == data['filename'])]
+        detections = self.tracker[(self.tracker.file_name == data['file_name']) & \
+                                  (self.tracker.source >= 1)]
         poses = detections.pose_xy(with_conf=True)
         for pose in poses:
             for kp in pose:
@@ -76,7 +70,7 @@ class Vis_Engine():
                            thickness=self.cfg['detection']['pose']['thickness'])
                 if self.cfg['detection']['pose']['print_conf']:
                     p = (int(kp[0]) + 1, int(kp[1]) - 2)
-                    cv2.putText(patch, f'{kp[2]:.2}', p,
+                    cv2.putText(patch, f"{kp[2]:.2}", p,
                         fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL,
                         fontScale=0.75,
                         color=self.cfg['detection']['pose']['color'],
@@ -84,8 +78,8 @@ class Vis_Engine():
         return patch
     
     def _plot_track(self, data, patch):
-        detections = self.tracker[(self.tracker.filename == data['filename']) & \
-                                  (self.tracker.source == 3)]
+        detections = self.tracker[(self.tracker.file_name == data['file_name']) & \
+                                  (self.tracker.source == 2)]
         bboxes = detections.bbox_xyxy(with_conf=True)
         ids = detections[['person_id']].values
         for bbox, id in zip(bboxes, ids):
@@ -95,9 +89,9 @@ class Vis_Engine():
                           thickness=self.cfg['tracking']['thickness'])
             txt = ''
             if self.cfg['tracking']['print_id']:
-                txt += f' ID: {int(id)}'
+                txt += f" ID: {int(id)}"
             if self.cfg['tracking']['print_conf']:
-                txt += f' - conf: {bbox[4]:.2}'
+                txt += f" - conf: {bbox[4]:.2}"
             p = (int(bbox[0]) + 1, int(bbox[1]) - 2)
             cv2.putText(patch, txt, p,
                     fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL,

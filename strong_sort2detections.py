@@ -2,7 +2,7 @@ import torch
 import numpy as np
 
 from pathlib import Path
-from strong_sort.utils.parser import get_config # TODOs in here
+from strong_sort.utils.parser import get_config # FIXME in here
 from strong_sort.strong_sort import StrongSORT
 
 @torch.no_grad()
@@ -25,10 +25,9 @@ class StrongSORT2detections():
             ema_alpha=self.cfg.STRONGSORT.EMA_ALPHA,
         )
         # For camera compensation
-        # TODO not sure about utility
         self.prev_frame = None
         
-    def _image2input(self, image): # Tensor RGB (1, 3, H, W)
+    def _image2input(self, image): # Tensor RGB (3, H, W)
         input = image.detach().cpu().numpy() # tensor -> numpy
         input = np.transpose(input, (1, 2, 0)) # -> (H, W, 3)
         input = input*255.0
@@ -44,8 +43,9 @@ class StrongSORT2detections():
         xywhs = []
         scores = []
         for detection in detections:
-            xywhs.append(detection.bbox_xywh())
-            scores.append(detection.bbox.conf)
+            if detection.source == 1:
+                xywhs.append(detection.bbox_xywh())
+                scores.append(detection.bbox.conf)
         
         xywhs = torch.Tensor(np.asarray(xywhs))
         scores = torch.Tensor(scores)
@@ -57,14 +57,9 @@ class StrongSORT2detections():
         self._camera_compensation(input)
         
         results = []
-         # check if instance(s) has been detected
-         # by pose detector
-        if detections:
-            xywhs, scores, classes = self._detections2inputs(detections)
-            results = self.model.update(xywhs,
-                                        scores,
-                                        classes,
-                                        input)
+        xywhs, scores, classes = self._detections2inputs(detections)
+        if xywhs.nelement() != 0: # check if a detection has been made
+            results = self.model.update(xywhs, scores, classes, input)
         
         detections = self._update_detections(results, detections)
         return detections
@@ -79,13 +74,13 @@ class StrongSORT2detections():
             detection.bbox.w = w
             detection.bbox.h = h
             detection.bbox.conf = result[6]
-            detection.person_id = result[4]
-            detection.source = 3
+            detection.person_id = int(result[4])
+            detection.source = 2
         return detections
     
     def _find_detection(self, bbox_track, detections):
         """
-            TODO rendre ça mieux car c'est vraiment degeulasse
+            FIXME rendre ça mieux car c'est vraiment degeulasse
             Comme les Bboxes en output de StrongSort sont différentes de celles
             du detecteur, je suis obligé des les parser pour les associer.
             Ici l'algo est clairement sous optimisé O(n) mais on appelle
@@ -97,8 +92,11 @@ class StrongSORT2detections():
         # to return the Keypoints
         distances = []
         for detection in detections:
-            distances.append(
-                np.sum((bbox_track - detection.bbox_xyxy())**2)
-            )
+            if detection.source == 0: # if not a detection
+                distances.append(1e25)
+            else:
+                distances.append(
+                    np.sum((bbox_track - detection.bbox_xyxy())**2)
+                )
         argmin = distances.index(min(distances))
         return detections[argmin]

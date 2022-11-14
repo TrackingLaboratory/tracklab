@@ -1,87 +1,78 @@
 import os
+import yaml
 import argparse
-
 from tqdm import tqdm
 
-import cv2
 import torch
-import numpy as np
 
+from tracker import Tracker
 from datasets import ImageFolder
+from vis_engine import VisEngine
 from dekr2detections import DEKR2detections
 from strong_sort2detections import StrongSORT2detections
-
-from tracker import *
-from vis_engine import Vis_Engine
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input-folder', required=True, help='path to folder containing images to process')
-    parser.add_argument('--project', default='track', help='project name')
-    parser.add_argument('--name', default='exp', help='experience name')
-    parser.add_argument('--show-poses', default=True, help='show keypoints')
-    parser.add_argument('--show-tracks', default=True, help='show tracking results')
-    parser.add_argument('--save-imgs', default=True, help='save images')
-    parser.add_argument('--save-vid', default=True, help='save video')
-    parser.add_argument('--config-dekr', type=str, default='DEKR/experiments/inference.yaml')
-    parser.add_argument('--config-strongsort', type=str, default='strong_sort/configs/track.yaml')
+    parser.add_argument('input_dir', type=str,
+                        help='path to directory containing images')
+    parser.add_argument('--vis-cfg', type=str,
+                        default='vis.yaml',
+                        help='path to visualization config file')
+    parser.add_argument('--dekr-cfg', type=str, 
+                        default='DEKR/experiments/inference.yaml', 
+                        help='path to dekr config file')
+    parser.add_argument('--strongsort-cfg', type=str, 
+                        default='strong_sort/configs/track.yaml', 
+                        help='path to strongsort config file')
     args = parser.parse_args()
     return args
 
 
 @torch.no_grad()
 def track(
-    input_folder,
-    project='track',
-    name='exp',
-    show_poses=True,
-    show_tracks=True,
-    save_imgs=True,
-    save_vid=True,
-    config_dekr='DEKR/experiments/inference.yaml',
-    config_strongsort='strong_sort/configs/track.yaml',
-    config_vis='vis.yaml'
+    input_dir,
+    vis_cfg,
+    dekr_cfg,
+    strongsort_cfg,
+    *args, **kwargs
 ):
-    # handle paths
-    if save_imgs or save_vid:
-        save_path = os.path.join('runs', project, name)
+    # handle vis_cfg and paths
+    with open(vis_cfg, 'r') as f:
+        vis_cfg = yaml.load(f, Loader=yaml.FullLoader)
+    save_dir = os.path.join('runs', vis_cfg['save_dir'])
+    if os.path.exists(save_dir):
         i = 0
-        while os.path.exists(save_path + str(i)):
-            i += 1
-        save_path = save_path + str(i)
-        os.makedirs(save_path, exist_ok=True)
-        if save_imgs:
-            imgs_name = os.path.join(save_path, 'imgs')
-            os.makedirs(imgs_name, exist_ok=True)
-        if save_vid:
-            vid_name = None
+        while os.path.exists(save_dir + str(i)): i += 1
+        save_dir = save_dir + str(i)
+        print(f"Save directory ({os.path.join('runs', vis_cfg['save_dir'])}) already exists.")
+        print(f"New save directory replaced by ({save_dir}).")
+    os.makedirs(save_dir, exist_ok=True)
     
     # select device
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     
-    # TODO use this as a module, not always DEKR but whatever we want
     # load pose extractor 
+    # TODO make it modulable and more parametrable
     model_pose = DEKR2detections(
-        config_dekr, 
+        dekr_cfg, 
         device,
-        vis_threshold=0.3 # TODO maybe add to .yaml file ?
+        vis_threshold=0.3 # FIXME add vis channel
     )
     
-    # TODO replace by Re-ID framework and make it modulable
-    # TODO use this as a module, not always StrongSORT but whatever we want
-    # load strongsort
+    # load model tracker
+    # TODO make it modulable and more parametrable
     model_track = StrongSORT2detections(
-            config_strongsort,
-            device
-        )
+        strongsort_cfg,
+        device
+    )
     
-    # load dataloader
-    dataset = ImageFolder(input_folder)
+    # load dataset
+    dataset = ImageFolder(input_dir)
     
-    all_detections = []
     # process images
-    for data in tqdm(dataset, desc='Inference'): # image is Tensor RGB (3, H, W)
+    all_detections = []
+    for data in tqdm(dataset, desc='Inference'): # tensor RGB (3, H, W)
         # pose estimation part -> create detections object
         detections = model_pose.run(data)
         
@@ -91,7 +82,8 @@ def track(
     
     tracker = Tracker([det.asdict() for det in all_detections])
     
-    vis_engine = Vis_Engine(config_vis, tracker)
+    # visualization part
+    vis_engine = VisEngine(vis_cfg, save_dir, tracker)
     for data in tqdm(dataset, desc='Visualization'):
         vis_engine.process(data)
     
@@ -100,5 +92,5 @@ def main():
     track(**vars(args))
     
     
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

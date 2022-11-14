@@ -8,7 +8,7 @@ import torchvision.transforms as transforms
 
 from tracker import *
 import warnings
-warnings.filterwarnings("ignore")
+warnings.filterwarnings('ignore')
 
 from DEKR.lib.config import cfg
 from DEKR.lib.config import update_config
@@ -47,7 +47,7 @@ class DEKR2detections():
         # taken from DEKR/tools/inference_demo.py
         self.transforms = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize( # TODO FIXME (values to adapt I don't know how)
+            transforms.Normalize( # FIXME (values to adapt I don't know how)
                 mean=[0.485, 0.456, 0.406],
                 std=[0.229, 0.224, 0.225]
             )
@@ -123,7 +123,7 @@ class DEKR2detections():
                                             data, h, w)
         return detection
         
-    def _results2detections(self, results_poses, results_scores, data, h, w):        
+    def _results2detections(self, results_poses, results_scores, data, h, w):     
         detections = []
         for score, pose in zip(results_scores, results_poses):
             detection = Detection()
@@ -145,23 +145,15 @@ class DEKR2detections():
             height = bottom_right[1] - left_top[1]
             detection.keypoints = keypoints
             detection.bbox = Bbox(left_top[0], left_top[1], width, height, score)
-            detection.source = 2
+            detection.source = 1
             detections.append(detection)
-        return detections
-    
         
-
-if __name__ == '__main__': # testing function
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model = DEKR2detections("DEKR/experiments/inference.yaml", device)    
-    
-    from datasets import ImageFolder
-    dataset = ImageFolder("../Yolov5_StrongSORT_OSNet/data/test_images")
-    dataloader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=1,
-        shuffle=False
-    )
-    
-    for i, image in enumerate(dataloader):
-        detections = model.run(image)
+        if not detections:
+            detection = Detection()
+            detection.metadata = Metadata(**{
+                k: v for k, v in data.items() if k != 'image'
+            })
+            detection.source = 0
+            detections.append(detection)
+        
+        return detections
