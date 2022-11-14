@@ -112,7 +112,7 @@ class PoseTrack21ReID(ImageDataset):
 
         # Load Posetrack21 dataset and build ReID variant
         self.train_gt_dets, self.train_images, self.train_categories = self.build_dataset(max_crop_size, mot_cfg.fig_size, mot_cfg.mask_size, mot_cfg.train, 'train', is_test_set=False)
-        self.val_gt_dets, self.val_images, self.val_categories = self.build_dataset(max_crop_size, mot_cfg.fig_size, mot_cfg.mask_size, mot_cfg.test, 'val', is_test_set=False)
+        self.val_gt_dets, self.val_images, self.val_categories = self.build_dataset(max_crop_size, mot_cfg.fig_size, mot_cfg.mask_size, mot_cfg.test, 'val', is_test_set=True)
 
         # Get train/query/gallery sets as torchreid list format
         train_df = self.train_gt_dets
@@ -129,7 +129,8 @@ class PoseTrack21ReID(ImageDataset):
         reid_img_path = reid_path / self.reid_images_dir / set_name
         reid_mask_path = reid_path / self.reid_masks_dir / set_name
         reid_fig_path = reid_path / self.reid_fig_dir / set_name
-        reid_anns_filepath = reid_img_path / self.reid_anns_dir / (set_name + '_' + self.images_anns_filename)
+        reid_anns_filepath = reid_path / self.reid_images_dir / self.reid_anns_dir / (set_name + '_' + self.images_anns_filename)
+        masks_anns_filepath = reid_path / self.reid_masks_dir / self.reid_anns_dir / (set_name + '_' + self.masks_anns_filename)
 
         # Load annotations into Pandas dataframes
         categories, gt_dets, images = self.build_annotations_df(anns_path)
@@ -144,7 +145,6 @@ class PoseTrack21ReID(ImageDataset):
 
         # Build human parsing pseudo ground truth using the pose model
         existing_files = list(reid_mask_path.glob('*/*{}'.format(self.masks_ext)))
-        masks_anns_filepath = reid_mask_path / self.reid_anns_dir / (set_name + '_' + self.masks_anns_filename)
         if len(existing_files) != len(gt_dets) or not masks_anns_filepath.exists():
             self.build_human_parsing_gt(reid_mask_path, reid_fig_path, set_name, masks_anns_filepath, gt_dets, images,
                                         fig_size, mask_size)
