@@ -58,7 +58,14 @@ class PoseTrack21ReID(ImageDataset):
     annotations_dir = 'posetrack_data'
     img_ext = '.jpg'
     masks_ext = '.npy'
-    is_id_cross_video = True  # used at inference to know if a query can be matched with gallery samples from other videos
+
+    reid_dir = 'reid'
+    reid_images_dir = 'images'
+    reid_masks_dir = 'masks'
+    reid_fig_dir = 'figures'
+    reid_anns_dir = 'anns'
+    images_anns_filename = 'reid_crops_anns.json'
+    masks_anns_filename = 'reid_masks_anns.json'
 
     masks_dirs = {
         # dir_name: (masks_stack_size, contains_background_mask)
@@ -74,7 +81,7 @@ class PoseTrack21ReID(ImageDataset):
 
         # TODO run it on Belldev
         # ----
-        # TODO remove 'self.'
+        # add test/val
         # TODO generic code for train and test
         # TODO filter FIRST: generate reid data only for filtered detections
         # TODO get changes from other BPBreID branch
@@ -91,69 +98,62 @@ class PoseTrack21ReID(ImageDataset):
         # TODO make this class dataset independant
         # TODO: make different config for query and gallery?
 
-
     def __init__(self, config, datasets_root='', masks_dir='', crop_dim=(384, 128), pose_model=None, **kwargs):
 
         # Init
+        self.config = config
+        mot_cfg = config.data.mot
         datasets_root = Path(osp.abspath(osp.expanduser(datasets_root)))
         self.dataset_dir = Path(datasets_root, self.dataset_dir)
-        self.train_anns_path = Path(self.dataset_dir, self.annotations_dir, 'train')
-        self.val_anns_path = Path(self.dataset_dir, self.annotations_dir, 'val')
-        self.cfg = config.data.mot
-        assert self.cfg.train.max_samples_per_id >= self.cfg.train.min_samples_per_id, "max_samples_per_id must be >= min_samples_per_id"
-        assert self.cfg.test.max_samples_per_id >= self.cfg.test.min_samples_per_id, "max_samples_per_id must be >= min_samples_per_id"
-
-        reid_dir = 'reid'
-        reid_images_dir = 'images'
-        reid_masks_dir = 'masks'
-        reid_fig_dir = 'figures'
-        reid_anns_dir = 'anns'
-        images_anns_filename = 'images_anns.json'
-        masks_anns_filename = 'masks_anns.json'
-
-        self.reid_path = Path(self.dataset_dir, reid_dir)
-        self.reid_img_path = self.reid_path / reid_images_dir
-        self.reid_mask_path = self.reid_path / reid_masks_dir
-        self.reid_mask_train_path = self.reid_mask_path / 'train'
-        self.reid_mask_val_path = self.reid_mask_path / 'val'
-        self.reid_fig_path = self.reid_path / reid_fig_dir
-        self.reid_train_path = self.reid_img_path / 'train'
-        self.reid_val_path = self.reid_img_path / 'val'
         self.pose_model = pose_model
+        assert mot_cfg.train.max_samples_per_id >= mot_cfg.train.min_samples_per_id, "max_samples_per_id must be >= min_samples_per_id"
+        assert mot_cfg.test.max_samples_per_id >= mot_cfg.test.min_samples_per_id, "max_samples_per_id must be >= min_samples_per_id"
+
+        # Precompute all paths
+        train_anns_path = Path(self.dataset_dir, self.annotations_dir, 'train')
+        val_anns_path = Path(self.dataset_dir, self.annotations_dir, 'val')
+        reid_path = Path(self.dataset_dir, self.reid_dir)
+        reid_img_path = reid_path / self.reid_images_dir
+        reid_mask_path = reid_path / self.reid_masks_dir
+        reid_mask_train_path = reid_mask_path / 'train'
+        reid_mask_val_path = reid_mask_path / 'val'
+        reid_fig_path = reid_path / self.reid_fig_dir
+        reid_train_path = reid_img_path / 'train'
+        reid_val_path = reid_img_path / 'val'
 
         # Load annotations into Pandas dataframes
-        self.train_categories, self.train_gt_dets, self.train_images = self.build_annotations_df(self.train_anns_path)
-        self.val_categories, self.val_gt_dets, self.val_images = self.build_annotations_df(self.val_anns_path)
+        train_categories, train_gt_dets, train_images = self.build_annotations_df(train_anns_path)
+        val_categories, val_gt_dets, val_images = self.build_annotations_df(val_anns_path)
 
         # Save detections crops and related metadata on disk to build ReID dataset
-        existing_train_files = list(self.reid_train_path.glob('*/*{}'.format(self.img_ext)))
-        train_reid_anns_filepath = self.reid_img_path / reid_anns_dir / ('train_' + images_anns_filename)
-        if len(existing_train_files) != len(self.train_gt_dets) or not train_reid_anns_filepath.exists():
-            self.build_reid_set(self.reid_img_path, 'train', train_reid_anns_filepath, self.train_gt_dets, self.train_images, crop_dim)
+        existing_train_files = list(reid_train_path.glob('*/*{}'.format(self.img_ext)))
+        train_reid_anns_filepath = reid_img_path / self.reid_anns_dir / ('train_' + self.images_anns_filename)
+        if len(existing_train_files) != len(train_gt_dets) or not train_reid_anns_filepath.exists():
+            self.build_reid_set(reid_img_path, 'train', train_reid_anns_filepath, train_gt_dets, train_images, crop_dim)
 
-        existing_val_files = list(self.reid_val_path.glob('*/*{}'.format(self.img_ext)))
-        val_reid_anns_filepath = self.reid_img_path / reid_anns_dir / ('val_' + images_anns_filename)
-        if len(existing_val_files) != len(self.val_gt_dets) or not val_reid_anns_filepath.exists():
-            self.build_reid_set(self.reid_img_path, 'val', val_reid_anns_filepath, self.val_gt_dets, self.val_images, crop_dim)
+        existing_val_files = list(reid_val_path.glob('*/*{}'.format(self.img_ext)))
+        val_reid_anns_filepath = reid_img_path / self.reid_anns_dir / ('val_' + self.images_anns_filename)
+        if len(existing_val_files) != len(val_gt_dets) or not val_reid_anns_filepath.exists():
+            self.build_reid_set(reid_img_path, 'val', val_reid_anns_filepath, val_gt_dets, val_images, crop_dim)
 
         # Load reid crops metadata into existing ground truth detections dataframe
-        self.train_gt_dets = self.load_reid_annotations(train_reid_anns_filepath, self.train_gt_dets)
-        self.val_gt_dets = self.load_reid_annotations(val_reid_anns_filepath, self.val_gt_dets)
+        train_gt_dets = self.load_reid_annotations(train_reid_anns_filepath, train_gt_dets)
+        val_gt_dets = self.load_reid_annotations(val_reid_anns_filepath, val_gt_dets)
 
         # Build human parsing pseudo ground truth using the pose model
-        existing_train_files = list(self.reid_mask_train_path.glob('*/*{}'.format(self.masks_ext)))
-        train_masks_anns_filepath = self.reid_mask_path / reid_anns_dir / ('train_' + masks_anns_filename)
-        if len(existing_train_files) != len(self.train_gt_dets) or not train_masks_anns_filepath.exists():
-            self.build_human_parsing_gt(self.reid_mask_path, self.reid_fig_path, 'train', train_masks_anns_filepath, self.train_gt_dets, self.train_images, (128, 64), (32, 16))
+        existing_train_files = list(reid_mask_train_path.glob('*/*{}'.format(self.masks_ext)))
+        train_masks_anns_filepath = reid_mask_path / self.reid_anns_dir / ('train_' + self.masks_anns_filename)
+        if len(existing_train_files) != len(train_gt_dets) or not train_masks_anns_filepath.exists():
+            self.build_human_parsing_gt(reid_mask_path, reid_fig_path, 'train', train_masks_anns_filepath, train_gt_dets, train_images, (128, 64), (32, 16))
 
-        existing_val_files = list(self.reid_mask_val_path.glob('*/*{}'.format(self.masks_ext)))
-        val_masks_anns_filepath = self.reid_mask_path / reid_anns_dir / ('val_' + masks_anns_filename)
-        if len(existing_val_files) != len(self.val_gt_dets) or not val_masks_anns_filepath.exists():
-            self.build_human_parsing_gt(self.reid_mask_path, self.reid_fig_path, 'val', val_masks_anns_filepath, self.val_gt_dets, self.val_images, (128, 64), (32, 16))
+        existing_val_files = list(reid_mask_val_path.glob('*/*{}'.format(self.masks_ext)))
+        val_masks_anns_filepath = reid_mask_path / self.reid_anns_dir / ('val_' + self.masks_anns_filename)
+        if len(existing_val_files) != len(val_gt_dets) or not val_masks_anns_filepath.exists():
+            self.build_human_parsing_gt(reid_mask_path, reid_fig_path, 'val', val_masks_anns_filepath, val_gt_dets, val_images, (128, 64), (32, 16))
 
         # Load reid masks metadata into existing ground truth detections dataframe
-        self.train_gt_dets = self.load_reid_annotations(train_masks_anns_filepath, self.train_gt_dets)
-        self.val_gt_dets = self.load_reid_annotations(val_masks_anns_filepath, self.val_gt_dets)
+        train_gt_dets = self.load_reid_annotations(train_masks_anns_filepath, train_gt_dets)
+        val_gt_dets = self.load_reid_annotations(val_masks_anns_filepath, val_gt_dets)
 
         self.masks_dir = masks_dir
         if self.masks_dir in self.masks_dirs:
@@ -161,25 +161,25 @@ class PoseTrack21ReID(ImageDataset):
         else:
             self.masks_parts_numbers, self.has_background, self.masks_suffix, self.masks_parts_names = None, None, None, None
 
-        train_df = self.filter_reid_samples(self.train_gt_dets,
-                                            max_total_ids=self.cfg.train.max_total_ids,
-                                            min_vis=self.cfg.train.min_vis,
-                                            min_h=self.cfg.train.min_h,
-                                            min_w=self.cfg.train.min_w,
-                                            min_samples=self.cfg.train.min_samples_per_id,
-                                            max_samples_per_id=self.cfg.train.max_samples_per_id)
+        train_df = self.filter_reid_samples(train_gt_dets,
+                                            max_total_ids=mot_cfg.train.max_total_ids,
+                                            min_vis=mot_cfg.train.min_vis,
+                                            min_h=mot_cfg.train.min_h,
+                                            min_w=mot_cfg.train.min_w,
+                                            min_samples=mot_cfg.train.min_samples_per_id,
+                                            max_samples_per_id=mot_cfg.train.max_samples_per_id)
 
-        test_df = self.filter_reid_samples(self.val_gt_dets,
-                                            max_total_ids=self.cfg.test.max_total_ids,
-                                            min_vis=self.cfg.test.min_vis,
-                                            min_h=self.cfg.test.min_h,
-                                            min_w=self.cfg.test.min_w,
-                                            min_samples=self.cfg.test.min_samples_per_id,
-                                            max_samples_per_id=self.cfg.test.max_samples_per_id)
+        test_df = self.filter_reid_samples(val_gt_dets,
+                                            max_total_ids=mot_cfg.test.max_total_ids,
+                                            min_vis=mot_cfg.test.min_vis,
+                                            min_h=mot_cfg.test.min_h,
+                                            min_w=mot_cfg.test.min_w,
+                                            min_samples=mot_cfg.test.min_samples_per_id,
+                                            max_samples_per_id=mot_cfg.test.max_samples_per_id)
 
         train_df = relabel_ids(train_df)
         test_df = relabel_ids(test_df)
-        query_df, gallery_df = self.query_gallery_split(test_df, self.cfg.test.ratio_query_per_id)
+        query_df, gallery_df = self.query_gallery_split(test_df, mot_cfg.test.ratio_query_per_id)
 
         # get train/query/gallery sets as torchreid list format
         train, query, gallery = self.to_torchreid_dataset_format([train_df, query_df, gallery_df])
@@ -204,7 +204,9 @@ class PoseTrack21ReID(ImageDataset):
         annotations_list = []
         categories_list = []
         images_list = []
-        for path in anns_path.glob('*.json'):
+        anns_files_list = list(anns_path.glob('*.json'))
+        assert len(anns_files_list) > 0, 'No annotations files found in {}'.format(anns_path)
+        for path in anns_files_list:
             json_file = open(path)
             data_dict = json.load(json_file)
             annotations_list.append(pd.DataFrame(data_dict['annotations']))
@@ -337,14 +339,14 @@ class PoseTrack21ReID(ImageDataset):
                             bbox_xyc = rescale_keypoints(det_metadata.keypoints_bbox_xyc, (w, h), (mask_w, mask_h))
                             hp_gt_crop = self.build_gaussian_heatmaps(bbox_xyc, len(det_metadata.keypoints_xyc), mask_w,
                                                                       mask_h, gaussian=gaussian)
-                        elif mode == 'pose_on_img':
+                        elif mode == 'pose_on_img_crops':
                             # compute human parsing heatmaps using output of pose model on full image
                             img_crop = cv2.imread(det_metadata.reid_crop_path)
                             img_crop = cv2.resize(img_crop, (crop_w, crop_h), cv2.INTER_CUBIC)
                             _, hp_gt_crop = self.pose_model.run(torch.from_numpy(img_crop).permute((2, 0, 1)).unsqueeze(0))
                             hp_gt_crop = hp_gt_crop.squeeze().permute((1, 2, 0)).numpy()
                             hp_gt_crop = resize(hp_gt_crop, (crop_h, crop_w, hp_gt_crop.shape[2]))
-                        elif mode == 'pose_on_img_crops':
+                        elif mode == 'pose_on_img':
                             # compute human parsing heatmaps using output of pose model on cropped person image
                             img_crop = img[t:t + h, l:l + w]
                             img_crop = cv2.resize(img_crop, (crop_w, crop_h), cv2.INTER_CUBIC)
