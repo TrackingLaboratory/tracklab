@@ -21,6 +21,24 @@ from reconnaissance.utils.images import overlay_heatmap
 from torchreid.data import ImageDataset
 
 
+# TODO run it on Belldev
+# ----
+# TODO filter FIRST: generate reid data only for filtered detections
+# TODO get changes from other BPBreID branch
+# TODO bootstrap general purpose dataset class for MOT datasets (will be improved later when integrating with other datasets)
+# TODO print stats from posetrack test
+# todo add nice prints + docstring
+# TODO load HRNet and other pretrained weights from URLs
+# TODO cfg.data.masks_dir not used + refactor folder structure
+# TODO fix 'none' in masks_preprocess_transforms: should be able to use none to indicate to use raw masks, load_masks should come from 'disk' vs 'stripes'
+# ----
+# TODO add pifpaf to the pipeline
+# TODO batch processing of heatmaps
+# TODO make sure format is good: RGB vs BGR, etc
+# TODO make this class dataset independant
+# TODO: make different config for query and gallery?
+
+
 def uniform_tracklet_sampling(_df, max_samples_per_id, column):
     _df.sort_values(column)
     num_det = len(_df)
@@ -78,23 +96,6 @@ class PoseTrack21ReID(ImageDataset):
             return None
         else:
             return PoseTrack21ReID.masks_dirs[masks_dir]
-
-        # TODO run it on Belldev
-        # ----
-        # TODO filter FIRST: generate reid data only for filtered detections
-        # TODO get changes from other BPBreID branch
-        # TODO bootstrap general purpose dataset class for MOT datasets (will be improved later when integrating with other datasets)
-        # TODO print stats from posetrack test
-        # todo add nice prints + docstring
-        # TODO load HRNet and other pretrained weights from URLs
-        # TODO cfg.data.masks_dir not used + refactor folder structure
-        # TODO fix 'none' in masks_preprocess_transforms: should be able to use none to indicate to use raw masks, load_masks should come from 'disk' vs 'stripes'
-        # ----
-        # TODO add pifpaf to the pipeline
-        # TODO batch processing of heatmaps
-        # TODO make sure format is good: RGB vs BGR, etc
-        # TODO make this class dataset independant
-        # TODO: make different config for query and gallery?
 
     def __init__(self, config, datasets_root='', masks_dir='', crop_dim=(384, 128), pose_model=None, **kwargs):
 
