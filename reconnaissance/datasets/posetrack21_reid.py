@@ -259,12 +259,12 @@ class PoseTrack21ReID(ImageDataset):
         """
         save_path = save_path / set_name
         max_h, max_w = max_crop_size
-        gt_dets_to_crop = gt_dets[(gt_dets.split != 'none') & gt_dets.reid_crop_path.isnull()]
-        if len(gt_dets_to_crop) == 0:
+        gt_dets_for_reid = gt_dets[(gt_dets.split != 'none') & gt_dets.reid_crop_path.isnull()]
+        if len(gt_dets_for_reid) == 0:
             print("All detections used for ReID already have their image crop saved on disk.")
             return
-        grp_gt_dets = gt_dets_to_crop.groupby(['video_id', 'image_id'])
-        with tqdm(total=len(gt_dets_to_crop)) as pbar:
+        grp_gt_dets = gt_dets_for_reid.groupby(['video_id', 'image_id'])
+        with tqdm(total=len(gt_dets_for_reid)) as pbar:
             for (video_id, image_id), dets_from_img in grp_gt_dets:
                 img_metadata = images_df[images_df.image_id == image_id].iloc[0]
                 filename = img_metadata.file_name
@@ -306,12 +306,12 @@ class PoseTrack21ReID(ImageDataset):
         g_scale = 6
         g_radius = int(mask_w / g_scale)
         gaussian = self.gkern(g_radius * 2 + 1)
-        gt_dets_to_crop = gt_dets[(gt_dets.split != 'none') & gt_dets.masks_path.isnull()]
-        if len(gt_dets_to_crop) == 0:
+        gt_dets_for_reid = gt_dets[(gt_dets.split != 'none') & gt_dets.masks_path.isnull()]
+        if len(gt_dets_for_reid) == 0:
             print("All reid crops already have human parsing masks labels.")
             return
-        grp_gt_dets = gt_dets_to_crop.groupby(['video_id', 'image_id'])
-        with tqdm(total=len(grp_gt_dets)) as pbar:
+        grp_gt_dets = gt_dets_for_reid.groupby(['video_id', 'image_id'])
+        with tqdm(total=len(gt_dets_for_reid)) as pbar:
             pbar.set_description('Extracting all {} human parsing labels'.format(set_name))
             for (video_id, image_id), dets_from_img in grp_gt_dets:
                 img_metadata = images_df[images_df.image_id == image_id].iloc[0]
