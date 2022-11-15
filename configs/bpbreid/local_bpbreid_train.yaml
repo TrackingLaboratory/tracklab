@@ -1,13 +1,13 @@
 project:
-    name: "Person-Re-Identification"
+    name: "Reconnaissance"
     experiment_name: ""
     notes: ""
-    tags: [""]
+    tags: []
     logger:
       use_clearml: False
       use_neptune: False
-      use_tensorboard: False
-      use_wandb: False
+      use_tensorboard: True
+      use_wandb: True
 data:
   root: '~/datasets/reid'
   type: 'image'
@@ -31,14 +31,14 @@ data:
       min_h: 50
       min_w: 25
       min_samples_per_id: 4
-      max_samples_per_id: 4
+      max_samples_per_id: 7
       max_total_ids: 50
     test:
       min_vis: 0.3
       min_h: 50
       min_w: 25
       min_samples_per_id: 4
-      max_samples_per_id: 4
+      max_samples_per_id: 7
       max_total_ids: 16
       ratio_query_per_id: 0.2
 
@@ -50,7 +50,7 @@ sampler:
 model:
   name: 'bpbreid'
   pretrained: True
-  save_model_flag: False
+  save_model_flag: True
   bpbreid:
     pooling: 'gwap'  # ['gap', 'gmp', 'gwap', 'gwap2']
     normalization: 'identity' # 'batch_norm_2d' 'identity'
@@ -107,7 +107,7 @@ test:
   batch_size_pairwise_dist_matrix: 5000
   normalize_feature: True
   dist_metric: 'euclidean' # ['euclidean', 'cosine']
-  visrank: False
+  visrank: True
   visrank_per_body_part: False
   vis_embedding_projection: False
   vis_feature_maps: False
