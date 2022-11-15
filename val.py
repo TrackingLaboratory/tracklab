@@ -1,4 +1,5 @@
-import os.path as op
+import os
+import os.path as osp
 import yaml
 import argparse
 from tqdm import tqdm

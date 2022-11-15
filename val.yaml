@@ -63,7 +63,7 @@ pose_tracking:
   METRICS_CFG: ['HOTAeypoints']
 
 reid_pose_tracking:
-  eval: True
+  eval: False
   EVAL_CFG:
     BREAK_ON_ERROR: True
     RETURN_ON_ERROR: False
