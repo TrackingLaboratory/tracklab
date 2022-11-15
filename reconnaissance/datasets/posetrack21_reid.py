@@ -23,10 +23,8 @@ from torchreid.data import ImageDataset
 
 # TODO run it on Belldev
 # ----
-# TODO filter FIRST: generate reid data only for filtered detections
-# TODO make generic MOT dataset
-# TODO print stats from posetrack test
-# TODO add nice prints + docstring
+# remove global_index?
+# TODO reorder functions
 # TODO get changes from other BPBreID branch
 # TODO load HRNet and other pretrained weights from URLs
 # TODO cfg.data.masks_dir not used + refactor folder structure
@@ -49,23 +47,24 @@ def uniform_tracklet_sampling(_df, max_samples_per_id, column):
         return _df
 
 
-def ad_pid_column(df):
+def ad_pid_column(gt_dets):
     # create pids as 0-based increasing numbers
-    df['pid'] = pd.factorize(df.person_id)[0]
-    return df
+    gt_dets['pid'] = None
+    gt_dets_for_reid = gt_dets[(gt_dets.split != 'none')]
+    gt_dets.loc[gt_dets_for_reid.index, 'pid'] = pd.factorize(gt_dets_for_reid.person_id)[0]
 
 
-def random_sampling_per_pid(df, ratio=1.0):
-    def uniform_tracklet_sampling(_df):
-        x = list(_df.index)
-        size = ceil(len(x) * ratio)
-        result = list(np.random.choice(x, size=size, replace=False))
-        return _df.loc[result]
-
-    per_pid = df.groupby('person_id').apply(uniform_tracklet_sampling)
-    queries = df[df.id.isin(per_pid.id)]
-    galleries = df[~df.id.isin(per_pid.id)]
-    return queries, galleries
+# def random_sampling_per_pid(df, ratio=1.0):
+#     def random_tracklet_sampling(_df):
+#         x = list(_df.index)
+#         size = ceil(len(x) * ratio)
+#         result = list(np.random.choice(x, size=size, replace=False))
+#         return _df.loc[result]
+#
+#     per_pid = df.groupby('person_id').apply(random_tracklet_sampling)
+#     queries = df[df.id.isin(per_pid.id)]
+#     galleries = df[~df.id.isin(per_pid.id)]
+#     return queries, galleries
 
 
 class PoseTrack21ReID(ImageDataset):
@@ -100,7 +99,7 @@ class PoseTrack21ReID(ImageDataset):
         self.config = config
         mot_cfg = config.data.mot
         datasets_root = Path(osp.abspath(osp.expanduser(datasets_root)))
-        self.dataset_dir = Path(datasets_root, self.dataset_dir)
+        self.dataset_path = Path(datasets_root, self.dataset_dir)
         self.pose_model = pose_model
         assert mot_cfg.train.max_samples_per_id >= mot_cfg.train.min_samples_per_id, "max_samples_per_id must be >= min_samples_per_id"
         assert mot_cfg.test.max_samples_per_id >= mot_cfg.test.min_samples_per_id, "max_samples_per_id must be >= min_samples_per_id"
@@ -110,22 +109,22 @@ class PoseTrack21ReID(ImageDataset):
         else:
             self.masks_parts_numbers, self.has_background, self.masks_suffix, self.masks_parts_names = None, None, None, None
 
-        # Load Posetrack21 dataset and build ReID variant
-        self.train_gt_dets, self.train_images, self.train_categories = self.build_dataset(max_crop_size, mot_cfg.fig_size, mot_cfg.mask_size, mot_cfg.train, 'train', is_test_set=False)
-        self.val_gt_dets, self.val_images, self.val_categories = self.build_dataset(max_crop_size, mot_cfg.fig_size, mot_cfg.mask_size, mot_cfg.test, 'val', is_test_set=True)
+        # Load MOT dataset and build ReID one
+        self.train_gt_dets, self.train_images, self.train_categories = self.load_dataset(max_crop_size, mot_cfg.fig_size, mot_cfg.mask_size, mot_cfg.train, 'train', is_test_set=False)
+        self.val_gt_dets, self.val_images, self.val_categories = self.load_dataset(max_crop_size, mot_cfg.fig_size, mot_cfg.mask_size, mot_cfg.test, 'val', is_test_set=True)
 
         # Get train/query/gallery sets as torchreid list format
-        train_df = self.train_gt_dets
+        train_df = self.train_gt_dets[self.train_gt_dets['split'] == 'train']
         query_df = self.val_gt_dets[self.val_gt_dets['split'] == 'query']
         gallery_df = self.val_gt_dets[self.val_gt_dets['split'] == 'gallery']
         train, query, gallery = self.to_torchreid_dataset_format([train_df, query_df, gallery_df])
 
         super(PoseTrack21ReID, self).__init__(train, query, gallery, **kwargs)
 
-    def build_dataset(self, max_crop_size, fig_size, mask_size, mot_cfg, set_name, is_test_set):
+    def load_dataset(self, max_crop_size, fig_size, mask_size, mot_cfg, set_name, is_test_set):
         # Precompute all paths
-        anns_path = Path(self.dataset_dir, self.annotations_dir, set_name)
-        reid_path = Path(self.dataset_dir, self.reid_dir)
+        anns_path = Path(self.dataset_path, self.annotations_dir, set_name)
+        reid_path = Path(self.dataset_path, self.reid_dir)
         reid_img_path = reid_path / self.reid_images_dir / set_name
         reid_mask_path = reid_path / self.reid_masks_dir / set_name
         reid_fig_path = reid_path / self.reid_fig_dir / set_name
@@ -135,36 +134,28 @@ class PoseTrack21ReID(ImageDataset):
         # Load annotations into Pandas dataframes
         categories, gt_dets, images = self.build_annotations_df(anns_path)
 
-        # Save detections crops and related metadata on disk to build ReID dataset
-        existing_files = list(reid_img_path.glob('*/*{}'.format(self.img_ext)))
-        if len(existing_files) != len(gt_dets) or not reid_anns_filepath.exists():
-            self.build_reid_set(reid_img_path, set_name, reid_anns_filepath, gt_dets, images, max_crop_size)
-
         # Load reid crops metadata into existing ground truth detections dataframe
-        gt_dets = self.load_reid_annotations(reid_anns_filepath, gt_dets)
-
-        # Build human parsing pseudo ground truth using the pose model
-        existing_files = list(reid_mask_path.glob('*/*{}'.format(self.masks_ext)))
-        if len(existing_files) != len(gt_dets) or not masks_anns_filepath.exists():
-            self.build_human_parsing_gt(reid_mask_path, reid_fig_path, set_name, masks_anns_filepath, gt_dets, images,
-                                        fig_size, mask_size)
+        gt_dets = self.load_reid_annotations(gt_dets, reid_anns_filepath, ['reid_crop_path', 'reid_crop_width', 'reid_crop_height'])
 
         # Load reid masks metadata into existing ground truth detections dataframe
-        gt_dets = self.load_reid_annotations(masks_anns_filepath, gt_dets)
-        gt_dets = self.filter_reid_samples(gt_dets,
-                                      max_total_ids=mot_cfg.max_total_ids,
-                                      min_vis=mot_cfg.min_vis,
-                                      min_h=mot_cfg.min_h,
-                                      min_w=mot_cfg.min_w,
-                                      min_samples=mot_cfg.min_samples_per_id,
-                                      max_samples_per_id=mot_cfg.max_samples_per_id)
+        gt_dets = self.load_reid_annotations(gt_dets, masks_anns_filepath, ['masks_path'])
 
-        # Add 0-based pid column for Torchreid compatibility
-        gt_dets = ad_pid_column(gt_dets)
+        # Sampling of detections to be used to create the ReID dataset
+        self.sample_detections_for_reid(gt_dets, mot_cfg)
 
-        # Flag each detection as a query or gallery sample
+        # Save ReID detections crops and related metadata. Apply only on sampled detections
+        self.save_reid_img_crops(gt_dets, reid_img_path, set_name, reid_anns_filepath, images, max_crop_size)
+
+        # Save human parsing pseudo ground truth and related metadata. Apply only on sampled detections
+        self.save_reid_masks_crops(gt_dets, reid_mask_path, reid_fig_path, set_name, masks_anns_filepath, images,
+                                   fig_size, mask_size)
+
+        # Add 0-based pid column (for Torchreid compatibility) to sampled detections
+        ad_pid_column(gt_dets)
+
+        # Flag sampled detection as a query or gallery if this is a test set
         if is_test_set:
-            gt_dets = self.query_gallery_split(gt_dets, mot_cfg.ratio_query_per_id)
+            self.query_gallery_split(gt_dets, mot_cfg.ratio_query_per_id)
 
         return gt_dets, images, categories
 
@@ -178,7 +169,7 @@ class PoseTrack21ReID(ImageDataset):
             # remove bbox_head as it is not available for each sample
             df.drop(columns='bbox_head', inplace=True)
             # df to list of dict
-            data_list = df.to_dict('records')
+            data_list = df.sort_values(by=['pid']).to_dict('records')
             results.append(data_list)
         return results
 
@@ -228,143 +219,138 @@ class PoseTrack21ReID(ImageDataset):
         return categories, gt_dets, images
 
 
-    def build_reid_set(self, save_path, set_name, reid_anns_filepath, gt_dets_df, images_df, max_crop_size):
+    def save_reid_img_crops(self, gt_dets, save_path, set_name, reid_anns_filepath, images_df, max_crop_size):
         """
         Save on disk all detections image crops from the ground truth dataset to build the reid dataset.
         Create a json annotation file with crops metadata.
         """
         save_path = save_path / set_name
         max_h, max_w = max_crop_size
-        reid_crops_anns = []
-        with tqdm(total=len(gt_dets_df)) as pbar:
-            pbar.set_description('Extracting all {} bboxes crops'.format(set_name))
-            # loop on videos
-            for video_id in images_df.video_id.unique():
-                # loop on video frames
-                for img_metadata in images_df[images_df.video_id == video_id].itertuples():
-                    if not img_metadata.is_labeled:
-                        continue
-                    filename = img_metadata.file_name
-                    img = cv2.imread(str(self.dataset_dir / filename))
-                    # loop on detections in frame
-                    for det_metadata in gt_dets_df[gt_dets_df.image_id == img_metadata.image_id].itertuples():
-                        # crop and resize bbox from image
-                        bbox_ltwh = np.array(det_metadata.bbox_ltwh)
-                        bbox_ltwh = clip_to_img_dim(bbox_ltwh, img.shape[1], img.shape[0])
-                        pid = det_metadata.person_id
-                        l, t, w, h = bbox_ltwh.astype(int)
-                        img_crop = img[t:t + h, l:l + w]
-                        if h > max_h or w > max_w:
-                            img_crop = cv2.resize(img_crop, (max_w, max_h), cv2.INTER_CUBIC)
+        gt_dets_to_crop = gt_dets[(gt_dets.split != 'none') & gt_dets.reid_crop_path.isnull()]
+        if len(gt_dets_to_crop) == 0:
+            return
+        grp_gt_dets = gt_dets_to_crop.groupby(['video_id', 'image_id'])
+        with tqdm(total=len(gt_dets_to_crop)) as pbar:
+            for (video_id, image_id), dets_from_img in grp_gt_dets:
+                img_metadata = images_df[images_df.image_id == image_id].iloc[0]
+                filename = img_metadata.file_name
+                img = cv2.imread(str(self.dataset_path / filename))
+                for det_metadata in dets_from_img.itertuples():
+                    # crop and resize bbox from image
+                    bbox_ltwh = det_metadata.bbox_ltwh
+                    bbox_ltwh = clip_to_img_dim(bbox_ltwh, img.shape[1], img.shape[0])
+                    pid = det_metadata.person_id
+                    l, t, w, h = bbox_ltwh.astype(int)
+                    img_crop = img[t:t + h, l:l + w]
+                    if h > max_h or w > max_w:
+                        img_crop = cv2.resize(img_crop, (max_w, max_h), cv2.INTER_CUBIC)
 
-                        # save crop to disk
-                        filename = "{}_{}_{}{}".format(pid, video_id, img_metadata.image_id, self.img_ext)
-                        rel_filepath = Path(video_id, filename)
-                        abs_filepath = Path(save_path, rel_filepath)
-                        abs_filepath.parent.mkdir(parents=True, exist_ok=True)
-                        cv2.imwrite(str(abs_filepath), img_crop)
+                    # save crop to disk
+                    filename = "{}_{}_{}{}".format(pid, video_id, img_metadata.image_id, self.img_ext)
+                    rel_filepath = Path(video_id, filename)
+                    abs_filepath = Path(save_path, rel_filepath)
+                    abs_filepath.parent.mkdir(parents=True, exist_ok=True)
+                    cv2.imwrite(str(abs_filepath), img_crop)
 
-                        # record image crop metadata for later json dump
-                        reid_crops_anns.append({
-                            'index': det_metadata.global_index,
-                            'reid_crop_path': str(abs_filepath),
-                            'reid_crop_width': img_crop.shape[0],
-                            'reid_crop_height': img_crop.shape[1],
-                        })
-                        pbar.update(1)
+                    # save image crop metadata
+                    gt_dets.at[det_metadata.Index, 'reid_crop_path'] = str(abs_filepath)
+                    gt_dets.at[det_metadata.Index, 'reid_crop_width'] = img_crop.shape[0]
+                    gt_dets.at[det_metadata.Index, 'reid_crop_height'] = img_crop.shape[1]
+                    pbar.update(1)
 
         print('Saving reid crops annotations as json to "{}"'.format(reid_anns_filepath))
         reid_anns_filepath.parent.mkdir(parents=True, exist_ok=True)
-        pd.DataFrame(reid_crops_anns).to_json(reid_anns_filepath)
+        gt_dets[['reid_crop_path', 'reid_crop_width', 'reid_crop_height']].to_json(reid_anns_filepath)
 
-    def build_human_parsing_gt(self, masks_save_path, fig_save_path, set_name, reid_anns_filepath, gt_dets_df, images_df, fig_size, masks_size, mode='gaussian_keypoints'):
+    def save_reid_masks_crops(self, gt_dets, masks_save_path, fig_save_path, set_name, reid_anns_filepath, images_df, fig_size, masks_size, mode='gaussian_keypoints'):
         """
         Save on disk all human parsing gt for each reid crop.
         Create a json annotation file with human parsing metadata.
         """
         fig_h, fig_w = fig_size
         mask_h, mask_w = masks_size
-        reid_masks_anns = []
         g_scale = 6
         g_radius = int(mask_w / g_scale)
         gaussian = self.gkern(g_radius * 2 + 1)
-        with tqdm(total=len(gt_dets_df)) as pbar:
+        gt_dets_to_crop = gt_dets[(gt_dets.split != 'none') & gt_dets.masks_path.isnull()]
+        if len(gt_dets_to_crop) == 0:
+            return
+        grp_gt_dets = gt_dets_to_crop.groupby(['video_id', 'image_id'])
+        with tqdm(total=len(grp_gt_dets)) as pbar:
             pbar.set_description('Extracting all {} human parsing labels'.format(set_name))
-            # loop on videos
-            for video_id in images_df.video_id.unique():
-                img_shape = None
-                # loop on video frames
-                for img_metadata in images_df[images_df.video_id == video_id].itertuples():
-                    filename = img_metadata.file_name
-                    img_id = img_metadata.image_id
-                    img_detections = gt_dets_df[gt_dets_df.image_id == img_id]
-                    if len(img_detections) == 0:
-                        continue
-                    if img_shape is None:
-                        # load image once to get video frame size
-                        img_shape = cv2.imread(str(self.dataset_dir / filename)).shape
-                    if mode == 'pose_on_img':
-                        img = cv2.imread(str(self.dataset_dir / filename))
-                        _, masks_gt_or = self.pose_model.run(torch.from_numpy(img).permute((2, 0, 1)).unsqueeze(0))  # TODO check if pose_model need BRG or RGB
-                        masks_gt_or = masks_gt_or.squeeze(0).permute((1, 2, 0)).numpy()  # TODO why that permute needed? for old resize?
-                        masks_gt = resize(masks_gt_or, (img.shape[0], img.shape[1], masks_gt_or.shape[2]))
-                    # loop on detections in frame
-                    for det_metadata in img_detections.itertuples():
-                        bbox_ltwh = clip_to_img_dim(det_metadata.bbox_ltwh, img_shape[1], img_shape[0]).astype(int)
+            for (video_id, image_id), dets_from_img in grp_gt_dets:
+                img_metadata = images_df[images_df.image_id == image_id].iloc[0]
+                filename = img_metadata.file_name
+                # load image once to get video frame size
+                if mode == 'pose_on_img':
+                    img = cv2.imread(str(self.dataset_path / filename))
+                    _, masks_gt_or = self.pose_model.run(torch.from_numpy(img).permute((2, 0, 1)).unsqueeze(0))  # TODO check if pose_model need BRG or RGB
+                    masks_gt_or = masks_gt_or.squeeze(0).permute((1, 2, 0)).numpy()  # TODO why that permute needed? for old resize?
+                    masks_gt = resize(masks_gt_or, (img.shape[0], img.shape[1], masks_gt_or.shape[2]))
+                # loop on detections in frame
+                for det_metadata in dets_from_img.itertuples():
+                    if mode == 'gaussian_keypoints':
+                        # compute human parsing heatmaps as gaussian on each visible keypoint
+                        img_crop = cv2.imread(det_metadata.reid_crop_path)
+                        img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
+                        l, t, w, h = det_metadata.bbox_ltwh
+                        bbox_xyc = rescale_keypoints(det_metadata.keypoints_bbox_xyc, (w, h), (mask_w, mask_h))
+                        masks_gt_crop = self.build_gaussian_heatmaps(bbox_xyc, len(det_metadata.keypoints_xyc),
+                                                                     mask_w,
+                                                                     mask_h, gaussian=gaussian)
+                    elif mode == 'pose_on_img_crops':
+                        # compute human parsing heatmaps using output of pose model on cropped person image
+                        img_crop = cv2.imread(det_metadata.reid_crop_path)
+                        img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
+                        _, masks_gt_crop = self.pose_model.run(
+                            torch.from_numpy(img_crop).permute((2, 0, 1)).unsqueeze(0))
+                        masks_gt_crop = masks_gt_crop.squeeze().permute((1, 2, 0)).numpy()
+                        masks_gt_crop = resize(masks_gt_crop, (fig_h, fig_w, masks_gt_crop.shape[2]))
+                    elif mode == 'pose_on_img':
+                        # compute human parsing heatmaps using output of pose model on full image
+                        bbox_ltwh = clip_to_img_dim(det_metadata.bbox_ltwh, img.shape[1], img.shape[0]).astype(int)
                         l, t, w, h = bbox_ltwh
-                        if mode == 'gaussian_keypoints':
-                            # compute human parsing heatmaps as gaussian on each visible keypoint
-                            img_crop = cv2.imread(det_metadata.reid_crop_path)
-                            img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
-                            bbox_xyc = rescale_keypoints(det_metadata.keypoints_bbox_xyc, (w, h), (mask_w, mask_h))
-                            masks_gt_crop = self.build_gaussian_heatmaps(bbox_xyc, len(det_metadata.keypoints_xyc), mask_w,
-                                                                      mask_h, gaussian=gaussian)
-                        elif mode == 'pose_on_img_crops':
-                            # compute human parsing heatmaps using output of pose model on full image
-                            img_crop = cv2.imread(det_metadata.reid_crop_path)
-                            img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
-                            _, masks_gt_crop = self.pose_model.run(torch.from_numpy(img_crop).permute((2, 0, 1)).unsqueeze(0))
-                            masks_gt_crop = masks_gt_crop.squeeze().permute((1, 2, 0)).numpy()
-                            masks_gt_crop = resize(masks_gt_crop, (fig_h, fig_w, masks_gt_crop.shape[2]))
-                        elif mode == 'pose_on_img':
-                            # compute human parsing heatmaps using output of pose model on cropped person image
-                            img_crop = img[t:t + h, l:l + w]
-                            img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
-                            masks_gt_crop = masks_gt[t:t + h, l:l + w]
-                            masks_gt_crop = resize(masks_gt_crop, (fig_h, fig_w, masks_gt_crop.shape[2]))
-                        else:
-                            raise ValueError('Invalid human parsing method')
+                        img_crop = img[t:t + h, l:l + w]
+                        img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
+                        masks_gt_crop = masks_gt[t:t + h, l:l + w]
+                        masks_gt_crop = resize(masks_gt_crop, (fig_h, fig_w, masks_gt_crop.shape[2]))
+                    else:
+                        raise ValueError('Invalid human parsing method')
 
-                        # save human parsing heatmaps on disk
-                        pid = det_metadata.person_id
-                        filename = "{}_{}_{}".format(pid, video_id, img_id)
-                        abs_filepath = Path(masks_save_path, Path(video_id, filename + self.masks_ext))
-                        abs_filepath.parent.mkdir(parents=True, exist_ok=True)
-                        np.save(str(abs_filepath), masks_gt_crop)
+                    # save human parsing heatmaps on disk
+                    pid = det_metadata.person_id
+                    filename = "{}_{}_{}".format(pid, video_id, image_id)
+                    abs_filepath = Path(masks_save_path, Path(video_id, filename + self.masks_ext))
+                    abs_filepath.parent.mkdir(parents=True, exist_ok=True)
+                    np.save(str(abs_filepath), masks_gt_crop)
 
-                        # save image crop with human parsing heatmaps overlayed on disk for visualization/debug purpose
-                        img_with_heatmap = overlay_heatmap(img_crop, masks_gt_crop.max(axis=0), weight=0.3)
-                        figure_filepath = Path(fig_save_path, video_id, filename + self.img_ext)
-                        figure_filepath.parent.mkdir(parents=True, exist_ok=True)
-                        cv2.imwrite(str(figure_filepath), img_with_heatmap)
+                    # save image crop with human parsing heatmaps overlayed on disk for visualization/debug purpose
+                    img_with_heatmap = overlay_heatmap(img_crop, masks_gt_crop.max(axis=0), weight=0.3)
+                    figure_filepath = Path(fig_save_path, video_id, filename + self.img_ext)
+                    figure_filepath.parent.mkdir(parents=True, exist_ok=True)
+                    cv2.imwrite(str(figure_filepath), img_with_heatmap)
 
-                        # record human parsing metadata for later json dump
-                        reid_masks_anns.append({
-                            'index': det_metadata.global_index,
-                            'masks_path': str(abs_filepath),
-                        })
-                        pbar.update(1)
+                    # record human parsing metadata for later json dump
+                    gt_dets.at[det_metadata.Index, 'masks_path'] = str(abs_filepath)
+                    pbar.update(1)
 
         print('Saving reid human parsing annotations as json to "{}"'.format(reid_anns_filepath))
         reid_anns_filepath.parent.mkdir(parents=True, exist_ok=True)
-        pd.DataFrame(reid_masks_anns).to_json(reid_anns_filepath)
+        gt_dets[['masks_path']].to_json(reid_anns_filepath)
 
-    def load_reid_annotations(self, reid_anns_filepath, gt_dets):
-        reid_anns = pd.read_json(reid_anns_filepath)
-        assert len(reid_anns) == len(gt_dets), "reid_anns_filepath and gt_dets must have the same length"
-        merged_df = pd.merge(gt_dets, reid_anns, left_index=False, right_index=False, left_on='global_index', right_on='index', validate='one_to_one')
-        merged_df.drop('index', axis=1, inplace=True)
-        return merged_df
+    def load_reid_annotations(self, gt_dets, reid_anns_filepath, columns):
+        if reid_anns_filepath.exists():
+            reid_anns = pd.read_json(reid_anns_filepath)
+            reid_anns = reid_anns[columns]
+            assert len(reid_anns) == len(gt_dets), "reid_anns_filepath and gt_dets must have the same length. Delete " \
+                                                   "'{}' and re-run the script.".format(reid_anns_filepath)
+            return gt_dets.merge(reid_anns, left_index=False, right_index=True, left_on='global_index', validate='one_to_one')
+            # merged_df.drop('index', axis=1, inplace=True)
+        else:
+            # no annotations yet, initialize empty columns
+            for col in columns:
+                gt_dets[col] = None
+            return gt_dets
 
     def rescale_and_filter_keypoints(self, keypoints, bbox_ltwh, new_w, new_h):
         l, t, w, h = bbox_ltwh.astype(int)
@@ -421,43 +407,50 @@ class PoseTrack21ReID(ImageDataset):
                                                                           g_radius - rl:g_radius + rr + 1]
         return gaussian_heatmaps
 
-    def filter_reid_samples(self, dets_df, max_total_ids=-1, min_vis=-1, min_h=0, min_w=0, min_samples=0, max_samples_per_id=10000):
+    def sample_detections_for_reid(self, dets_df, mot_cfg):
+        dets_df['split'] = 'none'
+
         # filter detections by visibility
-        dets_df_f1 = dets_df[dets_df['visibility'] >= min_vis]
+        dets_df_f1 = dets_df[dets_df.visibility >= mot_cfg.min_vis]
 
-        keep = (dets_df_f1['reid_crop_height'] >= min_h) & (dets_df_f1['reid_crop_width'] >= min_w)
+        # filter detections by crop size
+        keep = dets_df_f1.bbox_ltwh.apply(lambda x: x[2] > mot_cfg.min_w) & dets_df_f1.bbox_ltwh.apply(lambda x: x[3] > mot_cfg.min_h)
         dets_df_f2 = dets_df_f1[keep]
-        print("{} removed because too small samples (h<{} or w<{}) = {}".format(self.__class__.__name__, min_h, min_w, len(dets_df_f1) - len(dets_df_f2)))
+        print("{} removed because too small samples (h<{} or w<{}) = {}".format(self.dataset_dir,
+                                                                                (mot_cfg.min_h),
+                                                                                (mot_cfg.min_w),
+                                                                                len(dets_df_f1) - len(dets_df_f2)))
 
-        dets_df_f3 = dets_df_f2.groupby('person_id').apply(uniform_tracklet_sampling, max_samples_per_id, 'image_id').reset_index(drop=True).copy()
-        print("{} removed for uniform tracklet sampling = {}".format(self.__class__.__name__, len(dets_df_f2) - len(dets_df_f3)))
+        # filter detections by uniform sampling along each tracklet
+        dets_df_f3 = dets_df_f2.groupby('person_id').apply(uniform_tracklet_sampling, mot_cfg.max_samples_per_id,
+                                                           'image_id').reset_index(drop=True).copy()
+        print("{} removed for uniform tracklet sampling = {}".format(self.dataset_dir, len(dets_df_f2) - len(dets_df_f3)))
 
         # Keep only ids with at least MIN_SAMPLES appearances
         count_per_id = dets_df_f3.person_id.value_counts()
-        ids_to_keep = count_per_id.index[count_per_id.ge(min_samples)]
+        ids_to_keep = count_per_id.index[count_per_id.ge((mot_cfg.min_samples_per_id))]
         dets_df_f4 = dets_df_f3[dets_df_f3.person_id.isin(ids_to_keep)]
-        print("{} removed for not enough samples per id = {}".format(self.__class__.__name__, len(dets_df_f3) - len(dets_df_f4)))
+        print("{} removed for not enough samples per id = {}".format(self.dataset_dir, len(dets_df_f3) - len(dets_df_f4)))
 
         # Keep only max_total_ids ids
-        if max_total_ids == -1:
-            max_total_ids = len(dets_df_f4.person_id.unique())
-        ids_to_keep = np.random.choice(dets_df_f4.person_id.unique(), replace=False, size=max_total_ids)
+        if mot_cfg.max_total_ids == -1:
+            mot_cfg.max_total_ids = len(dets_df_f4.person_id.unique())
+        np.random.seed(0)
+        ids_to_keep = np.random.choice(dets_df_f4.person_id.unique(), replace=False, size=mot_cfg.max_total_ids)
         dets_df_f5 = dets_df_f4[dets_df_f4.person_id.isin(ids_to_keep)]
 
-        dets_df_f5.reset_index(drop=True, inplace=True)
-        print("{} filtered size = {}".format(self.__class__.__name__, len(dets_df_f5)))
+        dets_df.loc[dets_df.global_index.isin(dets_df_f5.global_index), 'split'] = 'train'
+        print("{} filtered size = {}".format(self.dataset_dir, len(dets_df_f5)))
 
-        return dets_df_f5
-
-    def query_gallery_split(self, df, ratio):
-        def uniform_tracklet_sampling(_df):
+    def query_gallery_split(self, gt_dets, ratio):
+        def random_tracklet_sampling(_df):
             x = list(_df.index)
             size = ceil(len(x) * ratio)
             result = list(np.random.choice(x, size=size, replace=False))
             return _df.loc[result]
 
-        queries_per_pid = df.groupby('person_id').apply(uniform_tracklet_sampling)
-        df.loc[df.id.isin(queries_per_pid.id), 'split'] = 'query'
-        df.loc[~df.id.isin(queries_per_pid.id), 'split'] = 'gallery'
-        return df
-
+        gt_dets_for_reid = gt_dets[(gt_dets.split != 'none')]
+        np.random.seed(0)
+        queries_per_pid = gt_dets_for_reid.groupby('person_id').apply(random_tracklet_sampling)
+        gt_dets.loc[gt_dets.split != 'none', 'split'] = 'gallery'
+        gt_dets.loc[gt_dets.id.isin(queries_per_pid.id), 'split'] = 'query'
