@@ -25,7 +25,6 @@ from torchreid.data import ImageDataset
 # ----
 # TODO remove global_index?
 # TODO dataset should be instantiated once!
-# TODO reorder functions
 # TODO get changes from other BPBreID branch
 # TODO load HRNet and other pretrained weights from URLs
 # TODO cfg.data.masks_dir not used + refactor folder structure
@@ -53,19 +52,6 @@ def ad_pid_column(gt_dets):
     gt_dets['pid'] = None
     gt_dets_for_reid = gt_dets[(gt_dets.split != 'none')]
     gt_dets.loc[gt_dets_for_reid.index, 'pid'] = pd.factorize(gt_dets_for_reid.person_id)[0]
-
-
-# def random_sampling_per_pid(df, ratio=1.0):
-#     def random_tracklet_sampling(_df):
-#         x = list(_df.index)
-#         size = ceil(len(x) * ratio)
-#         result = list(np.random.choice(x, size=size, replace=False))
-#         return _df.loc[result]
-#
-#     per_pid = df.groupby('person_id').apply(random_tracklet_sampling)
-#     queries = df[df.id.isin(per_pid.id)]
-#     galleries = df[~df.id.isin(per_pid.id)]
-#     return queries, galleries
 
 
 class PoseTrack21ReID(ImageDataset):
@@ -131,6 +117,9 @@ class PoseTrack21ReID(ImageDataset):
         If the config is changed and more detections are selected, the image crops and masks are generated only for
         these new detections.
         """
+
+        print("Loading {} set...".format(set_name))
+
         # Precompute all paths
         anns_path = Path(self.dataset_path, self.annotations_dir, set_name)
         reid_path = Path(self.dataset_path, self.reid_dir)
@@ -167,20 +156,6 @@ class PoseTrack21ReID(ImageDataset):
             self.query_gallery_split(gt_dets, mot_cfg.ratio_query_per_id)
 
         return gt_dets, images, categories
-
-    def to_torchreid_dataset_format(self, dataframes):
-        results = []
-        for df in dataframes:
-            df = df.copy()  # to avoid SettingWithCopyWarning
-            # use video id as camera id: camid is used at inference to filter out gallery samples given a query sample
-            df['camid'] = df['video_id']
-            df['img_path'] = df['reid_crop_path']
-            # remove bbox_head as it is not available for each sample
-            df.drop(columns='bbox_head', inplace=True)
-            # df to list of dict
-            data_list = df.sort_values(by=['pid']).to_dict('records')
-            results.append(data_list)
-        return results
 
     def build_annotations_df(self, anns_path):
         annotations_list = []
@@ -227,6 +202,55 @@ class PoseTrack21ReID(ImageDataset):
 
         return categories, gt_dets, images
 
+    def to_torchreid_dataset_format(self, dataframes):
+        results = []
+        for df in dataframes:
+            df = df.copy()  # to avoid SettingWithCopyWarning
+            # use video id as camera id: camid is used at inference to filter out gallery samples given a query sample
+            df['camid'] = df['video_id']
+            df['img_path'] = df['reid_crop_path']
+            # remove bbox_head as it is not available for each sample
+            df.drop(columns='bbox_head', inplace=True)
+            # df to list of dict
+            data_list = df.sort_values(by=['pid']).to_dict('records')
+            results.append(data_list)
+        return results
+
+    def sample_detections_for_reid(self, dets_df, mot_cfg):
+        dets_df['split'] = 'none'
+
+        # Filter detections by visibility
+        dets_df_f1 = dets_df[dets_df.visibility >= mot_cfg.min_vis]
+
+        # Filter detections by crop size
+        keep = dets_df_f1.bbox_ltwh.apply(lambda x: x[2] > mot_cfg.min_w) & dets_df_f1.bbox_ltwh.apply(lambda x: x[3] > mot_cfg.min_h)
+        dets_df_f2 = dets_df_f1[keep]
+        print("{} removed because too small samples (h<{} or w<{}) = {}".format(self.__class__.__name__,
+                                                                                (mot_cfg.min_h),
+                                                                                (mot_cfg.min_w),
+                                                                                len(dets_df_f1) - len(dets_df_f2)))
+
+        # Filter detections by uniform sampling along each tracklet
+        dets_df_f3 = dets_df_f2.groupby('person_id').apply(uniform_tracklet_sampling, mot_cfg.max_samples_per_id,
+                                                           'image_id').reset_index(drop=True).copy()
+        print("{} removed for uniform tracklet sampling = {}".format(self.__class__.__name__, len(dets_df_f2) - len(dets_df_f3)))
+
+        # Keep only ids with at least MIN_SAMPLES appearances
+        count_per_id = dets_df_f3.person_id.value_counts()
+        ids_to_keep = count_per_id.index[count_per_id.ge((mot_cfg.min_samples_per_id))]
+        dets_df_f4 = dets_df_f3[dets_df_f3.person_id.isin(ids_to_keep)]
+        print("{} removed for not enough samples per id = {}".format(self.__class__.__name__, len(dets_df_f3) - len(dets_df_f4)))
+
+        # Keep only max_total_ids ids
+        if mot_cfg.max_total_ids == -1:
+            mot_cfg.max_total_ids = len(dets_df_f4.person_id.unique())
+        # reset seed to make sure the same split is used if the dataset is instantiated multiple times
+        np.random.seed(0)
+        ids_to_keep = np.random.choice(dets_df_f4.person_id.unique(), replace=False, size=mot_cfg.max_total_ids)
+        dets_df_f5 = dets_df_f4[dets_df_f4.person_id.isin(ids_to_keep)]
+
+        dets_df.loc[dets_df.global_index.isin(dets_df_f5.global_index), 'split'] = 'train'
+        print("{} filtered size = {}".format(self.__class__.__name__, len(dets_df_f5)))
 
     def save_reid_img_crops(self, gt_dets, save_path, set_name, reid_anns_filepath, images_df, max_crop_size):
         """
@@ -237,6 +261,7 @@ class PoseTrack21ReID(ImageDataset):
         max_h, max_w = max_crop_size
         gt_dets_to_crop = gt_dets[(gt_dets.split != 'none') & gt_dets.reid_crop_path.isnull()]
         if len(gt_dets_to_crop) == 0:
+            print("All detections used for ReID already have their image crop saved on disk.")
             return
         grp_gt_dets = gt_dets_to_crop.groupby(['video_id', 'image_id'])
         with tqdm(total=len(gt_dets_to_crop)) as pbar:
@@ -283,6 +308,7 @@ class PoseTrack21ReID(ImageDataset):
         gaussian = self.gkern(g_radius * 2 + 1)
         gt_dets_to_crop = gt_dets[(gt_dets.split != 'none') & gt_dets.masks_path.isnull()]
         if len(gt_dets_to_crop) == 0:
+            print("All reid crops already have human parsing masks labels.")
             return
         grp_gt_dets = gt_dets_to_crop.groupby(['video_id', 'image_id'])
         with tqdm(total=len(grp_gt_dets)) as pbar:
@@ -415,42 +441,6 @@ class PoseTrack21ReID(ImageDataset):
                                                                           g_radius - rt:g_radius + rb + 1,
                                                                           g_radius - rl:g_radius + rr + 1]
         return gaussian_heatmaps
-
-    def sample_detections_for_reid(self, dets_df, mot_cfg):
-        dets_df['split'] = 'none'
-
-        # Filter detections by visibility
-        dets_df_f1 = dets_df[dets_df.visibility >= mot_cfg.min_vis]
-
-        # Filter detections by crop size
-        keep = dets_df_f1.bbox_ltwh.apply(lambda x: x[2] > mot_cfg.min_w) & dets_df_f1.bbox_ltwh.apply(lambda x: x[3] > mot_cfg.min_h)
-        dets_df_f2 = dets_df_f1[keep]
-        print("{} removed because too small samples (h<{} or w<{}) = {}".format(self.dataset_dir,
-                                                                                (mot_cfg.min_h),
-                                                                                (mot_cfg.min_w),
-                                                                                len(dets_df_f1) - len(dets_df_f2)))
-
-        # Filter detections by uniform sampling along each tracklet
-        dets_df_f3 = dets_df_f2.groupby('person_id').apply(uniform_tracklet_sampling, mot_cfg.max_samples_per_id,
-                                                           'image_id').reset_index(drop=True).copy()
-        print("{} removed for uniform tracklet sampling = {}".format(self.dataset_dir, len(dets_df_f2) - len(dets_df_f3)))
-
-        # Keep only ids with at least MIN_SAMPLES appearances
-        count_per_id = dets_df_f3.person_id.value_counts()
-        ids_to_keep = count_per_id.index[count_per_id.ge((mot_cfg.min_samples_per_id))]
-        dets_df_f4 = dets_df_f3[dets_df_f3.person_id.isin(ids_to_keep)]
-        print("{} removed for not enough samples per id = {}".format(self.dataset_dir, len(dets_df_f3) - len(dets_df_f4)))
-
-        # Keep only max_total_ids ids
-        if mot_cfg.max_total_ids == -1:
-            mot_cfg.max_total_ids = len(dets_df_f4.person_id.unique())
-        # reset seed to make sure the same split is used if the dataset is instantiated multiple times
-        np.random.seed(0)
-        ids_to_keep = np.random.choice(dets_df_f4.person_id.unique(), replace=False, size=mot_cfg.max_total_ids)
-        dets_df_f5 = dets_df_f4[dets_df_f4.person_id.isin(ids_to_keep)]
-
-        dets_df.loc[dets_df.global_index.isin(dets_df_f5.global_index), 'split'] = 'train'
-        print("{} filtered size = {}".format(self.dataset_dir, len(dets_df_f5)))
 
     def query_gallery_split(self, gt_dets, ratio):
         def random_tracklet_sampling(_df):

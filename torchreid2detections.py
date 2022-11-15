@@ -19,7 +19,10 @@ def configure_dataset_class(clazz, **ext_kwargs):
     """
     class ClazzWrapper(clazz):
         def __init__(self, **kwargs):
+            self.__name__ = clazz.__name__
             super(ClazzWrapper, self).__init__(**{**kwargs, **ext_kwargs})
+
+    ClazzWrapper.__name__ = clazz.__name__
 
     return ClazzWrapper
 
