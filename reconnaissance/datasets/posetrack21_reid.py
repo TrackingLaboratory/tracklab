@@ -21,8 +21,9 @@ from reconnaissance.utils.images import overlay_heatmap
 from torchreid.data import ImageDataset
 
 
-# TODO run it on Belldev
-# ----
+# TODO refactor pifpaf transforms
+# TODO fix video inference: give masks or keypoints as input to model
+# TODO dataset should be instantiated once!
 # TODO remove global_index?
 # TODO dataset should be instantiated once!
 # TODO get changes from other BPBreID branch
@@ -242,7 +243,7 @@ class PoseTrack21ReID(ImageDataset):
         print("{} removed for not enough samples per id = {}".format(self.__class__.__name__, len(dets_df_f3) - len(dets_df_f4)))
 
         # Keep only max_total_ids ids
-        if mot_cfg.max_total_ids == -1:
+        if mot_cfg.max_total_ids == -1 or mot_cfg.max_total_ids > len(dets_df_f4.person_id.unique()):
             mot_cfg.max_total_ids = len(dets_df_f4.person_id.unique())
         # reset seed to make sure the same split is used if the dataset is instantiated multiple times
         np.random.seed(0)
@@ -265,6 +266,7 @@ class PoseTrack21ReID(ImageDataset):
             return
         grp_gt_dets = gt_dets_for_reid.groupby(['video_id', 'image_id'])
         with tqdm(total=len(gt_dets_for_reid)) as pbar:
+            pbar.set_description('Extracting all {} reid crops'.format(set_name))
             for (video_id, image_id), dets_from_img in grp_gt_dets:
                 img_metadata = images_df[images_df.image_id == image_id].iloc[0]
                 filename = img_metadata.file_name
