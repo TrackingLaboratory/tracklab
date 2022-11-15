@@ -25,7 +25,7 @@ from torchreid.data import ImageDataset
 # TODO fix video inference: give masks or keypoints as input to model
 # TODO dataset should be instantiated once!
 # TODO remove global_index?
-# TODO dataset should be instantiated once!
+# ---
 # TODO get changes from other BPBreID branch
 # TODO load HRNet and other pretrained weights from URLs
 # TODO cfg.data.masks_dir not used + refactor folder structure
@@ -81,6 +81,12 @@ class PoseTrack21ReID(ImageDataset):
             return None
         else:
             return PoseTrack21ReID.masks_dirs[masks_dir]
+
+    @staticmethod
+    def gallery_filter(q_pid, q_camid, q_ann, g_pids, g_camids, g_anns):
+        """ camid refers to video id: remove gallery samples from the different videos than query sample
+        """
+        return np.zeros_like(q_pid)
 
     def __init__(self, config, datasets_root='', masks_dir='', max_crop_size=(384, 128), pose_model=None, **kwargs):
         # Init
