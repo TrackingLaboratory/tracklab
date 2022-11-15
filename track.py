@@ -20,7 +20,7 @@ def parse_args():
                         default='vis.yaml',
                         help='path to visualization config file')
     parser.add_argument('--dekr-cfg', type=str, 
-                        default='DEKR/experiments/inference.yaml', 
+                        default='dekr.yaml', 
                         help='path to dekr config file')
     parser.add_argument('--strongsort-cfg', type=str, 
                         default='strong_sort/configs/track.yaml', 
