@@ -1,5 +1,6 @@
 import os
 import argparse
+import random
 
 import cv2
 import torch
@@ -39,7 +40,7 @@ def track(
     job_id=random.randint(0, 1_000_000_000),
     config_dekr='DEKR/experiments/inference.yaml',
     config_strongsort='strong_sort/configs/track.yaml',
-    config_bpbreid='configs/bpbreid/local_bpbreid_hrnet32_market1501_train.yaml',
+    config_bpbreid='configs/bpbreid/local_bpbreid_train.yaml',
 ):
     # handle paths
     save_path = os.path.join('runs', project, name)
@@ -89,8 +90,7 @@ def track(
         shuffle=False
     )
 
-    if model_reid.training_enabled:
-        model_reid.train()
+    model_reid.train()
 
     # process images
     for i, image in enumerate(dataloader): # image is Tensor RGB (1, 3, H, W)
