@@ -36,6 +36,7 @@ def track(
     show_tracks=True,
     save_imgs=True,
     save_vid=True,
+    job_id=random.randint(0, 1_000_000_000),
     config_dekr='DEKR/experiments/inference.yaml',
     config_strongsort='strong_sort/configs/track.yaml',
     config_bpbreid='configs/bpbreid/local_bpbreid_hrnet32_market1501_train.yaml',
