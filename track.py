@@ -23,6 +23,7 @@ def parse_args():
     parser.add_argument('--config-dekr', type=str, default='DEKR/experiments/inference.yaml')
     parser.add_argument('--config-strongsort', type=str, default='strong_sort/configs/track.yaml')
     parser.add_argument('--config-bpbreid', type=str, default='')
+    parser.add_argument('--job-id', type=int, default=None, help='Slurm job id')
     args = parser.parse_args()
     return args
 
