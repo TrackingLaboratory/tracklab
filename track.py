@@ -5,11 +5,11 @@ from tqdm import tqdm
 
 import torch
 
-from tracker import Tracker
-from datasets import ImageFolder
-from vis_engine import VisEngine
-from dekr2detections import DEKR2detections
-from strong_sort2detections import StrongSORT2detections
+from lib.tracker import Tracker
+from lib.datasets import ImageFolder
+from lib.vis_engine import VisEngine
+from lib.dekr2detections import DEKR2detections
+from lib.strong_sort2detections import StrongSORT2detections
 
 
 def parse_args():
@@ -17,13 +17,13 @@ def parse_args():
     parser.add_argument('input_dir', type=str,
                         help='path to directory containing images')
     parser.add_argument('--vis-cfg', type=str,
-                        default='vis.yaml',
+                        default='configs/track.yaml',
                         help='path to visualization config file')
     parser.add_argument('--dekr-cfg', type=str, 
-                        default='dekr.yaml', 
+                        default='configs/dekr.yaml', 
                         help='path to dekr config file')
     parser.add_argument('--strongsort-cfg', type=str, 
-                        default='strong_sort/configs/track.yaml', 
+                        default='trackers/strong_sort/configs/track.yaml', 
                         help='path to strongsort config file')
     args = parser.parse_args()
     return args

@@ -11,22 +11,22 @@ import sys
 sys.path.insert(0, './PoseTrack21/eval/posetrack21')
 import PoseTrack21.eval.posetrack21.posetrack21.trackeval as trackeval
 
-from tracker import Tracker
-from datasets import PoseTrack
-from dekr2detections import DEKR2detections
-from strong_sort2detections import StrongSORT2detections
+from lib.tracker import Tracker
+from lib.datasets import PoseTrack
+from lib.dekr2detections import DEKR2detections
+from lib.strong_sort2detections import StrongSORT2detections
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--eval-cfg', type=str,
-                        default='val.yaml',
+                        default='configs/val.yaml',
                         help='path to evaluation config file')
     parser.add_argument('--dekr-cfg', type=str,
-                        default='dekr.yaml', 
+                        default='configs/dekr.yaml', 
                         help='path to dekr config file')
     parser.add_argument('--strongsort-cfg', type=str,
-                        default='strong_sort/configs/track.yaml',
+                        default='trackers/strong_sort/configs/track.yaml',
                         help='path to strongsort config file')
     args = parser.parse_args()
     return args
