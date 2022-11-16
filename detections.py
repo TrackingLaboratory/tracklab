@@ -130,7 +130,7 @@ class Detections:
             l, t, r, b = int(Bbox[0]), int(Bbox[1]), int(Bbox[2]), int(Bbox[3])
             body_masks = self.body_masks[i]
             img_crop = self.img[t:b, l:r]
-            img_crop_with_mask = overlay_heatmap(img_crop, body_masks[0].numpy(), weight=-1)
+            img_crop_with_mask = overlay_heatmap(img_crop, body_masks[0].cpu().numpy(), weight=-1)
             self.img[t:b, l:r] = img_crop_with_mask
 
     def show_Poses(self):

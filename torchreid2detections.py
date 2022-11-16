@@ -4,13 +4,17 @@ import torch
 
 from reconnaissance.datasets.posetrack21_reid import PoseTrack21ReID
 from scripts.main import build_torchreid_model_engine, build_config
+from reconnaissance.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints
+from tools.feature_extractor import FeatureExtractor
+from torchreid.data.data_augmentation import CocoToSixBodyMasks
+from torchreid.utils.imagetools import build_gaussian_heatmaps
+
 sys.path.append('bpbreid')
 import torchreid
 # need that line to not break import of torchreid ('from torchreid... import ...') inside the bpbreid.torchreid module
 # to remove the 'from torchreid... import ...' error 'Unresolved reference 'torchreid' in PyCharm, right click
 # on 'bpbreid' folder, then choose 'Mark Directory as' -> 'Sources root'
 from bpbreid.scripts.default_config import engine_run_kwargs
-from torchreid.utils import FeatureExtractor
 
 
 def configure_dataset_class(clazz, **ext_kwargs):
@@ -53,6 +57,7 @@ class Torchreid2detections:
         self.training_enabled = not self.cfg.test.evaluate
         self.feature_extractor = None
         self.model = None
+        self.transform = CocoToSixBodyMasks()
 
     def _image2input(self, image): # Tensor RGB (1, 3, H, W)
         assert 1 == image.shape[0], "Test batch size should be 1"
@@ -71,14 +76,25 @@ class Torchreid2detections:
                 image_size=(self.cfg.data.height, self.cfg.data.width),
                 model=self.model
             )
+        mask_w, mask_h = 32, 64
         im_crops = []
         image = self._image2input(image)
-        for bbox in detections.Bboxes:
+        all_masks = []
+        for i, bbox in enumerate(detections.Bboxes):
             l, t, r, b = bbox.astype(int)
             crop = image[t:b, l:r]
             im_crops.append(crop)
+            keypoints = np.array(detections.Poses[i])
+            bbox_ltwh = np.array([l, t, r - l, b - t])
+            kp_xyc_bbox = kp_img_to_kp_bbox(keypoints, bbox_ltwh)
+            kp_xyc_mask = rescale_keypoints(kp_xyc_bbox, (bbox_ltwh[2], bbox_ltwh[3]), (mask_w, mask_h))
+            pixels_parts_probabilities = build_gaussian_heatmaps(kp_xyc_mask, mask_w, mask_h)
+            all_masks.append(pixels_parts_probabilities)
+
+
         if im_crops:
-            embeddings, visibility_scores, body_masks, _ = self.feature_extractor(im_crops)
+            external_parts_masks = np.stack(all_masks, axis=0)
+            embeddings, visibility_scores, body_masks, _ = self.feature_extractor(im_crops, external_parts_masks=external_parts_masks)
             detections.add_reid_features(embeddings)
             detections.add_visibility_scores(visibility_scores)
             detections.add_body_masks(body_masks)

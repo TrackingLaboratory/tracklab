@@ -12,7 +12,6 @@ from os import path as osp
 from pathlib import Path
 
 import torch
-from scipy import signal
 from skimage.transform import resize
 from tqdm import tqdm
 
@@ -21,9 +20,6 @@ from reconnaissance.utils.images import overlay_heatmap
 from torchreid.data import ImageDataset
 
 
-# TODO refactor pifpaf transforms
-# TODO fix video inference: give masks or keypoints as input to model
-# TODO dataset should be instantiated once!
 # TODO remove global_index?
 # ---
 # TODO get changes from other BPBreID branch
@@ -34,6 +30,7 @@ from torchreid.data import ImageDataset
 # TODO add pifpaf to the pipeline
 # TODO batch processing of heatmaps
 # TODO make sure format is good: RGB vs BGR, etc
+from torchreid.utils.imagetools import gkern, build_gaussian_heatmaps
 
 
 def uniform_tracklet_sampling(_df, max_samples_per_id, column):
@@ -82,8 +79,7 @@ class PoseTrack21ReID(ImageDataset):
         else:
             return PoseTrack21ReID.masks_dirs[masks_dir]
 
-    @staticmethod
-    def gallery_filter(q_pid, q_camid, q_ann, g_pids, g_camids, g_anns):
+    def gallery_filter(self, q_pid, q_camid, q_ann, g_pids, g_camids, g_anns):
         """ camid refers to video id: remove gallery samples from the different videos than query sample
         """
         return np.zeros_like(q_pid)
@@ -313,7 +309,7 @@ class PoseTrack21ReID(ImageDataset):
         mask_h, mask_w = masks_size
         g_scale = 6
         g_radius = int(mask_w / g_scale)
-        gaussian = self.gkern(g_radius * 2 + 1)
+        gaussian = gkern(g_radius * 2 + 1)
         gt_dets_for_reid = gt_dets[(gt_dets.split != 'none') & gt_dets.masks_path.isnull()]
         if len(gt_dets_for_reid) == 0:
             print("All reid crops already have human parsing masks labels.")
@@ -337,8 +333,8 @@ class PoseTrack21ReID(ImageDataset):
                         img_crop = cv2.imread(det_metadata.reid_crop_path)
                         img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
                         l, t, w, h = det_metadata.bbox_ltwh
-                        bbox_xyc = rescale_keypoints(det_metadata.keypoints_bbox_xyc, (w, h), (mask_w, mask_h))
-                        masks_gt_crop = self.build_gaussian_heatmaps(bbox_xyc, len(det_metadata.keypoints_xyc),
+                        keypoints_xyc = rescale_keypoints(det_metadata.keypoints_bbox_xyc, (w, h), (mask_w, mask_h))
+                        masks_gt_crop = build_gaussian_heatmaps(keypoints_xyc,
                                                                      mask_w,
                                                                      mask_h, gaussian=gaussian)
                     elif mode == 'pose_on_img_crops':
@@ -417,38 +413,6 @@ class PoseTrack21ReID(ImageDataset):
 
             rescaled_keypoints[i] = np.array([int(kpx), int(kpy), 1])
         return rescaled_keypoints, discarded_keypoints
-
-    def gkern(self, kernlen=21, std=None):
-        """Returns a 2D Gaussian kernel array."""
-        if std is None:
-            std = kernlen / 4
-        gkern1d = signal.gaussian(kernlen, std=std).reshape(kernlen, 1)
-        gkern2d = np.outer(gkern1d, gkern1d)
-        return gkern2d
-
-    def build_gaussian_heatmaps(self, kp_xyc, k, w, h, gaussian=None):
-        gaussian_heatmaps = np.zeros((k, h, w))
-        for i, kp in enumerate(kp_xyc):
-            # do not use invisible keypoints
-            if kp[2] == 0:
-                continue
-
-            kpx, kpy = kp[:2].astype(int)
-
-            if gaussian is None:
-                g_scale = 6
-                g_radius = int(w / g_scale)
-                gaussian = self.gkern(g_radius * 2 + 1)
-            else:
-                g_radius = gaussian.shape[0] // 2
-
-            rt, rb = min(g_radius, kpy), min(g_radius, h - 1 - kpy)
-            rl, rr = min(g_radius, kpx), min(g_radius, w - 1 - kpx)
-
-            gaussian_heatmaps[i, kpy - rt:kpy + rb + 1, kpx - rl:kpx + rr + 1] = gaussian[
-                                                                          g_radius - rt:g_radius + rb + 1,
-                                                                          g_radius - rl:g_radius + rr + 1]
-        return gaussian_heatmaps
 
     def query_gallery_split(self, gt_dets, ratio):
         def random_tracklet_sampling(_df):
