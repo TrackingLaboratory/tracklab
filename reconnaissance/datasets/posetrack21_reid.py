@@ -19,15 +19,11 @@ from reconnaissance.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoint
 from reconnaissance.utils.images import overlay_heatmap
 from torchreid.data import ImageDataset
 
-# TODO remove global_index?
 # TODO fix UserWarning: nn.functional.upsample is deprecated. Use nn.functional.interpolate instead.
 # TODO get changes from other BPBreID branch
 # TODO load HRNet and other pretrained weights from URLs
 # TODO cfg.data.masks_dir not used + refactor folder structure
 # TODO fix 'none' in masks_preprocess_transforms: should be able to use none to indicate to use raw masks, load_masks should come from 'disk' vs 'stripes'
-# ----
-# TODO add pifpaf to the pipeline
-# TODO batch processing of heatmaps
 from torchreid.utils.imagetools import gkern, build_gaussian_heatmaps
 
 
@@ -134,10 +130,10 @@ class PoseTrack21ReID(ImageDataset):
         categories, gt_dets, images = self.build_annotations_df(anns_path)
 
         # Load reid crops metadata into existing ground truth detections dataframe
-        gt_dets = self.load_reid_annotations(gt_dets, reid_anns_filepath, ['reid_crop_path', 'reid_crop_width', 'reid_crop_height'])
+        gt_dets = self.load_reid_annotations(gt_dets, reid_anns_filepath, ['id', 'reid_crop_path', 'reid_crop_width', 'reid_crop_height'])
 
         # Load reid masks metadata into existing ground truth detections dataframe
-        gt_dets = self.load_reid_annotations(gt_dets, masks_anns_filepath, ['masks_path'])
+        gt_dets = self.load_reid_annotations(gt_dets, masks_anns_filepath, ['id', 'masks_path'])
 
         # Sampling of detections to be used to create the ReID dataset
         self.sample_detections_for_reid(gt_dets, mot_cfg)
@@ -180,8 +176,9 @@ class PoseTrack21ReID(ImageDataset):
         # reshape keypoints to (n, 3) array
         gt_dets.keypoints = gt_dets.keypoints.apply(lambda kp: np.array(kp).reshape(-1, 3))
 
-        # keep global index as reference for further slicing operations
-        gt_dets['global_index'] = gt_dets.index
+        # If detections do not have a unique 'id' column, add one for further unambiguous detection referencing
+        if 'id' not in gt_dets:
+            gt_dets['id'] = gt_dets.index
 
         # rename base 'vid_id' to 'video_id', to be consistent with 'image_id'
         images.rename(columns={'vid_id': 'video_id'}, inplace=True)
@@ -255,7 +252,7 @@ class PoseTrack21ReID(ImageDataset):
         ids_to_keep = np.random.choice(dets_df_f4.person_id.unique(), replace=False, size=mot_cfg.max_total_ids)
         dets_df_f5 = dets_df_f4[dets_df_f4.person_id.isin(ids_to_keep)]
 
-        dets_df.loc[dets_df.global_index.isin(dets_df_f5.global_index), 'split'] = 'train'
+        dets_df.loc[dets_df.id.isin(dets_df_f5.id), 'split'] = 'train'
         print("{} filtered size = {}".format(self.__class__.__name__, len(dets_df_f5)))
 
     def save_reid_img_crops(self, gt_dets, save_path, set_name, reid_anns_filepath, images_df, max_crop_size):
@@ -301,7 +298,7 @@ class PoseTrack21ReID(ImageDataset):
 
         print('Saving reid crops annotations as json to "{}"'.format(reid_anns_filepath))
         reid_anns_filepath.parent.mkdir(parents=True, exist_ok=True)
-        gt_dets[['reid_crop_path', 'reid_crop_width', 'reid_crop_height']].to_json(reid_anns_filepath)
+        gt_dets[['id', 'reid_crop_path', 'reid_crop_width', 'reid_crop_height']].to_json(reid_anns_filepath)
 
     def save_reid_masks_crops(self, gt_dets, masks_save_path, fig_save_path, set_name, reid_anns_filepath, images_df, fig_size, masks_size, mode='gaussian_keypoints'):
         """
@@ -378,7 +375,7 @@ class PoseTrack21ReID(ImageDataset):
 
         print('Saving reid human parsing annotations as json to "{}"'.format(reid_anns_filepath))
         reid_anns_filepath.parent.mkdir(parents=True, exist_ok=True)
-        gt_dets[['masks_path']].to_json(reid_anns_filepath)
+        gt_dets[['id', 'masks_path']].to_json(reid_anns_filepath)
 
     def load_reid_annotations(self, gt_dets, reid_anns_filepath, columns):
         if reid_anns_filepath.exists():
@@ -386,7 +383,7 @@ class PoseTrack21ReID(ImageDataset):
             reid_anns = reid_anns[columns]
             assert len(reid_anns) == len(gt_dets), "reid_anns_filepath and gt_dets must have the same length. Delete " \
                                                    "'{}' and re-run the script.".format(reid_anns_filepath)
-            return gt_dets.merge(reid_anns, left_index=False, right_index=True, left_on='global_index', validate='one_to_one')
+            return gt_dets.merge(reid_anns, left_index=False, right_index=False, left_on='id', right_on='id', validate='one_to_one')
             # merged_df.drop('index', axis=1, inplace=True)
         else:
             # no annotations yet, initialize empty columns
