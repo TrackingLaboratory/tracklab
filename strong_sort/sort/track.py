@@ -78,7 +78,7 @@ class Track:
         self.state = TrackState.Tentative
         self.features = []
         if feature is not None:
-            feature["reid_features"] /= np.linalg.norm(feature["reid_features"])
+            # feature["reid_features"] /= np.linalg.norm(feature["reid_features"])  # TODO can cause div by 0 + check if norm is already performed in compute_distance_matrix_using_bp_features
             self.features.append(feature)
 
         self.conf = conf
@@ -294,7 +294,7 @@ class Track:
             ema_scores_detection, 1) * detection_features
         smooth_visibility_scores = np.maximum(tracklet_vis_scores, detection_vis_scores)
         smooth_feat[np.logical_and(ema_scores_tracklet == 0., ema_scores_detection == 0.)] = 1
-        smooth_feat /= np.linalg.norm(smooth_feat, axis=-1, keepdims=True)
+        # smooth_feat /= np.linalg.norm(smooth_feat, axis=-1, keepdims=True)  # TODO can cause div by 0 + check if norm is already performed in compute_distance_matrix_using_bp_features
         self.features = [{
             'reid_features': smooth_feat,
             'visibility_scores': smooth_visibility_scores

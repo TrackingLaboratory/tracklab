@@ -92,6 +92,7 @@ def _nn_cosine_distance(x, y):
     distances = distances.cpu().detach().numpy()
     return distances.min(axis=0)
 
+
 def _nn_part_based(y, x):
     """ Helper function for nearest neighbor distance metric (cosine).
 
@@ -114,7 +115,10 @@ def _nn_part_based(y, x):
     y_features = y[-1]['reid_features']
     y_visibility_scores = y[-1]['visibility_scores']
 
-    x_features /= np.linalg.norm(x_features, axis=-1, keepdims=True)
+    # x_features = x_features / np.linalg.norm(x_features, axis=-1, keepdims=True)  # TODO can cause div by 0 + check if norm is already performed in compute_distance_matrix_using_bp_features
+    # if np.isnan(x_features).any():
+    #     raise ValueError("NaN in features")
+
     distances = compute_distance_matrix_using_bp_features(torch.from_numpy(y_features).unsqueeze(0), torch.from_numpy(x_features), torch.from_numpy(y_visibility_scores).unsqueeze(0), torch.from_numpy(x_visibility_scores))
     distances = distances[0]
     distances = 1 - distances.numpy()
