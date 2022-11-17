@@ -18,12 +18,6 @@ from tqdm import tqdm
 from reconnaissance.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints, clip_to_img_dim
 from reconnaissance.utils.images import overlay_heatmap
 from torchreid.data import ImageDataset
-
-# TODO fix UserWarning: nn.functional.upsample is deprecated. Use nn.functional.interpolate instead.
-# TODO get changes from other BPBreID branch
-# TODO load HRNet and other pretrained weights from URLs
-# TODO cfg.data.masks_dir not used + refactor folder structure
-# TODO fix 'none' in masks_preprocess_transforms: should be able to use none to indicate to use raw masks, load_masks should come from 'disk' vs 'stripes'
 from torchreid.utils.imagetools import gkern, build_gaussian_heatmaps
 
 
