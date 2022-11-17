@@ -213,7 +213,12 @@ class PoseTrack21ReID(ImageDataset):
             # remove bbox_head as it is not available for each sample
             df.drop(columns='bbox_head', inplace=True)
             # df to list of dict
-            data_list = df.sort_values(by=['pid']).to_dict('records')
+            data_list = df.sort_values(by=['pid'])
+            # use only necessary annotations: using them all caused a
+            # 'RuntimeError: torch.cat(): input types can't be cast to the desired output type Long' in collate.py
+            # -> still has to be fixed
+            data_list = data_list[['pid', 'camid', 'img_path', 'masks_path']]
+            data_list = data_list.to_dict('records')
             results.append(data_list)
         return results
 
