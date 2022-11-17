@@ -19,9 +19,8 @@ from reconnaissance.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoint
 from reconnaissance.utils.images import overlay_heatmap
 from torchreid.data import ImageDataset
 
-
 # TODO remove global_index?
-# ---
+# TODO fix UserWarning: nn.functional.upsample is deprecated. Use nn.functional.interpolate instead.
 # TODO get changes from other BPBreID branch
 # TODO load HRNet and other pretrained weights from URLs
 # TODO cfg.data.masks_dir not used + refactor folder structure
@@ -29,7 +28,6 @@ from torchreid.data import ImageDataset
 # ----
 # TODO add pifpaf to the pipeline
 # TODO batch processing of heatmaps
-# TODO make sure format is good: RGB vs BGR, etc
 from torchreid.utils.imagetools import gkern, build_gaussian_heatmaps
 
 
@@ -260,7 +258,7 @@ class PoseTrack21ReID(ImageDataset):
         Save on disk all detections image crops from the ground truth dataset to build the reid dataset.
         Create a json annotation file with crops metadata.
         """
-        save_path = save_path / set_name
+        save_path = save_path
         max_h, max_w = max_crop_size
         gt_dets_for_reid = gt_dets[(gt_dets.split != 'none') & gt_dets.reid_crop_path.isnull()]
         if len(gt_dets_for_reid) == 0:
