@@ -42,7 +42,7 @@ class Torchreid2detections:
         save folder: uniform with reconnaissance
         wandb support
     """
-    def __init__(self, device, save_path, config_path, model_pose):
+    def __init__(self, device, save_path, config_path, model_pose, job_id):
         config = {
             'crop_dim': (384, 128),
             'datasets_root': '~/datasets/other',
@@ -50,8 +50,9 @@ class Torchreid2detections:
         }
         torchreid.data.register_image_dataset("posetrack21_reid", configure_dataset_class(PoseTrack21ReID, **config), "pt21")
         self.cfg = build_config(config_file=config_path)  # TODO support command line args as well?
-        self.cfg.use_gpu = torch.cuda.is_available()
         self.cfg.data.save_dir = save_path
+        self.cfg.project.job_id = job_id
+        self.cfg.use_gpu = torch.cuda.is_available()
         self.device = device
         # Register the PoseTrack21ReID dataset to Torchreid that will be instantiated when building Torchreid engine.
         self.training_enabled = not self.cfg.test.evaluate

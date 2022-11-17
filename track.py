@@ -71,7 +71,8 @@ def track(
         device,
         save_path,
         config_bpbreid,
-        model_pose
+        model_pose,
+        job_id
     )
     
     # TODO replace by Re-ID framework and make it modulable
