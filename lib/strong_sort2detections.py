@@ -51,7 +51,7 @@ class StrongSORT2detections():
         
     def run(self, data, detections):
         image = self._image2input(data['image'])
-        self._camera_compensation(input)
+        self._camera_compensation(image)
         
         results = []
         xywhs, reid_features, visibility_scores, scores, classes = self._detections2inputs(detections)
