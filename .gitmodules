@@ -1,9 +1,6 @@
 [submodule "PoseTrack21"]
 	path = PoseTrack21
 	url = https://github.com/anDoer/PoseTrack21.git
-[submodule "DEKR"]
-	path = DEKR
-	url = https://github.com/HRNet/DEKR.git
 [submodule "detectors/DEKR"]
 	path = detectors/DEKR
 	url = https://github.com/HRNet/DEKR.git
