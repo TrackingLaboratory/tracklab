@@ -44,6 +44,8 @@ class Detection:
     bbox: Optional[Bbox] = None
     keypoints: Optional[list[Keypoint]] = None
     reid_features : Optional[np.ndarray] = None
+    visibility_score : Optional[np.ndarray] = None
+    body_mask : Optional[np.ndarray] = None
     person_id: Optional[int] = -1
 
     def asdict(self): 

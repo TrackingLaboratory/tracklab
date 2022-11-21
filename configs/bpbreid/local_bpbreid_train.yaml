@@ -31,15 +31,15 @@ data:
       min_h: 50
       min_w: 25
       min_samples_per_id: 4
-      max_samples_per_id: 30
-      max_total_ids: 70
+      max_samples_per_id: 4
+      max_total_ids: 5
     test:
       min_vis: 0.
       min_h: 0
       min_w: 0
       min_samples_per_id: 4
       max_samples_per_id: 10
-      max_total_ids: 30
+      max_total_ids: 10
       ratio_query_per_id: 0.2
 
 sampler:
@@ -93,7 +93,7 @@ loss:
 train:
   batch_size: 20
   eval_freq: 0
-  max_epoch: 2 # 45 120
+  max_epoch: 1 # 45 120
   stepsize: [40, 70] # [40, 70] [25, 35]
   optim: 'adam' # 'adam', 'amsgrad', 'sgd', 'rmsprop', 'radam'
   lr: 0.00035
@@ -107,7 +107,7 @@ test:
   batch_size_pairwise_dist_matrix: 5000
   normalize_feature: True
   dist_metric: 'euclidean' # ['euclidean', 'cosine']
-  visrank: True
+  visrank: False
   visrank_per_body_part: False
   vis_embedding_projection: False
   vis_feature_maps: False

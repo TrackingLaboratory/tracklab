@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import json
 import os.path as osp
+import sys
 from math import ceil
 
 import cv2
@@ -15,8 +16,9 @@ import torch
 from skimage.transform import resize
 from tqdm import tqdm
 
-from reconnaissance.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints, clip_to_img_dim
-from reconnaissance.utils.images import overlay_heatmap
+from lib.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints, clip_to_img_dim
+from lib.utils.images import overlay_heatmap
+sys.path.append('modules/reid/bpbreid')
 from torchreid.data import ImageDataset
 from torchreid.utils.imagetools import gkern, build_gaussian_heatmaps
 
@@ -124,10 +126,10 @@ class PoseTrack21ReID(ImageDataset):
         categories, gt_dets, images = self.build_annotations_df(anns_path)
 
         # Load reid crops metadata into existing ground truth detections dataframe
-        gt_dets = self.load_reid_annotations(gt_dets, reid_anns_filepath, ['id', 'reid_crop_path', 'reid_crop_width', 'reid_crop_height'])
+        gt_dets = self.load_reid_annotations(gt_dets, reid_anns_filepath, ['reid_crop_path', 'reid_crop_width', 'reid_crop_height'])
 
         # Load reid masks metadata into existing ground truth detections dataframe
-        gt_dets = self.load_reid_annotations(gt_dets, masks_anns_filepath, ['id', 'masks_path'])
+        gt_dets = self.load_reid_annotations(gt_dets, masks_anns_filepath, ['masks_path'])
 
         # Sampling of detections to be used to create the ReID dataset
         self.sample_detections_for_reid(gt_dets, mot_cfg)
@@ -194,24 +196,18 @@ class PoseTrack21ReID(ImageDataset):
 
         return categories, gt_dets, images
 
-    def to_torchreid_dataset_format(self, dataframes):
-        results = []
-        for df in dataframes:
-            df = df.copy()  # to avoid SettingWithCopyWarning
-            # use video id as camera id: camid is used at inference to filter out gallery samples given a query sample
-            df['camid'] = df['video_id']
-            df['img_path'] = df['reid_crop_path']
-            # remove bbox_head as it is not available for each sample
-            df.drop(columns='bbox_head', inplace=True)
-            # df to list of dict
-            data_list = df.sort_values(by=['pid'])
-            # use only necessary annotations: using them all caused a
-            # 'RuntimeError: torch.cat(): input types can't be cast to the desired output type Long' in collate.py
-            # -> still has to be fixed
-            data_list = data_list[['pid', 'camid', 'img_path', 'masks_path']]
-            data_list = data_list.to_dict('records')
-            results.append(data_list)
-        return results
+    def load_reid_annotations(self, gt_dets, reid_anns_filepath, columns):
+        if reid_anns_filepath.exists():
+            reid_anns = pd.read_json(reid_anns_filepath)
+            assert len(reid_anns) == len(gt_dets), "reid_anns_filepath and gt_dets must have the same length. Delete " \
+                                                   "'{}' and re-run the script.".format(reid_anns_filepath)
+            return gt_dets.merge(reid_anns, left_index=False, right_index=False, left_on='id', right_on='id', validate='one_to_one')
+            # merged_df.drop('index', axis=1, inplace=True)
+        else:
+            # no annotations yet, initialize empty columns
+            for col in columns:
+                gt_dets[col] = None
+            return gt_dets
 
     def sample_detections_for_reid(self, dets_df, mot_cfg):
         dets_df['split'] = 'none'
@@ -261,8 +257,7 @@ class PoseTrack21ReID(ImageDataset):
             print("All detections used for ReID already have their image crop saved on disk.")
             return
         grp_gt_dets = gt_dets_for_reid.groupby(['video_id', 'image_id'])
-        with tqdm(total=len(gt_dets_for_reid)) as pbar:
-            pbar.set_description('Extracting all {} reid crops'.format(set_name))
+        with tqdm(total=len(gt_dets_for_reid), desc='Extracting all {} reid crops'.format(set_name)) as pbar:
             for (video_id, image_id), dets_from_img in grp_gt_dets:
                 img_metadata = images_df[images_df.image_id == image_id].iloc[0]
                 filename = img_metadata.file_name
@@ -309,8 +304,7 @@ class PoseTrack21ReID(ImageDataset):
             print("All reid crops already have human parsing masks labels.")
             return
         grp_gt_dets = gt_dets_for_reid.groupby(['video_id', 'image_id'])
-        with tqdm(total=len(gt_dets_for_reid)) as pbar:
-            pbar.set_description('Extracting all {} human parsing labels'.format(set_name))
+        with tqdm(total=len(gt_dets_for_reid), desc='Extracting all {} human parsing labels'.format(set_name)) as pbar:
             for (video_id, image_id), dets_from_img in grp_gt_dets:
                 img_metadata = images_df[images_df.image_id == image_id].iloc[0]
                 filename = img_metadata.file_name
@@ -329,8 +323,8 @@ class PoseTrack21ReID(ImageDataset):
                         l, t, w, h = det_metadata.bbox_ltwh
                         keypoints_xyc = rescale_keypoints(det_metadata.keypoints_bbox_xyc, (w, h), (mask_w, mask_h))
                         masks_gt_crop = build_gaussian_heatmaps(keypoints_xyc,
-                                                                     mask_w,
-                                                                     mask_h, gaussian=gaussian)
+                                                                mask_w,
+                                                                mask_h, gaussian=gaussian)
                     elif mode == 'pose_on_img_crops':
                         # compute human parsing heatmaps using output of pose model on cropped person image
                         img_crop = cv2.imread(det_metadata.reid_crop_path)
@@ -371,20 +365,6 @@ class PoseTrack21ReID(ImageDataset):
         reid_anns_filepath.parent.mkdir(parents=True, exist_ok=True)
         gt_dets[['id', 'masks_path']].to_json(reid_anns_filepath)
 
-    def load_reid_annotations(self, gt_dets, reid_anns_filepath, columns):
-        if reid_anns_filepath.exists():
-            reid_anns = pd.read_json(reid_anns_filepath)
-            reid_anns = reid_anns[columns]
-            assert len(reid_anns) == len(gt_dets), "reid_anns_filepath and gt_dets must have the same length. Delete " \
-                                                   "'{}' and re-run the script.".format(reid_anns_filepath)
-            return gt_dets.merge(reid_anns, left_index=False, right_index=False, left_on='id', right_on='id', validate='one_to_one')
-            # merged_df.drop('index', axis=1, inplace=True)
-        else:
-            # no annotations yet, initialize empty columns
-            for col in columns:
-                gt_dets[col] = None
-            return gt_dets
-
     def rescale_and_filter_keypoints(self, keypoints, bbox_ltwh, new_w, new_h):
         l, t, w, h = bbox_ltwh.astype(int)
         discarded_keypoints = 0
@@ -421,3 +401,22 @@ class PoseTrack21ReID(ImageDataset):
         queries_per_pid = gt_dets_for_reid.groupby('person_id').apply(random_tracklet_sampling)
         gt_dets.loc[gt_dets.split != 'none', 'split'] = 'gallery'
         gt_dets.loc[gt_dets.id.isin(queries_per_pid.id), 'split'] = 'query'
+
+    def to_torchreid_dataset_format(self, dataframes):
+        results = []
+        for df in dataframes:
+            df = df.copy()  # to avoid SettingWithCopyWarning
+            # use video id as camera id: camid is used at inference to filter out gallery samples given a query sample
+            df['camid'] = df['video_id']
+            df['img_path'] = df['reid_crop_path']
+            # remove bbox_head as it is not available for each sample
+            df.drop(columns='bbox_head', inplace=True)
+            # df to list of dict
+            data_list = df.sort_values(by=['pid'])
+            # use only necessary annotations: using them all caused a
+            # 'RuntimeError: torch.cat(): input types can't be cast to the desired output type Long' in collate.py
+            # -> still has to be fixed
+            data_list = data_list[['pid', 'camid', 'img_path', 'masks_path']]
+            data_list = data_list.to_dict('records')
+            results.append(data_list)
+        return results

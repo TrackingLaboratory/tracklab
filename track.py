@@ -5,10 +5,11 @@ import random
 import torch
 
 from tqdm import tqdm
+
+from lib.dataset import ImageFolder
 from lib.tracker import Tracker
-from lib.datasets import ImageFolder
 from lib.vis_engine import VisEngine
-from torchreid2detections import Torchreid2detections  # need to import Torchreid2detections before
+from lib.torchreid2detections import Torchreid2detections  # need to import Torchreid2detections before
 # StrongSORT2detections, so that 'bpbreid' is added to system path first
 from lib.dekr2detections import DEKR2detections
 from lib.strong_sort2detections import StrongSORT2detections
@@ -16,7 +17,7 @@ from lib.strong_sort2detections import StrongSORT2detections
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('input_dir', type=str,
+    parser.add_argument('--input-dir', type=str,
                         help='path to directory containing images')
     parser.add_argument('--vis-cfg', type=str,
                         default='configs/track.yaml',
@@ -25,7 +26,7 @@ def parse_args():
                         default='configs/dekr.yaml',
                         help='path to dekr config file')
     parser.add_argument('--strongsort-cfg', type=str,
-                        default='trackers/strong_sort/configs/track.yaml',
+                        default='configs/strongsort/track.yaml',
                         help='path to strongsort config file')
     parser.add_argument('--bpbreid-cfg', type=str, default='')
     parser.add_argument('--job-id', type=int,
@@ -69,7 +70,7 @@ def track(
     # load reid
     model_reid = Torchreid2detections(
         device,
-        save_path,
+        save_dir,
         bpbreid_cfg,
         model_pose,
         job_id

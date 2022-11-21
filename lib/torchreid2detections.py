@@ -2,14 +2,16 @@ import sys
 import numpy as np
 import torch
 
-from reconnaissance.datasets.posetrack21_reid import PoseTrack21ReID
-from scripts.main import build_torchreid_model_engine, build_config
-from reconnaissance.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints
-from tools.feature_extractor import FeatureExtractor
-from torchreid.data.data_augmentation import CocoToSixBodyMasks
-from torchreid.utils.imagetools import build_gaussian_heatmaps
+from lib.datasets.posetrack21_reid import PoseTrack21ReID
+from lib.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints
 
-sys.path.append('bpbreid')
+from modules.reid.bpbreid.scripts.main import build_config, build_torchreid_model_engine
+from modules.reid.bpbreid.tools.feature_extractor import FeatureExtractor
+from modules.reid.bpbreid.torchreid.data.data_augmentation.coco_keypoints_transforms import CocoToSixBodyMasks
+from modules.reid.bpbreid.torchreid.utils.imagetools import build_gaussian_heatmaps
+
+sys.path.append('modules/reid/bpbreid')
+sys.path.append('modules/reid')
 import torchreid
 # need that line to not break import of torchreid ('from torchreid... import ...') inside the bpbreid.torchreid module
 # to remove the 'from torchreid... import ...' error 'Unresolved reference 'torchreid' in PyCharm, right click
@@ -68,7 +70,7 @@ class Torchreid2detections:
         input = input.astype(np.uint8) # -> to uint8
         return input
 
-    def run(self, detections, image):
+    def run(self, detections, data):
         if self.feature_extractor is None:
             self.feature_extractor = FeatureExtractor(
                 self.cfg,
@@ -79,26 +81,31 @@ class Torchreid2detections:
             )
         mask_w, mask_h = 32, 64
         im_crops = []
-        image = self._image2input(image)
+        image = self._image2input(data['image'].unsqueeze(0))  # FIXME
         all_masks = []
-        for i, bbox in enumerate(detections.Bboxes):
-            l, t, r, b = bbox.astype(int)
+        for i, detection in enumerate(detections):
+            bbox = detection.bbox
+            pose = detection.keypoints
+            l = int(bbox.x)
+            t = int(bbox.y)
+            r = int(bbox.x+bbox.w)
+            b = int(bbox.y+bbox.h)
             crop = image[t:b, l:r]
             im_crops.append(crop)
-            keypoints = np.array(detections.Poses[i])
+            keypoints = np.array([[kp.x, kp.y, kp.conf] for kp in detection.keypoints])
             bbox_ltwh = np.array([l, t, r - l, b - t])
             kp_xyc_bbox = kp_img_to_kp_bbox(keypoints, bbox_ltwh)
             kp_xyc_mask = rescale_keypoints(kp_xyc_bbox, (bbox_ltwh[2], bbox_ltwh[3]), (mask_w, mask_h))
             pixels_parts_probabilities = build_gaussian_heatmaps(kp_xyc_mask, mask_w, mask_h)
             all_masks.append(pixels_parts_probabilities)
 
-
         if im_crops:
             external_parts_masks = np.stack(all_masks, axis=0)
             embeddings, visibility_scores, body_masks, _ = self.feature_extractor(im_crops, external_parts_masks=external_parts_masks)
-            detections.add_reid_features(embeddings)
-            detections.add_visibility_scores(visibility_scores)
-            detections.add_body_masks(body_masks)
+            for i, detection in enumerate(detections):
+                detection.reid_features = embeddings[i]
+                detection.visibility_score = visibility_scores[i]
+                detection.body_mask = body_masks[i]
         return detections
 
     def train(self):

@@ -2,8 +2,8 @@ import torch
 import numpy as np
 
 from pathlib import Path
-from trackers.strong_sort.utils.parser import get_config
-from trackers.strong_sort.strong_sort import StrongSORT
+from modules.track.strong_sort.utils.parser import get_config
+from modules.track.strong_sort.strong_sort import StrongSORT
 
 @torch.no_grad()
 class StrongSORT2detections():
@@ -43,14 +43,14 @@ class StrongSORT2detections():
                 scores.append(detection.bbox.conf)
         
         xywhs = torch.Tensor(np.asarray(xywhs))
-        reid_features = torch.Tensor(detections.reid_features)
-        visibility_scores = torch.Tensor(detections.visibility_scores)
+        reid_features = torch.stack([det.reid_features for det in detections])
+        visibility_scores = torch.stack([det.visibility_score for det in detections])
         scores = torch.Tensor(scores)
         classes = torch.Tensor([0]*len(scores))
         return xywhs, reid_features, visibility_scores, scores, classes
         
     def run(self, data, detections):
-        input = self._image2input(data['image'])
+        image = self._image2input(data['image'])
         self._camera_compensation(input)
         
         results = []

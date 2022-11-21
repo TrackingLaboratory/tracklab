@@ -7,10 +7,10 @@ import torchvision.transforms as T
 from lib.tracker import Detection, Metadata, Keypoint, Bbox
 import warnings
 warnings.filterwarnings('ignore')
-from detectors.DEKR.lib.config import cfg
-from detectors.DEKR.lib.config import update_config
+from modules.detect.DEKR.lib.config import cfg
+from modules.detect.DEKR.lib.config import update_config
 
-import detectors.DEKR.tools._init_paths
+import modules.detect.DEKR.tools._init_paths  # FIXME can we avoid this?
 import models
 from core.inference import get_multi_stage_outputs
 from core.inference import aggregate_results
@@ -21,7 +21,8 @@ from utils.transforms import get_final_preds
 from utils.transforms import get_multi_scale_size
 from utils.rescore import rescore_valid
 
-@torch.no_grad()
+
+@torch.no_grad()  # FIXME Is this required HERE?
 class DEKR2detections():
     def __init__(self, p_cfg, device, vis_threshold=0.3):
         args = SimpleNamespace(cfg=p_cfg, opts=[])
@@ -66,6 +67,7 @@ class DEKR2detections():
             input = cv2.resize(input, dim, interpolation=cv2.INTER_LINEAR) # -> (h, w, 3)
         return input
 
+    @torch.no_grad()
     def run(self, data):
         input = self._image2input(data['image'])
         
