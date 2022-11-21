@@ -1,8 +1,8 @@
 [submodule "PoseTrack21"]
 	path = eval/PoseTrack21
 	url = https://github.com/anDoer/PoseTrack21.git
-[submodule "detectors/DEKR"]
-	path = detectors/DEKR
+[submodule "detect/DEKR"]
+	path = detectors/pose/DEKR
 	url = https://github.com/HRNet/DEKR.git
 [submodule "bpbreid"]
 	path = reid/bpbreid
