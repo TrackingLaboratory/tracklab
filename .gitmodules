@@ -1,10 +1,10 @@
 [submodule "PoseTrack21"]
-	path = PoseTrack21
+	path = eval/PoseTrack21
 	url = https://github.com/anDoer/PoseTrack21.git
 [submodule "detectors/DEKR"]
 	path = detectors/DEKR
 	url = https://github.com/HRNet/DEKR.git
 [submodule "bpbreid"]
-	path = bpbreid
+	path = reid/bpbreid
 	url = https://github.com/VlSomers/person-reid
     branch = reconnaissance
