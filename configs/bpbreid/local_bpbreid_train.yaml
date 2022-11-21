@@ -6,8 +6,8 @@ project:
     logger:
       use_clearml: False
       use_neptune: False
-      use_tensorboard: True
-      use_wandb: True
+      use_tensorboard: False
+      use_wandb: False
 data:
   root: '~/datasets/reid'
   type: 'image'
@@ -18,9 +18,9 @@ data:
   combineall: False
   transforms: ['rc', 're']
   masks:
-    preprocess: 'none'  # 'none', 'full', 'id', 'ids', 'bs_fu', 'bs_fu_bb', 'mu_sc', 'four', 'four_no', 'four_v', 'four_v_pif', 'five_v', 'six', 'six_no', 'eight'
-    background_computation_strategy: 'threshold'  # threshold, diff_from_max
-    softmax_weight: 15
+    preprocess: 'cc6'  # 'none', 'full', 'id', 'ids', 'bs_fu', 'bs_fu_bb', 'mu_sc', 'four', 'four_no', 'four_v', 'four_v_pif', 'five_v', 'six', 'six_no', 'eight'
+    background_computation_strategy: 'sum'  # threshold, diff_from_max
+    softmax_weight: 0
     mask_filtering_threshold: 0.5
   save_dir: '/Users/vladimirsomers/Code/logs/deep-person-reid/bot_synergy'
   masks_dir: 'gaussian' # 'pifpaf' 'pifpaf_maskrcnn_filtering' 'isp_6_parts'
@@ -31,15 +31,15 @@ data:
       min_h: 50
       min_w: 25
       min_samples_per_id: 4
-      max_samples_per_id: 7
-      max_total_ids: 50
+      max_samples_per_id: 30
+      max_total_ids: 70
     test:
-      min_vis: 0.3
-      min_h: 50
-      min_w: 25
+      min_vis: 0.
+      min_h: 0
+      min_w: 0
       min_samples_per_id: 4
-      max_samples_per_id: 7
-      max_total_ids: 16
+      max_samples_per_id: 10
+      max_total_ids: 30
       ratio_query_per_id: 0.2
 
 sampler:
@@ -88,12 +88,12 @@ loss:
         ce: 0.
         tr: 1.
       pixls:
-        ce: 0.35
+        ce: 2.
 
 train:
   batch_size: 20
   eval_freq: 0
-  max_epoch: 20 # 45 120
+  max_epoch: 2 # 45 120
   stepsize: [40, 70] # [40, 70] [25, 35]
   optim: 'adam' # 'adam', 'amsgrad', 'sgd', 'rmsprop', 'radam'
   lr: 0.00035
