@@ -16,8 +16,8 @@ import torch
 from skimage.transform import resize
 from tqdm import tqdm
 
-from lib.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints, clip_to_img_dim
-from lib.utils.images import overlay_heatmap
+from pbtrack.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints, clip_to_img_dim
+from pbtrack.utils.images import overlay_heatmap
 sys.path.append('modules/reid/bpbreid')
 from torchreid.data import ImageDataset
 from torchreid.utils.imagetools import gkern, build_gaussian_heatmaps

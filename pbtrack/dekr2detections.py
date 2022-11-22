@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import torch
 import torchvision.transforms as T
 
-from lib.tracker import Detection, Metadata, Keypoint, Bbox
+from pbtrack.tracker import Detection, Metadata, Keypoint, Bbox
 import warnings
 warnings.filterwarnings('ignore')
 from modules.detect.DEKR.lib.config import cfg

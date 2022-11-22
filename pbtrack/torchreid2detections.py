@@ -2,16 +2,16 @@ import sys
 import numpy as np
 import torch
 
-from lib.datasets.posetrack21_reid import PoseTrack21ReID
-from lib.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints
+from pbtrack.datasets.posetrack21_reid import PoseTrack21ReID
+from pbtrack.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints
 
 from modules.reid.bpbreid.scripts.main import build_config, build_torchreid_model_engine
 from modules.reid.bpbreid.tools.feature_extractor import FeatureExtractor
 from modules.reid.bpbreid.torchreid.data.data_augmentation.coco_keypoints_transforms import CocoToSixBodyMasks
 from modules.reid.bpbreid.torchreid.utils.imagetools import build_gaussian_heatmaps
 
-sys.path.append('modules/reid/bpbreid')
-sys.path.append('modules/reid')
+sys.path.append('modules/reid/bpbreid')  # FIXME ugly
+sys.path.append('modules/reid')  # FIXME ugly
 import torchreid
 # need that line to not break import of torchreid ('from torchreid... import ...') inside the bpbreid.torchreid module
 # to remove the 'from torchreid... import ...' error 'Unresolved reference 'torchreid' in PyCharm, right click

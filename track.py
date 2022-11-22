@@ -6,13 +6,13 @@ import torch
 
 from tqdm import tqdm
 
-from lib.dataset import ImageFolder
-from lib.tracker import Tracker
-from lib.vis_engine import VisEngine
-from lib.torchreid2detections import Torchreid2detections  # need to import Torchreid2detections before
+from pbtrack.dataset import ImageFolder
+from pbtrack.tracker import Tracker
+from pbtrack.vis_engine import VisEngine
+from pbtrack.torchreid2detections import Torchreid2detections  # need to import Torchreid2detections before
 # StrongSORT2detections, so that 'bpbreid' is added to system path first
-from lib.dekr2detections import DEKR2detections
-from lib.strong_sort2detections import StrongSORT2detections
+from pbtrack.dekr2detections import DEKR2detections
+from pbtrack.strong_sort2detections import StrongSORT2detections
 
 
 def parse_args():
