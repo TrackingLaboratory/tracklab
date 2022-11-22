@@ -1,0 +1,118 @@
+project:
+    name: "Reconnaissance"
+    experiment_name: ""
+    notes: ""
+    tags: []
+    logger:
+      use_clearml: False
+      use_neptune: False
+      use_tensorboard: True
+      use_wandb: True
+data:
+  root: '~/datasets/reid'
+  type: 'image'
+  sources: ['posetrack21_reid']
+  targets: ['posetrack21_reid']
+  height: 256
+  width: 128
+  combineall: False
+  transforms: ['rc', 're']
+  masks:
+    preprocess: 'cc6'  # 'none', 'full', 'id', 'ids', 'bs_fu', 'bs_fu_bb', 'mu_sc', 'four', 'four_no', 'four_v', 'four_v_pif', 'five_v', 'six', 'six_no', 'eight'
+    background_computation_strategy: 'sum'  # threshold, diff_from_max
+    softmax_weight: 0
+    mask_filtering_threshold: 0.5
+  save_dir: '/home/vso/log/posetrack/reid'
+  masks_dir: 'gaussian' # 'pifpaf' 'pifpaf_maskrcnn_filtering' 'isp_6_parts'
+  workers: 4
+  mot:
+    train:
+      min_vis: 0.3
+      min_h: 50
+      min_w: 25
+      min_samples_per_id: 4
+      max_samples_per_id: 20
+      max_total_ids: 1000
+    test:
+      min_vis: 0.
+      min_h: 0
+      min_w: 0
+      min_samples_per_id: 4
+      max_samples_per_id: 10
+      max_total_ids: -1
+      ratio_query_per_id: 0.2
+
+sampler:
+  train_sampler: RandomIdentitySampler # sampler for source train loader
+  train_sampler_t: RandomIdentitySampler # sampler for target train loader
+  num_instances: 4 # number of instances per identity for RandomIdentitySampler
+
+model:
+  name: 'bpbreid'
+  pretrained: True
+  save_model_flag: True
+  bpbreid:
+    pooling: 'gwap'  # ['gap', 'gmp', 'gwap', 'gwap2']
+    normalization: 'identity' # 'batch_norm_2d' 'identity'
+    mask_filtering_training: False
+    mask_filtering_testing: True
+    training_binary_visibility_score: True
+    testing_binary_visibility_score: True
+    last_stride: 1
+    learnable_attention_enabled: False
+    dim_reduce: 'after_pooling' # 'none', 'before_pooling', 'after_pooling', 'after_pooling_with_dropout'
+    dim_reduce_output: 512
+    backbone: 'hrnet32' # 'hrnet32' 'resnet50' 'fastreid_resnet' 'fastreid_resnet_ibn' 'fastreid_resnet_nl' 'fastreid_resnet_ibn_nl'
+    test_embeddings: ['bn_foreg', 'parts'] #  ['globl', 'foreg', 'conct', 'parts']
+    test_use_target_segmentation: 'none' # 'none' 'hard' 'soft'
+    shared_parts_id_classifier: False
+    hrnet_pretrained_path: '/home/vso/models' # FIXME refactor model loading (use urls)
+
+loss:
+  name: 'part_based'
+  triplet:
+    margin: 0.3
+  part_based:
+    name: 'part_based_triplet_loss_mean' # ['inter_parts_triplet_loss', 'intra_parts_triplet_loss', 'part_based_triplet_loss_max', 'part_based_triplet_loss_mean', 'part_based_triplet_loss_min', 'part_based_triplet_loss_max_min', 'part_based_triplet_loss_random_max_min']
+    weights:
+      globl:
+        ce: 1.
+        tr: 0.
+      foreg:
+        ce: 1.
+        tr: 1.
+      conct:
+        ce: 1.
+        tr: 0.
+      parts:
+        ce: 0.
+        tr: 1.
+      pixls:
+        ce: 0.35
+
+train:
+  batch_size: 64
+  eval_freq: 0
+  max_epoch: 120 # 45 120
+  stepsize: [40, 70] # [40, 70] [25, 35]
+  optim: 'adam' # 'adam', 'amsgrad', 'sgd', 'rmsprop', 'radam'
+  lr: 0.00035
+  lr_scheduler: 'warmup_multi_step' # 'single_step' 'multi_step' 'cosine' 'warmup_multi_step'
+  fixbase_epoch: 0
+
+test:
+  evaluate: False # test only
+  start_eval: 40
+  batch_size: 128
+  batch_size_pairwise_dist_matrix: 5000
+  normalize_feature: True
+  dist_metric: 'euclidean' # ['euclidean', 'cosine']
+  visrank: True
+  visrank_per_body_part: False
+  vis_embedding_projection: False
+  vis_feature_maps: False
+  visrank_topk: 10
+  visrank_count: 10
+  visrank_q_idx_list: []
+  part_based:
+    dist_combine_strat: mean

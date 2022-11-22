@@ -2,8 +2,8 @@ import torch
 import numpy as np
 
 from pathlib import Path
-from trackers.strong_sort.utils.parser import get_config
-from trackers.strong_sort.strong_sort import StrongSORT
+from modules.track.strong_sort.utils.parser import get_config
+from modules.track.strong_sort.strong_sort import StrongSORT
 
 @torch.no_grad()
 class StrongSORT2detections():
@@ -13,16 +13,11 @@ class StrongSORT2detections():
         weights = Path(self.cfg.STRONGSORT.WEIGHTS).resolve()
         
         self.model = StrongSORT(
-            weights,
-            device,
-            self.cfg.STRONGSORT.HALF,
             max_dist=self.cfg.STRONGSORT.MAX_DIST,
             max_iou_distance=self.cfg.STRONGSORT.MAX_IOU_DISTANCE,
             max_age=self.cfg.STRONGSORT.MAX_AGE,
             n_init=self.cfg.STRONGSORT.N_INIT,
             nn_budget=self.cfg.STRONGSORT.NN_BUDGET,
-            mc_lambda=self.cfg.STRONGSORT.MC_LAMBDA,
-            ema_alpha=self.cfg.STRONGSORT.EMA_ALPHA,
         )
         # For camera compensation
         self.prev_frame = None
@@ -33,7 +28,7 @@ class StrongSORT2detections():
         input = input*255.0
         input = input.astype(np.uint8) # -> to uint8
         return input
-    
+
     def _camera_compensation(self, curr_frame):
         if self.cfg.STRONGSORT.ECC:  # camera motion compensation
             self.model.tracker.camera_update(self.prev_frame, curr_frame)
@@ -48,18 +43,25 @@ class StrongSORT2detections():
                 scores.append(detection.bbox.conf)
         
         xywhs = torch.Tensor(np.asarray(xywhs))
+        reid_features = torch.stack([det.reid_features for det in detections])
+        visibility_scores = torch.stack([det.visibility_score for det in detections])
         scores = torch.Tensor(scores)
         classes = torch.Tensor([0]*len(scores))
-        return xywhs, scores, classes
+        return xywhs, reid_features, visibility_scores, scores, classes
         
     def run(self, data, detections):
-        input = self._image2input(data['image'])
-        self._camera_compensation(input)
+        image = self._image2input(data['image'])
+        self._camera_compensation(image)
         
         results = []
-        xywhs, scores, classes = self._detections2inputs(detections)
+        xywhs, reid_features, visibility_scores, scores, classes = self._detections2inputs(detections)
         if xywhs.nelement() != 0: # check if a detection has been made
-            results = self.model.update(xywhs, scores, classes, input)
+            results = self.model.update(xywhs,
+                                        reid_features,
+                                        visibility_scores,
+                                        scores,
+                                        classes,
+                                        image)
         
         detections = self._update_detections(results, detections)
         return detections

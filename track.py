@@ -1,40 +1,47 @@
 import os
 import yaml
 import argparse
-from tqdm import tqdm
-
+import random
 import torch
 
+from tqdm import tqdm
+
+from lib.dataset import ImageFolder
 from lib.tracker import Tracker
-from lib.datasets import ImageFolder
 from lib.vis_engine import VisEngine
+from lib.torchreid2detections import Torchreid2detections  # need to import Torchreid2detections before
+# StrongSORT2detections, so that 'bpbreid' is added to system path first
 from lib.dekr2detections import DEKR2detections
 from lib.strong_sort2detections import StrongSORT2detections
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('input_dir', type=str,
+    parser.add_argument('--input-dir', type=str,
                         help='path to directory containing images')
     parser.add_argument('--vis-cfg', type=str,
                         default='configs/track.yaml',
                         help='path to visualization config file')
-    parser.add_argument('--dekr-cfg', type=str, 
-                        default='configs/dekr.yaml', 
+    parser.add_argument('--dekr-cfg', type=str,
+                        default='configs/dekr.yaml',
                         help='path to dekr config file')
-    parser.add_argument('--strongsort-cfg', type=str, 
-                        default='trackers/strong_sort/configs/track.yaml', 
+    parser.add_argument('--strongsort-cfg', type=str,
+                        default='configs/strongsort/track.yaml',
                         help='path to strongsort config file')
+    parser.add_argument('--bpbreid-cfg', type=str, default='')
+    parser.add_argument('--job-id', type=int,
+                        help='Slurm job id', default=None)
     args = parser.parse_args()
     return args
 
 
-@torch.no_grad()
 def track(
     input_dir,
     vis_cfg,
     dekr_cfg,
     strongsort_cfg,
+    bpbreid_cfg,
+    job_id=random.randint(0, 1_000_000_000),
     *args, **kwargs
 ):
     # handle vis_cfg and paths
@@ -52,14 +59,23 @@ def track(
     # select device
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     
-    # load pose extractor 
+    # load pose extractor
     # TODO make it modulable and more parametrable
     model_pose = DEKR2detections(
-        dekr_cfg, 
+        dekr_cfg,
         device,
         vis_threshold=0.3 # FIXME add vis channel
     )
-    
+
+    # load reid
+    model_reid = Torchreid2detections(
+        device,
+        save_dir,
+        bpbreid_cfg,
+        model_pose,
+        job_id
+    )
+
     # load model tracker
     # TODO make it modulable and more parametrable
     model_track = StrongSORT2detections(
@@ -69,17 +85,23 @@ def track(
     
     # load dataset
     dataset = ImageFolder(input_dir)
-    
+
+    # train
+    model_reid.train()
+
     # process images
     all_detections = []
     for data in tqdm(dataset, desc='Inference'): # tensor RGB (3, H, W)
         # pose estimation part -> create detections object
-        detections = model_pose.run(data)
-        
+        detections, _ = model_pose.run(data)
+
+        # reid part -> update detections object
+        detections = model_reid.run(detections, data)
+
         # tracking part -> update detections object
         detections = model_track.run(data, detections)
         all_detections.extend(detections)
-    
+
     tracker = Tracker([det.asdict() for det in all_detections])
     
     # visualization part

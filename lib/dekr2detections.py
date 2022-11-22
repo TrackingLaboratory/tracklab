@@ -1,18 +1,16 @@
 import cv2
 import numpy as np
 from types import SimpleNamespace
-
 import torch
 import torchvision.transforms as T
 
 from lib.tracker import Detection, Metadata, Keypoint, Bbox
 import warnings
 warnings.filterwarnings('ignore')
+from modules.detect.DEKR.lib.config import cfg
+from modules.detect.DEKR.lib.config import update_config
 
-from detectors.DEKR.lib.config import cfg
-from detectors.DEKR.lib.config import update_config
-
-import detectors.DEKR.tools._init_paths
+import modules.detect.DEKR.tools._init_paths  # FIXME can we avoid this?
 import models
 from core.inference import get_multi_stage_outputs
 from core.inference import aggregate_results
@@ -23,7 +21,8 @@ from utils.transforms import get_final_preds
 from utils.transforms import get_multi_scale_size
 from utils.rescore import rescore_valid
 
-@torch.no_grad()
+
+@torch.no_grad()  # FIXME Is this required HERE?
 class DEKR2detections():
     def __init__(self, p_cfg, device, vis_threshold=0.3):
         args = SimpleNamespace(cfg=p_cfg, opts=[])
@@ -67,7 +66,8 @@ class DEKR2detections():
             dim = (int(ratio*W), self.max_img_size)
             input = cv2.resize(input, dim, interpolation=cv2.INTER_LINEAR) # -> (h, w, 3)
         return input
-        
+
+    @torch.no_grad()
     def run(self, data):
         input = self._image2input(data['image'])
         
@@ -111,8 +111,7 @@ class DEKR2detections():
             for score, pose in zip(scores, poses):
                 if score >= self.vis_threshold:
                     results_scores.append(score)
-                    results_poses.append(pose)            
-        
+                    results_poses.append(pose)
         results_scores = np.asarray(results_scores)
         results_poses = np.asarray(results_poses)
         h, w = input.shape[:2]
@@ -120,9 +119,9 @@ class DEKR2detections():
         detection = self._results2detections(results_poses,
                                             results_scores,
                                             data, h, w)
-        return detection
-        
-    def _results2detections(self, results_poses, results_scores, data, h, w):     
+        return detection, heatmap_avg
+
+    def _results2detections(self, results_poses, results_scores, data, h, w):
         detections = []
         for score, pose in zip(results_scores, results_poses):
             detection = Detection()
@@ -146,7 +145,7 @@ class DEKR2detections():
             detection.bbox = Bbox(left_top[0], left_top[1], width, height, score)
             detection.source = 1
             detections.append(detection)
-        
+
         if not detections:
             detection = Detection()
             detection.metadata = Metadata(**{
@@ -154,5 +153,5 @@ class DEKR2detections():
             })
             detection.source = 0
             detections.append(detection)
-        
+
         return detections

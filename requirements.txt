@@ -1,88 +1,33 @@
-absl-py==1.2.0
-attrs==22.1.0
-beautifulsoup4==4.11.1
-brotlipy @ file:///home/conda/feedstock_root/build_artifacts/brotlipy_1648854167867/work
-cachetools==5.2.0
-certifi==2022.9.24
-cffi @ file:///tmp/abs_98z5h56wf8/croots/recipe/cffi_1659598650955/work
-charset-normalizer @ file:///home/conda/feedstock_root/build_artifacts/charset-normalizer_1661170624537/work
-contourpy==1.0.5
-crowdposetools==2.0
-cryptography @ file:///home/conda/feedstock_root/build_artifacts/cryptography_1652967019182/work
-cycler==0.11.0
-Cython==0.29.32
-easydict==1.10
-filelock==3.8.0
-flake8==5.0.4
-fonttools==4.37.4
-future==0.18.2
-gdown==4.5.1
-gitdb==4.0.9
-GitPython==3.1.29
-google-auth==2.12.0
-google-auth-oauthlib==0.4.6
-grpcio==1.49.1
-h5py==3.7.0
-idna @ file:///home/conda/feedstock_root/build_artifacts/idna_1663625384323/work
-imageio==2.22.1
-iniconfig==1.1.1
-isort==4.3.21
-json-tricks==3.15.5
-kiwisolver==1.4.4
-llvmlite==0.39.1
-Markdown==3.4.1
-MarkupSafe==2.1.1
-matplotlib==3.6.1
-mccabe==0.7.0
-mkl-fft==1.3.1
-mkl-random @ file:///home/builder/ci_310/mkl_random_1641843545607/work
-mkl-service==2.4.0
-numba==0.56.3
-numpy==1.23.4
-oauthlib==3.2.1
-opencv-python==4.6.0.66
-packaging==21.3
-pafy==0.5.5
-pandas==1.5.0
-Pillow==9.2.0
-pluggy==1.0.0
-protobuf==3.20.1
-py==1.11.0
-pyasn1==0.4.8
-pyasn1-modules==0.2.8
-pycocotools==2.0
-pycodestyle==2.9.1
-pycparser @ file:///home/conda/feedstock_root/build_artifacts/pycparser_1636257122734/work
-pyflakes==2.5.0
-pyOpenSSL @ file:///home/conda/feedstock_root/build_artifacts/pyopenssl_1663846997386/work
-pyparsing==3.0.9
-PySocks @ file:///home/conda/feedstock_root/build_artifacts/pysocks_1661604839144/work
-pytest==6.2.5
-python-dateutil==2.8.2
-pytz==2022.4
-PyYAML==6.0
-requests @ file:///home/conda/feedstock_root/build_artifacts/requests_1661872987712/work
-requests-oauthlib==1.3.1
-rsa==4.9
-scipy==1.9.2
-seaborn==0.12.0
-Shapely==1.8.0
-six @ file:///home/conda/feedstock_root/build_artifacts/six_1620240208055/work
-smmap==5.0.0
-soupsieve==2.3.2.post1
-sparse==0.13.0
-tb-nightly==2.11.0a20221012
-tensorboard-data-server==0.6.1
-tensorboard-plugin-wit==1.8.1
-tensorboardX==2.5.1
-toml==0.10.2
-torch==1.12.1
-torchaudio==0.12.1
-torchvision==0.13.1
-tqdm==4.64.1
-typing_extensions @ file:///home/conda/feedstock_root/build_artifacts/typing_extensions_1665144421445/work
-urllib3==1.26.12
-Werkzeug==2.2.2
-yacs==0.1.8
-yapf==0.32.0
-youtube-dl==2020.12.2
+albumentations
+coremltools
+Cython
+easydict
+Flask
+gdown
+h5py
+imageio
+ipdb
+ipython
+json_tricks
+matplotlib
+numpy
+opencv-python
+ortools
+pafy
+pandas
+Pillow
+psutil
+pycocotools
+pytest
+PyYAML
+requests
+scipy
+setuptools
+Shapely
+six
+tensorboard
+torch
+torchvision
+tqdm
+xmltodict
+yacs
