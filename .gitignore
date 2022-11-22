@@ -1,5 +1,7 @@
 runs/
 data/
+outputs/
+multiruns/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
