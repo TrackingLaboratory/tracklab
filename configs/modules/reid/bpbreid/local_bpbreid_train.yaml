@@ -66,7 +66,7 @@ model:
     test_embeddings: ['bn_foreg', 'parts'] #  ['globl', 'foreg', 'conct', 'parts']
     test_use_target_segmentation: 'none' # 'none' 'hard' 'soft'
     shared_parts_id_classifier: False
-    hrnet_pretrained_path: 'bpbreid/pretrained_models/' # FIXME refactor model loading (use urls)
+    hrnet_pretrained_path: 'modules/reid/bpbreid/pretrained_models/' # FIXME refactor model loading (use urls)
 
 loss:
   name: 'part_based'

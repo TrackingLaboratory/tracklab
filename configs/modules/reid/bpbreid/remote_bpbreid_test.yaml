@@ -2,12 +2,12 @@ project:
     name: "Reconnaissance"
     experiment_name: ""
     notes: ""
-    tags: []
+    tags: ["test"]
     logger:
       use_clearml: False
       use_neptune: False
-      use_tensorboard: True
-      use_wandb: True
+      use_tensorboard: False
+      use_wandb: False
 data:
   root: '~/datasets/reid'
   type: 'image'
@@ -18,29 +18,13 @@ data:
   combineall: False
   transforms: ['rc', 're']
   masks:
-    preprocess: 'cc6'  # 'none', 'full', 'id', 'ids', 'bs_fu', 'bs_fu_bb', 'mu_sc', 'four', 'four_no', 'four_v', 'four_v_pif', 'five_v', 'six', 'six_no', 'eight'
-    background_computation_strategy: 'sum'  # threshold, diff_from_max
-    softmax_weight: 0
+    preprocess: 'eight'  # 'none', 'full', 'id', 'ids', 'bs_fu', 'bs_fu_bb', 'mu_sc', 'four', 'four_no', 'four_v', 'four_v_pif', 'five_v', 'six', 'six_no', 'eight'
+    background_computation_strategy: 'threshold'  # threshold, diff_from_max
+    softmax_weight: 15
     mask_filtering_threshold: 0.5
   save_dir: '/home/vso/log/posetrack/reid'
   masks_dir: 'gaussian' # 'pifpaf' 'pifpaf_maskrcnn_filtering' 'isp_6_parts'
-  workers: 4
-  mot:
-    train:
-      min_vis: 0.3
-      min_h: 50
-      min_w: 25
-      min_samples_per_id: 4
-      max_samples_per_id: 20
-      max_total_ids: 1000
-    test:
-      min_vis: 0.
-      min_h: 0
-      min_w: 0
-      min_samples_per_id: 4
-      max_samples_per_id: 10
-      max_total_ids: -1
-      ratio_query_per_id: 0.2
+  workers: 8
 
 sampler:
   train_sampler: RandomIdentitySampler # sampler for source train loader
@@ -50,7 +34,8 @@ sampler:
 model:
   name: 'bpbreid'
   pretrained: True
-  save_model_flag: True
+  save_model_flag: False
+  load_weights: 'modules/reid/bpbreid/pretrained_models/job-10289_120_model.pth.tar'
   bpbreid:
     pooling: 'gwap'  # ['gap', 'gmp', 'gwap', 'gwap2']
     normalization: 'identity' # 'batch_norm_2d' 'identity'
@@ -59,10 +44,10 @@ model:
     training_binary_visibility_score: True
     testing_binary_visibility_score: True
     last_stride: 1
-    learnable_attention_enabled: False
+    learnable_attention_enabled: True
     dim_reduce: 'after_pooling' # 'none', 'before_pooling', 'after_pooling', 'after_pooling_with_dropout'
     dim_reduce_output: 512
-    backbone: 'hrnet32' # 'hrnet32' 'resnet50' 'fastreid_resnet' 'fastreid_resnet_ibn' 'fastreid_resnet_nl' 'fastreid_resnet_ibn_nl'
+    backbone: 'resnet50' # 'hrnet32' 'resnet50' 'fastreid_resnet' 'fastreid_resnet_ibn' 'fastreid_resnet_nl' 'fastreid_resnet_ibn_nl'
     test_embeddings: ['bn_foreg', 'parts'] #  ['globl', 'foreg', 'conct', 'parts']
     test_use_target_segmentation: 'none' # 'none' 'hard' 'soft'
     shared_parts_id_classifier: False
@@ -101,13 +86,13 @@ train:
   fixbase_epoch: 0
 
 test:
-  evaluate: False # test only
+  evaluate: True # test only
   start_eval: 40
   batch_size: 128
   batch_size_pairwise_dist_matrix: 5000
   normalize_feature: True
   dist_metric: 'euclidean' # ['euclidean', 'cosine']
-  visrank: True
+  visrank: False
   visrank_per_body_part: False
   vis_embedding_projection: False
   vis_feature_maps: False

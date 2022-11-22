@@ -11,19 +11,19 @@ project:
 data:
   root: '~/datasets/reid'
   type: 'image'
-  sources: ['market1501']
-  targets: ['market1501', 'occluded_reid']
-  height: 384
-  width: 128
+  sources: ['posetrack21_reid']
+  targets: ['posetrack21_reid']
+  height: 64
+  width: 32
   combineall: False
   transforms: ['rc', 're']
   masks:
-    preprocess: 'eight'  # 'none', 'full', 'id', 'ids', 'bs_fu', 'bs_fu_bb', 'mu_sc', 'four', 'four_no', 'four_v', 'four_v_pif', 'five_v', 'six', 'six_no', 'eight'
+    preprocess: 'cc6'  # 'none', 'full', 'id', 'ids', 'bs_fu', 'bs_fu_bb', 'mu_sc', 'four', 'four_no', 'four_v', 'four_v_pif', 'five_v', 'six', 'six_no', 'eight'
     background_computation_strategy: 'sum'  # threshold, diff_from_max
     softmax_weight: 0
     mask_filtering_threshold: 0.5
   save_dir: '/Users/vladimirsomers/Code/logs/deep-person-reid/bot_synergy'
-  masks_dir: 'pifpaf_maskrcnn_filtering' # 'pifpaf' 'pifpaf_maskrcnn_filtering' 'isp_6_parts'
+  masks_dir: 'gaussian' # 'pifpaf' 'pifpaf_maskrcnn_filtering' 'isp_6_parts'
   workers: 0
   mot:
     train:
@@ -51,7 +51,7 @@ model:
   name: 'bpbreid'
   pretrained: True
   save_model_flag: True
-  load_weights: 'bpbreid/pretrained_models/job-10289_120_model.pth.tar'
+  load_weights: 'runs/track/exp14/2022_11_15_14_18_00_18Scf2c4481-41bc-4aeb-bbd7-5c66743f53aamodel/job-63029147_20_model.pth.tar'
   bpbreid:
     pooling: 'gwap'  # ['gap', 'gmp', 'gwap', 'gwap2']
     normalization: 'identity' # 'batch_norm_2d' 'identity'
@@ -60,14 +60,14 @@ model:
     training_binary_visibility_score: True
     testing_binary_visibility_score: True
     last_stride: 1
-    learnable_attention_enabled: True
+    learnable_attention_enabled: False
     dim_reduce: 'after_pooling' # 'none', 'before_pooling', 'after_pooling', 'after_pooling_with_dropout'
-    dim_reduce_output: 512
-    backbone: 'hrnet32' # 'hrnet32' 'resnet50' 'fastreid_resnet' 'fastreid_resnet_ibn' 'fastreid_resnet_nl' 'fastreid_resnet_ibn_nl'
+    dim_reduce_output: 256
+    backbone: 'resnet50' # 'hrnet32' 'resnet50' 'fastreid_resnet' 'fastreid_resnet_ibn' 'fastreid_resnet_nl' 'fastreid_resnet_ibn_nl'
     test_embeddings: ['bn_foreg', 'parts'] #  ['globl', 'foreg', 'conct', 'parts']
     test_use_target_segmentation: 'none' # 'none' 'hard' 'soft'
     shared_parts_id_classifier: False
-    hrnet_pretrained_path: 'bpbreid/pretrained_models/' # FIXME refactor model loading (use urls)
+    hrnet_pretrained_path: 'modules/reid/bpbreid/pretrained_models/' # FIXME refactor model loading (use urls)
 
 test:
   evaluate: True # test only
@@ -83,3 +83,5 @@ test:
   visrank_topk: 10
   visrank_count: 4
   visrank_q_idx_list: []
+  part_based:
+    dist_combine_strat: mean

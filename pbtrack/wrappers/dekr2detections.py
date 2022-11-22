@@ -1,16 +1,17 @@
+import sys
 import cv2
 import numpy as np
 from types import SimpleNamespace
 import torch
 import torchvision.transforms as T
 
-from pbtrack.tracker import Detection, Metadata, Keypoint, Bbox
+from pbtrack.tracker.tracker import Detection, Metadata, Keypoint, Bbox
 import warnings
 warnings.filterwarnings('ignore')
 from modules.detect.DEKR.lib.config import cfg
 from modules.detect.DEKR.lib.config import update_config
 
-import modules.detect.DEKR.tools._init_paths  # FIXME can we avoid this?
+sys.path.append('modules/detect/DEKR/lib')
 import models
 from core.inference import get_multi_stage_outputs
 from core.inference import aggregate_results

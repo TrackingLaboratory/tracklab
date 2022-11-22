@@ -6,13 +6,13 @@ import torch
 
 from tqdm import tqdm
 
-from pbtrack.dataset import ImageFolder
-from pbtrack.tracker import Tracker
-from pbtrack.vis_engine import VisEngine
-from pbtrack.torchreid2detections import Torchreid2detections  # need to import Torchreid2detections before
+from pbtrack.datasets.posetrack import ImageFolder
+from pbtrack.tracker.tracker import Tracker
+from pbtrack.visualization.vis_engine import VisEngine
+from pbtrack.wrappers.torchreid2detections import Torchreid2detections  # need to import Torchreid2detections before
 # StrongSORT2detections, so that 'bpbreid' is added to system path first
-from pbtrack.dekr2detections import DEKR2detections
-from pbtrack.strong_sort2detections import StrongSORT2detections
+from pbtrack.wrappers.dekr2detections import DEKR2detections
+from pbtrack.wrappers.strong_sort2detections import StrongSORT2detections
 
 
 def parse_args():
@@ -20,15 +20,15 @@ def parse_args():
     parser.add_argument('--input-dir', type=str,
                         help='path to directory containing images')
     parser.add_argument('--vis-cfg', type=str,
-                        default='configs/track.yaml',
+                        default='configs/pbtrack/track.yaml',
                         help='path to visualization config file')
     parser.add_argument('--dekr-cfg', type=str,
-                        default='configs/dekr.yaml',
+                        default='configs/modules/detect/dekr/dekr.yaml',
                         help='path to dekr config file')
     parser.add_argument('--strongsort-cfg', type=str,
-                        default='configs/strongsort/track.yaml',
+                        default='configs/modules/track/strongsort/track.yaml',
                         help='path to strongsort config file')
-    parser.add_argument('--bpbreid-cfg', type=str, default='')
+    parser.add_argument('--bpbreid-cfg', type=str, default='configs/modules/reid/bpbreid/local_bpbreid_train.yaml')
     parser.add_argument('--job-id', type=int,
                         help='Slurm job id', default=None)
     args = parser.parse_args()
