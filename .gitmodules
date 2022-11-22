@@ -1,6 +1,6 @@
 [submodule "reid/bpbreid"]
 	path = modules/reid/bpbreid
-	url = https://github.com/VlSomers/person-reid
+	url = git@github.com:VlSomers/person-reid.git
 	branch = reconnaissance
 [submodule "detect/DEKR"]
 	path = modules/detect/DEKR
