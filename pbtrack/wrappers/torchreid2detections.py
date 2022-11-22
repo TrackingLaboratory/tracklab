@@ -47,7 +47,7 @@ class Torchreid2detections:
     def __init__(self, device, save_path, config_path, model_pose, job_id):
         config = {
             'crop_dim': (384, 128),
-            'datasets_root': '~/datasets/other',
+            'datasets_root': '/globalscratch/ucl/elen/bstandae/data/',
             'pose_model': model_pose
         }
         torchreid.data.register_image_dataset("posetrack21_reid", configure_dataset_class(PoseTrack21ReID, **config), "pt21")
@@ -77,7 +77,8 @@ class Torchreid2detections:
                 model_path=self.cfg.model.load_weights,
                 device=self.device,
                 image_size=(self.cfg.data.height, self.cfg.data.width),
-                model=self.model
+                model=self.model,
+                verbose=False, # FIXME @Vladimir
             )
         mask_w, mask_h = 32, 64
         im_crops = []

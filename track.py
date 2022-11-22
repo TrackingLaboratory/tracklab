@@ -28,7 +28,8 @@ def parse_args():
     parser.add_argument('--strongsort-cfg', type=str,
                         default='configs/modules/track/strongsort/track.yaml',
                         help='path to strongsort config file')
-    parser.add_argument('--bpbreid-cfg', type=str, default='configs/modules/reid/bpbreid/local_bpbreid_train.yaml')
+    parser.add_argument('--bpbreid-cfg', type=str, 
+                        default='configs/modules/reid/bpbreid/local_bpbreid_test.yaml')
     parser.add_argument('--job-id', type=int,
                         help='Slurm job id', default=None)
     args = parser.parse_args()
