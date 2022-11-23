@@ -60,6 +60,9 @@ class Torchreid2detections:
             "pt21",
         )
         self.cfg = CN(OmegaConf.to_container(cfg, resolve=True))
+        # set parts information (number of parts K and each part name),
+        # depending on the original loaded masks size or the transformation applied:
+        self.cfg = build_config(config_file=self.cfg)
         self.cfg.data.save_dir = save_path
         self.cfg.project.job_id = job_id
         self.cfg.use_gpu = torch.cuda.is_available()

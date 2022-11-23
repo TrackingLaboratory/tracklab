@@ -2,7 +2,7 @@ defaults:
   - _self_
   - detection: dekr
   - track: track
-  - reid: local_bpbreid_test
+  - reid: bpbreid
   - dataset: image_folder
 input_folder: "${oc.env:HOME}/projects/pb-track/images"
 project: track
