@@ -83,8 +83,8 @@ cfg:
       background_computation_strategy: "threshold" # threshold, diff_from_max
       mask_filtering_threshold: 0.5
     mot: # Config for building a ReID dataset from a MOT dataset
-      fig_size: (128, 64) # Figure size for visualization purpose of the reid heatmaps/masks labels
-      mask_size: (32, 16) # Size of saved the numpy array for the reid heatmaps/masks labels
+      fig_size: [128, 64] # Figure size for visualization purpose of the reid heatmaps/masks labels
+      mask_size: [32, 16] # Size of saved the numpy array for the reid heatmaps/masks labels
       train:
         min_vis: 0.3
         min_h: 50
