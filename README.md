@@ -54,6 +54,7 @@ pip install -r modules/detect/DEKR/requirements.txt
 ```bash
 git clone https://github.com/cocodataset/cocoapi.git ../cocoapi
 cd ../cocoapi/PythonAPI
+pip install Cython
 make install
 cd ../../pb-track
 ```
@@ -61,7 +62,6 @@ cd ../../pb-track
 [CrowdPose](https://github.com/Jeff-sjtu/CrowdPose) installation
 
 ```bash
-pip install Cython
 git clone https://github.com/Jeff-sjtu/CrowdPose.git ../CrowdPose
 cd ../CrowdPose/crowdpose-api/PythonAPI/
 sh install.sh
@@ -97,13 +97,25 @@ Then, install requirements
 pip install -r modules/eval/PoseTrack21/eval/posetrack21/requirements.txt
 ```
 
+If you encounter the error `Could not find library geos_c or load any of its variants`, try to install geos:
+
+```bash
+sudo apt-get install libgeos-dev
+```
+
+or
+
+```bash
+brew install geos
+```
+
 ##### modules/reid/bpreid
 
 ```bash
 cd modules/reid/bpbreid/
 pip install -r requirements.txt
-python modules/reid/bpbreid/setup.py develop
-cd ../../../
+python setup.py develop
+cd ../../..
 ```
 
 ##### modules/track/yolov5
