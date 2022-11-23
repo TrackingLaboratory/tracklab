@@ -31,3 +31,4 @@ torchvision
 tqdm
 xmltodict
 yacs
+hydra-core
