@@ -1,131 +1,154 @@
-# reconn.ai.ssance
+# PbTrack
 
-Work in progress.
+Work in progress
 
-Repo sources:
-- [Yolov5 + StrongSORT with OSNet](https://github.com/mikel-brostrom/Yolov5_StrongSORT_OSNet)
-- [PoseTrack21](https://github.com/anDoer/PoseTrack21)
-- [DEKR](https://github.com/HRNet/DEKR)
+## Installation guide
 
+(tested on python 3.8.6)
 
-## Installation
+### Clone the repo
 
-*TODO: verify if everything is ok*
-
-1. Clone this repo
-
-    ```git clone "https://github.com/bstandaert/reconn.ai.ssance.git"```
-
-2. Install DEKR dependencies:
-   ```
-   pip install -r DEKR/requirements.txt
-   ```
-3. Install [COCOAPI](https://github.com/cocodataset/cocoapi) (/!\ 'pip install cython' might be needed to install cocoapi/crowdposeapi):
-   ```
-   # COCOAPI=/path/to/clone/cocoapi
-   git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
-   cd $COCOAPI/PythonAPI
-   # Install into global site-packages
-   make install
-   # Alternatively, if you do not have permissions or prefer
-   # not to install the COCO API into global site-packages
-   python3 setup.py install --user
-   ```
-   Note that instructions like # COCOAPI=/path/to/install/cocoapi indicate that you should pick a path where you'd like to have the software cloned and then set an environment variable (COCOAPI in this case) accordingly.
-4. Install [CrowdPoseAPI](https://github.com/Jeff-sjtu/CrowdPose) exactly the same as COCOAPI.
-5. Manage DEKR folder:
-    1. Download the pretrainded models from this [URL](https://mailustceducn-my.sharepoint.com/:f:/g/personal/aa397601_mail_ustc_edu_cn/EmoNwNpq4L1FgUsC9KbWezABSotd3BGOlcWCdkBi91l50g?e=HWuluh).
-    2. Move the downloaded models to the right place. The structure of the folder should looks like:
-
-        ```
-        DEKR/
-        ├── experiments/
-            ├── ...
-        ├── lib/
-            ├── ...
-        ├── model/
-            ├── imagenet/
-                ├── *.pth
-            ├── pose_coco/
-                ├── *.pth
-            ├── pose_crowdpose/
-                ├── *.pth
-            ├── rescore/
-                ├── *.pth
-        ├── tools/
-            ├── ...
-        ├── ...
-        ```
-6. Install BPBreID requirements:
-    ```pip install -r bpbreid/requirements.txt```
-
-7. Setup BPBreID (required for fast Cython evaluation):
-    ```
-    cd bpbreid
-    python setup.py develop
-    ``` 
-9. To remove the IDE-level error 'Unresolved reference 'torchreid'' when using the 'from torchreid... import ...' statement inside BPBreID python files:
-   1. In PyCharm, right click on 'bpbreid' folder, then choose 'Mark Directory as' -> 'Sources root'
-   2. In VSCode, ...
-
-10. Install Reconnaissance requirements:
-     ```pip install -r requirements.txt```
-
-11. Download [PoseTrack21](https://github.com/anDoer/PoseTrack21) dataset. You can refer to [their documentation](https://github.com/anDoer/PoseTrack21#how-to-get-the-dataset) for the instructions. The structure of the folder should looks like:
-     ```
-     PoseTrack21/
-     ├── baselines/
-         ├── ...
-     ├── doc/
-         ├── ...
-     ├── eval/
-         ├── ...
-     ├── download_dataset.py
-     ├── ...
-     ```
-12. Weights from ```strong_sort/``` folder should be downloaded automatically. The structure of the folder should looks like:
-     ```
-     strong_sort/
-     ├── configs/
-         ├── ...
-     ├── deep/
-         ├── ...
-     ├── results/
-         ├── ...
-     ├── sort/
-         ├── ...
-     ├── utils/
-         ├── ...
-     ├── weights/
-         ├── *.pt
-     ├── results/
-         ├── ...
-     ├── __init__.py
-     ├── reid_multibackend.py
-     ├── strong_sort.py
-     ├── ...
-     ```
-*TODO: check if this is correct.*
-
-11. YOLOv5 is not yet been implemented. *TODO: implement yolov5 module for track.py and val.py.*
-
-## Repo structure
-
-Your repository should look like:
+```bash
+git clone https://github.com/PbTrack/pb-track.git --recurse-submodules
 ```
-reconn.ai.ssance/
-├── DEKR/
-    ├── ...
-├── PoseTrack21/
-    ├── ...
-├── strong_sort/
-    ├── ...
-├── yolov5/
-    ├── ...
-├── datasets.py
-├── dekr2detections.py
-├── detections.py
-├── track.py
-├── val.py
-├── ...
+
+or
+
+```bash
+git clone git@github.com:PbTrack/pb-track.git
+cd pb-track
+git submodule update --init --recursive
+```
+
+### Manage environment
+
+#### Create a new environment
+
+```bash
+conda create --name pb-track
+conda activate pb-track
+```
+
+#### Install the dependencies
+
+**TODO**
+
+Vérifier si un seul call à requirements.txt dans notre folder de base suffit.
+
+**END TODO**
+
+##### modules/detect/DEKR
+
+**TODO**
+
+(Sera viré si on arrive à utiliser MMPose)
+
+**END TODO**
+
+```bash
+pip install -r modules/detect/DEKR/requirements.txt
+```
+
+[COCOAPI](https://github.com/cocodataset/cocoapi) installation
+
+```bash
+git clone https://github.com/cocodataset/cocoapi.git ../cocoapi
+cd ../cocoapi/PythonAPI
+make install
+cd ../../pb-track
+```
+
+[CrowdPose](https://github.com/Jeff-sjtu/CrowdPose) installation
+
+```bash
+pip install Cython
+git clone https://github.com/Jeff-sjtu/CrowdPose.git ../CrowdPose
+cd ../CrowdPose/crowdpose-api/PythonAPI/
+sh install.sh
+cd ../../../pb-track
+```
+
+[download the weights](https://mailustceducn-my.sharepoint.com/personal/aa397601_mail_ustc_edu_cn/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Faa397601%5Fmail%5Fustc%5Fedu%5Fcn%2FDocuments%2FDEKR%2DDisentangled%2DKeypoint%2DRegression&ga=1) and make the modules/detect/DEKR/ directory look like
+
+```text
+${modules/detect/DEKR}
+|-- model
+`-- |-- imagenet
+    |   |-- hrnet_w32-36af842e.pth
+    |   `-- hrnetv2_w48_imagenet_pretrained.pth
+    |-- pose_coco
+    |   |-- pose_dekr_hrnetw32_coco.pth
+    |   `-- pose_dekr_hrnetw48_coco.pth
+    |-- pose_crowdpose
+    |   |-- pose_dekr_hrnetw32_crowdpose.pth
+    |   `-- pose_dekr_hrnetw48_crowdpose.pth
+    `-- rescore
+        |-- final_rescore_coco_kpt.pth
+        `-- final_rescore_crowd_pose_kpt.pth
+```
+
+##### modules/eval/PoseTrack21
+
+First, [get the dataset](https://github.com/anDoer/PoseTrack21/tree/35bd7033ec4e1a352ae39b9522df5a683f83781b#how-to-get-the-dataset).
+
+Then, install requirements
+
+```bash
+pip install -r modules/eval/PoseTrack21/eval/posetrack21/requirements.txt
+```
+
+##### modules/reid/bpreid
+
+```bash
+cd modules/reid/bpbreid/
+pip install -r requirements.txt
+python modules/reid/bpbreid/setup.py develop
+cd ../../../
+```
+
+##### modules/track/yolov5
+
+```bash
+pip install -r modules/track/yolov5/requirements.txt
+```
+
+##### bptrack
+
+```bash
+pip install -r requirements.txt
+```
+
+## Directory structure
+
+**TODO**
+
+Finish this once it is fixed.
+
+**END TODO**
+
+```text
+pb-track
+|-- configs
+|   |-- bpreid
+|   |   `-- *.yaml
+|   |-- strongsort
+|   |    `-- *.yaml
+|   `-- *.yaml
+|-- modules
+|   |-- detect
+|   |   `-- DEKR
+|   |       `-- *
+|   |-- eval
+|   |   `-- PoseTrack21
+|   |       `-- *
+|   |-- reid
+|   |   `-- bpbreid
+|   |       `-- *
+|   |-- track
+|   |   |-- strong_sort
+|   |   |   `-- *
+|   |   `-- yolov5
+|   |       `-- *
+|-- pbtrack
+...
 ```

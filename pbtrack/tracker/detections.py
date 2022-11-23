@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-from lib.utils.images import overlay_heatmap
+from pbtrack.utils.images import overlay_heatmap
 
 cmap = [(0,0,255), (0,128,255), (0,255,255), (0,255,128), (0,255,0), (128,255,0),
         (255,255,0), (255,128,0), (255,0,0), (255,0,128), (255,0,255), (128,0,255),

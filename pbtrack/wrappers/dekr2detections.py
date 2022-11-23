@@ -1,17 +1,19 @@
+import sys
 import cv2
 import numpy as np
 from types import SimpleNamespace
 import torch
 import torchvision.transforms as T
 
-from pbtrack.tracker import Detection, Metadata, Keypoint, Bbox
+from pbtrack.tracker.tracker import Detection, Metadata, Keypoint, Bbox
 import warnings
 
 warnings.filterwarnings("ignore")
 from modules.detect.DEKR.lib.config import cfg
 from modules.detect.DEKR.lib.config import update_config
+from hydra.utils import to_absolute_path
 
-import modules.detect.DEKR.tools._init_paths  # FIXME can we avoid this?
+sys.path.append(to_absolute_path("modules/detect/DEKR/lib"))
 import models
 from core.inference import get_multi_stage_outputs
 from core.inference import aggregate_results

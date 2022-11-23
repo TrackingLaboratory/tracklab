@@ -1,7 +1,6 @@
 defaults:
   - dekr_default
 
-_target_: pbtrack.dekr2detections.DEKR2detections
 vis_threshold: 0.3
 cfg:
   AUTO_RESUME: True

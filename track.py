@@ -1,11 +1,9 @@
 import logging
 from pathlib import Path
-import cv2
 import hydra
-from hydra.utils import instantiate, call
+from hydra.utils import instantiate
 import torch
-from pbtrack.tracker import Tracker
-from pbtrack.vis_engine import VisEngine
+from pbtrack.tracker.tracker import Tracker
 from tqdm import tqdm
 
 log = logging.getLogger(__name__)

@@ -52,15 +52,11 @@ class Torchreid2detections:
         wandb support
     """
 
-    def __init__(self, device, save_path, cfg, model_pose, job_id):
-        config = {
-            "crop_dim": (384, 128),
-            "datasets_root": "~/datasets/other",
-            "pose_model": model_pose,
-        }
+    def __init__(self, device, save_path, cfg, model_pose, dataset, job_id):
+        dataset_config = {**dataset, "pose_model": model_pose}
         torchreid.data.register_image_dataset(
             "posetrack21_reid",
-            configure_dataset_class(PoseTrack21ReID, **config),
+            configure_dataset_class(PoseTrack21ReID, **dataset_config),
             "pt21",
         )
         self.cfg = CN(OmegaConf.to_container(cfg, resolve=True))
@@ -90,6 +86,7 @@ class Torchreid2detections:
                 device=self.device,
                 image_size=(self.cfg.data.height, self.cfg.data.width),
                 model=self.model,
+                verbose=False,  # FIXME @Vladimir
             )
         mask_w, mask_h = 32, 64
         im_crops = []

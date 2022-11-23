@@ -42,7 +42,7 @@ class Detection:
     metadata: Optional[Metadata] = None
     source: Optional[Source] = 0
     bbox: Optional[Bbox] = None
-    keypoints: Optional[list[Keypoint]] = None
+    keypoints: Optional[list] = None
     reid_features : Optional[np.ndarray] = None
     visibility_score : Optional[np.ndarray] = None
     body_mask : Optional[np.ndarray] = None

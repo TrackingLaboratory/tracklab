@@ -1,4 +1,4 @@
-_target_: pbtrack.dekr2detections.DEKR2detections
+_target_: pbtrack.wrappers.dekr2detections.DEKR2detections
 vis_threshold: 0.3
 
 cfg:
