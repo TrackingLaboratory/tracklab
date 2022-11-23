@@ -1,5 +1,7 @@
 runs/
 data/
+outputs/
+multiruns/
 pb-track/
 .vscode/
 

@@ -1,0 +1,215 @@
+defaults:
+  - dataset: default
+
+_target_: pbtrack.wrappers.torchreid2detections.Torchreid2detections
+job_id: "${oc.env:SLURM_JOBID,0}" # TODO
+save_path: reid
+
+cfg:
+  project:
+    name: "Person-Re-Identification"
+    experiment_name: ""
+    diff_config: ""
+    notes: ""
+    tags: []
+    config_file: ""
+    debug_mode: False
+    logger:
+      use_clearml: False
+      use_neptune: False
+      use_tensorboard: False
+      use_wandb: False
+      matplotlib_show: False
+    job_id: "${reid.job_id}" # random.randint(0, 1_000_000_000)
+    experiment_id: "0" # str(uuid.uuid4())
+    start_time: "0" # datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%MS")
+
+  model:
+    name: "bpbreid"
+    pretrained: True # automatically load pretrained model weights if available (For example Resnet pretrained weights on ImageNet)
+    load_weights: "" # path to model weights
+    resume: "" # path to checkpoint for resume training
+    save_model_flag: False # path to checkpoint for resume training
+    bpbreid:
+      pooling: "gwap" # ['gap', 'gmp', 'gwap', 'gwap2']
+      normalization: "identity" # ['identity', 'batch_norm_2d']
+      mask_filtering_training: False
+      mask_filtering_testing: True
+      last_stride: 1
+      dim_reduce: "after_pooling" # 'none', 'before_pooling', 'after_pooling', 'after_pooling_with_dropout'
+      dim_reduce_output: 512
+      backbone: "resnet50" # 'resnet50' 'hrnet32' 'fastreid_resnet_ibn_nl'
+      learnable_attention_enabled: True
+      test_embeddings: ["bn_foreg", "parts"]
+      test_use_target_segmentation: "none"
+      training_binary_visibility_score: True
+      testing_binary_visibility_score: True
+      shared_parts_id_classifier: False
+      normalized_bned_embeddings: False
+      hrnet_pretrained_path: "/home/vso/projects/ISP-reID/pretrained_models"
+
+  data:
+    type: "image"
+    root: "reid-data"
+    sources: ["market1501"]
+    targets: ["market1501"]
+    workers: 4 # number of data loading workers, set to 0 to enable breakpoint debugging in dataloader code
+    split_id: 0 # split index
+    height: 256 # image height
+    width: 128 # image width
+    combineall: False # combine train, query and gallery for training
+    transforms: ["rc", "re"] # data augmentation ['rf', 'rc', 're', 'cj']
+    ro:
+      path: "/home/vso/datasets/other/Pascal_VOC/VOCdevkit/VOC2012"
+      p: 0.5
+      n: 1
+      min_overlap: 0.5
+      max_overlap: 0.8
+    cj:
+      brightness: 0.2
+      contrast: 0.15
+      saturation: 0.
+      hue: 0.
+      always_apply: False
+      p: 0.5
+    norm_mean: [0.485, 0.456, 0.406] # default is imagenet mean
+    norm_std: [0.229, 0.224, 0.225] # default is imagenet std
+    save_dir: "log" # path to save log
+    load_train_targets: False
+    masks_dir: "pifpaf_maskrcnn_filtering"
+    masks:
+      preprocess: "eight" # 'full', 'id', 'ids', 'bs_fu', 'bs_fu_bb', 'mu_sc', 'four', 'four_no', 'four_v', 'four_v_pif', 'five_v', 'six', 'six_no', 'eight'
+      softmax_weight: 15
+      background_computation_strategy: "threshold" # threshold, diff_from_max
+      mask_filtering_threshold: 0.5
+    mot: # Config for building a ReID dataset from a MOT dataset
+      fig_size: (128, 64) # Figure size for visualization purpose of the reid heatmaps/masks labels
+      mask_size: (32, 16) # Size of saved the numpy array for the reid heatmaps/masks labels
+      train:
+        min_vis: 0.3
+        min_h: 50
+        min_w: 25
+        min_samples_per_id: 4
+        max_samples_per_id: 40
+        max_total_ids: -1 # -1 means no limit
+      test:
+        min_vis: 0.3
+        min_h: 50
+        min_w: 25
+        min_samples_per_id: 4
+        max_samples_per_id: 40
+        max_total_ids: -1 # -1 means no limit
+        ratio_query_per_id: 0.2
+
+  # specific datasets
+  market1501:
+    use_500k_distractors: False # add 500k distractors to the gallery set for market1501
+  cuhk03:
+    labeled_images: False # use labeled images, if False, use detected images
+    classic_split: False # use classic split by Li et al. CVPR14
+    use_metric_cuhk03: False # use cuhk03's metric for evaluation
+  dartfish:
+    train_size: 10_000
+    val_size: 2_000
+    test_size: 10_000
+    query_per_id: 10_000
+
+  sampler:
+    train_sampler: "RandomIdentitySampler" # sampler for source train loader
+    train_sampler_t: "RandomIdentitySampler" # sampler for target train loader
+    num_instances: 4 # number of instances per identity for RandomIdentitySampler
+
+  video:
+    seq_len: 15 # number of images to sample in a tracklet
+    sample_method: "evenly" # how to sample images from a tracklet 'random'/'evenly'/'all'
+    pooling_method: "avg" # how to pool features over a tracklet
+
+  train:
+    optim: "adam"
+    lr: 0.00035
+    weight_decay: 5e-4
+    max_epoch: 120
+    start_epoch: 0
+    batch_size: 64
+    fixbase_epoch: 0 # number of epochs to fix base layers
+    open_layers:
+      - "classifier" # layers for training while keeping others frozen
+    staged_lr: False # set different lr to different layers
+    new_layers: ["classifier"] # newly added layers with default lr
+    base_lr_mult: 0.1 # learning rate multiplier for base layers
+    lr_scheduler: "warmup_multi_step"
+    stepsize: [40, 70] # stepsize to decay learning rate
+    gamma: 0.1 # learning rate decay multiplier
+    seed: 1 # random seed
+    eval_freq: -1 # evaluation frequency (-1 means to only test after training)
+    batch_debug_freq: 0
+    batch_log_freq: 0
+
+    # optimizer
+  sgd:
+    momentum: 0.9 # momentum factor for sgd and rmsprop
+    dampening: 0. # dampening for momentum
+    nesterov: False # Nesterov momentum
+  rmsprop:
+    alpha: 0.99 # smoothing constant
+  adam:
+    beta1: 0.9 # exponential decay rate for first moment
+    beta2: 0.999 # exponential decay rate for second moment
+
+    # loss
+  loss:
+    name: "part_based"
+    part_based:
+      name: "part_based_triplet_loss_mean" # ['inter_parts_triplet_loss', 'intra_parts_triplet_loss', 'part_based_triplet_loss_max', 'part_based_triplet_loss_mean', 'part_based_triplet_loss_min', 'part_based_triplet_loss_max_min', 'part_based_triplet_loss_random_max_min']
+      ppl: "cl" # part prediction loss: ['cl', 'fl', 'dl'], cross entropy loss with label smoothing, focal loss, dice loss
+      weights:
+        globl:
+          ce: 1.
+          tr: 0.
+        foreg:
+          ce: 1.
+          tr: 0.
+        conct:
+          ce: 1.
+          tr: 0.
+        parts:
+          ce: 0.
+          tr: 1.
+        pixls:
+          ce: 0.35
+    softmax:
+      label_smooth: True # use label smoothing regularizer
+    triplet:
+      margin: 0.3 # distance margin
+      weight_t: 1. # weight to balance hard triplet loss
+      weight_x: 0. # weight to balance cross entropy loss
+
+    # test
+  test:
+    batch_size: 128
+    batch_size_pairwise_dist_matrix: 5000
+    dist_metric: "euclidean" # distance metric, ['euclidean', 'cosine']
+    normalize_feature: True # normalize feature vectors before computing distance
+    ranks: [1, 5, 10, 20] # cmc ranks
+    evaluate: False # test only
+    start_eval: 0 # start to evaluate after a specific epoch
+    rerank: False # use person re-ranking
+    visrank: False # visualize ranked results (only available when cfg.  evaluate=True)
+    visrank_topk: 10 # top-k ranks to visualize
+    visrank_count: 10 # number of top-k ranks to plot
+    visrank_q_idx_list: [0, 1, 2, 3, 4, 5] # list of ids of queries for which we want to plot topk rank. If len(visrank_q_idx_list) < visrank_count, remaining ids will be random
+    # for i, sample in enumerate(datamanager.test_loader['occluded_duke']['query'].dataset.query):
+    #     if ntpath.basename(sample[0]) in ['4804_c6_f0202700.jpg', '4760_c7_f0184430.jpg', '4726_c6_f0169726.jpg', '4681_c6_f0155553.jpg', '0749_c1_f0188383.jpg', '0114_c1_f0072838.jpg', '0076_c1_f0065392.jpg']:
+    #         print("{} - {}".format(i, sample))
+    vis_feature_maps: False
+    visrank_per_body_part: False
+    vis_embedding_projection: False
+    save_features: False # save test set extracted features to disk
+    detailed_ranking: True
+    part_based:
+      dist_combine_strat: "mean"
+
+    # inference
+  inference:
+    enabled: False
+    input_folder: "/home/vso/projects/StrongSORT/pregenerated_files/MOT17_val_YOLOX_crops_for_reid_simpleCNN"
