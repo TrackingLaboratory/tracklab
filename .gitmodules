@@ -1,7 +1,7 @@
 [submodule "reid/bpbreid"]
 	path = modules/reid/bpbreid
 	url = git@github.com:VlSomers/person-reid.git
-	branch = reconnaissance
+	branch = pbtrack
 [submodule "detect/DEKR"]
 	path = modules/detect/DEKR
 	url = https://github.com/HRNet/DEKR.git
