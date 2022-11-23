@@ -1,0 +1,2 @@
+crop_dim: [384, 128]
+datasets_root: "${data_dir}"

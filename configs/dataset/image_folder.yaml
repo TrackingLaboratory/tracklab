@@ -1,0 +1,2 @@
+_target_: pbtrack.datasets.posetrack.ImageFolder
+path: ${input_folder}

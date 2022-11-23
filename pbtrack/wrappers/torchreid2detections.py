@@ -7,12 +7,18 @@ from pbtrack.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints
 
 from modules.reid.bpbreid.scripts.main import build_config, build_torchreid_model_engine
 from modules.reid.bpbreid.tools.feature_extractor import FeatureExtractor
-from modules.reid.bpbreid.torchreid.data.data_augmentation.coco_keypoints_transforms import CocoToSixBodyMasks
+from modules.reid.bpbreid.torchreid.data.data_augmentation.coco_keypoints_transforms import (
+    CocoToSixBodyMasks,
+)
 from modules.reid.bpbreid.torchreid.utils.imagetools import build_gaussian_heatmaps
+from hydra.utils import to_absolute_path
+from omegaconf import OmegaConf
+from yacs.config import CfgNode as CN
 
-sys.path.append('modules/reid/bpbreid')  # FIXME ugly
-sys.path.append('modules/reid')  # FIXME ugly
+sys.path.append(to_absolute_path("modules/reid/bpbreid"))  # FIXME ugly
+sys.path.append(to_absolute_path("modules/reid"))  # FIXME ugly
 import torchreid
+
 # need that line to not break import of torchreid ('from torchreid... import ...') inside the bpbreid.torchreid module
 # to remove the 'from torchreid... import ...' error 'Unresolved reference 'torchreid' in PyCharm, right click
 # on 'bpbreid' folder, then choose 'Mark Directory as' -> 'Sources root'
@@ -23,6 +29,7 @@ def configure_dataset_class(clazz, **ext_kwargs):
     """
     Wrapper function to provide the class with args external to torchreid
     """
+
     class ClazzWrapper(clazz):
         def __init__(self, **kwargs):
             self.__name__ = clazz.__name__
@@ -44,14 +51,15 @@ class Torchreid2detections:
         save folder: uniform with reconnaissance
         wandb support
     """
-    def __init__(self, device, save_path, config_path, model_pose, job_id):
-        config = {
-            'crop_dim': (384, 128),
-            'datasets_root': '/globalscratch/ucl/elen/bstandae/data/',
-            'pose_model': model_pose
-        }
-        torchreid.data.register_image_dataset("posetrack21_reid", configure_dataset_class(PoseTrack21ReID, **config), "pt21")
-        self.cfg = build_config(config_file=config_path)  # TODO support command line args as well?
+
+    def __init__(self, device, save_path, cfg, model_pose, dataset, job_id):
+        dataset_config = {**dataset, "pose_model": model_pose}
+        torchreid.data.register_image_dataset(
+            "posetrack21_reid",
+            configure_dataset_class(PoseTrack21ReID, **dataset_config),
+            "pt21",
+        )
+        self.cfg = CN(OmegaConf.to_container(cfg, resolve=True))
         self.cfg.data.save_dir = save_path
         self.cfg.project.job_id = job_id
         self.cfg.use_gpu = torch.cuda.is_available()
@@ -62,12 +70,12 @@ class Torchreid2detections:
         self.model = None
         self.transform = CocoToSixBodyMasks()
 
-    def _image2input(self, image): # Tensor RGB (1, 3, H, W)
+    def _image2input(self, image):  # Tensor RGB (1, 3, H, W)
         assert 1 == image.shape[0], "Test batch size should be 1"
-        input = image[0].cpu().numpy() # -> (3, H, W)
-        input = np.transpose(input, (1, 2, 0)) # -> (H, W, 3)
-        input = input*255.0
-        input = input.astype(np.uint8) # -> to uint8
+        input = image[0].cpu().numpy()  # -> (3, H, W)
+        input = np.transpose(input, (1, 2, 0))  # -> (H, W, 3)
+        input = input * 255.0
+        input = input.astype(np.uint8)  # -> to uint8
         return input
 
     def run(self, detections, data):
@@ -78,31 +86,37 @@ class Torchreid2detections:
                 device=self.device,
                 image_size=(self.cfg.data.height, self.cfg.data.width),
                 model=self.model,
-                verbose=False, # FIXME @Vladimir
+                verbose=False,  # FIXME @Vladimir
             )
         mask_w, mask_h = 32, 64
         im_crops = []
-        image = self._image2input(data['image'].unsqueeze(0))  # FIXME
+        image = self._image2input(data["image"].unsqueeze(0))  # FIXME
         all_masks = []
         for i, detection in enumerate(detections):
             bbox = detection.bbox
             pose = detection.keypoints
             l = int(bbox.x)
             t = int(bbox.y)
-            r = int(bbox.x+bbox.w)
-            b = int(bbox.y+bbox.h)
+            r = int(bbox.x + bbox.w)
+            b = int(bbox.y + bbox.h)
             crop = image[t:b, l:r]
             im_crops.append(crop)
             keypoints = np.array([[kp.x, kp.y, kp.conf] for kp in detection.keypoints])
             bbox_ltwh = np.array([l, t, r - l, b - t])
             kp_xyc_bbox = kp_img_to_kp_bbox(keypoints, bbox_ltwh)
-            kp_xyc_mask = rescale_keypoints(kp_xyc_bbox, (bbox_ltwh[2], bbox_ltwh[3]), (mask_w, mask_h))
-            pixels_parts_probabilities = build_gaussian_heatmaps(kp_xyc_mask, mask_w, mask_h)
+            kp_xyc_mask = rescale_keypoints(
+                kp_xyc_bbox, (bbox_ltwh[2], bbox_ltwh[3]), (mask_w, mask_h)
+            )
+            pixels_parts_probabilities = build_gaussian_heatmaps(
+                kp_xyc_mask, mask_w, mask_h
+            )
             all_masks.append(pixels_parts_probabilities)
 
         if im_crops:
             external_parts_masks = np.stack(all_masks, axis=0)
-            embeddings, visibility_scores, body_masks, _ = self.feature_extractor(im_crops, external_parts_masks=external_parts_masks)
+            embeddings, visibility_scores, body_masks, _ = self.feature_extractor(
+                im_crops, external_parts_masks=external_parts_masks
+            )
             for i, detection in enumerate(detections):
                 detection.reid_features = embeddings[i]
                 detection.visibility_score = visibility_scores[i]
