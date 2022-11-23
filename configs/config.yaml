@@ -4,15 +4,15 @@ defaults:
   - track: track
   - reid: local_bpbreid_test
   - dataset: image_folder
-input_folder: "${oc.env:HOME}/projects/pb-track/images"
+input_folder: "???"
 project: track
 name: exp
 show_poses: true
 show_tracks: true
 save_imgs: false
 save_vid: true
-data_dir: "${oc.env:HOME}/projects/pb-track"
-project_dir: "${oc.env:HOME}/projects/pb-track"
+data_dir: "???"
+project_dir: "${hydra:runtime.cwd}"
 job_id: "???"
 
 hydra:
