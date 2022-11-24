@@ -1,0 +1,2 @@
+_target_: pbtrack.datasets.posetracking.posetrack21.PoseTrack21
+dataset_path: ${data_dir}/PoseTrack21
