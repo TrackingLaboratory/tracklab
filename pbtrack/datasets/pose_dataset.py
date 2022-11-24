@@ -6,7 +6,7 @@ import torch
 import torchvision.transforms as T
 
 
-class PoseTrack(torch.utils.data.Dataset):
+class PoseTrack(torch.utils.data.Dataset):  # TODO replace by PoseTrack21
     """
         Not for training.
         This dataset is only for inference and testing.
