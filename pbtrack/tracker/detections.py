@@ -1,168 +1,246 @@
+from dataclasses import asdict, dataclass
+from enum import Enum
+from typing import Optional
 import numpy as np
-import cv2
-
-from pbtrack.utils.images import overlay_heatmap
-
-cmap = [(0,0,255), (0,128,255), (0,255,255), (0,255,128), (0,255,0), (128,255,0),
-        (255,255,0), (255,128,0), (255,0,0), (255,0,128), (255,0,255), (128,0,255),
-        (128,128,128), (0,0,0), (255,255,255)]
+import pandas as pd
+import os
+import json
 
 
-class Detections:
-    
-    def __init__(self, bboxes=[], poses=[], scores=[], h=None, w=None, **kwargs):
-        self.poses = poses # low resolution
-        # poses is a list of np.array of keypoints.
-        # An element of pose is thus the keypoints of a detected instance
-        self.bboxes = bboxes # low resolution
-        self.scores = scores
-        self.h = h # low resolution height
-        self.w = w # low resolution width
-        
-    """
-        Data part - working in both resolutions
-    """
-    
-    def update_bboxes(self):
-        # update bboxes based on self.poses
-        self.bboxes = []
-        for keypoints in self.poses:
-            left_top = np.amin(keypoints, axis=0)
-            right_bottom = np.amax(keypoints, axis=0)
-            l = left_top[0]
-            t = left_top[1]
-            r = right_bottom[0]
-            b = right_bottom[1]
-            w = r - l
-            h = b - t
-            scale = 0.2
-            sl = max(l - w*scale / 2, 0)
-            st = max(t - h*scale / 2, 0)
-            sr = min(r + w*scale / 2, self.w - 1)
-            sb = min(b + h*scale / 2, self.h - 1)
-            self.bboxes.append(
-                np.array([sl, st, sr, sb])
-            )
+class Source(Enum):
+    METADATA = 0  # just an image
+    DET = 1  # model detection
+    TRACK = 2  # model tracking
 
-    def add_reid_features(self, reid_features):
-        self.reid_features = reid_features
 
-    def add_visibility_scores(self, visibility_scores):
-        self.visibility_scores = visibility_scores
+@dataclass
+class Metadata:
+    file_path: str  # path/video_name/file.jpg
+    height: int
+    width: int
+    image_id: Optional[str] = None  # for eval of posetrack
+    file_name: Optional[str] = None  # file.jpg
+    video_name: Optional[str] = None  # video_name
+    frame: Optional[int] = None
+    nframes: Optional[int] = None
 
-    def add_body_masks(self, body_masks):
-        self.body_masks = body_masks
 
-    def add_HW(self, H, W):
-        # add high resolution sizes
-        self.H = H
-        self.W = W
-        
-    def add_Tracks(self, Bboxes, IDs, scores, Poses):
-        self.Tracks = []
-        for Bbox, Id, score, Keypoints in zip(Bboxes, IDs, scores, Poses):
-            Track = dict(
-                ID = Id,
-                score = score,
-                Bbox = Bbox,
-                Keypoints = Keypoints
-            )
-            self.Tracks.append(Track)
-            
-    def update_Bboxes(self):
-        # scale bboxes (xyxy) to BBoxes (XYXY)
-        gain = min(self.h/self.H, self.w/self.W)  # gain  = old / new
-        h_pad, w_pad  = (self.h - self.H*gain)/2, (self.w - self.W*gain) / 2  # wh padding
-        self.Bboxes = []
-        for bbox in self.bboxes:
-            BBox = bbox.copy()
-            BBox[[0, 2]] -= w_pad
-            BBox[[1, 3]] -= h_pad
-            BBox /= gain
-            self.Bboxes.append(BBox)
-        
-    def update_Poses(self):
-        # scale keypoints (xys) to Keypoints (XYs)
-        gain = min(self.h/self.H, self.w/self.W)  # gain  = old / new
-        h_pad, w_pad  = (self.h - self.H*gain)/2, (self.w - self.W*gain) / 2  # wh padding
-        self.Poses = []
-        for keypoints in self.poses:
-            Keypoints = keypoints.copy()
-            Keypoints[:, 0] -= w_pad
-            Keypoints[:, 1] -= h_pad
-            Keypoints[:, :2] /= gain
-            self.Poses.append(Keypoints)
-            
-    """
-        Visualization part - working in high resolution
-    """
-            
-    def _check_assertions(self):
-        assert hasattr(self, 'img'), "No image added, you should first load an image"+\
-            " using show_image(image)."
-        assert type(self.img) == np.ndarray, ""
-        assert self.img.dtype == np.float32, ""
-        assert self.img.ndim == 3, ""
-        assert self.img.shape[2] == 3, ""
-    
-    def show_image(self, img):
-        # img : Tensor RGB (1, 3, H, W) (0 -> 1)
-        img = 255*img[0].cpu().numpy().transpose(1, 2, 0)
-        # -> RGB (H, W, 3)
-        # OpenCV uses BGR
-        self.img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        # float 0 -> 255
+@dataclass
+class Bbox:
+    x: float
+    y: float
+    w: float
+    h: float
+    conf: float
 
-    def show_Bboxes(self):
-        self._check_assertions()
-        for i, Bbox in enumerate(self.Bboxes):
-            p1, p2 = (int(Bbox[0]), int(Bbox[1])), (int(Bbox[2]), int(Bbox[3]))
-            
-            overlay = self.img.copy()
-            cv2.rectangle(overlay, p1, p2, color=(0, 0, 255), thickness=2)
-            alpha = self.scores[i]
 
-            self.img = cv2.addWeighted(overlay, alpha, self.img, 1 - alpha, 0)
+@dataclass
+class Keypoint:
+    x: float
+    y: float
+    conf: float
+    part: int
 
-    def show_masks(self):
-        self._check_assertions()
-        for i, Bbox in enumerate(self.Bboxes):
-            l, t, r, b = int(Bbox[0]), int(Bbox[1]), int(Bbox[2]), int(Bbox[3])
-            body_masks = self.body_masks[i]
-            img_crop = self.img[t:b, l:r]
-            img_crop_with_mask = overlay_heatmap(img_crop, body_masks[0].cpu().numpy(), weight=-1)
-            self.img[t:b, l:r] = img_crop_with_mask
 
-    def show_Poses(self):
-        self._check_assertions()
-        for i, Keypoints in enumerate(self.Poses):
-            for Keypoint in Keypoints:
-                x, y = int(Keypoint[0]), int(Keypoint[1])
-                
-                # overlay = self.img.copy()
-                cv2.circle(self.img, (x, y), radius=3, color=(252, 93, 215), thickness=2)
-                # alpha = Keypoint[2]
-                # self.img = cv2.addWeighted(overlay, alpha, self.img, 1 - alpha, 0)
-                
-    def show_Tracks(self):
-        self._check_assertions()
-        for i, Track in enumerate(self.Tracks):
-            p1 = int(Track['Bbox'][0]), int(Track['Bbox'][1])
-            p2 = int(Track['Bbox'][2]), int(Track['Bbox'][3])
-            
-            overlay = self.img.copy()
-            cv2.rectangle(overlay, p1, p2, color=(255,0,0), thickness=2)
-            alpha = Track['score']
+@dataclass
+class Detection:
+    metadata: Optional[Metadata] = None
+    source: Optional[Source] = 0
+    bbox: Optional[Bbox] = None
+    keypoints: Optional[list] = None
+    reid_features: Optional[np.ndarray] = None
+    visibility_score: Optional[np.ndarray] = None
+    body_mask: Optional[np.ndarray] = None
+    person_id: Optional[int] = -1
 
-            self.img = cv2.addWeighted(overlay, alpha, self.img, 1 - alpha, 0)
-            self.img = cv2.putText(self.img,
-                                   f"ID={Track['ID']}",
-                                   p1, 
-                                   fontFace=2,
-                                   fontScale=0.5,
-                                   color=(255,0,0))
-    
-    def get_image(self):
-        self._check_assertions()
-        return self.img.astype(np.uint8)
-        
+    def asdict(self):
+        keypoints = {}
+        if self.keypoints:
+            for i, keypoint in enumerate(self.keypoints):
+                keypoints = {**keypoints,
+                             **{f"kp{i}_{k}": v for k, v in asdict(keypoint).items()},
+                             }
+        bboxes = {}
+        if self.bbox:
+            bboxes = {f"bb_{k}": v for k, v in asdict(self.bbox).items()}
+        return {
+            'source': self.source,
+            'person_id': self.person_id,
+            **asdict(self.metadata),
+            **bboxes,
+            **keypoints,
+        }
+
+    # TODO change location of those functions
+    def rescale_xy(self, coords, input_shape, output_shape=None):
+        if output_shape is None:
+            output_shape = (self.metadata.height, self.metadata.width)
+        x_ratio = output_shape[1] / input_shape[1]
+        y_ratio = output_shape[0] / input_shape[0]
+        coords[:, 0] *= x_ratio
+        coords[:, 1] *= y_ratio
+        return coords
+
+    def bbox_xyxy(self, image_shape=None):
+        xyxy = [self.bbox.x, self.bbox.y, self.bbox.x + self.bbox.w, self.bbox.y + self.bbox.h]
+        if image_shape is not None:
+            x_ratio = image_shape[1] / self.metadata.width
+            y_ratio = image_shape[0] / self.metadata.height
+            xyxy[[0, 2]] *= x_ratio
+            xyxy[[1, 3]] *= y_ratio
+        return np.array(xyxy)
+
+    def bbox_xywh(self, image_shape=None):
+        xywh = [self.bbox.x, self.bbox.y, self.bbox.w, self.bbox.h]
+        if image_shape is not None:
+            x_ratio = image_shape[1] / self.metadata.width
+            y_ratio = image_shape[0] / self.metadata.height
+            xywh[[0, 2]] *= x_ratio
+            xywh[[1, 3]] *= y_ratio
+        return np.array(xywh)
+
+
+class Detections(pd.DataFrame):
+    required_columns = {'bbox_ltwh', 'bbox_head', 'category_id', 'id', 'image_id',
+           'keypoints_xyc', 'person_id', 'track_id', 'split', 'visibility',
+           'bbox_ltrb', 'bbox_cxcywh', 'keypoints_bbox_xyc', 'video_id'}
+
+    def __init__(self, *args, **kwargs):
+        super(Detections, self).__init__(*args, **kwargs)
+        columns = set(self.columns)
+        for rcol in self.required_columns:
+            assert rcol in columns, f"Column {rcol} is required to build a Detections DataFrame object"
+
+    @property
+    def _constructor(self):
+        return Detections
+
+    @property
+    def _constructor_sliced(self):
+        return DetectionsSeries
+
+    @property
+    def base_class_view(self):
+        # use this to view the base class, needed for debugging in some IDEs.
+        return pd.DataFrame(self)
+
+    def bbox_xywh(self, with_conf=False):
+        return self[['bb_x', 'bb_y', 'bb_w', 'bb_h']].values
+        if with_conf:
+            return self[['bb_x', 'bb_y', 'bb_w', 'bb_h', 'bb_conf']].values
+        else:
+            return self[['bb_x', 'bb_y', 'bb_w', 'bb_h']].values
+
+    def bbox_xyxy(self, with_conf=False):
+        self['bb_x2'] = self.apply(lambda row: row.bb_x + row.bb_w, axis=1)
+        self['bb_y2'] = self.apply(lambda row: row.bb_y + row.bb_h, axis=1)
+        if with_conf:
+            return self[['bb_x', 'bb_y', 'bb_x2', 'bb_y2', 'bb_conf']].values
+        else:
+            return self[['bb_x', 'bb_y', 'bb_x2', 'bb_y2']].values
+
+    def pose_xy(self, with_conf=False):
+        if with_conf:
+            return self.loc[:, self.columns.str.endswith(('x', 'y', 'conf')) & \
+                               self.columns.str.startswith('kp')].values.reshape((-1, 17, 3))
+        else:
+            return self.loc[:, self.columns.str.endswith(('x', 'y')) & \
+                               self.columns.str.startswith('kp')].values.reshape((-1, 17, 2))
+
+    def save_mot(self, path):
+        videos = self.video_name.unique()
+        for video in videos:
+            output = ''
+            sub_df = self[(self['video_name'] == video) & (self['source'] == 2)].sort_values(by=['frame'])
+            for index, detection in sub_df.iterrows():
+                output += f"{detection['frame']}, {detection['person_id']}, {detection['bb_x']}, " + \
+                          f"{detection['bb_y']}, {detection['bb_w']}, " + \
+                          f"{detection['bb_h']}, {detection['bb_conf']}, -1, -1, -1\n"
+            file_name = os.path.join(path, video + '.txt')
+            with open(file_name, 'w+') as f:
+                f.write(output)
+
+    # FIXME maybe merge with save_pose_tracking ?
+    def save_pose_estimation(self, path):
+        videos = self.video_name.unique()
+        for video in videos:
+            video_df = self[(self['video_name'] == video)].sort_values(by=['frame'])
+            detection_df = video_df[video_df['source'] >= 1]
+
+            keypoints = detection_df.pose_xy(with_conf=True)
+            annotations = []
+            for ((index, detection), xys) in zip(detection_df.iterrows(), keypoints):
+                annotations.append({
+                    'bbox': [detection['bb_x'], detection['bb_y'],
+                             detection['bb_w'], detection['bb_h']],
+                    'image_id': detection['image_id'],
+                    'keypoints': xys,  # FIXME score -> visibility
+                    'scores': xys[:, 2],
+                    'person_id': index,  # This is a dummy variable
+                    'track_id': index,  # This is a dummy variable
+                })
+
+            file_paths = video_df['file_path'].unique()
+            image_ids = video_df['image_id'].unique()
+            images = []
+            for file_path, image_id in zip(file_paths, image_ids):
+                images.append({
+                    'file_name': file_path,
+                    'id': image_id,
+                    'image_id': image_id,
+                })
+
+            file_name = os.path.join(path, video + '.json')
+            with open(file_name, 'w+') as f:
+                output = {
+                    'images': images,
+                    'annotations': annotations,
+                }
+                json.dump(output, f, cls=CustomEncoder)
+
+    def save_pose_tracking(self, path):
+        videos = self.video_name.unique()
+        for video in videos:
+            video_df = self[(self['video_name'] == video)].sort_values(by=['frame'])
+            detection_df = video_df[video_df['source'] == 2]
+
+            keypoints = detection_df.pose_xy(with_conf=True)
+            annotations = []
+            for ((_, detection), xys) in zip(detection_df.iterrows(), keypoints):
+                annotations.append({
+                    'bbox': [detection['bb_x'], detection['bb_y'],
+                             detection['bb_w'], detection['bb_h']],
+                    'image_id': detection['image_id'],
+                    'keypoints': xys,  # FIXME score -> visibility
+                    'scores': xys[:, 2],
+                    'person_id': detection['person_id'],
+                    'track_id': detection['person_id'],
+                })
+
+            file_paths = video_df['file_path'].unique()
+            image_ids = video_df['image_id'].unique()
+            images = []
+            for file_path, image_id in zip(file_paths, image_ids):
+                images.append({
+                    'file_name': file_path,
+                    'id': image_id,
+                    'image_id': image_id,
+                })
+
+            file_name = os.path.join(path, video + '.json')
+            with open(file_name, 'w+') as f:
+                output = {
+                    'images': images,
+                    'annotations': annotations,
+                }
+                json.dump(output, f, cls=CustomEncoder)
+
+
+class DetectionsSeries(pd.Series):
+    @property
+    def _constructor(self):
+        return DetectionsSeries
+
+    @property
+    def _constructor_expanddim(self):
+        return Detections
