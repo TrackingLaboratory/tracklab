@@ -1,62 +1,32 @@
 from __future__ import absolute_import, division, print_function
 
-import json
-import os.path as osp
 import sys
-from math import ceil
-
 import cv2
+import torch
 import numpy as np
 import pandas as pd
 
-from os import path as osp
+from math import ceil
 from pathlib import Path
-
-import torch
 from skimage.transform import resize
 from tqdm import tqdm
-
 from pbtrack.utils.coordinates import (
-    kp_img_to_kp_bbox,
     rescale_keypoints,
     clip_to_img_dim,
 )
 from pbtrack.utils.images import overlay_heatmap
 from hydra.utils import to_absolute_path
-
 sys.path.append(to_absolute_path("modules/reid/bpbreid"))
 from torchreid.data import ImageDataset
 from torchreid.utils.imagetools import gkern, build_gaussian_heatmaps
 
 
-def uniform_tracklet_sampling(_df, max_samples_per_id, column):
-    _df.sort_values(column)
-    num_det = len(_df)
-    if num_det > max_samples_per_id:
-        # Select 'max_samples_per_id' evenly spaced indices, including first and last
-        indices = np.round(np.linspace(0, num_det - 1, max_samples_per_id)).astype(int)
-        assert len(indices) == max_samples_per_id
-        return _df.iloc[indices]
-    else:
-        return _df
-
-
-def ad_pid_column(gt_dets):
-    # create pids as 0-based increasing numbers
-    gt_dets["pid"] = None
-    gt_dets_for_reid = gt_dets[(gt_dets.split != "none")]
-    gt_dets.loc[gt_dets_for_reid.index, "pid"] = pd.factorize(
-        gt_dets_for_reid.person_id
-    )[0]
-
-
-class PoseTrack21ReID(ImageDataset):
-    dataset_dir = "Posetrack21"
+class ReidDataset(ImageDataset):
+    dataset_dir = "PoseTrack21"  # TODO
+    annotations_dir = "posetrack_data"  # TODO
     eval_metric = "mot_inter_video"
-    annotations_dir = "posetrack_data"
     img_ext = ".jpg"
     masks_ext = ".npy"
-
     reid_dir = "reid"
     reid_images_dir = "images"
     reid_masks_dir = "masks"
@@ -72,10 +42,10 @@ class PoseTrack21ReID(ImageDataset):
 
     @staticmethod
     def get_masks_config(masks_dir):
-        if masks_dir not in PoseTrack21ReID.masks_dirs:
+        if masks_dir not in ReidDataset.masks_dirs:
             return None
         else:
-            return PoseTrack21ReID.masks_dirs[masks_dir]
+            return ReidDataset.masks_dirs[masks_dir]
 
     def gallery_filter(self, q_pid, q_camid, q_ann, g_pids, g_camids, g_anns):
         """camid refers to video id: remove gallery samples from the different videos than query sample"""
@@ -83,27 +53,26 @@ class PoseTrack21ReID(ImageDataset):
 
     def __init__(
         self,
-        config,
-        datasets_root="",
-        masks_dir="",
-        max_crop_size=(384, 128),
+        tracking_dataset,
+        reid_config,
         pose_model=None,
+        masks_dir='',
         **kwargs
     ):
         # Init
-        self.config = config
-        mot_cfg = config.data.mot
-        datasets_root = Path(osp.abspath(osp.expanduser(datasets_root)))
-        self.dataset_path = Path(datasets_root, self.dataset_dir)
+        self.tracking_dataset = tracking_dataset
+        self.reid_config = reid_config
         self.pose_model = pose_model
-        assert (
-            mot_cfg.train.max_samples_per_id >= mot_cfg.train.min_samples_per_id
-        ), "max_samples_per_id must be >= min_samples_per_id"
-        assert (
-            mot_cfg.test.max_samples_per_id >= mot_cfg.test.min_samples_per_id
-        ), "max_samples_per_id must be >= min_samples_per_id"
+        self.dataset_path = Path(self.tracking_dataset.dataset_path)
         self.masks_dir = masks_dir
-        if self.masks_dir in self.masks_dirs:
+        assert (
+            self.reid_config.train.max_samples_per_id >= self.reid_config.train.min_samples_per_id
+        ), "max_samples_per_id must be >= min_samples_per_id"
+        assert (
+            self.reid_config.test.max_samples_per_id >= self.reid_config.test.min_samples_per_id
+        ), "max_samples_per_id must be >= min_samples_per_id"
+
+        if self.masks_dir in self.masks_dirs:  # TODO
             (
                 self.masks_parts_numbers,
                 self.has_background,
@@ -118,100 +87,99 @@ class PoseTrack21ReID(ImageDataset):
                 self.masks_parts_names,
             ) = (None, None, None, None)
 
-        # Load MOT dataset and build ReID one
-        (
-            self.train_gt_dets,
-            self.train_images,
-            self.train_categories,
-        ) = self.load_dataset(
-            max_crop_size,
-            mot_cfg.fig_size,
-            mot_cfg.mask_size,
-            mot_cfg.train,
-            "train",
+        # Build ReID dataset from MOT dataset
+        self.build_reid_set(
+            tracking_dataset.train_set,
+            self.reid_config,
             is_test_set=False,
         )
-        self.val_gt_dets, self.val_images, self.val_categories = self.load_dataset(
-            max_crop_size,
-            mot_cfg.fig_size,
-            mot_cfg.mask_size,
-            mot_cfg.test,
-            "val",
+
+        self.build_reid_set(
+            tracking_dataset.val_set,
+            self.reid_config,
             is_test_set=True,
         )
 
+        train_gt_dets = tracking_dataset.train_set.detections
+        val_gt_dets = tracking_dataset.val_set.detections
+
         # Get train/query/gallery sets as torchreid list format
-        train_df = self.train_gt_dets[self.train_gt_dets["split"] == "train"]
-        query_df = self.val_gt_dets[self.val_gt_dets["split"] == "query"]
-        gallery_df = self.val_gt_dets[self.val_gt_dets["split"] == "gallery"]
+        train_df = train_gt_dets[train_gt_dets["split"] == "train"]
+        query_df = val_gt_dets[val_gt_dets["split"] == "query"]
+        gallery_df = val_gt_dets[val_gt_dets["split"] == "gallery"]
         train, query, gallery = self.to_torchreid_dataset_format(
             [train_df, query_df, gallery_df]
         )
 
-        super(PoseTrack21ReID, self).__init__(train, query, gallery, **kwargs)
+        super().__init__(train, query, gallery, **kwargs)
 
-    def load_dataset(
-        self, max_crop_size, fig_size, mask_size, mot_cfg, set_name, is_test_set
+    def build_reid_set(
+        self, tracking_set, reid_config, is_test_set
     ):
         """
-        Load MOT dataset and build ReID one out of it.
+        Build ReID metadata for a given MOT dataset split.
         Only a subset of all MOT groundtruth detections is used for ReID.
-        Detections to be used for ReID are selected according to the filering criteria specified in the config 'mot_cfg'.
+        Detections to be used for ReID are selected according to the filtering criteria specified in the config 'reid_cfg'.
         Image crops and human parsing labels (masks) are generated for each selected detection only.
         If the config is changed and more detections are selected, the image crops and masks are generated only for
         these new detections.
         """
+        split = tracking_set.split
+        images = tracking_set.images
+        detections = tracking_set.detections
+        fig_size = reid_config.fig_size
+        mask_size = reid_config.mask_size
+        max_crop_size = reid_config.max_crop_size
+        reid_set_cfg = reid_config.test if is_test_set else reid_config.train
 
-        print("Loading {} set...".format(set_name))
+        print("Loading {} set...".format(split))
 
         # Precompute all paths
-        anns_path = Path(self.dataset_path, self.annotations_dir, set_name)
         reid_path = Path(self.dataset_path, self.reid_dir)
-        reid_img_path = reid_path / self.reid_images_dir / set_name
-        reid_mask_path = reid_path / self.reid_masks_dir / set_name
-        reid_fig_path = reid_path / self.reid_fig_dir / set_name
+        reid_img_path = reid_path / self.reid_images_dir / split
+        reid_mask_path = reid_path / self.reid_masks_dir / split
+        reid_fig_path = reid_path / self.reid_fig_dir / split
         reid_anns_filepath = (
             reid_path
             / self.reid_images_dir
             / self.reid_anns_dir
-            / (set_name + "_" + self.images_anns_filename)
+            / (split + "_" + self.images_anns_filename)
         )
         masks_anns_filepath = (
             reid_path
             / self.reid_masks_dir
             / self.reid_anns_dir
-            / (set_name + "_" + self.masks_anns_filename)
+            / (split + "_" + self.masks_anns_filename)
         )
 
-        # Load annotations into Pandas dataframes
-        categories, gt_dets, images = self.build_annotations_df(anns_path)
-
         # Load reid crops metadata into existing ground truth detections dataframe
-        gt_dets = self.load_reid_annotations(
-            gt_dets,
+        self.load_reid_annotations(
+            detections,
             reid_anns_filepath,
             ["reid_crop_path", "reid_crop_width", "reid_crop_height"],
         )
 
         # Load reid masks metadata into existing ground truth detections dataframe
-        gt_dets = self.load_reid_annotations(
-            gt_dets, masks_anns_filepath, ["masks_path"]
+        self.load_reid_annotations(
+            detections,
+            masks_anns_filepath,
+            ["masks_path"]
         )
 
         # Sampling of detections to be used to create the ReID dataset
-        self.sample_detections_for_reid(gt_dets, mot_cfg)
+        self.sample_detections_for_reid(detections, reid_set_cfg)
 
         # Save ReID detections crops and related metadata. Apply only on sampled detections
         self.save_reid_img_crops(
-            gt_dets, reid_img_path, set_name, reid_anns_filepath, images, max_crop_size
+            detections, reid_img_path, split, reid_anns_filepath, images, max_crop_size
         )
 
         # Save human parsing pseudo ground truth and related metadata. Apply only on sampled detections
         self.save_reid_masks_crops(
-            gt_dets,
+            detections,
             reid_mask_path,
             reid_fig_path,
-            set_name,
+            split,
             masks_anns_filepath,
             images,
             fig_size,
@@ -219,71 +187,11 @@ class PoseTrack21ReID(ImageDataset):
         )
 
         # Add 0-based pid column (for Torchreid compatibility) to sampled detections
-        ad_pid_column(gt_dets)
+        self.ad_pid_column(detections)
 
         # Flag sampled detection as a query or gallery if this is a test set
         if is_test_set:
-            self.query_gallery_split(gt_dets, mot_cfg.ratio_query_per_id)
-
-        return gt_dets, images, categories
-
-    def build_annotations_df(self, anns_path):
-        annotations_list = []
-        categories_list = []
-        images_list = []
-        anns_files_list = list(anns_path.glob("*.json"))
-        assert len(anns_files_list) > 0, "No annotations files found in {}".format(
-            anns_path
-        )
-        for path in anns_files_list:
-            json_file = open(path)
-            data_dict = json.load(json_file)
-            annotations_list.append(pd.DataFrame(data_dict["annotations"]))
-            categories_list.append(pd.DataFrame(data_dict["categories"]))
-            images_list.append(pd.DataFrame(data_dict["images"]))
-        gt_dets = pd.concat(annotations_list).reset_index(drop=True)
-        categories = pd.concat(categories_list).reset_index(drop=True)
-        images = pd.concat(images_list).reset_index(drop=True)
-
-        gt_dets.bbox = gt_dets.bbox.apply(lambda x: np.array(x))
-        gt_dets.bbox_head = gt_dets.bbox_head.apply(lambda x: np.array(x))
-
-        # reshape keypoints to (n, 3) array
-        gt_dets.keypoints = gt_dets.keypoints.apply(
-            lambda kp: np.array(kp).reshape(-1, 3)
-        )
-
-        # If detections do not have a unique 'id' column, add one for further unambiguous detection referencing
-        if "id" not in gt_dets:
-            gt_dets["id"] = gt_dets.index
-
-        # rename base 'vid_id' to 'video_id', to be consistent with 'image_id'
-        images.rename(columns={"vid_id": "video_id"}, inplace=True)
-
-        # add video_id to gt_dets, will be used for torchreid 'camid' paremeter
-        gt_dets = gt_dets.merge(
-            images[["image_id", "video_id"]], on="image_id", how="left"
-        )
-
-        # compute detection visiblity as average keypoints visibility
-        gt_dets["visibility"] = gt_dets.keypoints.apply(lambda x: x[:, 2].mean())
-
-        # precompute various bbox formats
-        gt_dets.rename(columns={"bbox": "bbox_ltwh"}, inplace=True)
-        gt_dets["bbox_ltrb"] = gt_dets.bbox_ltwh.apply(
-            lambda ltwh: np.concatenate((ltwh[:2], ltwh[:2] + ltwh[2:]))
-        )
-        gt_dets["bbox_cxcywh"] = gt_dets.bbox_ltwh.apply(
-            lambda ltwh: np.concatenate((ltwh[:2] + ltwh[2:] / 2, ltwh[2:]))
-        )
-
-        # precompute various keypoints formats
-        gt_dets.rename(columns={"keypoints": "keypoints_xyc"}, inplace=True)
-        gt_dets["keypoints_bbox_xyc"] = gt_dets.apply(
-            lambda r: kp_img_to_kp_bbox(r.keypoints_xyc, r.bbox_ltwh), axis=1
-        )
-
-        return categories, gt_dets, images
+            self.query_gallery_split(detections, reid_set_cfg.ratio_query_per_id)
 
     def load_reid_annotations(self, gt_dets, reid_anns_filepath, columns):
         if reid_anns_filepath.exists():
@@ -292,7 +200,7 @@ class PoseTrack21ReID(ImageDataset):
                 "reid_anns_filepath and gt_dets must have the same length. Delete "
                 "'{}' and re-run the script.".format(reid_anns_filepath)
             )
-            return gt_dets.merge(
+            tmp_df = gt_dets.merge(
                 reid_anns,
                 left_index=False,
                 right_index=False,
@@ -300,29 +208,28 @@ class PoseTrack21ReID(ImageDataset):
                 right_on="id",
                 validate="one_to_one",
             )
-            # merged_df.drop('index', axis=1, inplace=True)
+            gt_dets[columns] = tmp_df[columns]
         else:
             # no annotations yet, initialize empty columns
             for col in columns:
                 gt_dets[col] = None
-            return gt_dets
 
-    def sample_detections_for_reid(self, dets_df, mot_cfg):
+    def sample_detections_for_reid(self, dets_df, reid_cfg):
         dets_df["split"] = "none"
 
         # Filter detections by visibility
-        dets_df_f1 = dets_df[dets_df.visibility >= mot_cfg.min_vis]
+        dets_df_f1 = dets_df[dets_df.visibility >= reid_cfg.min_vis]
 
         # Filter detections by crop size
         keep = dets_df_f1.bbox_ltwh.apply(
-            lambda x: x[2] > mot_cfg.min_w
-        ) & dets_df_f1.bbox_ltwh.apply(lambda x: x[3] > mot_cfg.min_h)
+            lambda x: x[2] > reid_cfg.min_w
+        ) & dets_df_f1.bbox_ltwh.apply(lambda x: x[3] > reid_cfg.min_h)
         dets_df_f2 = dets_df_f1[keep]
         print(
             "{} removed because too small samples (h<{} or w<{}) = {}".format(
                 self.__class__.__name__,
-                (mot_cfg.min_h),
-                (mot_cfg.min_w),
+                (reid_cfg.min_h),
+                (reid_cfg.min_w),
                 len(dets_df_f1) - len(dets_df_f2),
             )
         )
@@ -330,7 +237,7 @@ class PoseTrack21ReID(ImageDataset):
         # Filter detections by uniform sampling along each tracklet
         dets_df_f3 = (
             dets_df_f2.groupby("person_id")
-            .apply(uniform_tracklet_sampling, mot_cfg.max_samples_per_id, "image_id")
+            .apply(self.uniform_tracklet_sampling, reid_cfg.max_samples_per_id, "image_id")
             .reset_index(drop=True)
             .copy()
         )
@@ -342,7 +249,7 @@ class PoseTrack21ReID(ImageDataset):
 
         # Keep only ids with at least MIN_SAMPLES appearances
         count_per_id = dets_df_f3.person_id.value_counts()
-        ids_to_keep = count_per_id.index[count_per_id.ge((mot_cfg.min_samples_per_id))]
+        ids_to_keep = count_per_id.index[count_per_id.ge((reid_cfg.min_samples_per_id))]
         dets_df_f4 = dets_df_f3[dets_df_f3.person_id.isin(ids_to_keep)]
         print(
             "{} removed for not enough samples per id = {}".format(
@@ -351,14 +258,14 @@ class PoseTrack21ReID(ImageDataset):
         )
 
         # Keep only max_total_ids ids
-        if mot_cfg.max_total_ids == -1 or mot_cfg.max_total_ids > len(
+        if reid_cfg.max_total_ids == -1 or reid_cfg.max_total_ids > len(
             dets_df_f4.person_id.unique()
         ):
-            mot_cfg.max_total_ids = len(dets_df_f4.person_id.unique())
+            reid_cfg.max_total_ids = len(dets_df_f4.person_id.unique())
         # reset seed to make sure the same split is used if the dataset is instantiated multiple times
         np.random.seed(0)
         ids_to_keep = np.random.choice(
-            dets_df_f4.person_id.unique(), replace=False, size=mot_cfg.max_total_ids
+            dets_df_f4.person_id.unique(), replace=False, size=reid_cfg.max_total_ids
         )
         dets_df_f5 = dets_df_f4[dets_df_f4.person_id.isin(ids_to_keep)]
 
@@ -604,3 +511,22 @@ class PoseTrack21ReID(ImageDataset):
             data_list = data_list.to_dict("records")
             results.append(data_list)
         return results
+
+    def ad_pid_column(self, gt_dets):
+        # create pids as 0-based increasing numbers
+        gt_dets["pid"] = None
+        gt_dets_for_reid = gt_dets[(gt_dets.split != "none")]
+        gt_dets.loc[gt_dets_for_reid.index, "pid"] = pd.factorize(
+            gt_dets_for_reid.person_id
+        )[0]
+
+    def uniform_tracklet_sampling(self, _df, max_samples_per_id, column):
+        _df.sort_values(column)
+        num_det = len(_df)
+        if num_det > max_samples_per_id:
+            # Select 'max_samples_per_id' evenly spaced indices, including first and last
+            indices = np.round(np.linspace(0, num_det - 1, max_samples_per_id)).astype(int)
+            assert len(indices) == max_samples_per_id
+            return _df.iloc[indices]
+        else:
+            return _df

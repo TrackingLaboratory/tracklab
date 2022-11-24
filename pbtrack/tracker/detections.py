@@ -107,9 +107,6 @@ class Detections(pd.DataFrame):
 
     def __init__(self, *args, **kwargs):
         super(Detections, self).__init__(*args, **kwargs)
-        columns = set(self.columns)
-        for rcol in self.required_columns:
-            assert rcol in columns, f"Column {rcol} is required to build a Detections DataFrame object"
 
     @property
     def _constructor(self):

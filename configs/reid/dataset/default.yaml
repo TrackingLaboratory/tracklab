@@ -1,2 +1,18 @@
-crop_dim: [384, 128]
-datasets_root: "${data_dir}"
+fig_size: [384, 128]
+mask_size: [64, 32]
+max_crop_size: [256, 128]
+train:
+  min_vis: 0.3
+  min_h: 50
+  min_w: 25
+  min_samples_per_id: 4
+  max_samples_per_id: 7
+  max_total_ids: 50
+test:
+  min_vis: 0.3
+  min_h: 50
+  min_w: 25
+  min_samples_per_id: 4
+  max_samples_per_id: 7
+  max_total_ids: 16
+  ratio_query_per_id: 0.2

@@ -2,6 +2,8 @@ import pandas as pd
 
 
 class Categories(pd.DataFrame):
+    required_columns = {'id', 'supercategory', 'keypoints', 'split', 'skeleton', 'name'}
+
     def __init__(self, *args, **kwargs):
         super(Categories, self).__init__(*args, **kwargs)
 

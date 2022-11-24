@@ -2,7 +2,7 @@ import sys
 import numpy as np
 import torch
 
-from pbtrack.datasets.posetrack21_reid import PoseTrack21ReID
+from pbtrack.datasets.reid_dataset import ReidDataset
 from pbtrack.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints
 
 from modules.reid.bpbreid.scripts.main import build_config, build_torchreid_model_engine
@@ -15,6 +15,8 @@ from hydra.utils import to_absolute_path
 from omegaconf import OmegaConf
 from yacs.config import CfgNode as CN
 
+from torchreid.data.datasets import configure_dataset_class
+
 sys.path.append(to_absolute_path("modules/reid/bpbreid"))  # FIXME ugly
 sys.path.append(to_absolute_path("modules/reid"))  # FIXME ugly
 import torchreid
@@ -23,21 +25,6 @@ import torchreid
 # to remove the 'from torchreid... import ...' error 'Unresolved reference 'torchreid' in PyCharm, right click
 # on 'bpbreid' folder, then choose 'Mark Directory as' -> 'Sources root'
 from bpbreid.scripts.default_config import engine_run_kwargs
-
-
-def configure_dataset_class(clazz, **ext_kwargs):
-    """
-    Wrapper function to provide the class with args external to torchreid
-    """
-
-    class ClazzWrapper(clazz):
-        def __init__(self, **kwargs):
-            self.__name__ = clazz.__name__
-            super(ClazzWrapper, self).__init__(**{**kwargs, **ext_kwargs})
-
-    ClazzWrapper.__name__ = clazz.__name__
-
-    return ClazzWrapper
 
 
 class Torchreid2detections:
@@ -52,13 +39,18 @@ class Torchreid2detections:
         wandb support
     """
 
-    def __init__(self, device, save_path, cfg, model_pose, dataset, job_id):
-        dataset_config = {**dataset, "pose_model": model_pose}
+    def __init__(self, cfg, tracking_dataset, dataset, device, save_path, model_pose, job_id):
+        additional_args = {
+            'tracking_dataset': tracking_dataset,
+            'reid_config': dataset,
+            'pose_model': model_pose,
+        }
         torchreid.data.register_image_dataset(
-            "posetrack21_reid",
-            configure_dataset_class(PoseTrack21ReID, **dataset_config),
-            "pt21",
+            tracking_dataset.name,
+            configure_dataset_class(ReidDataset, **additional_args),
+            tracking_dataset.nickname,
         )
+        self.device = device
         self.cfg = CN(OmegaConf.to_container(cfg, resolve=True))
         # set parts information (number of parts K and each part name),
         # depending on the original loaded masks size or the transformation applied:
@@ -66,7 +58,6 @@ class Torchreid2detections:
         self.cfg.data.save_dir = save_path
         self.cfg.project.job_id = job_id
         self.cfg.use_gpu = torch.cuda.is_available()
-        self.device = device
         # Register the PoseTrack21ReID dataset to Torchreid that will be instantiated when building Torchreid engine.
         self.training_enabled = not self.cfg.test.evaluate
         self.feature_extractor = None

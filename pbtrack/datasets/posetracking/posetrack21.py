@@ -23,7 +23,7 @@ def load_set(anns_path, split):
     images, categories, detections = load_annotations(anns_path, split)
     # Fix formatting of dataframes to be compatible with pbtrack
     images, categories, detections = fix_formatting(images, categories, detections)
-    return TrackingSet(Images(images), Categories(categories), Detections(detections))
+    return TrackingSet(split, Images(images), Categories(categories), Detections(detections))
 
 
 def load_annotations(anns_path, split):
@@ -106,4 +106,4 @@ class PoseTrack21(TrackingDataset):
         train_set = load_set(self.anns_path, "train")
         val_set = load_set(self.anns_path, "val")
         test_set = None  # TODO no json, load images
-        super().__init__(dataset_path, train_set, val_set, test_set, **kwargs)
+        super().__init__("posetrack21", "pt21", dataset_path, train_set, val_set, test_set, **kwargs)

@@ -18,8 +18,8 @@ cfg:
   data:
     root: "~/datasets/reid"
     type: "image"
-    sources: ["posetrack21_reid"]
-    targets: ["posetrack21_reid"]
+    sources: ["posetrack21"]
+    targets: ["posetrack21"]
     height: 256
     width: 32
     combineall: False
@@ -32,22 +32,6 @@ cfg:
     save_dir: "/Users/vladimirsomers/Code/logs/deep-person-reid/bot_synergy"
     masks_dir: "gaussian" # 'pifpaf' 'pifpaf_maskrcnn_filtering' 'isp_6_parts'
     workers: 0
-    mot:
-      train:
-        min_vis: 0.3
-        min_h: 50
-        min_w: 25
-        min_samples_per_id: 4
-        max_samples_per_id: 7
-        max_total_ids: 50
-      test:
-        min_vis: 0.3
-        min_h: 50
-        min_w: 25
-        min_samples_per_id: 4
-        max_samples_per_id: 7
-        max_total_ids: 16
-        ratio_query_per_id: 0.2
 
   sampler:
     train_sampler: RandomIdentitySampler # sampler for source train loader

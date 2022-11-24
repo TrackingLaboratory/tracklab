@@ -2,6 +2,9 @@ import pandas as pd
 
 
 class Images(pd.DataFrame):
+    required_columns = {'is_labeled', 'nframes', 'image_id', 'id', 'video_id', 'file_name',
+       'has_labeled_person', 'ignore_regions_y', 'ignore_regions_x', 'split'}
+
     def __init__(self, *args, **kwargs):
         super(Images, self).__init__(*args, **kwargs)
 

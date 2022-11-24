@@ -3,7 +3,7 @@ defaults:
   - detection: dekr
   - track: track
   - reid: bpbreid
-  - dataset: image_folder
+  - dataset: posetrack21
 input_folder: "???"
 project: track
 name: exp

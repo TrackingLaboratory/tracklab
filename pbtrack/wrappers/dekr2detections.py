@@ -1,11 +1,10 @@
 import sys
 import cv2
 import numpy as np
-from types import SimpleNamespace
 import torch
 import torchvision.transforms as T
 
-from pbtrack.tracker.tracker import Detection, Metadata, Keypoint, Bbox
+from pbtrack.tracker.detections import Detection, Metadata, Keypoint, Bbox
 import warnings
 
 warnings.filterwarnings("ignore")
