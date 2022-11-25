@@ -9,17 +9,8 @@ class Tracker:
     # TODO : use panda API for the following utils
     # Utils for loading/saving tracking results
     def save_mot(self, path):
-        videos = self.video_name.unique()
-        for video in videos:
-            output = ''
-            sub_df = self[(self['video_name'] == video) & (self['source'] == 2)].sort_values(by=['frame'])
-            for index, detection in sub_df.iterrows():
-                output += f"{detection['frame']}, {detection['person_id']}, {detection['bb_x']}, " + \
-                          f"{detection['bb_y']}, {detection['bb_w']}, " + \
-                          f"{detection['bb_h']}, {detection['bb_conf']}, -1, -1, -1\n"
-            file_name = os.path.join(path, video + '.txt')
-            with open(file_name, 'w+') as f:
-                f.write(output)
+        # FIXME do something like this :
+        self.predictions[['bbox_tlbr', 'person_id']].to_csv(path, sep=',', index=False, header=False)
 
     # FIXME maybe merge with save_pose_tracking ?
     def save_pose_estimation(self, path):
