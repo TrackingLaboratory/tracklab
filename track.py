@@ -26,7 +26,7 @@ def track(cfg, train_reid=True, train_pose=False):
 
     # Train Pose
     if train_pose:
-        model_pose.train(tracking_dataset)
+        model_pose.train()
 
     # Tracking
     tracker = Tracker(tracking_dataset.val_set)
@@ -39,6 +39,7 @@ def track(cfg, train_reid=True, train_pose=False):
 
     # Visualization
     # vis_engine.run(tracker)
+
 
 if __name__ == "__main__":
     track()
