@@ -3,7 +3,7 @@ import logging
 import torch
 from hydra.utils import instantiate
 
-from pbtrack.tracker.tracker import Tracker
+from pbtrack.tracker.tracker_state import TrackerState
 
 log = logging.getLogger(__name__)
 
