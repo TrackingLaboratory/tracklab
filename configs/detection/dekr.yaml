@@ -79,7 +79,7 @@ cfg:
     INIT_WEIGHTS: True
     NAME: hrnet_dekr
     NUM_JOINTS: 17
-    PRETRAINED: "${project_dir}/modules/detect/DEKR/model/pose_coco/pose_dekr_hrnetw32_coco.pth"
+    PRETRAINED: "${project_dir}/plugins/detect/DEKR/model/pose_coco/pose_dekr_hrnetw32_coco.pth"
   TEST:
     FLIP_TEST: True
     IMAGES_PER_GPU: 1
@@ -91,7 +91,7 @@ cfg:
     MAX_ABSORB_DISTANCE: 75
     GUASSIAN_KERNEL: 6
     DECREASE: 0.9
-    MODEL_FILE: "${project_dir}/modules/detect/DEKR/model/pose_coco/pose_dekr_hrnetw32_coco.pth"
+    MODEL_FILE: "${project_dir}/plugins/detect/DEKR/model/pose_coco/pose_dekr_hrnetw32_coco.pth"
   RESCORE:
     VALID: True
-    MODEL_FILE: "${project_dir}/modules/detect/DEKR/model/rescore/final_rescore_coco_kpt.pth"
+    MODEL_FILE: "${project_dir}/plugins/detect/DEKR/model/rescore/final_rescore_coco_kpt.pth"

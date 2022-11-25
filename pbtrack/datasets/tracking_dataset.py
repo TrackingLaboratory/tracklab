@@ -1,8 +1,8 @@
 from abc import ABC
 from pathlib import Path
-from pbtrack.tracker.categories import Categories
-from pbtrack.tracker.detections import Detections
-from pbtrack.tracker.images import Images
+from pbtrack.datastruct.categories import Categories
+from pbtrack.datastruct.detections import Detections
+from pbtrack.datastruct.images import Images
 
 
 def assert_valid_columns(df, rcols):

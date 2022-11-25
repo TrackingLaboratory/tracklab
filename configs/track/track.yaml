@@ -1,4 +1,4 @@
-_target_: pbtrack.wrappers.strong_sort2detections.StrongSORT2detections
+_target_: wrappers.track.strongsort_tracker.StrongSORTTracker
 cfg:
   STRONGSORT:
     WEIGHTS: "trackers/strong_sort/weights/osnet_x0_25_msmt17.pt"

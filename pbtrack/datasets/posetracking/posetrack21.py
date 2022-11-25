@@ -7,12 +7,12 @@ import pandas as pd
 
 from pathlib import Path
 from pbtrack.datasets.tracking_dataset import TrackingDataset, TrackingSet
-from pbtrack.tracker.categories import Categories
-from pbtrack.tracker.detections import Detections
-from pbtrack.tracker.images import Images
 from hydra.utils import to_absolute_path
+from pbtrack.datastruct.categories import Categories
+from pbtrack.datastruct.detections import Detections
+from pbtrack.datastruct.images import Images
 
-sys.path.append(to_absolute_path("modules/reid/bpbreid"))
+sys.path.append(to_absolute_path("plugins/reid/bpbreid"))
 
 
 def load_set(anns_path, split):

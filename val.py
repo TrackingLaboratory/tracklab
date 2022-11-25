@@ -13,8 +13,8 @@ import PoseTrack21.eval.posetrack21.posetrack21.trackeval as trackeval
 
 from lib.tracker import Tracker
 from lib.datasets import PoseTrack
-from lib.dekr2detections import DEKR2detections
-from lib.strong_sort2detections import StrongSORT2detections
+from lib.dekr_detector import DEKRDetector
+from lib.strongsort_tracker import StrongSORTTracker
 
 
 def parse_args():
@@ -55,7 +55,7 @@ def val(
     
     # load pose extractor 
     # TODO make it modulable and more parametrable
-    model_pose = DEKR2detections(
+    model_pose = DEKRDetector(
         dekr_cfg,
         device,
         vis_threshold=0.3 # FIXME add vis channel
@@ -71,7 +71,7 @@ def val(
         if data['frame'] == 1: # new video
             # TODO make it modulable and more parametrable
             # FIXME suboptimal to recreate a model at each new video
-            model_track = StrongSORT2detections(
+            model_track = StrongSORTTracker(
                 strongsort_cfg,
                 device
             )

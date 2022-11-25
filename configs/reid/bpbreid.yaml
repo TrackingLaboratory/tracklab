@@ -1,7 +1,7 @@
 defaults:
   - dataset: default
 
-_target_: pbtrack.wrappers.torchreid2detections.Torchreid2detections
+_target_: wrappers.reid.bpb_reidentifier.BPBReIdentifier
 job_id: "${oc.env:SLURM_JOBID,0}" # TODO
 save_path: reid
 cfg:

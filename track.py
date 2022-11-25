@@ -2,11 +2,9 @@ import hydra
 import logging
 import torch
 from hydra.utils import instantiate
-
-from pbtrack.tracker.tracker_state import TrackerState
+from pbtrack.datastruct.tracker_state import TrackerState
 
 log = logging.getLogger(__name__)
-
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def track(cfg, train_reid=True, train_pose=False):
@@ -29,10 +27,11 @@ def track(cfg, train_reid=True, train_pose=False):
         model_pose.train()
 
     # Tracking
-    tracker = Tracker(tracking_dataset.val_set)
-    model_pose.run(tracker)
-    model_reid.run(tracker)
-    model_track.run(tracker)
+    # TODO can we slice tracker_state?
+    tracking_state = TrackerState(tracking_dataset.val_set)
+    model_pose.run(tracking_state)  # list Image or slice Images OR batch numpy images -> list Detection or slice Detections
+    model_reid.run(tracking_state)  # list Detection or slice Detections OR batch numpy images + skeletons + masks -> list Detection or slice Detections
+    model_track.run(tracking_state)  # online: list frame Detection -> list frame Detection | offline: video detections -> video detections
 
     # Performance
     # evaluator.run(tracker)

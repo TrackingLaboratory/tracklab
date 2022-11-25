@@ -10,13 +10,14 @@ from math import ceil
 from pathlib import Path
 from skimage.transform import resize
 from tqdm import tqdm
+from pbtrack.datasets.tracking_dataset import TrackingDataset
 from pbtrack.utils.coordinates import (
     rescale_keypoints,
     clip_to_img_dim,
 )
 from pbtrack.utils.images import overlay_heatmap
 from hydra.utils import to_absolute_path
-sys.path.append(to_absolute_path("modules/reid/bpbreid"))
+sys.path.append(to_absolute_path("plugins/reid/bpbreid"))
 from torchreid.data import ImageDataset
 from torchreid.utils.imagetools import gkern, build_gaussian_heatmaps
 
@@ -53,7 +54,7 @@ class ReidDataset(ImageDataset):
 
     def __init__(
         self,
-        tracking_dataset,
+        tracking_dataset: TrackingDataset,
         reid_config,
         pose_model=None,
         masks_dir='',
