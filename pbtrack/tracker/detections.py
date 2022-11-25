@@ -133,6 +133,7 @@ class Detections(pd.DataFrame):
         # use this to view the base class, needed for debugging in some IDEs.
         return pd.DataFrame(self)
 
+    # Utils for converting between formats
     @property
     def bbox_ltrb(self):
         """Converts from (left, top, width, heights) to (left, top, right, bottom)"""
@@ -140,7 +141,6 @@ class Detections(pd.DataFrame):
             lambda ltwh: np.concatenate((ltwh[:2], ltwh[:2] + ltwh[2:]))
         )
 
-    # Utils for converting between formats
     @property
     def bbox_cmwh(self):
         """Converts from (left, top, width, heights) to (horizontal center, vertical middle, width, height)"""
