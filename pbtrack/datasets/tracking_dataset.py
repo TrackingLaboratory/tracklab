@@ -1,25 +1,25 @@
 from abc import ABC
 from pathlib import Path
-
 from pbtrack.tracker.categories import Categories
 from pbtrack.tracker.detections import Detections
 from pbtrack.tracker.images import Images
 
 
-def assert_valid_columns(df, required_columns):
+def assert_valid_columns(df, rcols):
+    required_columns = {k for k, v in rcols.items() if v}
     assert set(df.columns).issuperset(required_columns), \
         f"Column {required_columns-set(df.columns)} is required to build a {df.__class__.__name__} DataFrame object"
 
 
 class TrackingSet:
     def __init__(self, split: str, images: Images, categories: Categories, detections: Detections):
-        assert_valid_columns(images, Images.required_columns)
-        assert_valid_columns(categories, Categories.required_columns)
-        assert_valid_columns(detections, Detections.required_columns)
+        assert_valid_columns(images, Images.rcols)
+        assert_valid_columns(categories, Categories.rcols)
+        assert_valid_columns(detections, Detections.rcols)
+        self.images = images.reindex(columns=Images.rcols.keys())
+        self.categories = categories.reindex(columns=Categories.rcols.keys())
+        self.detections = detections.reindex(columns=Detections.rcols.keys())
         self.split = split
-        self.images = images
-        self.categories = categories
-        self.detections = detections
 
 
 class TrackingDataset(ABC):

@@ -1,10 +1,10 @@
+import numpy as np
+import pandas as pd
+
 from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Optional
-import numpy as np
-import pandas as pd
-import os
-import json
+from pbtrack.utils.coordinates import kp_img_to_kp_bbox
 
 
 class Source(Enum):
@@ -101,13 +101,25 @@ class Detection:
 
 
 class Detections(pd.DataFrame):
-    required_columns = {'bbox_ltwh', 'bbox_head', 'category_id', 'id', 'image_id',
-           'keypoints_xyc', 'person_id', 'track_id', 'split', 'visibility',
-           'bbox_ltrb', 'bbox_cxcywh', 'keypoints_bbox_xyc', 'video_id'}
+    rcols = {
+        'id': True,
+        'person_id': True,
+        'category_id': True,
+        'image_id': True,
+        'video_id': True,
+        'bbox_ltwh': False,
+        'bbox_ltrb': False,
+        'bbox_cxcywh': False,
+        'bbox_head': False,
+        'keypoints_xyc': False,
+        'keypoints_bbox_xyc': False,
+        'visibility': False,
+    }
 
     def __init__(self, *args, **kwargs):
         super(Detections, self).__init__(*args, **kwargs)
 
+    # Required for Dataframe subclassing
     @property
     def _constructor(self):
         return Detections
@@ -117,120 +129,31 @@ class Detections(pd.DataFrame):
         return DetectionsSeries
 
     @property
-    def base_class_view(self):
+    def aaa_base_class_view(self):
         # use this to view the base class, needed for debugging in some IDEs.
         return pd.DataFrame(self)
 
-    def bbox_xywh(self, with_conf=False):
-        return self[['bb_x', 'bb_y', 'bb_w', 'bb_h']].values
-        if with_conf:
-            return self[['bb_x', 'bb_y', 'bb_w', 'bb_h', 'bb_conf']].values
-        else:
-            return self[['bb_x', 'bb_y', 'bb_w', 'bb_h']].values
+    @property
+    def bbox_ltrb(self):
+        """Converts from (left, top, width, heights) to (left, top, right, bottom)"""
+        return self.bbox_ltwh.apply(
+            lambda ltwh: np.concatenate((ltwh[:2], ltwh[:2] + ltwh[2:]))
+        )
 
-    def bbox_xyxy(self, with_conf=False):
-        self['bb_x2'] = self.apply(lambda row: row.bb_x + row.bb_w, axis=1)
-        self['bb_y2'] = self.apply(lambda row: row.bb_y + row.bb_h, axis=1)
-        if with_conf:
-            return self[['bb_x', 'bb_y', 'bb_x2', 'bb_y2', 'bb_conf']].values
-        else:
-            return self[['bb_x', 'bb_y', 'bb_x2', 'bb_y2']].values
+    # Utils for converting between formats
+    @property
+    def bbox_cmwh(self):
+        """Converts from (left, top, width, heights) to (horizontal center, vertical middle, width, height)"""
+        return self.bbox_ltwh.apply(
+            lambda ltwh: np.concatenate((ltwh[:2] + ltwh[2:] / 2, ltwh[2:]))
+        )
 
-    def pose_xy(self, with_conf=False):
-        if with_conf:
-            return self.loc[:, self.columns.str.endswith(('x', 'y', 'conf')) & \
-                               self.columns.str.startswith('kp')].values.reshape((-1, 17, 3))
-        else:
-            return self.loc[:, self.columns.str.endswith(('x', 'y')) & \
-                               self.columns.str.startswith('kp')].values.reshape((-1, 17, 2))
-
-    def save_mot(self, path):
-        videos = self.video_name.unique()
-        for video in videos:
-            output = ''
-            sub_df = self[(self['video_name'] == video) & (self['source'] == 2)].sort_values(by=['frame'])
-            for index, detection in sub_df.iterrows():
-                output += f"{detection['frame']}, {detection['person_id']}, {detection['bb_x']}, " + \
-                          f"{detection['bb_y']}, {detection['bb_w']}, " + \
-                          f"{detection['bb_h']}, {detection['bb_conf']}, -1, -1, -1\n"
-            file_name = os.path.join(path, video + '.txt')
-            with open(file_name, 'w+') as f:
-                f.write(output)
-
-    # FIXME maybe merge with save_pose_tracking ?
-    def save_pose_estimation(self, path):
-        videos = self.video_name.unique()
-        for video in videos:
-            video_df = self[(self['video_name'] == video)].sort_values(by=['frame'])
-            detection_df = video_df[video_df['source'] >= 1]
-
-            keypoints = detection_df.pose_xy(with_conf=True)
-            annotations = []
-            for ((index, detection), xys) in zip(detection_df.iterrows(), keypoints):
-                annotations.append({
-                    'bbox': [detection['bb_x'], detection['bb_y'],
-                             detection['bb_w'], detection['bb_h']],
-                    'image_id': detection['image_id'],
-                    'keypoints': xys,  # FIXME score -> visibility
-                    'scores': xys[:, 2],
-                    'person_id': index,  # This is a dummy variable
-                    'track_id': index,  # This is a dummy variable
-                })
-
-            file_paths = video_df['file_path'].unique()
-            image_ids = video_df['image_id'].unique()
-            images = []
-            for file_path, image_id in zip(file_paths, image_ids):
-                images.append({
-                    'file_name': file_path,
-                    'id': image_id,
-                    'image_id': image_id,
-                })
-
-            file_name = os.path.join(path, video + '.json')
-            with open(file_name, 'w+') as f:
-                output = {
-                    'images': images,
-                    'annotations': annotations,
-                }
-                json.dump(output, f, cls=CustomEncoder)
-
-    def save_pose_tracking(self, path):
-        videos = self.video_name.unique()
-        for video in videos:
-            video_df = self[(self['video_name'] == video)].sort_values(by=['frame'])
-            detection_df = video_df[video_df['source'] == 2]
-
-            keypoints = detection_df.pose_xy(with_conf=True)
-            annotations = []
-            for ((_, detection), xys) in zip(detection_df.iterrows(), keypoints):
-                annotations.append({
-                    'bbox': [detection['bb_x'], detection['bb_y'],
-                             detection['bb_w'], detection['bb_h']],
-                    'image_id': detection['image_id'],
-                    'keypoints': xys,  # FIXME score -> visibility
-                    'scores': xys[:, 2],
-                    'person_id': detection['person_id'],
-                    'track_id': detection['person_id'],
-                })
-
-            file_paths = video_df['file_path'].unique()
-            image_ids = video_df['image_id'].unique()
-            images = []
-            for file_path, image_id in zip(file_paths, image_ids):
-                images.append({
-                    'file_name': file_path,
-                    'id': image_id,
-                    'image_id': image_id,
-                })
-
-            file_name = os.path.join(path, video + '.json')
-            with open(file_name, 'w+') as f:
-                output = {
-                    'images': images,
-                    'annotations': annotations,
-                }
-                json.dump(output, f, cls=CustomEncoder)
+    @property
+    def keypoints_bbox_xyc(self):
+        """Converts from keypoints in image coordinates to keypoints in bbox coordinates"""
+        return self.bbox_ltwh.apply(
+            lambda r: kp_img_to_kp_bbox(r.keypoints_xyc, r.bbox_ltwh), axis=1
+        )
 
 
 class DetectionsSeries(pd.Series):

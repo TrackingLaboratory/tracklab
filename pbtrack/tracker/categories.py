@@ -2,7 +2,13 @@ import pandas as pd
 
 
 class Categories(pd.DataFrame):
-    required_columns = {'id', 'supercategory', 'keypoints', 'split', 'skeleton', 'name'}
+    rcols = {
+        'id': True,
+        'name': True,
+        'supercategory': False,
+        'keypoints': False,
+        'skeleton': False,
+    }
 
     def __init__(self, *args, **kwargs):
         super(Categories, self).__init__(*args, **kwargs)
@@ -16,7 +22,7 @@ class Categories(pd.DataFrame):
         return CategoriesSeries
 
     @property
-    def base_class_view(self):
+    def aaa_base_class_view(self):
         # use this to view the base class, needed for debugging in some IDEs.
         return pd.DataFrame(self)
 

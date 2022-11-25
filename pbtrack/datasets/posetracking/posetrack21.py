@@ -10,9 +10,6 @@ from pbtrack.datasets.tracking_dataset import TrackingDataset, TrackingSet
 from pbtrack.tracker.categories import Categories
 from pbtrack.tracker.detections import Detections
 from pbtrack.tracker.images import Images
-from pbtrack.utils.coordinates import (
-    kp_img_to_kp_bbox,
-)
 from hydra.utils import to_absolute_path
 
 sys.path.append(to_absolute_path("modules/reid/bpbreid"))
@@ -41,9 +38,6 @@ def load_annotations(anns_path, split):
         images = pd.DataFrame(data_dict["images"])
         categories = pd.DataFrame(data_dict["categories"])
         detections = pd.DataFrame(data_dict["annotations"])
-        images['split'] = split
-        categories['split'] = split
-        detections['split'] = split
         images_list.append(images)
         categories_list.append(categories)
         detections_list.append(detections)
@@ -67,17 +61,8 @@ def fix_formatting(images, categories, detections):
     detections["visibility"] = detections.keypoints.apply(lambda x: x[:, 2].mean())
     # precompute various bbox formats
     detections.rename(columns={"bbox": "bbox_ltwh"}, inplace=True)
-    detections["bbox_ltrb"] = detections.bbox_ltwh.apply(
-        lambda ltwh: np.concatenate((ltwh[:2], ltwh[:2] + ltwh[2:]))
-    )
-    detections["bbox_cxcywh"] = detections.bbox_ltwh.apply(
-        lambda ltwh: np.concatenate((ltwh[:2] + ltwh[2:] / 2, ltwh[2:]))
-    )
     # precompute various keypoints formats
     detections.rename(columns={"keypoints": "keypoints_xyc"}, inplace=True)
-    detections["keypoints_bbox_xyc"] = detections.apply(
-        lambda r: kp_img_to_kp_bbox(r.keypoints_xyc, r.bbox_ltwh), axis=1
-    )
     # rename base 'vid_id' to 'video_id', to be consistent with 'image_id'
     images.rename(columns={"vid_id": "video_id"}, inplace=True)
     # add video_id to gt_dets, will be used for torchreid 'camid' paremeter

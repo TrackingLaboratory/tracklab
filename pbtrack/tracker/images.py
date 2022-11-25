@@ -2,8 +2,15 @@ import pandas as pd
 
 
 class Images(pd.DataFrame):
-    required_columns = {'is_labeled', 'nframes', 'image_id', 'id', 'video_id', 'file_name',
-       'has_labeled_person', 'ignore_regions_y', 'ignore_regions_x', 'split'}
+    rcols = {
+        'id': True,
+        'video_id': True,
+        'nframes': True,
+        'is_labeled': True,
+        'file_name': True,
+        'ignore_regions_y': True,
+        'ignore_regions_x': True,
+    }
 
     def __init__(self, *args, **kwargs):
         super(Images, self).__init__(*args, **kwargs)
@@ -17,7 +24,7 @@ class Images(pd.DataFrame):
         return ImagesSeries
 
     @property
-    def base_class_view(self):
+    def aaa_base_class_view(self):
         # use this to view the base class, needed for debugging in some IDEs.
         return pd.DataFrame(self)
 
