@@ -3,6 +3,7 @@ from pbtrack.datastruct.detections import Detections
 from pbtrack.datastruct.tracker_state import TrackerState
 
 
+# TODO Baptiste
 class Detector(ABC):
     @abstractmethod
     def train(self, detections: Detections):
