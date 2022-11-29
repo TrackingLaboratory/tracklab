@@ -39,6 +39,16 @@ class Detector(ABC):
         """
         pass
     
+    def __call__(self, pre_processed):
+        """process the pre_processed data and return the data
+        Args:
+            pre_processed (object): output of pre_process function
+        Returns:
+            processed (object): output of self.model
+        """
+        processed = self.model(pre_processed)  # type: ignore
+        return processed
+    
     @abstractmethod
     def post_process(self, processed) -> Detections:
         """ Your post processing function to adapt the output of self.model
