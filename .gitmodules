@@ -10,3 +10,7 @@
 	path = plugins/reid/bpbreid
 	url = git@github.com:VlSomers/person-reid.git
 	branch = pbtrack
+[submodule "plugins/detect/openpifpaf"]
+	path = plugins/detect/openpifpaf
+	url = https://github.com/bstandaert/openpifpaf.git
+	branch = pbtrack
