@@ -1,9 +1,11 @@
 [submodule "plugins/detect/DEKR"]
 	path = plugins/detect/DEKR
 	url = https://github.com/HRNet/DEKR.git
+	branch = main
 [submodule "plugins/eval/PoseTrack21"]
 	path = plugins/eval/PoseTrack21
 	url = https://github.com/anDoer/PoseTrack21.git
+	branch = main
 [submodule "plugins/reid/bpbreid"]
 	path = plugins/reid/bpbreid
 	url = git@github.com:VlSomers/person-reid.git
