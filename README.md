@@ -68,7 +68,7 @@ sh install.sh
 cd ../../../pb-track
 ```
 
-[download the weights](https://mailustceducn-my.sharepoint.com/personal/aa397601_mail_ustc_edu_cn/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Faa397601%5Fmail%5Fustc%5Fedu%5Fcn%2FDocuments%2FDEKR%2DDisentangled%2DKeypoint%2DRegression&ga=1) and make the modules/detect/DEKR/ directory look like
+[download the weights](https://mailustceducn-my.sharepoint.com/:f:/g/personal/aa397601_mail_ustc_edu_cn/EmoNwNpq4L1FgUsC9KbWezABSotd3BGOlcWCdkBi91l50g?e=HWuluh) and make the modules/detect/DEKR/ directory look like
 
 ```text
 ${modules/detect/DEKR}
