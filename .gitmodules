@@ -1,10 +1,10 @@
 [submodule "reid/bpbreid"]
-	path = modules/reid/bpbreid
+	path = plugins/reid/bpbreid
 	url = git@github.com:VlSomers/person-reid.git
 	branch = pbtrack
 [submodule "detect/DEKR"]
-	path = modules/detect/DEKR
+	path = plugins/detect/DEKR
 	url = https://github.com/HRNet/DEKR.git
 [submodule "eval/PoseTrack21"]
-	path = modules/eval/PoseTrack21
+	path = plugins/eval/PoseTrack21
 	url = https://github.com/anDoer/PoseTrack21.git
