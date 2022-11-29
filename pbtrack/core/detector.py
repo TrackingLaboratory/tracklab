@@ -1,14 +1,51 @@
 from abc import abstractmethod, ABC
-from pbtrack.datastruct.detections import Detections
-from pbtrack.datastruct.tracker_state import TrackerState
+from pbtrack.datastruct.detections import Detections, DetectionsSeries
 
-
-# TODO Baptiste
+# TODO check
 class Detector(ABC):
+    """
+        abstract class to implement for the integration of a new detector 
+        in wrapper/detect. The functions to implement are __init__, train, 
+        pre_process and post_process. A description of the expected behavior 
+        is provided below.
+    """
     @abstractmethod
-    def train(self, detections: Detections):
+    def __init__(self, cfg, device):
+        """
+        Args:
+            cfg (NameSpace): configuration file for the detector
+            device (str): device to use for the detector
+            
+        Attributes:
+            model (nn.Module): model of the detector
+        """
+        self.cfg = cfg
+        self.device = device
+        self.model = ...
+    
+    @abstractmethod
+    def train(self):
+        """TODO implement this function to train the detector
+        """
         pass
-
+    
     @abstractmethod
-    def run(self, tracker_state: TrackerState):
+    def pre_process(self, Detection: DetectionsSeries) -> object:
+        """ Your pre_processing function to adapt the input to your detector
+        Args:
+            Detection (DetectionsSeries): a single detection object
+        Returns:
+            pre_processed (object): pre_processed input for self.model
+        """
+        pass
+    
+    @abstractmethod
+    def post_process(self, processed) -> Detections:
+        """ Your post processing function to adapt the output of self.model
+        to a Detections object
+        Args:
+            processed (object): output of self.model(pre_processed)
+        Returns:
+            Detections (pd.DataFrame): new detections
+        """
         pass
