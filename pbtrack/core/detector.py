@@ -48,25 +48,25 @@ class Detector(ABC):
         pass
     
     @abstractmethod
-    def post_process(self, results, Image: ImagesSeries) -> List[Detection]:
+    def post_process(self, results, metadata: ImagesSeries) -> List[Detection]:
         """ Your post processing function to adapt the the output of process
         to a list of Detection objects
         Args:
             results (object): output of process function
-            Image (ImagesSeries): metadata of the corresponding image
+            metadata (ImagesSeries): metadata of the corresponding image
         Returns:
             detections (List[Detection]): new detections
         """
         pass
     
-    def __call__(self, image: torch.Tensor, Image: ImagesSeries) -> List[Detection]:
+    def __call__(self, image: torch.Tensor, metadata: ImagesSeries) -> List[Detection]:
         """process the detector pipeline
         Args:
             image (torch.Tensor): the image to process
-            Image (ImagesSeries): metadata of the corresponding image
+            metadata (ImagesSeries): metadata of the corresponding image
         Returns:
             detections (List[Detection]): new detections
         """
         pre_processed = self.pre_process(image)
         results = self.process(pre_processed)
-        return self.post_process(results, Image)
+        return self.post_process(results, metadata)

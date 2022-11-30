@@ -24,7 +24,7 @@ class OnlineTrackingEngine(pl.LightningModule):
         self.reider = reider
         self.tracker = tracker
     
-    def predict_step(self, image: torch.Tensor, Image: ImagesSeries):
+    def predict_step(self, image: torch.Tensor, metadata: ImagesSeries):
         """ Steps through tracking predictions for one image.
 
             This doesn't work for a batch or any other construct. To work on a batch
@@ -32,13 +32,13 @@ class OnlineTrackingEngine(pl.LightningModule):
 
             Args:
                 image (torch.Tensor): the image to process
-                Image (ImagesSeries): metadata of the corresponding image       
+                metadata (ImagesSeries): metadata of the corresponding image       
             Returns:
                 detection: populated detection object, with pose, reid and tracking info
         """
 
         # 1. Detection
-        pose_detections = self.detector(image, Image)
+        pose_detections = self.detector(image, metadata)
 
         # 2. Reid
         reid_detections = []
