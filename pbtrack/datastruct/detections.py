@@ -4,9 +4,6 @@ from pbtrack.utils.coordinates import kp_img_to_kp_bbox
 
 
 class Detections(pd.DataFrame):
-    def __init__(self, *args, **kwargs):
-        super(Detections, self).__init__(*args, **kwargs)
-
     # Required for DataFrame subclassing
     @property
     def _constructor(self):
@@ -43,7 +40,8 @@ class Detections(pd.DataFrame):
         return self.bbox.apply(
             lambda r: kp_img_to_kp_bbox(r.keypoints_xyc, r.bbox_ltwh), axis=1
         )
-
+    
+    # add the properties here
 
 class Detection(pd.Series):
     def __init__(
@@ -92,7 +90,7 @@ class Detection(pd.Series):
         try:
             return pd.Series.__getattr__(self, attr)
         except AttributeError as e:
-            if hasattr(Images, attr):
+            if hasattr(Detections, attr):
                 return getattr(self.to_frame().T, attr)
             else:
                 raise e
