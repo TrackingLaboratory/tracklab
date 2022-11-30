@@ -1,6 +1,9 @@
 import torch
 
+from pbtrack.utils.coordinates import kp_to_bbox
+
 from pbtrack.core.detector import Detector
+from pbtrack.datastruct.detections import Detection
 
 import sys
 sys.path.append("plugins/detect/openpifpaf/src")
@@ -26,12 +29,24 @@ class OpenPifPaf(Detector):
         self.predictor.model.to(self.device)
         
     def pre_process(self, image: torch.Tensor):
+        # maybe check if the image should be by batch of alone
+        # image = image[0]
         return image.cpu().detach().numpy()
     
     def process(self, image):
         return self.predictor.numpy_image(image)
     
-    def post_process(self, results, Image):
+    def post_process(self, results, metadata):
+        detections = []
         results, _, _ = results
-        # TODO
-        return 
+        for result in results:
+            result = result.data
+            detections.append(
+                Detection(
+                    image_id = metadata.image_id,
+                    video_id = metadata.video_id,
+                    keypoints_xyc = result,
+                    bbox = kp_to_bbox(result[:, :2]),
+                    )  # type: ignore
+                )
+        return detections

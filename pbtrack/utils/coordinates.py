@@ -1,5 +1,17 @@
 import numpy as np
 
+def kp_to_bbox(kp_xy):
+    """Extract bounding box from keypoints.
+    Args:
+        kp_xy (np.ndarray): keypoints in image coordinates, shape (K, 2)
+    Returns:
+        bbox (np.ndarray): bounding box tlwh (COCO format), shape (4,)
+    """
+    lt = np.amin(kp_xy, axis=0)
+    br = np.amax(kp_xy, axis=0)
+    w = br[0] - lt[0]
+    h = br[1] - lt[1]
+    return np.array([lt[0], lt[1], w, h])
 
 def kp_img_to_kp_bbox(kp_xyc_img, bbox_ltwh):
     """

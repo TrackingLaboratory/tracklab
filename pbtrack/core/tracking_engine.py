@@ -38,11 +38,11 @@ class OnlineTrackingEngine(pl.LightningModule):
         """
 
         # 1. Detection
-        pose_detections = self.detector(image, metadata)
+        detections = self.detector(image, metadata)
 
         # 2. Reid
         reid_detections = []
-        for detection in pose_detections:
+        for detection in detections:
             reid_input = self.reider.preprocess(detection)
             reid_output = self.reider(reid_input)
             reid_detections.append(self.reider.postprocess(reid_output))
