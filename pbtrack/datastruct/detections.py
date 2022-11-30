@@ -58,15 +58,15 @@ class Detection(pd.Series):
         ):
         super(Detection, self).__init__(
             dict(
-                image_id=image_id,
-                video_id=video_id,
-                bbox=bbox,
-                keypoints_xyc=keypoints_xyc,
-                keypoints_bbox_xyc=keypoints_bbox_xyc,
-                visibility=visibility,
-                id=id,
-                person_id=person_id,
-                category_id=category_id
+                image_id = image_id,
+                video_id = video_id,
+                bbox = bbox,
+                keypoints_xyc = keypoints_xyc,
+                keypoints_bbox_xyc = keypoints_bbox_xyc,
+                visibility = visibility,
+                id = id,
+                person_id = person_id,
+                category_id = category_id
             )  # type: ignore
         )
     

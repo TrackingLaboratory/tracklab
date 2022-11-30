@@ -3,7 +3,7 @@ import pytorch_lightning as pl
 import pandas as pd
 import torch
 
-from pbtrack.datastruct.images import ImagesSeries
+from pbtrack.datastruct.images import Images
 
 class OnlineTrackingEngine(pl.LightningModule):
     """ Online tracking engine
@@ -24,7 +24,7 @@ class OnlineTrackingEngine(pl.LightningModule):
         self.reider = reider
         self.tracker = tracker
     
-    def predict_step(self, image: torch.Tensor, metadata: ImagesSeries):
+    def predict_step(self, image: torch.Tensor, metadata: Images):
         """ Steps through tracking predictions for one image.
 
             This doesn't work for a batch or any other construct. To work on a batch
@@ -32,7 +32,7 @@ class OnlineTrackingEngine(pl.LightningModule):
 
             Args:
                 image (torch.Tensor): the image to process
-                metadata (ImagesSeries): metadata of the corresponding image       
+                metadata (Images): metadata of the corresponding image       
             Returns:
                 detection: populated detection object, with pose, reid and tracking info
         """

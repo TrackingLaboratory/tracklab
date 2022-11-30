@@ -29,13 +29,13 @@ class Image(pd.Series):
         ):
         super(Image, self).__init__(
             dict(
-                id=id,
-                video_id=video_id,
-                nframe=nframe,
-                file_path=file_path,
-                is_labeled=is_labeled,
-                ignore_regions_x=ignore_regions_x,
-                ignore_regions_y=ignore_regions_y
+                id = id,
+                video_id = video_id,
+                nframe = nframe,
+                file_path = file_path,
+                is_labeled = is_labeled,
+                ignore_regions_x = ignore_regions_x,
+                ignore_regions_y = ignore_regions_y
             )  # type: ignore
         )
     
@@ -46,9 +46,9 @@ class Image(pd.Series):
     # not needed - can be suppressed
     @property
     def _constructor(self):
-        return pd.Series # we lose the link with Detection here
+        return pd.Series # we lose the link with Image here
     
-    # Allows to convert automatically from Detection to Detections
+    # Allows to convert automatically from Image to Images
     # and use their @property methods
     def __getattr__(self, attr):
         if hasattr(Images, attr):
