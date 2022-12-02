@@ -3,16 +3,15 @@ import cv2
 import numpy as np
 import torch
 import torchvision.transforms as T
-import warnings
 
 from pbtrack.datastruct.detections import Detection
 from pbtrack.core.detector import Detector
 from pbtrack.utils.coordinates import kp_to_bbox, rescale_keypoints
 
-warnings.filterwarnings("ignore")
 from hydra.utils import to_absolute_path
-
 sys.path.append(to_absolute_path("plugins/detect/DEKR/lib"))
+
+import models
 from core.inference import get_multi_stage_outputs
 from core.inference import aggregate_results
 from core.nms import pose_nms
@@ -22,7 +21,7 @@ from utils.transforms import get_final_preds
 from utils.transforms import get_multi_scale_size
 from utils.rescore import rescore_valid
 
-# TODO fixme and add the training part
+# TODO fixmes and add the training part
 class DEKR(Detector):
     def __init__(self, cfg, device):
         self.cfg = cfg
@@ -71,6 +70,7 @@ class DEKR(Detector):
         reshaped_shape = image.shape[:2]
         return (image, initial_shape, reshaped_shape)
     
+    @torch.no_grad() # FIXME for the moment it is required...
     def process(self, image):
         (image, initial_shape, reshaped_shape) = image
         # make inference and extract results
@@ -125,7 +125,7 @@ class DEKR(Detector):
             pose[:, :2] = rescale_keypoints(pose[:, :2], reshaped_shape, initial_shape)
             detections.append(
                 Detection(
-                    image_id = metadata.image_id,
+                    image_id = metadata.id,
                     video_id = metadata.video_id,
                     keypoints_xyc = pose,
                     bbox = kp_to_bbox(pose[:, :2]),

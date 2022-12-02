@@ -1,4 +1,4 @@
-_target_: wrappers.detect.dekr_detector.DEKRDetector
+_target_: wrappers.detect.dekr_api.DEKR
 
 cfg:
   OUTPUT_DIR: ""
