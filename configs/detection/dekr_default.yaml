@@ -1,5 +1,4 @@
 _target_: wrappers.detect.dekr_detector.DEKRDetector
-vis_threshold: 0.3
 
 cfg:
   OUTPUT_DIR: ""

@@ -1,7 +1,6 @@
 defaults:
   - dekr_default
 
-vis_threshold: 0.3
 cfg:
   AUTO_RESUME: True
   DATA_DIR: ""
@@ -26,7 +25,6 @@ cfg:
     MAX_TRANSLATE: 40
     MIN_SCALE: 0.75
     NUM_JOINTS: 17
-
     OFFSET_RADIUS: 4
     SIGMA: 2.0
     CENTER_SIGMA: 4.0
@@ -92,6 +90,7 @@ cfg:
     GUASSIAN_KERNEL: 6
     DECREASE: 0.9
     MODEL_FILE: "${project_dir}/plugins/detect/DEKR/model/pose_coco/pose_dekr_hrnetw32_coco.pth"
+    vis_threshold: 0.3
   RESCORE:
     VALID: True
     MODEL_FILE: "${project_dir}/plugins/detect/DEKR/model/rescore/final_rescore_coco_kpt.pth"
