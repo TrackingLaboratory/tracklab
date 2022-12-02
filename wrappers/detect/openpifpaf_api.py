@@ -6,7 +6,8 @@ from pbtrack.core.detector import Detector
 from pbtrack.datastruct.detections import Detection
 
 import sys
-sys.path.append("plugins/detect/openpifpaf/src")
+from hydra.utils import to_absolute_path
+sys.path.append(to_absolute_path("plugins/detect/openpifpaf/src"))
 import openpifpaf
 
 class OpenPifPaf(Detector):
@@ -37,8 +38,8 @@ class OpenPifPaf(Detector):
         return self.predictor.numpy_image(image)
     
     def post_process(self, results, metadata):
-        detections = []
         results, _, _ = results
+        detections = []
         for result in results:
             result = result.data
             detections.append(
