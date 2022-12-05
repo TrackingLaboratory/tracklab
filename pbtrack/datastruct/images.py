@@ -21,6 +21,7 @@ class Image(pd.Series):
             self,
             id,
             video_id,
+            frame,
             nframe,
             file_path,
             is_labeled=None,
@@ -31,6 +32,7 @@ class Image(pd.Series):
             dict(
                 id = id,
                 video_id = video_id,
+                frame = frame,
                 nframe = nframe,
                 file_path = file_path,
                 is_labeled = is_labeled,
