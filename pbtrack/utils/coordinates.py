@@ -13,6 +13,16 @@ def kp_to_bbox(kp_xy):
     h = br[1] - lt[1]
     return np.array([lt[0], lt[1], w, h])
 
+def kp_to_bbox_w_threshold(kp_xyc, vis_threshold=0.1):
+    """Extract bounding box from keypoints with visibility threshold.
+    Args:
+        kp_xy (np.ndarray): keypoints in image coordinates, shape (K, 3) (x, y, c)
+    Returns:
+        bbox (np.ndarray): bounding box tlwh (COCO format), shape (4,)
+    """
+    kp_xy = kp_xyc[kp_xyc[:, 2] > vis_threshold][:, :2]
+    return kp_to_bbox(kp_xy)
+
 def kp_img_to_kp_bbox(kp_xyc_img, bbox_ltwh):
     """
     Convert keypoints in image coordinates to bounding box coordinates and filter out keypoints that are outside the

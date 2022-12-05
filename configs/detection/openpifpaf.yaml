@@ -1,0 +1,26 @@
+_target_: wrappers.detect.openpifpaf_api.OpenPifPaf
+cfg:
+  checkpoint: shufflenetv2k16
+  train:
+    loader-workers: 8
+    batch-size: 32
+    lr: 0.0003
+    momentum: 0.95
+    b-scale: 10.0
+    epochs: 50
+    lr-decay-epochs: 5
+    weight-decay: 0.00001
+    dataset: posetrack2021-cocokpst 
+    stride-apply: 2
+    posetrack-upsample: 2
+    cocokp-upsample: 2 
+    cocokp-orientation-invariant: 0.1
+    cocokp-blur: 0.1
+    posetrack2021-train-annotations: "YOURPATH"
+    posetrack2021-val-annotations: "YOURPATH"
+    posetrack2021-eval-annotations: "YOURPATH"
+    posetrack2021-data-root: "YOURPATH"
+    cocokp-train-annotations: "YOURPATH"
+    cocokp-val-annotations: "YOURPATH"
+    cocokp-train-image-dir: "YOURPATH"
+    cocokp-val-image-dir: "YOURPATH"

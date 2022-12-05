@@ -1,9 +1,9 @@
 import torch
-
-from pbtrack.utils.coordinates import kp_to_bbox
+from torchvision.transforms.functional import to_pil_image
 
 from pbtrack.core.detector import Detector
 from pbtrack.datastruct.detections import Detection
+from pbtrack.utils.coordinates import kp_to_bbox_w_threshold
 
 import sys
 from hydra.utils import to_absolute_path
@@ -32,10 +32,10 @@ class OpenPifPaf(Detector):
     def pre_process(self, image: torch.Tensor):
         # maybe check if the image should be by batch of alone
         # image = image[0]
-        return image.cpu().detach().numpy()
+        return to_pil_image(image)
     
     def process(self, image):
-        return self.predictor.numpy_image(image)
+        return self.predictor.pil_image(image)
     
     def post_process(self, results, metadata):
         results, _, _ = results
@@ -44,10 +44,10 @@ class OpenPifPaf(Detector):
             result = result.data
             detections.append(
                 Detection(
-                    image_id = metadata.image_id,
+                    image_id = metadata.id,
                     video_id = metadata.video_id,
                     keypoints_xyc = result,
-                    bbox = kp_to_bbox(result[:, :2]),
+                    bbox = kp_to_bbox_w_threshold(result, vis_threshold=0.1),
                     )  # type: ignore
                 )
         return detections
