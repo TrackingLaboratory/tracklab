@@ -1,31 +1,24 @@
 from abc import ABC
 from pathlib import Path
-from pbtrack.datastruct.categories import Categories
-from pbtrack.datastruct.detections import Detections
+
 from pbtrack.datastruct.images import Images
-
-
-def assert_valid_columns(df, rcols):
-    required_columns = {k for k, v in rcols.items() if v}
-    assert set(df.columns).issuperset(required_columns), \
-        f"Column {required_columns-set(df.columns)} is required to build a {df.__class__.__name__} DataFrame object"
-
+from pbtrack.datastruct.detections import Detections
+from pbtrack.datastruct.categories import Categories
 
 class TrackingSet:
-    def __init__(self, split: str, images: Images, categories: Categories, detections: Detections):
-        assert_valid_columns(images, Images.rcols)
-        assert_valid_columns(categories, Categories.rcols)
-        assert_valid_columns(detections, Detections.rcols)
-        self.images = images.reindex(columns=Images.rcols.keys())
-        self.categories = categories.reindex(columns=Categories.rcols.keys())
-        self.detections = detections.reindex(columns=Detections.rcols.keys())
+    def __init__(self, split: str, images: Images, detections: Detections, categories: Categories):
         self.split = split
-
+        self.images = images
+        self.detections = detections
+        self.categories = categories
 
 class TrackingDataset(ABC):
-    def __init__(self, name: str, nickname: str, dataset_path: str, train_set: TrackingSet, val_set: TrackingSet, test_set: TrackingSet, **kwargs):
-        self.name = name
-        self.nickname = nickname
+    def __init__(self,
+                 dataset_path: str,
+                 train_set: TrackingSet,
+                 val_set: TrackingSet,
+                 test_set: TrackingSet,
+                 *args, **kwargs):
         self.dataset_path = Path(dataset_path)
         self.train_set = train_set
         self.val_set = val_set

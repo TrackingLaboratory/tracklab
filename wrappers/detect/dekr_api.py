@@ -4,6 +4,9 @@ import numpy as np
 import torch
 import torchvision.transforms as T
 
+import warnings
+warnings.filterwarnings('ignore')
+
 from pbtrack.datastruct.detections import Detection
 from pbtrack.core.detector import Detector
 from pbtrack.utils.coordinates import kp_to_bbox, rescale_keypoints
@@ -21,7 +24,7 @@ from utils.transforms import get_final_preds
 from utils.transforms import get_multi_scale_size
 from utils.rescore import rescore_valid
 
-# TODO fixmes and add the training part
+# TODO add train
 class DEKR(Detector):
     def __init__(self, cfg, device):
         self.cfg = cfg
@@ -36,53 +39,69 @@ class DEKR(Detector):
             )
         self.model.to(self.device)
 
-        # taken from DEKR/tools/inference_demo.py
         self.transforms = T.Compose(
             [
                 T.ToTensor(),
-                T.Normalize(  # FIXME values to adapt according to dataset
+                T.Normalize(  # FIXME COCO specific
                     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
                 ),
             ]
         )
 
-    def train(self): # TODO
+    def train(self):
+        # TODO
         pass
     
-    def pre_process(self, image: torch.Tensor):
-        # maybe check if the image should be by batch of alone
-        # image = image[0]
-        image = image.detach().cpu().numpy()  # tensor -> numpy
-        image = np.transpose(image, (1, 2, 0))  # type: ignore # -> (H, W, 3)
-        initial_shape = image.shape[:2]
-        if image.shape[0] > image.shape[1]: # H > W
-            ratio = float(self.cfg.DATASET.INPUT_SIZE) / float(image.shape[1])
-            dim = (self.cfg.DATASET.INPUT_SIZE, int(ratio * image.shape[0]))
-            image = cv2.resize(
-                image, dim, interpolation=cv2.INTER_LINEAR  # type: ignore
-            )  # -> (h, w, 3)
+    def pre_process(self, image):
+        img = cv2.imread(image.file_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # -> (H, W, 3)
+        initial_shape = img.shape[:2]
+        if img.shape[0] > img.shape[1]: # H > W
+            ratio = float(self.cfg.DATASET.INPUT_SIZE) / float(img.shape[1])
+            dim = (self.cfg.DATASET.INPUT_SIZE, int(ratio * img.shape[0]))
         else:
-            ratio = float(self.cfg.DATASET.INPUT_SIZE) / float(image.shape[0])
-            dim = (int(ratio * image.shape[1]), self.cfg.DATASET.INPUT_SIZE)
-            image = cv2.resize(
-                image, dim, interpolation=cv2.INTER_LINEAR  # type: ignore
-            )  # -> (h, w, 3)
-        reshaped_shape = image.shape[:2]
-        return (image, initial_shape, reshaped_shape)
+            ratio = float(self.cfg.DATASET.INPUT_SIZE) / float(img.shape[0])
+            dim = (int(ratio * img.shape[1]), self.cfg.DATASET.INPUT_SIZE)
+        img = cv2.resize(
+            img, dim, interpolation=cv2.INTER_LINEAR  # type: ignore
+        )  # -> (h, w, 3)
+        processed_shape = img.shape[:2]
+        return {
+            'img': img,
+            'initial_shape': initial_shape,
+            'processed_shape': processed_shape,
+            'metadata': image,
+        }
     
-    @torch.no_grad() # FIXME for the moment it is required...
-    def process(self, image):
-        (image, initial_shape, reshaped_shape) = image
+    @torch.no_grad() # required
+    def process(self, pre_processed_batch):
+        detections = []
+        poses = self._process_img(pre_processed_batch['img'])
+        for pose in poses:
+            pose[:, :2] = rescale_keypoints(pose[:, :2], 
+                                            pre_processed_batch['processed_shape'], 
+                                            pre_processed_batch['initial_shape'])
+            detections.append(
+                Detection(
+                    image_id = pre_processed_batch['metadata'].id,
+                    video_id = pre_processed_batch['metadata'].video_id,
+                    keypoints_xyc = pose,
+                    bbox = kp_to_bbox(pose[:, :2]),
+                    )  # type: ignore
+                )
+        return detections
+    
+    def _process_img(self, img):
         # make inference and extract results
         base_size, center, scale = get_multi_scale_size(
-            image, self.cfg.DATASET.INPUT_SIZE, 1.0, 1.0
+            img, self.cfg.DATASET.INPUT_SIZE, 1.0, 1.0
         )
         heatmap_sum = 0
         poses = []
 
         for scale in sorted(self.cfg.TEST.SCALE_FACTOR, reverse=True):
             image_resized, center, scale_resized = resize_align_multi_scale(
-                image, self.cfg.DATASET.INPUT_SIZE, scale, 1.0
+                img, self.cfg.DATASET.INPUT_SIZE, scale, 1.0
             )
 
             image_resized = self.transforms(image_resized)
@@ -115,20 +134,4 @@ class DEKR(Detector):
         results_scores = np.asarray(results_scores)
         results_poses = np.asarray(results_poses)
         
-        # results_scores dropped
-        return (results_poses, initial_shape, reshaped_shape)
-    
-    def post_process(self, results, metadata):
-        (results_poses, initial_shape, reshaped_shape) = results
-        detections = []
-        for pose in results_poses:
-            pose[:, :2] = rescale_keypoints(pose[:, :2], reshaped_shape, initial_shape)
-            detections.append(
-                Detection(
-                    image_id = metadata.id,
-                    video_id = metadata.video_id,
-                    keypoints_xyc = pose,
-                    bbox = kp_to_bbox(pose[:, :2]),
-                    )  # type: ignore
-            )
-        return detections
+        return results_poses #, results_scores

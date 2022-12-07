@@ -31,11 +31,11 @@ class Categorie(pd.Series):
         ):
         super(Categorie, self).__init__(
             dict(
-            id,
-            name,
-            supercategory = supercategory,
-            keypoints = keypoints,
-            skeleton = skeleton,
+                id = id,
+                name = name,
+                supercategory = supercategory,
+                keypoints = keypoints,
+                skeleton = skeleton,
             )  # type: ignore
         )
     

@@ -1,72 +1,47 @@
-import torch
 from typing import List
 from abc import abstractmethod, ABC
-from pbtrack.datastruct.detections import Detection
-from pbtrack.datastruct.images import Images
 
-# TODO check
+from pbtrack.datastruct.detections import Detection
+from pbtrack.datastruct.images import Image, Images
+
 class Detector(ABC):
-    """
-        abstract class to implement for the integration of a new detector 
-        in wrapper/detect. The functions to implement are __init__, train, 
-        pre_process, __call__ and post_process. A description of the expected 
-        behavior is provided below.
+    """ Abstract class to implement for the integration of a new detector
+        in wrapper/detect. The functions to implement are __init__, train,
+        pre_process and process. A description of the expected behavior is
+        provided below.
     """
     @abstractmethod
     def __init__(self, cfg, device):
-        """
+        """ Init function
         Args:
             cfg (NameSpace): configuration file from Hydra for the detector
-            device (str): device to use for the detector            
+            device (str): device to use for the detector        
         """
         self.cfg = cfg
         self.device = device
     
     @abstractmethod
     def train(self):
-        """training function for the detector
+        """ Training function for your detector
         """
         pass
     
-    def pre_process(self, image: torch.Tensor) -> object:
-        """ Your pre_processing function to adapt the input to your detector
+    @abstractmethod
+    def pre_process(self, image: Image) -> object:
+        """ Your pre-processing function to adapt the input to your detector
         Args:
-            image (torch.Tensor): the image to process
+            image (Image): the image metadata to process
         Returns:
-            pre_processed (object): pre_processed input for process function
+            pre_processed (object): pre_processed input for process()
         """
-        return image
+        pass
     
     @abstractmethod
-    def process(self, results) -> object:
+    def process(self, pre_processed_batch, images: Images):
         """ Your processing function to run the detector
         Args:
-            processed (object): output of pre_process()
+            pre_processed_batch (object): output of pre_process() by batch
         Returns:
-            results (object): your detection results
+            detections (List[Detection]): list of new detections for the batch
         """
         pass
-    
-    @abstractmethod
-    def post_process(self, results, metadata: Images) -> List[Detection]:
-        """ Your post processing function to adapt the the output of process
-        to a list of Detection objects
-        Args:
-            results (object): output of process function
-            metadata (Images): metadata of the corresponding image
-        Returns:
-            detections (List[Detection]): new detections
-        """
-        pass
-    
-    def __call__(self, image: torch.Tensor, metadata: Images) -> List[Detection]:
-        """process the detector pipeline
-        Args:
-            image (torch.Tensor): the image to process
-            metadata (Images): metadata of the corresponding image
-        Returns:
-            detections (List[Detection]): new detections
-        """
-        pre_processed = self.pre_process(image)
-        results = self.process(pre_processed)
-        return self.post_process(results, metadata)

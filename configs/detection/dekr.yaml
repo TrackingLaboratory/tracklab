@@ -81,7 +81,7 @@ cfg:
   TEST:
     FLIP_TEST: True
     IMAGES_PER_GPU: 1
-    SCALE_FACTOR: [0.5, 1, 2]
+    SCALE_FACTOR: [1] # [0.5, 1, 2]
     NMS_THRE: 0.05
     NMS_NUM_THRE: 8
     KEYPOINT_THRESHOLD: 0.01

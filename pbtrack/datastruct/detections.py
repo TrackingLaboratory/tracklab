@@ -47,24 +47,20 @@ class Detection(pd.Series):
     def __init__(
             self,
             image_id,
-            video_id,
+            id,
             bbox = None, # COCO bbox format [top_left_x, top_left_y, width, height]
             keypoints_xyc = None,
-            keypoints_bbox_xyc = None,
-            visibility = None, # visibility score for each keypoint ?
-            id = None, # can't it be the index in the dataframe ?
+            track_id = None,
             person_id = None,
             category_id = None,
         ):
         super(Detection, self).__init__(
             dict(
                 image_id = image_id,
-                video_id = video_id,
+                id = id,
                 bbox = bbox,
                 keypoints_xyc = keypoints_xyc,
-                keypoints_bbox_xyc = keypoints_bbox_xyc,
-                visibility = visibility,
-                id = id,
+                track_id = track_id,
                 person_id = person_id,
                 category_id = category_id
             )  # type: ignore
