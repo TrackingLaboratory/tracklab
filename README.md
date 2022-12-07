@@ -87,6 +87,12 @@ ${modules/detect/DEKR}
         `-- final_rescore_crowd_pose_kpt.pth
 ```
 
+##### modules/detect/openpifpaf
+
+```bash
+pip3 install --editable '.[dev,train,test]'
+```
+
 ##### modules/eval/PoseTrack21
 
 First, [get the dataset](https://github.com/anDoer/PoseTrack21/tree/35bd7033ec4e1a352ae39b9522df5a683f83781b#how-to-get-the-dataset).
