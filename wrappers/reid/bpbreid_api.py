@@ -65,7 +65,7 @@ class BPBReId(ReIdentifier):
         self.model = None
         self.transform = CocoToSixBodyMasks()
 
-    def pre_process(self, image):  # Tensor RGB (1, 3, H, W)
+    def preprocess(self, image):  # Tensor RGB (1, 3, H, W)
         assert 1 == image.shape[0], "Test batch size should be 1"
         input = image[0].cpu().numpy()  # -> (3, H, W)
         input = np.transpose(input, (1, 2, 0))  # -> (H, W, 3)

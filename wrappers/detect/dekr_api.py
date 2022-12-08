@@ -70,10 +70,10 @@ class DEKR(Detector):
         }
     
     @torch.no_grad() # required
-    def process(self, pprocessed_b, images):
+    def process(self, pprocessed_b, metadatas):
         detections = []
         for (image, initial_shape, processed_shape, image_id) in \
-            zip(pprocessed_b['image'], pprocessed_b['initial_shape'], pprocessed_b['processed_shape'], images.id):
+            zip(pprocessed_b['image'], pprocessed_b['initial_shape'], pprocessed_b['processed_shape'], metadatas.id):
             poses = self._process_image(image)
             for pose in poses:
                 pose[:, :2] = rescale_keypoints(pose[:, :2], processed_shape, initial_shape)
