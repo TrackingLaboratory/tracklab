@@ -1,14 +1,14 @@
 from abc import ABC
 from pathlib import Path
 
-from .images import Images
+from .metadatas import Metadatas
 from .detections import Detections
 from .categories import Categories
 
 class TrackingSet:
-    def __init__(self, split: str, images: Images, detections: Detections, categories: Categories):
+    def __init__(self, split: str, metadatas: Metadatas, detections: Detections, categories: Categories):
         self.split = split
-        self.images = images
+        self.metadatas = metadatas
         self.detections = detections
         self.categories = categories
 

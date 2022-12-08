@@ -2,12 +2,12 @@ from typing import List
 from abc import abstractmethod, ABC
 
 from pbtrack.datastruct.detections import Detection, Detections
-from pbtrack.datastruct.images import Image
+from pbtrack.datastruct.metadatas import Metadata
 
 class ReIdentifier(ABC):
     """ Abstract class to implement for the integration of a new reidentifier
         in wrapper/reid. The functions to implement are __init__, train 
-        (optional), pre_process and process. A description of the expected 
+        (optional), preprocess and process. A description of the expected 
         behavior is provided below.
     """
     @abstractmethod
@@ -21,23 +21,23 @@ class ReIdentifier(ABC):
         self.device = device
     
     @abstractmethod
-    def pre_process(self, detection: Detection, image: Image)-> object:
+    def preprocess(self, detection: Detection, metadata: Metadata)-> object:
         """ Your pre-processing function to adapt the input to your 
             reidentifier
         Args:
             detection (Detection): the detection to process
-            image (Image): the image metadata associated to the detection
+            metadata (Metadata): the image metadata associated to the detection
         Returns:
-            pre_processed (object): pre_processed input for process()
+            preprocessed (object): preprocessed input for process()
         """
         pass
         # return pre_processed tel que collate_fn is OK nativement
     
     @abstractmethod
-    def process(self, pre_processed_batch, detections: Detections) -> List[Detection]:
+    def process(self, preprocessed_batch, detections: Detections) -> List[Detection]:
         """ Your processing function to run the reidentifier
         Args:
-            pre_processed_batch (object): output of pre_process() by batch
+            preprocessed_batch (object): output of preprocess() by batch
             detections (Detections): the detections to update
         Returns:
             detections (List[Detection]): updated detections for the batch

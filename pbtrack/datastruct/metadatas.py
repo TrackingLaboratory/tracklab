@@ -1,13 +1,13 @@
 import pandas as pd
 
-class Images(pd.DataFrame):
+class Metadatas(pd.DataFrame):
     @property
     def _constructor(self):
-        return Images
+        return Metadatas
 
     @property # not needed
     def _constructor_sliced(self):
-        return pd.Series # we lose the link with Image here
+        return pd.Series # we lose the link with Metadata here
     
     @property
     def aaa_base_class_view(self):
@@ -16,7 +16,7 @@ class Images(pd.DataFrame):
     
     # add the properties here
     
-class Image(pd.Series):
+class Metadata(pd.Series):
     def __init__(
             self,
             id,
@@ -28,7 +28,7 @@ class Image(pd.Series):
             ignore_regions_x=None,
             ignore_regions_y=None
         ):
-        super(Image, self).__init__(
+        super(Metadata, self).__init__(
             dict(
                 id = id,
                 video_id = video_id,
@@ -43,17 +43,17 @@ class Image(pd.Series):
     
     @property
     def _constructor_expanddim(self):
-        return Images
+        return Metadatas
     
     # not needed - can be suppressed
     @property
     def _constructor(self):
-        return pd.Series # we lose the link with Image here
+        return pd.Series # we lose the link with Metadata here
     
-    # Allows to convert automatically from Image to Images
+    # Allows to convert automatically from Metadata to Metadatas
     # and use their @property methods
     def __getattr__(self, attr):
-        if hasattr(Images, attr):
+        if hasattr(Metadatas, attr):
             return getattr(self.to_frame().T, attr)
         else:
             return super().__getattr__(attr)

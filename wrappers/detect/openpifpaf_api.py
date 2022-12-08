@@ -12,11 +12,29 @@ class OpenPifPaf(Detector):
         assert cfg.checkpoint or cfg.train, "Either a checkpoint or train must be declared"
         self.cfg = cfg
         self.device = device
+        self.id = 0
         
         if cfg.checkpoint:
             self.predictor = openpifpaf.Predictor(cfg.checkpoint)
             self.predictor.model.to(device)
+        
+    def preprocess(self, image):
+        return image
     
+    def process(self, preprocessed_batch):
+        detections = []
+        predictions, _, _ = self.predictor.image(preprocessed_batch.file_path)
+        for prediction in predictions:
+            detections.append(
+                Detection(
+                    image_id = preprocessed_batch.id,
+                    video_id = preprocessed_batch.video_id,
+                    keypoints_xyc = prediction.data,
+                    bbox = kp_to_bbox_w_threshold(prediction.data, vis_threshold=0.05),
+                    )  # type: ignore
+                )
+        return detections
+
     def train(self):
         saved_argv = sys.argv
         sys.argv += [f'--{str(k)}={str(v)}' for k, v in self.cfg.train.items()]
@@ -24,20 +42,3 @@ class OpenPifPaf(Detector):
         sys.argv = saved_argv
         self.predictor = openpifpaf.Predictor(self.cfg.checkpoint)
         self.predictor.model.to(self.device)
-        
-    def pre_process(self, image):
-        return image
-    
-    def process(self, pre_processed_batch):
-        detections = []
-        predictions, _, _ = self.predictor.image(pre_processed_batch.file_path)
-        for prediction in predictions:
-            detections.append(
-                Detection(
-                    image_id = pre_processed_batch.id,
-                    video_id = pre_processed_batch.video_id,
-                    keypoints_xyc = prediction.data,
-                    bbox = kp_to_bbox_w_threshold(prediction.data, vis_threshold=0.05),
-                    )  # type: ignore
-                )
-        return detections

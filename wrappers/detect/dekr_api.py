@@ -29,6 +29,7 @@ class DEKR(Detector):
     def __init__(self, cfg, device):
         self.cfg = cfg
         self.device = device
+        self.id = 0
         
         self.model = eval("models." + cfg.MODEL.NAME + ".get_pose_net")( # FIXME uggly
             self.cfg, is_train=False
@@ -47,60 +48,57 @@ class DEKR(Detector):
                 ),
             ]
         )
-
-    def train(self):
-        # TODO
-        pass
     
-    def pre_process(self, image):
-        img = cv2.imread(str(image.file_path))
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # -> (H, W, 3)
-        initial_shape = img.shape[:2]
-        if img.shape[0] > img.shape[1]: # H > W
-            ratio = float(self.cfg.DATASET.INPUT_SIZE) / float(img.shape[1])
-            dim = (self.cfg.DATASET.INPUT_SIZE, int(ratio * img.shape[0]))
+    def preprocess(self, image):
+        image = cv2.imread(str(image.file_path))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) # -> (H, W, 3)
+        initial_shape = image.shape[:2]
+        if image.shape[0] > image.shape[1]: # H > W
+            ratio = float(self.cfg.DATASET.INPUT_SIZE) / float(image.shape[1])
+            dim = (self.cfg.DATASET.INPUT_SIZE, int(ratio * image.shape[0]))
         else:
-            ratio = float(self.cfg.DATASET.INPUT_SIZE) / float(img.shape[0])
-            dim = (int(ratio * img.shape[1]), self.cfg.DATASET.INPUT_SIZE)
-        img = cv2.resize(
-            img, dim, interpolation=cv2.INTER_LINEAR  # type: ignore
+            ratio = float(self.cfg.DATASET.INPUT_SIZE) / float(image.shape[0])
+            dim = (int(ratio * image.shape[1]), self.cfg.DATASET.INPUT_SIZE)
+        image = cv2.resize(
+            image, dim, interpolation=cv2.INTER_LINEAR  # type: ignore
         )  # -> (h, w, 3)
-        processed_shape = img.shape[:2]
+        processed_shape = image.shape[:2]
         return {
-            'img': img,
-            'initial_shape': initial_shape,
-            'processed_shape': processed_shape,
+            'image': image,
+            'initial_shape': np.array(initial_shape),
+            'processed_shape': np.array(processed_shape),
         }
     
     @torch.no_grad() # required
-    def process(self, pre_processed_batch):
+    def process(self, pprocessed_b, images):
         detections = []
-        poses = self._process_img(pre_processed_batch['img'])
-        for pose in poses:
-            pose[:, :2] = rescale_keypoints(pose[:, :2], 
-                                            pre_processed_batch['processed_shape'], 
-                                            pre_processed_batch['initial_shape'])
-            detections.append(
-                Detection(
-                    image_id = pre_processed_batch['metadata'].id,
-                    video_id = pre_processed_batch['metadata'].video_id,
-                    keypoints_xyc = pose,
-                    bbox = kp_to_bbox(pose[:, :2]),
-                    )  # type: ignore
-                )
-        return detections
+        for (image, initial_shape, processed_shape, image_id) in \
+            zip(pprocessed_b['image'], pprocessed_b['initial_shape'], pprocessed_b['processed_shape'], images.id):
+            poses = self._process_image(image)
+            for pose in poses:
+                pose[:, :2] = rescale_keypoints(pose[:, :2], processed_shape, initial_shape)
+                detections.append(
+                    Detection(
+                        image_id = image_id,
+                        id = self.id,
+                        keypoints_xyc = pose,
+                        bbox = kp_to_bbox(pose[:, :2]),
+                        )  # type: ignore
+                    )
+                self.id += 1
+            return detections
     
-    def _process_img(self, img):
+    def _process_image(self, image):
         # make inference and extract results
         base_size, center, scale = get_multi_scale_size(
-            img, self.cfg.DATASET.INPUT_SIZE, 1.0, 1.0
+            image, self.cfg.DATASET.INPUT_SIZE, 1.0, 1.0
         )
         heatmap_sum = 0
         poses = []
 
         for scale in sorted(self.cfg.TEST.SCALE_FACTOR, reverse=True):
             image_resized, center, scale_resized = resize_align_multi_scale(
-                img, self.cfg.DATASET.INPUT_SIZE, scale, 1.0
+                image, self.cfg.DATASET.INPUT_SIZE, scale, 1.0
             )
 
             image_resized = self.transforms(image_resized)

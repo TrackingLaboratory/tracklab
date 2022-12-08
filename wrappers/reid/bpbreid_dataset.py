@@ -126,7 +126,7 @@ class ReidDataset(ImageDataset):
         these new detections.
         """
         split = tracking_set.split
-        images = tracking_set.images
+        metadatas = tracking_set.metadatas
         detections = tracking_set.detections
         fig_size = reid_config.fig_size
         mask_size = reid_config.mask_size
@@ -172,7 +172,7 @@ class ReidDataset(ImageDataset):
 
         # Save ReID detections crops and related metadata. Apply only on sampled detections
         self.save_reid_img_crops(
-            detections, reid_img_path, split, reid_anns_filepath, images, max_crop_size
+            detections, reid_img_path, split, reid_anns_filepath, metadatas, max_crop_size
         )
 
         # Save human parsing pseudo ground truth and related metadata. Apply only on sampled detections
@@ -182,7 +182,7 @@ class ReidDataset(ImageDataset):
             reid_fig_path,
             split,
             masks_anns_filepath,
-            images,
+            metadatas,
             fig_size,
             mask_size,
         )
@@ -274,7 +274,7 @@ class ReidDataset(ImageDataset):
         print("{} filtered size = {}".format(self.__class__.__name__, len(dets_df_f5)))
 
     def save_reid_img_crops(
-        self, gt_dets, save_path, set_name, reid_anns_filepath, images_df, max_crop_size
+        self, gt_dets, save_path, set_name, reid_anns_filepath, metadatas_df, max_crop_size
     ):
         """
         Save on disk all detections image crops from the ground truth dataset to build the reid dataset.
@@ -296,7 +296,7 @@ class ReidDataset(ImageDataset):
             desc="Extracting all {} reid crops".format(set_name),
         ) as pbar:
             for (video_id, image_id), dets_from_img in grp_gt_dets:
-                img_metadata = images_df[images_df.image_id == image_id].iloc[0]
+                img_metadata = metadatas_df[metadatas_df.image_id == image_id].iloc[0]
                 filename = img_metadata.file_name
                 img = cv2.imread(str(self.dataset_path / filename))
                 for det_metadata in dets_from_img.itertuples():
@@ -343,7 +343,7 @@ class ReidDataset(ImageDataset):
         fig_save_path,
         set_name,
         reid_anns_filepath,
-        images_df,
+        metadatas_df,
         fig_size,
         masks_size,
         mode="gaussian_keypoints",
@@ -369,7 +369,7 @@ class ReidDataset(ImageDataset):
             desc="Extracting all {} human parsing labels".format(set_name),
         ) as pbar:
             for (video_id, image_id), dets_from_img in grp_gt_dets:
-                img_metadata = images_df[images_df.image_id == image_id].iloc[0]
+                img_metadata = metadatas_df[metadatas_df.image_id == image_id].iloc[0]
                 filename = img_metadata.file_name
                 # load image once to get video frame size
                 if mode == "pose_on_img":

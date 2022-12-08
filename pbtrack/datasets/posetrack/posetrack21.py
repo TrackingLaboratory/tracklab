@@ -6,7 +6,7 @@ import numpy as np
 from pathlib import Path
 
 from pbtrack.datastruct.tracking_dataset import TrackingDataset, TrackingSet
-from pbtrack.datastruct.images import Image, Images
+from pbtrack.datastruct.metadatas import Metadata, Metadatas
 from pbtrack.datastruct.detections import Detection, Detections
 from pbtrack.datastruct.categories import Categorie, Categories
 
@@ -25,8 +25,8 @@ class PoseTrack21(TrackingDataset):
 
 def load_set(anns_path, dataset_path, split):
     # Load annotations into Pandas dataframes
-    images, detections, categories = load_annotations(anns_path, dataset_path, split)
-    return TrackingSet(split, Images(images), Detections(detections), Categories(categories))
+    metadatas, detections, categories = load_annotations(anns_path, dataset_path, split)
+    return TrackingSet(split, Metadatas(metadatas), Detections(detections), Categories(categories))
 
 def load_annotations(anns_path, dataset_path, split):
     anns_path = anns_path / split
@@ -34,15 +34,15 @@ def load_annotations(anns_path, dataset_path, split):
     assert len(anns_files_list) > 0, "No annotations files found in {}".format(
         anns_path
     )
-    images_list = []
+    metadatas_list = []
     detections_list = []
     categories_list = []
     for path in anns_files_list:
         with open(path) as json_file:
             data_dict = json.load(json_file)
             for frame, image in enumerate(data_dict['images']):
-                images_list.append(
-                    Image(
+                metadatas_list.append(
+                    Metadata(
                         id = image['image_id'],
                         video_id = image['vid_id'],
                         frame = frame,
@@ -75,4 +75,4 @@ def load_annotations(anns_path, dataset_path, split):
                         skeleton = category['skeleton'],
                     )  # type: ignore
                 )
-    return images_list, detections_list, categories_list
+    return metadatas_list, detections_list, categories_list
