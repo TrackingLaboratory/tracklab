@@ -1,10 +1,9 @@
 # TODO VICTOR
 import pytorch_lightning as pl
 import pandas as pd
-import torch
 
-from pbtrack.datastruct.images import Images
 from pbtrack.core import Detector, ReIdentifier, Tracker
+from pbtrack.datastruct.metadatas import Metadatas
 
 class OnlineTrackingEngine(pl.LightningModule):
     """ Online tracking engine
@@ -20,13 +19,14 @@ class OnlineTrackingEngine(pl.LightningModule):
             reidentifier: Predicts reid embeddings
             tracker: Tracks using reid embeddings
     """
-    def __init__(self, detector: Detector, reider: ReIdentifier, tracker: Tracker):
+    def __init__(self, detector: Detector, reider: ReIdentifier, tracker: Tracker, metadatas: Metadatas):
         super().__init__()
         self.detector = detector
         self.reider = reider
         self.tracker = tracker
+        self.metadatas = metadatas
     
-    def predict_step(self, *args, **kwargs):
+    def predict_step(self, batch, batch_idx):
         """ Steps through tracking predictions for one image.
 
             This doesn't work for a batch or any other construct. To work on a batch
@@ -38,9 +38,10 @@ class OnlineTrackingEngine(pl.LightningModule):
             Returns:
                 detection: populated detection object, with pose, reid and tracking info
         """
-
+        idxs, batch = batch
         # 1. Detection
-        detections = self.detector.process(*args, **kwargs)
+
+        detections = self.detector.process(batch, self.metadatas.loc[idxs])
 
         # 2. Reid
         reid_detections = []

@@ -1,6 +1,14 @@
 import pandas as pd
 
 class Metadatas(pd.DataFrame):
+
+    def __init__(self, data) -> None:
+        if isinstance(data, list):
+            indices = [x.id for x in data]
+        else:
+            indices = None
+        super().__init__(data, index=indices)
+
     @property
     def _constructor(self):
         return Metadatas
@@ -38,7 +46,7 @@ class Metadata(pd.Series):
                 is_labeled = is_labeled,
                 ignore_regions_x = ignore_regions_x,
                 ignore_regions_y = ignore_regions_y
-            )  # type: ignore
+            ),  # type: ignore
         )
     
     @property
