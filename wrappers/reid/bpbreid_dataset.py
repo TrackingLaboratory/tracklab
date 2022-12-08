@@ -10,7 +10,7 @@ from math import ceil
 from pathlib import Path
 from skimage.transform import resize
 from tqdm import tqdm
-from pbtrack.datasets.tracking_dataset import TrackingDataset
+from pbtrack.datastruct.tracking_dataset import TrackingDataset
 from pbtrack.utils.coordinates import (
     rescale_keypoints,
     clip_to_img_dim,

@@ -1,4 +1,4 @@
-from pbtrack.datasets.tracking_dataset import TrackingSet
+from .tracking_dataset import TrackingSet
 
 
 class TrackerState:

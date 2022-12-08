@@ -1,9 +1,9 @@
 from abc import ABC
 from pathlib import Path
 
-from pbtrack.datastruct.images import Images
-from pbtrack.datastruct.detections import Detections
-from pbtrack.datastruct.categories import Categories
+from .images import Images
+from .detections import Detections
+from .categories import Categories
 
 class TrackingSet:
     def __init__(self, split: str, images: Images, detections: Detections, categories: Categories):

@@ -5,7 +5,7 @@ import json
 import numpy as np
 from pathlib import Path
 
-from pbtrack.datasets.tracking_dataset import TrackingDataset, TrackingSet
+from pbtrack.datastruct.tracking_dataset import TrackingDataset, TrackingSet
 from pbtrack.datastruct.images import Image, Images
 from pbtrack.datastruct.detections import Detection, Detections
 from pbtrack.datastruct.categories import Categorie, Categories

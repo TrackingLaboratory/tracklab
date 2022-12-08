@@ -1,3 +1,5 @@
+# FILE WILL BE DELETED IN FUTURE
+
 import os
 import PIL
 import json
@@ -45,7 +47,7 @@ class PoseTrack21(torch.utils.data.Dataset):
             metadata = metadata
             )  # type: ignore
         
-class ImageFolder(torch.utils.data.Dataset):
+class ImageFolder2(torch.utils.data.Dataset):
     def __init__(self, path):
         assert os.path.isdir(path), f"{path} is not a directory. path should point to" +\
             " a folder with images"
@@ -85,3 +87,42 @@ class ImageFolder(torch.utils.data.Dataset):
             metadata = metadata
             )  # type: ignore
         
+import cv2   
+class ImageFolder(torch.utils.data.Dataset):
+    def __init__(self, path):
+        assert os.path.isdir(path), f"{path} is not a directory. path should point to" +\
+            " a folder with images"
+        
+        self.path = path
+        video_id = os.path.basename(os.path.dirname(path))
+        
+        files = []
+        for type in ('*.jpg', '*.jpeg', '*.png'):
+            files.extend(glob(os.path.join(path, type)))
+        images = []
+        for index, file in enumerate(sorted(files)):
+            #image_path = os.path.join(self.path, file)
+            images.append(
+                Image(
+                    id = index,
+                    video_id = video_id,
+                    frame = index,
+                    nframe = len(files),
+                    file_path = file,
+                    is_labeled = False,
+                    ignore_regions_x = [],
+                    ignore_regions_y = []
+                )  # type: ignore
+            )
+        self.images = images
+            
+    def __len__(self):
+        return len(self.images)
+    
+    def __getitem__(self, index):
+        return self.images[index]
+    
+    def get_image(self, image_id):
+        for image in self.images:
+            if image.id == image_id:
+                return cv2.imread(image.file_path)

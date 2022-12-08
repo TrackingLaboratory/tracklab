@@ -1,3 +1,5 @@
+name: "PoseTrack21"
+nickname: "pt21"
 fig_size: [384, 128]
 mask_size: [64, 32]
 max_crop_size: [256, 128]

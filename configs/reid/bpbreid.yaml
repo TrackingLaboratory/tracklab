@@ -1,7 +1,7 @@
 defaults:
   - dataset: default
 
-_target_: wrappers.reid.bpb_reidentifier.BPBReIdentifier
+_target_: wrappers.reid.bpbreid_api.BPBReId
 job_id: "${oc.env:SLURM_JOBID,0}" # TODO
 save_path: reid
 cfg:
@@ -16,10 +16,10 @@ cfg:
       use_tensorboard: False
       use_wandb: False
   data:
-    root: "~/datasets/reid"
+    root: "${data_dir}/reid"
     type: "image"
-    sources: ["posetrack21"]
-    targets: ["posetrack21"]
+    sources: ["PoseTrack21"]
+    targets: ["PoseTrack21"]
     height: 256
     width: 32
     combineall: False
@@ -29,7 +29,7 @@ cfg:
       background_computation_strategy: "sum" # threshold, diff_from_max
       softmax_weight: 0
       mask_filtering_threshold: 0.5
-    save_dir: "/Users/vladimirsomers/Code/logs/deep-person-reid/bot_synergy"
+    save_dir: ""
     masks_dir: "gaussian" # 'pifpaf' 'pifpaf_maskrcnn_filtering' 'isp_6_parts'
     workers: 0
 
@@ -42,7 +42,7 @@ cfg:
     name: "bpbreid"
     pretrained: True
     save_model_flag: True
-    load_weights: "runs/track/exp14/2022_11_15_14_18_00_18Scf2c4481-41bc-4aeb-bbd7-5c66743f53aamodel/job-63029147_20_model.pth.tar"
+    load_weights: ""
     bpbreid:
       pooling: "gwap" # ['gap', 'gmp', 'gwap', 'gwap2']
       normalization: "identity" # 'batch_norm_2d' 'identity'
@@ -58,7 +58,7 @@ cfg:
       test_embeddings: ["bn_foreg", "parts"] #  ['globl', 'foreg', 'conct', 'parts']
       test_use_target_segmentation: "none" # 'none' 'hard' 'soft'
       shared_parts_id_classifier: False
-      hrnet_pretrained_path: "bpbreid/pretrained_models/" # FIXME refactor model loading (use urls)
+      hrnet_pretrained_path: "" # FIXME refactor model loading (use urls)
 
   test:
     evaluate: True # test only
