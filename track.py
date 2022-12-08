@@ -3,6 +3,9 @@ import logging
 import torch
 from hydra.utils import instantiate
 from pbtrack.datastruct.tracker_state import TrackerState
+from pbtrack.core import OnlineTrackingEngine, EngineDatapipe
+import pytorch_lightning as pl
+from torch.utils.data import DataLoader
 
 log = logging.getLogger(__name__)
 
@@ -16,6 +19,16 @@ def track(cfg):
     model_reid = instantiate(cfg.reid, tracking_dataset=tracking_dataset, device=device, model_pose=model_pose)
     model_track = instantiate(cfg.track, device=device) 
     
+
+    
+
+    tracking_engine = OnlineTrackingEngine(model_pose, model_reid, model_track, tracking_dataset.val_set.metadatas)
+    detection_datapipe = DataLoader(dataset=EngineDatapipe(model_pose, tracking_dataset.val_set.metadatas),
+                                    batch_size=8
+    )
+    trainer = pl.Trainer()
+    trainer.predict(tracking_engine, dataloaders=detection_datapipe)
+
     # evaluator = instantiate(cfg.eval) # TODO
     # vis_engine = instantiate(cfg.visualization) # TODO
 
