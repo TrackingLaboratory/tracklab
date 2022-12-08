@@ -18,21 +18,23 @@ class OpenPifPaf(Detector):
             self.predictor = openpifpaf.Predictor(cfg.checkpoint)
             self.predictor.model.to(device)
         
-    def preprocess(self, image):
-        return image
+    def preprocess(self, metadata):
+        return str(metadata.file_path)
     
-    def process(self, preprocessed_batch):
+    def process(self, preprocessed_batch, metadatas):
         detections = []
-        predictions, _, _ = self.predictor.image(preprocessed_batch.file_path)
-        for prediction in predictions:
-            detections.append(
-                Detection(
-                    image_id = preprocessed_batch.id,
-                    video_id = preprocessed_batch.video_id,
-                    keypoints_xyc = prediction.data,
-                    bbox = kp_to_bbox_w_threshold(prediction.data, vis_threshold=0.05),
+        processed = self.predictor.images(preprocessed_batch)
+        for ((predictions, _, _), (_, metadata)) in zip(processed, metadatas.iterrows()):
+            for prediction in predictions:
+                detections.append(
+                    Detection(
+                        image_id = metadata.id,
+                        id = self.id,
+                        keypoints_xyc = prediction.data,
+                        bbox = kp_to_bbox_w_threshold(prediction.data, vis_threshold=0.05),
                     )  # type: ignore
                 )
+                self.id += 1
         return detections
 
     def train(self):

@@ -73,7 +73,7 @@ class DEKR(Detector):
     def process(self, pprocessed_b, metadatas):
         detections = []
         for (image, initial_shape, processed_shape, image_id) in \
-            zip(pprocessed_b['image'], pprocessed_b['initial_shape'], pprocessed_b['processed_shape'], metadatas.id):
+            zip(pprocessed_b['image'], pprocessed_b['initial_shape'], pprocessed_b['processed_shape'], metadatas.id.iterrows()):
             poses = self._process_image(image)
             for pose in poses:
                 pose[:, :2] = rescale_keypoints(pose[:, :2], processed_shape, initial_shape)
