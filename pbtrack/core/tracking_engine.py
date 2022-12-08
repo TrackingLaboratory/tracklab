@@ -4,6 +4,7 @@ import pandas as pd
 import torch
 
 from pbtrack.datastruct.images import Images
+from pbtrack.core import Detector, ReIdentifier, Tracker
 
 class OnlineTrackingEngine(pl.LightningModule):
     """ Online tracking engine
@@ -19,12 +20,13 @@ class OnlineTrackingEngine(pl.LightningModule):
             reidentifier: Predicts reid embeddings
             tracker: Tracks using reid embeddings
     """
-    def __init__(self, detector, reider, tracker):
+    def __init__(self, detector: Detector, reider: ReIdentifier, tracker: Tracker):
+        super().__init__()
         self.detector = detector
         self.reider = reider
         self.tracker = tracker
     
-    def predict_step(self, image: torch.Tensor, metadata: Images):
+    def predict_step(self, *args, **kwargs):
         """ Steps through tracking predictions for one image.
 
             This doesn't work for a batch or any other construct. To work on a batch
@@ -38,7 +40,7 @@ class OnlineTrackingEngine(pl.LightningModule):
         """
 
         # 1. Detection
-        detections = self.detector(image, metadata)
+        detections = self.detector.process(*args, **kwargs)
 
         # 2. Reid
         reid_detections = []

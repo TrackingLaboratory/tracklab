@@ -53,7 +53,7 @@ class DEKR(Detector):
         pass
     
     def pre_process(self, image):
-        img = cv2.imread(image.file_path)
+        img = cv2.imread(str(image.file_path))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # -> (H, W, 3)
         initial_shape = img.shape[:2]
         if img.shape[0] > img.shape[1]: # H > W
@@ -70,7 +70,6 @@ class DEKR(Detector):
             'img': img,
             'initial_shape': initial_shape,
             'processed_shape': processed_shape,
-            'metadata': image,
         }
     
     @torch.no_grad() # required
