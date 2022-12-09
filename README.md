@@ -93,6 +93,14 @@ ${modules/detect/DEKR}
 pip3 install --editable '.[dev,train,test]'
 ```
 
+You will certainly need to install `torch 1.9.0` and `torchvision 0.10`.
+
+```bash
+pip install torch==1.9.0+cu111
+torchvision==0.10.0+cu111
+torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
+```
+
 ##### modules/eval/PoseTrack21
 
 First, [get the dataset](https://github.com/anDoer/PoseTrack21/tree/35bd7033ec4e1a352ae39b9522df5a683f83781b#how-to-get-the-dataset).
