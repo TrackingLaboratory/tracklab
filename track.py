@@ -19,6 +19,12 @@ def track(cfg):
     model_reid = instantiate(cfg.reid, tracking_dataset=tracking_dataset, device=device, model_pose=model_pose)
     model_track = instantiate(cfg.track, device=device) 
     
+<<<<<<< HEAD
+=======
+
+    
+
+>>>>>>> ab03124dec319b419755dad3cc97454a25bd7be7
     tracking_engine = OnlineTrackingEngine(model_pose, model_reid, model_track, tracking_dataset.val_set.metadatas)
     detection_datapipe = DataLoader(dataset=EngineDatapipe(model_pose, tracking_dataset.val_set.metadatas),
                                     batch_size=8
