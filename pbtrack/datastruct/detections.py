@@ -13,7 +13,7 @@ class Detections(pd.DataFrame):
     # not needed - can be suppressed
     @property
     def _constructor_sliced(self):
-        return pd.Series # we lose the link with Detection here
+        return Detection
 
     @property
     def aaa_base_class_view(self):
@@ -45,8 +45,9 @@ class Detections(pd.DataFrame):
     # add the properties here
 
 class Detection(pd.Series):
-    def __init__(
-            self,
+    @classmethod
+    def create(
+            cls,
             image_id,
             id,
             bbox = None, # COCO bbox format [top_left_x, top_left_y, width, height]
@@ -55,7 +56,7 @@ class Detection(pd.Series):
             person_id = None,
             category_id = None,
         ):
-        super(Detection, self).__init__(
+        return cls(
             dict(
                 image_id = image_id,
                 id = id,
@@ -74,13 +75,13 @@ class Detection(pd.Series):
     # not needed - can be suppressed
     @property
     def _constructor(self):
-        return pd.Series # we lose the link with Detection here
+        return Detection # we lose the link with Detection here
     
     # Allows to convert automatically from Detection to Detections
     # and use their @property methods
     def __getattr__(self, attr):
         if hasattr(Detections, attr):
-            return getattr(self.to_frame().T, attr)
+            return getattr(self.to_frame().T, attr).item()
         else:
             return super().__getattr__(attr)
         """ other version in case of bug with the implemented one

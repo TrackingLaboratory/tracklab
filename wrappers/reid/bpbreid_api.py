@@ -13,7 +13,7 @@ from plugins.reid.bpbreid.scripts.main import build_config, build_torchreid_mode
 from plugins.reid.bpbreid.tools.feature_extractor import FeatureExtractor
 from plugins.reid.bpbreid.torchreid.data.data_augmentation.coco_keypoints_transforms import CocoToSixBodyMasks
 from plugins.reid.bpbreid.torchreid.utils.imagetools import build_gaussian_heatmaps
-
+from pbtrack.utils.collate import Unbatchable
 
 from hydra.utils import to_absolute_path
 sys.path.append(to_absolute_path("plugins/reid/bpbreid"))  # FIXME ugly
@@ -67,15 +67,31 @@ class BPBReId(ReIdentifier):
         self.transform = CocoToSixBodyMasks()
 
     def preprocess(self, detection: Detection, metadata: Metadata):  # Tensor RGB (1, 3, H, W)
-        # assert 1 == image.shape[0], "Test batch size should be 1"
+        mask_w, mask_h = 32, 64
         image = metadata.image
-        input = image # image[0].cpu().numpy()  # -> (3, H, W)
-        # input = np.transpose(input, (1, 2, 0))  # -> (H, W, 3)
-        # input = input * 255.0
-        # input = input.astype(np.uint8)  # -> to uint8
-        return input
+        bbox_ltwh = detection.bbox
+        l, t, r, b = detection.bbox_ltrb.astype(int)
+        # l, t, r, b = int(bbox.x), int(bbox.y), int(bbox.x + bbox.w), int(bbox.y + bbox.h)
+        crop = image[t:b, l:r]
+        keypoints = detection.keypoints_xyc
+        bbox_ltwh = np.array([l, t, r - l, b - t])
+        kp_xyc_bbox = kp_img_to_kp_bbox(keypoints, bbox_ltwh)
+        kp_xyc_mask = rescale_keypoints(
+            kp_xyc_bbox, (bbox_ltwh[2], bbox_ltwh[3]), (mask_w, mask_h)
+        )
+        pixels_parts_probabilities = build_gaussian_heatmaps(
+            kp_xyc_mask, mask_w, mask_h
+        )
+
+        # pixels_parts_probabilities = pixels_parts_probabilities[np.newaxis, ...]
+        crop = Unbatchable([crop])
+        print(pixels_parts_probabilities.shape)
+        return crop, pixels_parts_probabilities
 
     def process(self, batch, detections, metadatas):
+        im_crops, external_parts_masks = batch
+        im_crops = [im_crop.numpy() for im_crop in im_crops]
+        external_parts_masks = external_parts_masks.numpy()
         if self.feature_extractor is None:
             self.feature_extractor = FeatureExtractor(
                 self.cfg,
@@ -85,36 +101,12 @@ class BPBReId(ReIdentifier):
                 model=self.model,
                 verbose=False,  # FIXME @Vladimir
             )
-        mask_w, mask_h = 32, 64
-        im_crops = []
-        image = self.pre_process(data["image"].unsqueeze(0))  # FIXME
-        all_masks = []
-        for i, detection in enumerate(detections):
-            bbox = detection.bbox
-            pose = detection.keypoints
-            l = int(bbox.x)
-            t = int(bbox.y)
-            r = int(bbox.x + bbox.w)
-            b = int(bbox.y + bbox.h)
-            crop = image[t:b, l:r]
-            im_crops.append(crop)
-            keypoints = np.array([[kp.x, kp.y, kp.conf] for kp in detection.keypoints])
-            bbox_ltwh = np.array([l, t, r - l, b - t])
-            kp_xyc_bbox = kp_img_to_kp_bbox(keypoints, bbox_ltwh)
-            kp_xyc_mask = rescale_keypoints(
-                kp_xyc_bbox, (bbox_ltwh[2], bbox_ltwh[3]), (mask_w, mask_h)
-            )
-            pixels_parts_probabilities = build_gaussian_heatmaps(
-                kp_xyc_mask, mask_w, mask_h
-            )
-            all_masks.append(pixels_parts_probabilities)
-
+        
         if im_crops:
-            external_parts_masks = np.stack(all_masks, axis=0)
             embeddings, visibility_scores, body_masks, _ = self.feature_extractor(
                 im_crops, external_parts_masks=external_parts_masks
             )
-            for i, detection in enumerate(detections):
+            for i, (idx, detection) in enumerate(detections.iterrows()):
                 detection.reid_features = embeddings[i]
                 detection.visibility_score = visibility_scores[i]
                 detection.body_mask = body_masks[i]

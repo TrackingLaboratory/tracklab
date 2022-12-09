@@ -78,7 +78,7 @@ class DEKR(Detector):
             for pose in poses:
                 pose[:, :2] = rescale_keypoints(pose[:, :2], processed_shape, initial_shape)
                 detections.append(
-                    Detection(
+                    Detection.create(
                         image_id = image_id,
                         id = self.id,
                         keypoints_xyc = pose,

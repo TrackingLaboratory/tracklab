@@ -55,7 +55,7 @@ def load_annotations(anns_path, dataset_path, split):
                 )
             for annotation in data_dict['annotations']:
                 detections_list.append(
-                    Detection(
+                    Detection.create(
                         image_id = annotation['image_id'],
                         id = annotation['id'],
                         bbox = np.array(annotation['bbox']),

@@ -27,7 +27,7 @@ class OpenPifPaf(Detector):
         for ((predictions, _, _), (_, metadata)) in zip(processed, metadatas.iterrows()):
             for prediction in predictions:
                 detections.append(
-                    Detection(
+                    Detection.create(
                         image_id = metadata.id,
                         id = self.id,
                         keypoints_xyc = prediction.data,

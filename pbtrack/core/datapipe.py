@@ -9,7 +9,10 @@ class EngineDatapipe(Dataset):
         self.detections = detections
 
     def __len__(self):
-        return len(self.metadatas)
+        if self.detections is not None:
+            return len(self.detections)
+        else:
+            return len(self.metadatas)
 
     def __getitem__(self, idx):
         if self.detections is not None:
