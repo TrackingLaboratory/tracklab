@@ -1,21 +1,32 @@
 import pandas as pd
+import cv2
 
 class Metadatas(pd.DataFrame):
 
-    def __init__(self, data) -> None:
+    def __init__(self, data, *args, **kwargs) -> None:
         if isinstance(data, list):
             indices = [x.id for x in data]
         else:
             indices = None
-        super().__init__(data, index=indices)
+        kwargs = {**kwargs, "index": indices}
+        super().__init__(data, *args, **kwargs)
 
     @property
     def _constructor(self):
         return Metadatas
 
+    @property
+    def image(self):
+        def open_image(file_path):
+            image = cv2.imread(str(file_path))
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            return image
+
+        return self.file_path.apply(open_image)
+
     @property # not needed
     def _constructor_sliced(self):
-        return pd.Series # we lose the link with Metadata here
+        return Metadata # we lose the link with Metadata here
     
     @property
     def aaa_base_class_view(self):
@@ -25,8 +36,10 @@ class Metadatas(pd.DataFrame):
     # add the properties here
     
 class Metadata(pd.Series):
-    def __init__(
-            self,
+
+    @classmethod
+    def create(
+            cls,
             id,
             video_id,
             frame,
@@ -36,7 +49,7 @@ class Metadata(pd.Series):
             ignore_regions_x=None,
             ignore_regions_y=None
         ):
-        super(Metadata, self).__init__(
+        return cls(
             dict(
                 id = id,
                 video_id = video_id,
@@ -62,7 +75,7 @@ class Metadata(pd.Series):
     # and use their @property methods
     def __getattr__(self, attr):
         if hasattr(Metadatas, attr):
-            return getattr(self.to_frame().T, attr)
+            return getattr(self.to_frame().T, attr).item()
         else:
             return super().__getattr__(attr)
         """ other version in case of bug with the implemented one

@@ -14,9 +14,10 @@ class EngineDatapipe(Dataset):
     def __getitem__(self, idx):
         if self.detections is not None:
             detection = self.detections.iloc[idx]
-            image = self.metadatas.loc[detection.image_id]
-            return self.model.preprocess(image=image, detection=detection)
+            metadata = self.metadatas.loc[detection.image_id]
+            sample = (idx, self.model.preprocess(detection=detection, metadata=metadata))
+            return sample
         else:
-            image = self.metadatas.iloc[idx]
-            sample = (image.id, self.model.preprocess(image))
+            metadata = self.metadatas.iloc[idx]
+            sample = (metadata.id, self.model.preprocess(metadata))
             return sample

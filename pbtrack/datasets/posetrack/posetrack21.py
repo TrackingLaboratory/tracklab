@@ -42,7 +42,7 @@ def load_annotations(anns_path, dataset_path, split):
             data_dict = json.load(json_file)
             for frame, image in enumerate(data_dict['images']):
                 metadatas_list.append(
-                    Metadata(
+                    Metadata.create(
                         id = image['image_id'],
                         video_id = image['vid_id'],
                         frame = frame,

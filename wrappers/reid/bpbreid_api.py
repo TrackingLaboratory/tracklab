@@ -6,6 +6,7 @@ from omegaconf import OmegaConf
 from yacs.config import CfgNode as CN
 
 from .bpbreid_dataset import ReidDataset
+from pbtrack.datastruct import Metadata, Detection
 from pbtrack.core.reidentifier import ReIdentifier
 from pbtrack.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints
 from plugins.reid.bpbreid.scripts.main import build_config, build_torchreid_model_engine
@@ -65,15 +66,16 @@ class BPBReId(ReIdentifier):
         self.model = None
         self.transform = CocoToSixBodyMasks()
 
-    def preprocess(self, image):  # Tensor RGB (1, 3, H, W)
-        assert 1 == image.shape[0], "Test batch size should be 1"
-        input = image[0].cpu().numpy()  # -> (3, H, W)
-        input = np.transpose(input, (1, 2, 0))  # -> (H, W, 3)
-        input = input * 255.0
-        input = input.astype(np.uint8)  # -> to uint8
+    def preprocess(self, detection: Detection, metadata: Metadata):  # Tensor RGB (1, 3, H, W)
+        # assert 1 == image.shape[0], "Test batch size should be 1"
+        image = metadata.image
+        input = image # image[0].cpu().numpy()  # -> (3, H, W)
+        # input = np.transpose(input, (1, 2, 0))  # -> (H, W, 3)
+        # input = input * 255.0
+        # input = input.astype(np.uint8)  # -> to uint8
         return input
 
-    def process(self, detections, data):
+    def process(self, batch, detections, metadatas):
         if self.feature_extractor is None:
             self.feature_extractor = FeatureExtractor(
                 self.cfg,

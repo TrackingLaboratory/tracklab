@@ -1,8 +1,11 @@
 # TODO VICTOR
 import pytorch_lightning as pl
 import pandas as pd
+from torch.utils.data import DataLoader
 
-from pbtrack.core import Detector, ReIdentifier, Tracker
+
+from pbtrack.core import Detector, ReIdentifier, Tracker, EngineDatapipe
+from pbtrack.datastruct.detections import Detections
 from pbtrack.datastruct.metadatas import Metadatas
 
 class OnlineTrackingEngine(pl.LightningModule):
@@ -41,14 +44,17 @@ class OnlineTrackingEngine(pl.LightningModule):
         idxs, batch = batch
         # 1. Detection
 
-        detections = self.detector.process(batch, self.metadatas.loc[idxs])
+        detections = Detections(self.detector.process(batch, self.metadatas.loc[idxs]))
 
         # 2. Reid
         reid_detections = []
-        for detection in detections:
-            reid_input = self.reider.preprocess(detection)
-            reid_output = self.reider(reid_input)
-            reid_detections.append(self.reider.postprocess(reid_output))
+        reid_pipe = EngineDatapipe(self.reider, self.metadatas, detections)
+        reid_dl = DataLoader(dataset=reid_pipe, batch_size=8)
+        for idxs, reid_batch in reid_dl:
+            batch_detections = detections.iloc[idxs]
+            batch_metadatas = self.metadatas.loc[batch_detections.image_id]
+            reid_detections += self.reider.process(reid_batch, batch_detections, batch_metadatas)
+            # reid_detections.append(self.reider.postprocess(reid_output))
         
         reid_detections = pd.concat(reid_detections)
 
