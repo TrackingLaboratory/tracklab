@@ -3,7 +3,8 @@ import logging
 import torch
 from hydra.utils import instantiate
 from pbtrack.datastruct.tracker_state import TrackerState
-from pbtrack.core import OnlineTrackingEngine, EngineDatapipe
+from pbtrack.core import EngineDatapipe
+from pbtrack.core.tracking_engine import OnlineTrackingEngine
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
