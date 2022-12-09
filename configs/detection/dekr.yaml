@@ -90,7 +90,7 @@ cfg:
     GUASSIAN_KERNEL: 6
     DECREASE: 0.9
     MODEL_FILE: "${project_dir}/plugins/detect/DEKR/model/pose_coco/pose_dekr_hrnetw32_coco.pth"
-    vis_threshold: 0.3
+    visibility_thre: 0.05
   RESCORE:
     VALID: True
     MODEL_FILE: "${project_dir}/plugins/detect/DEKR/model/rescore/final_rescore_coco_kpt.pth"
