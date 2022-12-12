@@ -25,7 +25,7 @@ git submodule update --init --recursive
 #### Create a new environment
 
 ```bash
-conda create --name pb-track
+conda create -n "pb-track" python=3.8 ipython
 conda activate pb-track
 ```
 
@@ -37,7 +37,7 @@ Vérifier si un seul call à requirements.txt dans notre folder de base suffit.
 
 **END TODO**
 
-##### modules/detect/DEKR
+##### plugins/detect/DEKR
 
 **TODO**
 
@@ -46,7 +46,7 @@ Vérifier si un seul call à requirements.txt dans notre folder de base suffit.
 **END TODO**
 
 ```bash
-pip install -r modules/detect/DEKR/requirements.txt
+pip install -r plugins/detect/DEKR/requirements.txt
 ```
 
 [COCOAPI](https://github.com/cocodataset/cocoapi) installation
@@ -71,7 +71,7 @@ cd ../../../pb-track
 [download the weights](https://mailustceducn-my.sharepoint.com/:f:/g/personal/aa397601_mail_ustc_edu_cn/EmoNwNpq4L1FgUsC9KbWezABSotd3BGOlcWCdkBi91l50g?e=HWuluh) and make the modules/detect/DEKR/ directory look like
 
 ```text
-${modules/detect/DEKR}
+${plugins/detect/DEKR}
 |-- model
 `-- |-- imagenet
     |   |-- hrnet_w32-36af842e.pth
@@ -87,7 +87,7 @@ ${modules/detect/DEKR}
         `-- final_rescore_crowd_pose_kpt.pth
 ```
 
-##### modules/detect/openpifpaf
+##### plugins/detect/openpifpaf
 
 ```bash
 pip3 install --editable '.[dev,train,test]'
@@ -101,14 +101,14 @@ torchvision==0.10.0+cu111
 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
-##### modules/eval/PoseTrack21
+##### plugins/eval/PoseTrack21
 
 First, [get the dataset](https://github.com/anDoer/PoseTrack21/tree/35bd7033ec4e1a352ae39b9522df5a683f83781b#how-to-get-the-dataset).
 
 Then, install requirements
 
 ```bash
-pip install -r modules/eval/PoseTrack21/eval/posetrack21/requirements.txt
+pip install -r plugins/eval/PoseTrack21/eval/posetrack21/requirements.txt
 ```
 
 If you encounter the error `Could not find library geos_c or load any of its variants`, try to install geos:
@@ -123,19 +123,19 @@ or
 brew install geos
 ```
 
-##### modules/reid/bpreid
+##### plugins/reid/bpreid
 
 ```bash
-cd modules/reid/bpbreid/
+cd plugins/reid/bpbreid/
 pip install -r requirements.txt
 python setup.py develop
 cd ../../..
 ```
 
-##### modules/track/yolov5
+##### plugins/track/yolov5
 
 ```bash
-pip install -r modules/track/yolov5/requirements.txt
+pip install -r plugins/track/yolov5/requirements.txt
 ```
 
 ##### bptrack
@@ -160,7 +160,7 @@ pb-track
 |   |-- strongsort
 |   |    `-- *.yaml
 |   `-- *.yaml
-|-- modules
+|-- plugins
 |   |-- detect
 |   |   `-- DEKR
 |   |       `-- *
