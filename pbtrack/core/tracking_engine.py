@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 
 from pbtrack.core import Detector, ReIdentifier, Tracker, EngineDatapipe
 from pbtrack.datastruct.detections import Detections
-from pbtrack.datastruct.metadatas import Metadatas
+from pbtrack.datastruct.image_metadatas import ImageMetadatas
 from pbtrack.utils.collate import default_collate
 
 class OnlineTrackingEngine(pl.LightningModule):
@@ -23,7 +23,7 @@ class OnlineTrackingEngine(pl.LightningModule):
             reidentifier: Predicts reid embeddings
             tracker: Tracks using reid embeddings
     """
-    def __init__(self, detector: Detector, reider: ReIdentifier, tracker: Tracker, metadatas: Metadatas):
+    def __init__(self, detector: Detector, reider: ReIdentifier, tracker: Tracker, metadatas: ImageMetadatas):
         super().__init__()
         self.detector = detector
         self.reider = reider

@@ -93,7 +93,7 @@ ${modules/detect/DEKR}
 pip3 install --editable '.[dev,train,test]'
 ```
 
-You will certainly need to install `torch 1.9.0` and `torchvision 0.10`.
+You will certainly need to install `torch 1.9.0` and `torchvision 0.10.0`.
 
 ```bash
 pip install torch==1.9.0+cu111

@@ -1,16 +1,16 @@
 from abc import ABC
 from pathlib import Path
 
-from .metadatas import Metadatas
 from .detections import Detections
-from .categories import Categories
+from .image_metadatas import ImageMetadatas
+from .video_metadatas import VideoMetadatas
 
 class TrackingSet:
-    def __init__(self, split: str, metadatas: Metadatas, detections: Detections, categories: Categories):
+    def __init__(self, split: str, detections: Detections, image_metadatas: ImageMetadatas, video_metadatas: VideoMetadatas):
         self.split = split
-        self.metadatas = metadatas
         self.detections = detections
-        self.categories = categories
+        self.image_metadatas = image_metadatas
+        self.video_metadatas = video_metadatas
 
 class TrackingDataset(ABC):
     def __init__(self,

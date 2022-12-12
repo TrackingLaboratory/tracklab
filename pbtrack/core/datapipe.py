@@ -1,9 +1,9 @@
-from pbtrack.datastruct import Metadatas, Detections
+from pbtrack.datastruct import ImageMetadatas, Detections
 from typing import Optional
 from torch.utils.data import Dataset
 
 class EngineDatapipe(Dataset):
-    def __init__(self, model, metadatas: Metadatas, detections:Optional[Detections] = None) -> None:
+    def __init__(self, model, metadatas: ImageMetadatas, detections:Optional[Detections] = None) -> None:
         self.model = model
         self.metadatas = metadatas
         self.detections = detections
