@@ -11,7 +11,6 @@ from pbtrack.core.reidentifier import ReIdentifier
 from pbtrack.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints
 from plugins.reid.bpbreid.scripts.main import build_config, build_torchreid_model_engine
 from plugins.reid.bpbreid.tools.feature_extractor import FeatureExtractor
-from plugins.reid.bpbreid.torchreid.data.data_augmentation.coco_keypoints_transforms import CocoToSixBodyMasks
 from plugins.reid.bpbreid.torchreid.utils.imagetools import build_gaussian_heatmaps
 from pbtrack.utils.collate import Unbatchable
 
@@ -19,6 +18,8 @@ from hydra.utils import to_absolute_path
 sys.path.append(to_absolute_path("plugins/reid/bpbreid"))  # FIXME ugly
 sys.path.append(to_absolute_path("plugins/reid"))  # FIXME ugly
 import torchreid
+from plugins.reid.bpbreid.torchreid.utils.tools import extract_test_embeddings
+from plugins.reid.bpbreid.torchreid.data.masks_transforms import CocoToSixBodyMasks
 from torchreid.data.datasets import configure_dataset_class
 
 # need that line to not break import of torchreid ('from torchreid... import ...') inside the bpbreid.torchreid module
@@ -57,6 +58,7 @@ class BPBReId(ReIdentifier):
         # set parts information (number of parts K and each part name),
         # depending on the original loaded masks size or the transformation applied:
         self.cfg = build_config(config_file=self.cfg)
+        self.test_embeddings = self.cfg.model.bpbreid.test_embeddings
         self.cfg.data.save_dir = save_path
         self.cfg.project.job_id = job_id
         self.cfg.use_gpu = torch.cuda.is_available()
@@ -103,9 +105,10 @@ class BPBReId(ReIdentifier):
             )
         
         if im_crops:
-            embeddings, visibility_scores, body_masks, _ = self.feature_extractor(
+            reid_result = self.feature_extractor(
                 im_crops, external_parts_masks=external_parts_masks
             )
+            embeddings, visibility_scores, body_masks, _ = extract_test_embeddings(reid_result, self.test_embeddings)
             for i, (idx, detection) in enumerate(detections.iterrows()):
                 detection.reid_features = embeddings[i]
                 detection.visibility_score = visibility_scores[i]
