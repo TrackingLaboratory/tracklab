@@ -55,7 +55,7 @@ cfg:
       hrnet_pretrained_path: "" # FIXME refactor model loading (use urls)
       masks:
         type: 'disk'
-        dir: 'pifpaf_maskrcnn_filtering'
+        dir: 'gaussian'
         preprocess: 'cc6'
 
   test:
