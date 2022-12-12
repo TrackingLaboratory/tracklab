@@ -24,13 +24,7 @@ cfg:
     width: 32
     combineall: False
     transforms: ["rc", "re"]
-    masks:
-      preprocess: "cc6" # 'none', 'full', 'id', 'ids', 'bs_fu', 'bs_fu_bb', 'mu_sc', 'four', 'four_no', 'four_v', 'four_v_pif', 'five_v', 'six', 'six_no', 'eight'
-      background_computation_strategy: "sum" # threshold, diff_from_max
-      softmax_weight: 0
-      mask_filtering_threshold: 0.5
     save_dir: ""
-    masks_dir: "gaussian" # 'pifpaf' 'pifpaf_maskrcnn_filtering' 'isp_6_parts'
     workers: 0
 
   sampler:
@@ -59,6 +53,10 @@ cfg:
       test_use_target_segmentation: "none" # 'none' 'hard' 'soft'
       shared_parts_id_classifier: False
       hrnet_pretrained_path: "" # FIXME refactor model loading (use urls)
+      masks:
+        type: 'disk'
+        dir: 'pifpaf_maskrcnn_filtering'
+        preprocess: 'cc6'
 
   test:
     evaluate: True # test only

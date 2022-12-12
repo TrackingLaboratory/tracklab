@@ -32,3 +32,4 @@ tqdm
 xmltodict
 yacs
 hydra-core
+pytorch_lightning
