@@ -7,7 +7,7 @@ from omegaconf import OmegaConf
 from yacs.config import CfgNode as CN
 
 from .bpbreid_dataset import ReidDataset
-from pbtrack.datastruct import Metadata, Detection
+from pbtrack.datastruct import ImageMetadata, Detection
 from pbtrack.core.reidentifier import ReIdentifier
 from pbtrack.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints
 from plugins.reid.bpbreid.scripts.main import build_config, build_torchreid_model_engine
@@ -69,7 +69,7 @@ class BPBReId(ReIdentifier):
         self.model = None
         self.transform = CocoToSixBodyMasks()
 
-    def preprocess(self, detection: Detection, metadata: Metadata):  # Tensor RGB (1, 3, H, W)
+    def preprocess(self, detection: Detection, metadata: ImageMetadata):  # Tensor RGB (1, 3, H, W)
         mask_w, mask_h = 32, 64
         image = metadata.image
         bbox_ltwh = detection.bbox

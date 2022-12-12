@@ -7,7 +7,7 @@ import torch
 from glob import glob
 import torchvision.transforms.functional as F
 
-from pbtrack.datastruct.metadatas import Metadata
+from pbtrack.datastruct.image_metadatas import ImageMetadata
 
 class PoseTrack21(torch.utils.data.Dataset):
     def __init__(self, path, subset):
@@ -23,7 +23,7 @@ class PoseTrack21(torch.utils.data.Dataset):
                 metadatas = json.load(f)
                 for frame, metadata in enumerate(metadatas['images']):
                     self.images.append(
-                        Metadata(
+                        ImageMetadata.create(
                             id = metadata['id'],
                             video_id = metadata['vid_id'],
                             frame = frame,

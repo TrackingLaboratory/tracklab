@@ -1,7 +1,7 @@
 import pandas as pd
 import cv2
 
-class Metadatas(pd.DataFrame):
+class ImageMetadatas(pd.DataFrame):
 
     def __init__(self, data, *args, **kwargs) -> None:
         if isinstance(data, list):
@@ -13,7 +13,7 @@ class Metadatas(pd.DataFrame):
 
     @property
     def _constructor(self):
-        return Metadatas
+        return ImageMetadatas
 
     @property
     def image(self):
@@ -24,9 +24,9 @@ class Metadatas(pd.DataFrame):
 
         return self.file_path.apply(open_image)
 
-    @property # not needed
+    @property
     def _constructor_sliced(self):
-        return Metadata # we lose the link with Metadata here
+        return ImageMetadata
     
     @property
     def aaa_base_class_view(self):
@@ -35,7 +35,7 @@ class Metadatas(pd.DataFrame):
     
     # add the properties here
     
-class Metadata(pd.Series):
+class ImageMetadata(pd.Series):
 
     @classmethod
     def create(
@@ -47,7 +47,8 @@ class Metadata(pd.Series):
             file_path,
             is_labeled=None,
             ignore_regions_x=None,
-            ignore_regions_y=None
+            ignore_regions_y=None,
+            **kwargs
         ):
         return cls(
             dict(
@@ -58,23 +59,24 @@ class Metadata(pd.Series):
                 file_path = file_path,
                 is_labeled = is_labeled,
                 ignore_regions_x = ignore_regions_x,
-                ignore_regions_y = ignore_regions_y
-            ),  # type: ignore
+                ignore_regions_y = ignore_regions_y,
+                **kwargs
+            ),
         )
     
     @property
     def _constructor_expanddim(self):
-        return Metadatas
+        return ImageMetadatas
     
     # not needed - can be suppressed
     @property
     def _constructor(self):
         return pd.Series # we lose the link with Metadata here
     
-    # Allows to convert automatically from Metadata to Metadatas
+    # Allows to convert automatically from ImageMetadata to ImageMetadatas
     # and use their @property methods
     def __getattr__(self, attr):
-        if hasattr(Metadatas, attr):
+        if hasattr(ImageMetadatas, attr):
             return getattr(self.to_frame().T, attr).item()
         else:
             return super().__getattr__(attr)
@@ -82,7 +84,7 @@ class Metadata(pd.Series):
         try:
             return pd.Series.__getattr__(self, attr)
         except AttributeError as e:
-            if hasattr(Images, attr):
+            if hasattr(ImageMetadatas, attr):
                 return getattr(self.to_frame().T, attr)
             else:
                 raise e

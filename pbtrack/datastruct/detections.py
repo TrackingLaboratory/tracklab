@@ -5,6 +5,15 @@ from pbtrack.utils.coordinates import kp_img_to_kp_bbox
 
 
 class Detections(pd.DataFrame):
+    
+    def __init__(self, data, *args, **kwargs) -> None:
+        if isinstance(data, list):
+            indices = [x.id for x in data]
+        else:
+            indices = None
+        kwargs = {**kwargs, "index": indices}
+        super().__init__(data, *args, **kwargs)
+    
     # Required for DataFrame subclassing
     @property
     def _constructor(self):
@@ -55,6 +64,7 @@ class Detection(pd.Series):
             track_id = None,
             person_id = None,
             category_id = None,
+            **kwargs
         ):
         return cls(
             dict(
@@ -64,7 +74,8 @@ class Detection(pd.Series):
                 keypoints_xyc = keypoints_xyc,
                 track_id = track_id,
                 person_id = person_id,
-                category_id = category_id
+                category_id = category_id,
+                **kwargs
             )  # type: ignore
         )
     

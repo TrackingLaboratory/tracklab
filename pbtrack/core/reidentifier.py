@@ -2,7 +2,7 @@ from typing import List
 from abc import abstractmethod, ABC
 
 from pbtrack.datastruct.detections import Detection, Detections
-from pbtrack.datastruct.metadatas import Metadata
+from pbtrack.datastruct.image_metadatas import ImageMetadata
 
 class ReIdentifier(ABC):
     """ Abstract class to implement for the integration of a new reidentifier
@@ -21,7 +21,7 @@ class ReIdentifier(ABC):
         self.device = device
     
     @abstractmethod
-    def preprocess(self, detection: Detection, metadata: Metadata)-> object:
+    def preprocess(self, detection: Detection, metadata: ImageMetadata)-> object:
         """ Your pre-processing function to adapt the input to your 
             reidentifier
         Args:
