@@ -110,6 +110,9 @@ class BPBReId(ReIdentifier):
                 im_crops, external_parts_masks=external_parts_masks
             )
             embeddings, visibility_scores, body_masks, _ = extract_test_embeddings(reid_result, self.test_embeddings)
+            embeddings = embeddings.cpu().detach().numpy()
+            visibility_scores = visibility_scores.cpu().detach().numpy()
+            body_masks = body_masks.cpu().detach().numpy()
             reid_df = pd.DataFrame({'embeddings': list(embeddings), 'visibility_scores': list(visibility_scores), 'body_masks': list(body_masks)})
             detections = detections.merge(reid_df, left_index=True, right_index=True, validate="one_to_one")
         return detections
