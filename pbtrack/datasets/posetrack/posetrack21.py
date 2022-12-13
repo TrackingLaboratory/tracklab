@@ -2,7 +2,6 @@ import os
 import sys
 import json
 import numpy as np
-import pandas as pd
 
 from pathlib import Path
 from pbtrack.datastruct.tracking_dataset import TrackingDataset, TrackingSet
@@ -19,9 +18,9 @@ class PoseTrack21(TrackingDataset):
 
     def __init__(self, dataset_path: str):
         self.dataset_path = Path(dataset_path)
-        assert (
-            self.dataset_path.exists()
-        ), "Dataset path does not exist in '{}'".format(self.dataset_path)
+        assert self.dataset_path.exists(), "Dataset path does not exist in '{}'".format(
+            self.dataset_path
+        )
         self.anns_path = self.dataset_path / self.annotations_dir
         assert (
             self.anns_path.exists()
@@ -30,7 +29,7 @@ class PoseTrack21(TrackingDataset):
         train_set = load_tracking_set(self.anns_path, self.dataset_path, "train")
         val_set = load_tracking_set(self.anns_path, self.dataset_path, "val")
         test_set = None  # TODO no json, load images
-        
+
         super().__init__(dataset_path, train_set, val_set, test_set)  # type: ignore
 
 
@@ -43,13 +42,18 @@ def load_tracking_set(anns_path, dataset_path, split):
     detections = []
     image_metadatas = []
     video_metadatas = []
-    for path in anns_files_list[:]:
+    for path in anns_files_list:
         with open(path) as json_file:
             data_dict = json.load(json_file)
             detections.extend(data_dict["annotations"])
             image_metadatas.extend(data_dict["images"])
-            video_metadatas.extend(data_dict["categories"])
-    
+            categories = data_dict["categories"]
+            video_metadata = {
+                "id": data_dict["images"][0]["vid_id"],
+                "categories": categories,
+            }
+            video_metadatas.append(video_metadata)
+
     # Detections
     detections = Detections(detections)
     detections.drop(["bbox_head"], axis=1, inplace=True)
@@ -61,15 +65,16 @@ def load_tracking_set(anns_path, dataset_path, split):
 
     # Images
     image_metadatas = ImageMetadatas(image_metadatas)
-    image_metadatas.drop(["image_id"], axis=1, inplace=True) # id == image_id
+    image_metadatas.drop(["image_id"], axis=1, inplace=True)  # id == image_id
     image_metadatas["file_name"] = image_metadatas["file_name"].apply(
         lambda x: os.path.join(dataset_path, x)
     )
-    image_metadatas['frame'] = image_metadatas["file_name"].apply(
+    image_metadatas["frame"] = image_metadatas["file_name"].apply(
         lambda x: int(os.path.basename(x).split(".")[0]) + 1
     )
     image_metadatas.rename(
-        columns={"vid_id": "video_id", "file_name": "file_path", "nframes": "nframe"}, inplace=True
+        columns={"vid_id": "video_id", "file_name": "file_path", "nframes": "nframe"},
+        inplace=True,
     )
     image_metadatas.set_index("id", drop=False, inplace=True)
 

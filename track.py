@@ -26,15 +26,20 @@ def track(cfg):
     )
     model_track = instantiate(cfg.track, device=device)
 
-    tracking_engine = OnlineTrackingEngine(
-        model_pose, model_reid, model_track, tracking_dataset.val_set.image_metadatas
-    )
-    detection_datapipe = DataLoader(
-        dataset=EngineDatapipe(model_pose, tracking_dataset.val_set.image_metadatas),
-        batch_size=8,
-    )
     trainer = pl.Trainer()
-    trainer.predict(tracking_engine, dataloaders=detection_datapipe)
+    imgs_meta = tracking_dataset.val_set.image_metadatas
+    for video_id in tracking_dataset.val_set.video_metadatas.id:
+        detection_datapipe = DataLoader(
+            dataset=EngineDatapipe(
+                model_pose, imgs_meta[imgs_meta.video_id == video_id]
+            ),
+            batch_size=8,
+        )
+        model_track.reset()
+        tracking_engine = OnlineTrackingEngine(
+            model_pose, model_reid, model_track, imgs_meta
+        )
+        trainer.predict(tracking_engine, dataloaders=detection_datapipe)
 
     # evaluator = instantiate(cfg.eval) # TODO
     # vis_engine = instantiate(cfg.visualization) # TODO

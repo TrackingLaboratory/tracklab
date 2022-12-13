@@ -10,8 +10,10 @@ from plugins.track.strong_sort import StrongSORT
 class StrongSORTTracker(OnlineTracker):
     def __init__(self, cfg, device):
         self.cfg = cfg
-        weights = Path(self.cfg.STRONGSORT.WEIGHTS).resolve()
+        self.reset()
 
+    def reset(self):
+        """ Reset the tracker state to start tracking in a new video."""
         self.model = StrongSORT(
             max_dist=self.cfg.STRONGSORT.MAX_DIST,
             max_iou_distance=self.cfg.STRONGSORT.MAX_IOU_DISTANCE,

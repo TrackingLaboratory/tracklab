@@ -51,6 +51,8 @@ class OnlineTrackingEngine(pl.LightningModule):
         # 1. Detection
 
         detections = Detections(self.detector.process(batch, self.metadatas.loc[idxs]))
+        if detections.empty:
+            return detections
 
         # 2. Reid
         reid_detections = []

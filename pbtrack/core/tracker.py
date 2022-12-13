@@ -7,6 +7,11 @@ class Tracker(ABC):
     def run(self, detections: Detections):
         pass
 
+    @abstractmethod
+    def reset(self):
+        """ Reset the tracker state to start tracking in a new video."""
+        pass
+
 
 class OfflineTracker(Tracker):
     @abstractmethod
