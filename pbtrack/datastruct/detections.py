@@ -55,8 +55,6 @@ class Detections(pd.DataFrame):
             lambda r: kp_img_to_kp_bbox(r.keypoints_xyc, r.bbox_ltwh), axis=1
         )
 
-    # add the properties here
-
 
 class Detection(pd.Series):
     @classmethod
@@ -64,7 +62,7 @@ class Detection(pd.Series):
         cls,
         image_id,
         id,
-        bbox=None,  # COCO bbox format [top_left_x, top_left_y, width, height]
+        bbox_ltwh=None,
         keypoints_xyc=None,
         track_id=None,
         person_id=None,
@@ -75,7 +73,7 @@ class Detection(pd.Series):
             dict(
                 image_id=image_id,
                 id=id,
-                bbox=bbox,
+                bbox_ltwh=bbox_ltwh,
                 keypoints_xyc=keypoints_xyc,
                 track_id=track_id,
                 person_id=person_id,

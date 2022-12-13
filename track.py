@@ -33,7 +33,7 @@ def track(cfg):
             dataset=EngineDatapipe(
                 model_pose, imgs_meta[imgs_meta.video_id == video_id]
             ),
-            batch_size=8,
+            batch_size=2,
         )
         model_track.reset()
         tracking_engine = OnlineTrackingEngine(

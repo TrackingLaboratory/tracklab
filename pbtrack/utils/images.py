@@ -33,3 +33,9 @@ def overlay_heatmap(
     )
     # img_with_heatmap = cv2.addWeighted(img, 1-weight, heatmap_color.astype(img.dtype), weight, 0)
     return img_with_heatmap
+
+
+def cv2_load_image(file_path):
+    image = cv2.imread(str(file_path))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    return image

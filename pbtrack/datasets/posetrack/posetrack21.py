@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import numpy as np
+import pandas as pd
 
 from pathlib import Path
 from pbtrack.datastruct.tracking_dataset import TrackingDataset, TrackingSet
@@ -16,7 +17,7 @@ sys.path.append(to_absolute_path("plugins/reid/bpbreid"))
 class PoseTrack21(TrackingDataset):
     annotations_dir = "posetrack_data"
 
-    def __init__(self, dataset_path: str):
+    def __init__(self, dataset_path: str, *args, **kwargs):
         self.dataset_path = Path(dataset_path)
         assert self.dataset_path.exists(), "Dataset path does not exist in '{}'".format(
             self.dataset_path
@@ -30,10 +31,25 @@ class PoseTrack21(TrackingDataset):
         val_set = load_tracking_set(self.anns_path, self.dataset_path, "val")
         test_set = None  # TODO no json, load images
 
-        super().__init__(dataset_path, train_set, val_set, test_set)  # type: ignore
+        super().__init__(dataset_path, train_set, val_set, test_set, *args, **kwargs)  # type: ignore
 
 
 def load_tracking_set(anns_path, dataset_path, split):
+    # Load annotations into Pandas dataframes
+    video_metadatas, image_metadatas, detections = load_annotations(anns_path, split)
+    # Fix formatting of dataframes to be compatible with pbtrack
+    video_metadatas, image_metadatas, detections = fix_formatting(
+        video_metadatas, image_metadatas, detections, dataset_path
+    )
+    return TrackingSet(
+        split,
+        VideoMetadatas(video_metadatas),
+        ImageMetadatas(image_metadatas),
+        Detections(detections),
+    )
+
+
+def load_annotations(anns_path, split):
     anns_path = anns_path / split
     anns_files_list = list(anns_path.glob("*.json"))
     assert len(anns_files_list) > 0, "No annotations files found in {}".format(
@@ -54,20 +70,21 @@ def load_tracking_set(anns_path, dataset_path, split):
             }
             video_metadatas.append(video_metadata)
 
-    # Detections
-    detections = Detections(detections)
-    detections.drop(["bbox_head"], axis=1, inplace=True)
-    detections["keypoints"] = detections["keypoints"].apply(
-        lambda x: np.reshape(np.array(x), (-1, 3))
+    return (
+        pd.DataFrame(video_metadatas),
+        pd.DataFrame(image_metadatas),
+        pd.DataFrame(detections),
     )
-    detections.rename(columns={"keypoints": "keypoints_xyc"}, inplace=True)
-    detections.set_index("id", drop=False, inplace=True)
+
+
+def fix_formatting(video_metadatas, image_metadatas, detections, dataset_path):
+    # Videos
+    video_metadatas.set_index("id", drop=False, inplace=True)
 
     # Images
-    image_metadatas = ImageMetadatas(image_metadatas)
     image_metadatas.drop(["image_id"], axis=1, inplace=True)  # id == image_id
     image_metadatas["file_name"] = image_metadatas["file_name"].apply(
-        lambda x: os.path.join(dataset_path, x)
+        lambda x: os.path.join(dataset_path, x)  # FIXME use relative path
     )
     image_metadatas["frame"] = image_metadatas["file_name"].apply(
         lambda x: int(os.path.basename(x).split(".")[0]) + 1
@@ -78,8 +95,20 @@ def load_tracking_set(anns_path, dataset_path, split):
     )
     image_metadatas.set_index("id", drop=False, inplace=True)
 
-    # Videos
-    video_metadatas = VideoMetadatas(video_metadatas)
-    video_metadatas.set_index("id", drop=False, inplace=True)
+    # Detections
+    detections.drop(["bbox_head"], axis=1, inplace=True)
+    detections.rename(columns={"bbox": "bbox_ltwh"}, inplace=True)
+    detections.bbox_ltwh = detections.bbox_ltwh.apply(lambda x: np.array(x))
+    detections.rename(columns={"keypoints": "keypoints_xyc"}, inplace=True)
+    detections.keypoints_xyc = detections.keypoints_xyc.apply(
+        lambda x: np.reshape(np.array(x), (-1, 3))
+    )
+    detections.set_index("id", drop=False, inplace=True)
+    # compute detection visiblity as average keypoints visibility
+    detections["visibility"] = detections.keypoints_xyc.apply(lambda x: x[:, 2].mean())
+    # add video_id to detections, will be used for bpbreid 'camid' parameter
+    detections = detections.merge(
+        image_metadatas[["video_id"]], how="left", left_on="image_id", right_index=True
+    )
 
-    return TrackingSet(split, detections, image_metadatas, video_metadatas)
+    return video_metadatas, image_metadatas, detections

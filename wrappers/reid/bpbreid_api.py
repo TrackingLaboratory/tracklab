@@ -6,6 +6,7 @@ import torch
 from omegaconf import OmegaConf
 from yacs.config import CfgNode as CN
 
+from pbtrack.utils.images import cv2_load_image
 from .bpbreid_dataset import ReidDataset
 from pbtrack.datastruct import ImageMetadata, Detection
 from pbtrack.core.reidentifier import ReIdentifier
@@ -76,10 +77,9 @@ class BPBReId(ReIdentifier):
         self, detection: Detection, metadata: ImageMetadata
     ):  # Tensor RGB (1, 3, H, W)
         mask_w, mask_h = 32, 64
-        image = metadata.image
-        bbox_ltwh = detection.bbox
+        # image = metadata.load_image()  # FIXME load_image() doesn't work because of ImageMetadata.__getattr__(
+        image = cv2_load_image(metadata.file_path)
         l, t, r, b = detection.bbox_ltrb.astype(int)
-        # l, t, r, b = int(bbox.x), int(bbox.y), int(bbox.x + bbox.w), int(bbox.y + bbox.h)
         crop = image[t:b, l:r]
         keypoints = detection.keypoints_xyc
         bbox_ltwh = np.array([l, t, r - l, b - t])

@@ -1,5 +1,6 @@
 import pandas as pd
-import cv2
+
+from pbtrack.utils.images import cv2_load_image
 
 
 class ImageMetadatas(pd.DataFrame):
@@ -32,14 +33,8 @@ class ImageMetadatas(pd.DataFrame):
         # use this to view the base class, needed for debugging in some IDEs.
         return pd.DataFrame(self)
 
-    @property
-    def image(self):
-        def open_image(file_path):
-            image = cv2.imread(str(file_path))
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            return image
-
-        return self.file_path.apply(open_image)
+    def load_image(self):
+        return self.file_path.apply(cv2_load_image)
 
     # add the properties here
 
@@ -70,7 +65,9 @@ class ImageMetadata(pd.Series):
 
     # Allows to convert automatically from ImageMetadata to ImageMetadatas
     # and use their @property methods
-    def __getattr__(self, attr):
+    def __getattr__(
+        self, attr
+    ):  # FIXME both doesn't work with helper functions (properties are ok)
         if hasattr(ImageMetadatas, attr):
             return getattr(self.to_frame().T, attr).item()
         else:
