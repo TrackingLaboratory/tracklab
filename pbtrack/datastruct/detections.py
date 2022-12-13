@@ -9,6 +9,8 @@ class Detections(pd.DataFrame):
     def __init__(self, data, *args, **kwargs) -> None:
         if isinstance(data, list):
             indices = [x.id for x in data]
+        elif isinstance(data, pd.DataFrame):
+            indices = data.id.values
         else:
             indices = None
         kwargs = {**kwargs, "index": indices}

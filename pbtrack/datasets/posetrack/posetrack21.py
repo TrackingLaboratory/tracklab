@@ -30,6 +30,10 @@ class PoseTrack21(TrackingDataset):
 
 def load_set(anns_path, dataset_path, split):
     # Load annotations into Pandas dataframes
+    detections, image_metadatas, video_metadatas = load_annotations(anns_path, dataset_path, split)
+    return TrackingSet(split, detections, image_metadatas, video_metadatas)
+
+def load_annotations(anns_path, dataset_path, split):
     anns_path = anns_path / split
     anns_files_list = list(anns_path.glob("*.json"))
     assert len(anns_files_list) > 0, "No annotations files found in {}".format(
