@@ -123,7 +123,7 @@ class ReidDataset(ImageDataset):
         these new detections.
         """
         split = tracking_set.split
-        metadatas = tracking_set.metadatas
+        image_metadatas = tracking_set.image_metadatas
         detections = tracking_set.detections
         fig_size = reid_config.fig_size
         mask_size = reid_config.mask_size
@@ -169,7 +169,7 @@ class ReidDataset(ImageDataset):
             reid_img_path,
             split,
             reid_anns_filepath,
-            metadatas,
+            image_metadatas,
             max_crop_size,
         )
 
@@ -180,7 +180,7 @@ class ReidDataset(ImageDataset):
             reid_fig_path,
             split,
             masks_anns_filepath,
-            metadatas,
+            image_metadatas,
             fig_size,
             mask_size,
         )

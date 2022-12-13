@@ -1,5 +1,7 @@
 import hydra
 import logging
+
+import pandas as pd
 import torch
 from hydra.utils import instantiate
 from pbtrack.datastruct.tracker_state import TrackerState
@@ -15,6 +17,9 @@ log = logging.getLogger(__name__)
 def track(cfg):
     device = "cuda" if torch.cuda.is_available() else "cpu"  # TODO support Mac chips
 
+    train_reid = False  # FIXME put in config
+    train_pose = False  # FIXME put in config
+
     # Init
     tracking_dataset = instantiate(cfg.dataset)
     model_pose = instantiate(cfg.detection, device=device)
@@ -25,10 +30,22 @@ def track(cfg):
         model_pose=model_pose,
     )
     model_track = instantiate(cfg.track, device=device)
-
+    # evaluator = instantiate(cfg.eval)
+    # vis_engine = instantiate(cfg.visualization)
     trainer = pl.Trainer()
-    imgs_meta = tracking_dataset.val_set.image_metadatas
-    for video_id in tracking_dataset.val_set.video_metadatas.id:
+
+    # Train reid
+    if train_reid:
+        model_reid.train()
+
+    # Train pose
+    if train_pose:
+        model_pose.train()
+
+    tracker_state = TrackerState(tracking_dataset.val_set)
+    # Run tracking
+    imgs_meta = tracker_state.gt.image_metadatas
+    for video_id in tracker_state.gt.video_metadatas.id:
         detection_datapipe = DataLoader(
             dataset=EngineDatapipe(
                 model_pose, imgs_meta[imgs_meta.video_id == video_id]
@@ -39,31 +56,17 @@ def track(cfg):
         tracking_engine = OnlineTrackingEngine(
             model_pose, model_reid, model_track, imgs_meta
         )
-        result = trainer.predict(tracking_engine, dataloaders=detection_datapipe)
-        print(result)
+        detections_list = trainer.predict(
+            tracking_engine, dataloaders=detection_datapipe
+        )
+        detections = pd.concat(detections_list)
+        tracker_state.update(detections)
 
-    # evaluator = instantiate(cfg.eval) # TODO
-    # vis_engine = instantiate(cfg.visualization) # TODO
+    # Evaluation
+    # evaluator.run(tracking_dataset)
 
-    # Train Reid # TODO
-    # if train_reid:
-    #    model_reid.train()
-
-    # Train Pose # TODO
-    # if train_pose:
-    #    model_pose.train()
-
-    # Tracking engine # TODO
-    # tracking_state = TrackerState(tracking_dataset.val_set)
-    # model_pose.run(tracking_state)  # list Image or slice Images OR batch numpy images -> list Detection or slice Detections
-    # model_reid.run(tracking_state)  # list Detection or slice Detections OR batch numpy images + skeletons + masks -> list Detection or slice Detections
-    # model_track.run(tracking_state)  # online: list frame Detection -> list frame Detection | offline: video detections -> video detections
-
-    # Performance # TODO
-    # evaluator.run(tracker)
-
-    # Visualization # TODO
-    # vis_engine.run(tracker)
+    # Visualization
+    # vis_engine.run(tracking_dataset)
 
 
 if __name__ == "__main__":
