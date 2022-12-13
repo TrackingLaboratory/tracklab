@@ -39,7 +39,8 @@ def track(cfg):
         tracking_engine = OnlineTrackingEngine(
             model_pose, model_reid, model_track, imgs_meta
         )
-        trainer.predict(tracking_engine, dataloaders=detection_datapipe)
+        result = trainer.predict(tracking_engine, dataloaders=detection_datapipe)
+        print(result)
 
     # evaluator = instantiate(cfg.eval) # TODO
     # vis_engine = instantiate(cfg.visualization) # TODO

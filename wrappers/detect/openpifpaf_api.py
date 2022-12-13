@@ -1,8 +1,8 @@
 import sys
+
 from pbtrack.core.detector import Detector
 from pbtrack.datastruct.detections import Detection
 from pbtrack.utils.coordinates import kp_to_bbox_w_threshold
-
 from hydra.utils import to_absolute_path
 
 sys.path.append(to_absolute_path("plugins/detect/openpifpaf/src"))
@@ -37,7 +37,7 @@ class OpenPifPaf(Detector):
                         image_id=metadata.id,
                         id=self.id,
                         keypoints_xyc=prediction.data,
-                        bbox=kp_to_bbox_w_threshold(
+                        bbox_ltwh=kp_to_bbox_w_threshold(
                             prediction.data, vis_threshold=0.05
                         ),
                     )  # type: ignore

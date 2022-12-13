@@ -24,21 +24,21 @@ class Detections(pd.DataFrame):
     @property
     def bbox_ltrb(self):
         """Converts from (left, top, width, heights) to (left, top, right, bottom)"""
-        return self.bbox.apply(
+        return self.bbox_ltwh.apply(
             lambda ltwh: np.concatenate((ltwh[:2], ltwh[:2] + ltwh[2:]))  # type: ignore
         )
 
     @property
     def bbox_cmwh(self):
         """Converts from (left, top, width, heights) to (horizontal center, vertical middle, width, height)"""
-        return self.bbox.apply(
+        return self.bbox_ltwh.apply(
             lambda ltwh: np.concatenate((ltwh[:2] + ltwh[2:] / 2, ltwh[2:]))  # type: ignore
         )
 
     @property
     def keypoints_bbox_xyc(self):
         """Converts from keypoints in image coordinates to keypoints in bbox coordinates"""
-        return self.bbox.apply(
+        return self.bbox_ltwh.apply(
             lambda r: kp_img_to_kp_bbox(r.keypoints_xyc, r.bbox_ltwh), axis=1
         )
 

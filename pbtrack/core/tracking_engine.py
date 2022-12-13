@@ -36,7 +36,7 @@ class OnlineTrackingEngine(pl.LightningModule):
         self.metadatas = metadatas
 
     def predict_step(self, batch, batch_idx):
-        """Steps through tracking predictions for one image.
+        """ Steps through tracking predictions for one image.
 
         This doesn't work for a batch or any other construct. To work on a batch
         we should modify the test_step to take a batch of images.
@@ -84,7 +84,7 @@ class OnlineTrackingEngine(pl.LightningModule):
             if len(detections) == 0:
                 continue
             track_pipe = EngineDatapipe(self.tracker, self.metadatas, detections)
-            track_dl = DataLoader(dataset=track_pipe, batch_size=2**16)
+            track_dl = DataLoader(dataset=track_pipe, batch_size=2 ** 16)
             for idxs, track_batch in track_dl:
                 batch_detections = detections.loc[idxs]
                 print(f"det type : {type(batch_detections)}")

@@ -2,9 +2,9 @@ import torch
 import numpy as np
 import pandas as pd
 
-from pathlib import Path
 from pbtrack.core.tracker import OnlineTracker
 from pbtrack.datastruct import Detections, ImageMetadatas, Detection, ImageMetadata
+from pbtrack.utils.images import cv2_load_image
 from plugins.track.strong_sort import StrongSORT
 
 
@@ -32,7 +32,7 @@ class StrongSORTTracker(OnlineTracker):
             self.prev_frame = curr_frame
 
     def preprocess(self, detection: Detection, metadata: ImageMetadata):
-        image = metadata.image
+        image = cv2_load_image(metadata.file_path)
         self._camera_compensation(image)
         bbox = detection.bbox_cmwh
         score = np.mean(detection.keypoints_xyc[:, 2])
@@ -47,16 +47,12 @@ class StrongSORTTracker(OnlineTracker):
             results = self.model.update(
                 cmwhs, reid_features, visibility_scores, scores, classes, image
             )
-            print(results)
             detections = self._update_detections(results, detections)
         return detections
 
     def _update_detections(self, results, detections):
-        track_bboxes = []
-        track_bbox_confs = []
-        person_id = []
         for result in results:
-            detection = detections.iloc[int(result[-1])]  # result[:4], detections)
+            detection = detections.iloc[int(result[-1])]
             w = result[2] - result[0]
             h = result[3] - result[1]
             detection.track_bbox = [result[0] + w / 2, result[1] + h / 2, w, h]
