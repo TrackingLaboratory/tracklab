@@ -4,13 +4,16 @@ import cv2
 
 class ImageMetadatas(pd.DataFrame):
     def __init__(self, data, *args, **kwargs) -> None:
+        """ FIXME ?
         if isinstance(data, list):
-            indices = [x.id for x in data]
-        elif isinstance(data, pd.DataFrame):
-            indices = data.id.values
+            if isinstance(data[0], ImageMetadata):
+                indices = [x.id for x in data]
+            elif isinstance(data[0], dict):
+                indices = [x["id"] for x in data]
         else:
             indices = None
         kwargs = {**kwargs, "index": indices}
+        """
         super().__init__(data, *args, **kwargs)
 
     @property
