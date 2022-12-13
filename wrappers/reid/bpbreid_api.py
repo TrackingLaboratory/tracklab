@@ -42,15 +42,13 @@ class BPBReId(ReIdentifier):
         wandb support
     """
 
-    def __init__(
-        self, cfg, tracking_dataset, dataset, device, save_path, model_pose, job_id
-    ):
+    def __init__(self, cfg, tracking_dataset, dataset, device, save_path, model_pose, job_id):
         tracking_dataset.name = dataset.name
         tracking_dataset.nickname = dataset.nickname
         additional_args = {
-            "tracking_dataset": tracking_dataset,
-            "reid_config": dataset,
-            "pose_model": model_pose,
+            'tracking_dataset': tracking_dataset,
+            'reid_config': dataset,
+            'pose_model': model_pose,
         }
         torchreid.data.register_image_dataset(
             tracking_dataset.name,
@@ -72,9 +70,7 @@ class BPBReId(ReIdentifier):
         self.model = None
         self.transform = CocoToSixBodyMasks()
 
-    def preprocess(
-        self, detection: Detection, metadata: ImageMetadata
-    ):  # Tensor RGB (1, 3, H, W)
+    def preprocess(self, detection: Detection, metadata: ImageMetadata):  # Tensor RGB (1, 3, H, W)
         mask_w, mask_h = 32, 64
         image = metadata.image
         bbox_ltwh = detection.bbox
@@ -114,19 +110,13 @@ class BPBReId(ReIdentifier):
             reid_result = self.feature_extractor(
                 im_crops, external_parts_masks=external_parts_masks
             )
-            embeddings, visibility_scores, body_masks, _ = extract_test_embeddings(
-                reid_result, self.test_embeddings
-            )
-            reid_df = pd.DataFrame(
-                {
-                    "embeddings": list(embeddings),
-                    "visibility_scores": list(visibility_scores),
-                    "body_masks": list(body_masks),
-                }
-            )
-            detections = detections.merge(
-                reid_df, left_index=True, right_index=True, validate="one_to_one"
-            )
+            embeddings, visibility_scores, body_masks, _ = extract_test_embeddings(reid_result, self.test_embeddings)
+            embeddings = embeddings.cpu().detach().numpy()
+            visibility_scores = visibility_scores.cpu().detach().numpy()
+            body_masks = body_masks.cpu().detach().numpy()
+            reid_df = pd.DataFrame({'embeddings': list(embeddings), 'visibility_scores': list(visibility_scores),
+                                    'body_masks': list(body_masks)})
+            detections = detections.merge(reid_df, left_index=True, right_index=True, validate="one_to_one")
         return detections
 
     def train(self):
@@ -144,13 +134,11 @@ class BPBReId(ReIdentifier):
 
 # will be used to update higher
 class BPBReIdentifier2(ReIdentifier):
-    def __init__(
-        self, cfg, device, tracking_dataset, dataset, save_path, model_pose, job_id
-    ):
+    def __init__(self, cfg, device, tracking_dataset, dataset, save_path, model_pose, job_id):
         additional_args = {
-            "tracking_dataset": tracking_dataset,
-            "reid_config": dataset,
-            "pose_model": model_pose,
+            'tracking_dataset': tracking_dataset,
+            'reid_config': dataset,
+            'pose_model': model_pose,
         }
         torchreid.data.register_image_dataset(
             tracking_dataset.name,
@@ -174,7 +162,7 @@ class BPBReIdentifier2(ReIdentifier):
         self.device = device
         self.cfg = CN(OmegaConf.to_container(cfg, resolve=True))
         self.cfg = build_config(config_file=self.cfg)
-        """
+        '''
         datamanager = build_datamanager(cfg)
         self.model = torchreid.models.build_model(
             name=cfg.model.name,
@@ -184,7 +172,7 @@ class BPBReIdentifier2(ReIdentifier):
             use_gpu=cfg.use_gpu,
             config=cfg
         )
-        """
+        '''
 
     def pre_process(self, detection, image):
         mask_w, mask_h = 32, 64
