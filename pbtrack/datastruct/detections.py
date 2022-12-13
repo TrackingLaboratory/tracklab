@@ -6,7 +6,7 @@ from pbtrack.utils.coordinates import kp_img_to_kp_bbox
 
 class Detections(pd.DataFrame):
     def __init__(self, data, *args, **kwargs) -> None:
-        """ FIXME ?
+        """FIXME ?
         if isinstance(data, list):
             if isinstance(data[0], Detection):
                 indices = [x.id for x in data]
@@ -23,14 +23,14 @@ class Detections(pd.DataFrame):
     def _constructor(self):
         return Detections
 
-    # not needed - can be suppressed
+    # Required for DataFrame subclassing
     @property
     def _constructor_sliced(self):
         return Detection
 
+    # use this to view the base class, needed for debugging in some IDEs.
     @property
     def aaa_base_class_view(self):
-        # use this to view the base class, needed for debugging in some IDEs.
         return pd.DataFrame(self)
 
     # Utils for converting between formats
@@ -81,17 +81,18 @@ class Detection(pd.Series):
                 person_id=person_id,
                 category_id=category_id,
                 **kwargs
-            )  # type: ignore
+            )
         )
 
+    # Required for DataFrame subclassing
     @property
     def _constructor_expanddim(self):
         return Detections
 
-    # not needed - can be suppressed
+    # Required for DataFrame subclassing
     @property
     def _constructor(self):
-        return Detection  # we lose the link with Detection here
+        return Detection
 
     # Allows to convert automatically from Detection to Detections
     # and use their @property methods

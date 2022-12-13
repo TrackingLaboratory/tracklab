@@ -16,9 +16,21 @@ class ImageMetadatas(pd.DataFrame):
         """
         super().__init__(data, *args, **kwargs)
 
+    # Required for DataFrame subclassing
     @property
     def _constructor(self):
         return ImageMetadatas
+
+    # Required for DataFrame subclassing
+    @property
+    def _constructor_sliced(self):
+        return ImageMetadata
+
+    # use this to view the base class, needed for debugging in some IDEs.
+    @property
+    def aaa_base_class_view(self):
+        # use this to view the base class, needed for debugging in some IDEs.
+        return pd.DataFrame(self)
 
     @property
     def image(self):
@@ -28,15 +40,6 @@ class ImageMetadatas(pd.DataFrame):
             return image
 
         return self.file_path.apply(open_image)
-
-    @property
-    def _constructor_sliced(self):
-        return ImageMetadata
-
-    @property
-    def aaa_base_class_view(self):
-        # use this to view the base class, needed for debugging in some IDEs.
-        return pd.DataFrame(self)
 
     # add the properties here
 
@@ -55,14 +58,15 @@ class ImageMetadata(pd.Series):
             ),
         )
 
+    # Required for DataFrame subclassing
     @property
     def _constructor_expanddim(self):
         return ImageMetadatas
 
-    # not needed - can be suppressed
+    # Required for DataFrame subclassing
     @property
     def _constructor(self):
-        return pd.Series  # we lose the link with Metadata here
+        return ImageMetadata
 
     # Allows to convert automatically from ImageMetadata to ImageMetadatas
     # and use their @property methods
