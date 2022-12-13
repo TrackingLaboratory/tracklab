@@ -1,8 +1,9 @@
 from typing import List
-from abc import abstractmethod, ABC
 
+from abc import abstractmethod, ABC
 from pbtrack.datastruct.detections import Detection
 from pbtrack.datastruct.image_metadatas import ImageMetadata, ImageMetadatas
+
 
 class Detector(ABC):
     """ Abstract class to implement for the integration of a new detector
@@ -10,6 +11,7 @@ class Detector(ABC):
         (optional), preprocess and process. A description of the expected 
         behavior is provided below.
     """
+
     @abstractmethod
     def __init__(self, cfg, device):
         """ Init function
@@ -22,7 +24,7 @@ class Detector(ABC):
         self.cfg = cfg
         self.device = device
         self.id = 0
-    
+
     @abstractmethod
     def preprocess(self, metadata: ImageMetadata) -> object:
         """ Your preprocessing function to adapt the input to your detector
@@ -32,7 +34,7 @@ class Detector(ABC):
             preprocessed (object): preprocessed input for process()
         """
         pass
-    
+
     @abstractmethod
     def process(self, preprocessed_batch, metadatas: ImageMetadatas) -> List[Detection]:
         """ Your processing function to run the detector

@@ -2,8 +2,11 @@ from pbtrack.datastruct import ImageMetadatas, Detections
 from typing import Optional
 from torch.utils.data import Dataset
 
+
 class EngineDatapipe(Dataset):
-    def __init__(self, model, metadatas: ImageMetadatas, detections:Optional[Detections] = None) -> None:
+    def __init__(
+        self, model, metadatas: ImageMetadatas, detections: Optional[Detections] = None
+    ) -> None:
         self.model = model
         self.metadatas = metadatas
         self.detections = detections
@@ -18,7 +21,10 @@ class EngineDatapipe(Dataset):
         if self.detections is not None:
             detection = self.detections.iloc[idx]
             metadata = self.metadatas.loc[detection.image_id]
-            sample = (idx, self.model.preprocess(detection=detection, metadata=metadata))
+            sample = (
+                idx,
+                self.model.preprocess(detection=detection, metadata=metadata),
+            )
             return sample
         else:
             metadata = self.metadatas.iloc[idx]

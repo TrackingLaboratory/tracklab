@@ -2,7 +2,9 @@ import cv2
 import numpy as np
 
 
-def overlay_heatmap(img, heatmap, weight=0.5, mask_threshold=0.0, color_map=cv2.COLORMAP_JET):
+def overlay_heatmap(
+    img, heatmap, weight=0.5, mask_threshold=0.0, color_map=cv2.COLORMAP_JET
+):
     """
     Overlay a heatmap on an image with given color map.
     Args:
@@ -25,7 +27,9 @@ def overlay_heatmap(img, heatmap, weight=0.5, mask_threshold=0.0, color_map=cv2.
     mask_alpha[heatmap < mask_threshold] = 0
     mask_alpha = np.repeat(np.expand_dims(mask_alpha, 2), 3, 2)
     if weight == -1:
-        weight = np.repeat(np.expand_dims(heatmap/2, 2), 3, 2)
-    img_with_heatmap = img * (1-mask_alpha*weight) + heatmap_color * mask_alpha*weight
+        weight = np.repeat(np.expand_dims(heatmap / 2, 2), 3, 2)
+    img_with_heatmap = (
+        img * (1 - mask_alpha * weight) + heatmap_color * mask_alpha * weight
+    )
     # img_with_heatmap = cv2.addWeighted(img, 1-weight, heatmap_color.astype(img.dtype), weight, 0)
     return img_with_heatmap

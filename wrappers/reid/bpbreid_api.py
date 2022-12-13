@@ -16,6 +16,7 @@ from plugins.reid.bpbreid.torchreid.utils.imagetools import build_gaussian_heatm
 from pbtrack.utils.collate import Unbatchable
 
 from hydra.utils import to_absolute_path
+
 sys.path.append(to_absolute_path("plugins/reid/bpbreid"))  # FIXME ugly
 sys.path.append(to_absolute_path("plugins/reid"))  # FIXME ugly
 import torchreid
@@ -41,13 +42,15 @@ class BPBReId(ReIdentifier):
         wandb support
     """
 
-    def __init__(self, cfg, tracking_dataset, dataset, device, save_path, model_pose, job_id):
+    def __init__(
+        self, cfg, tracking_dataset, dataset, device, save_path, model_pose, job_id
+    ):
         tracking_dataset.name = dataset.name
         tracking_dataset.nickname = dataset.nickname
         additional_args = {
-            'tracking_dataset': tracking_dataset,
-            'reid_config': dataset,
-            'pose_model': model_pose,
+            "tracking_dataset": tracking_dataset,
+            "reid_config": dataset,
+            "pose_model": model_pose,
         }
         torchreid.data.register_image_dataset(
             tracking_dataset.name,
@@ -69,7 +72,9 @@ class BPBReId(ReIdentifier):
         self.model = None
         self.transform = CocoToSixBodyMasks()
 
-    def preprocess(self, detection: Detection, metadata: ImageMetadata):  # Tensor RGB (1, 3, H, W)
+    def preprocess(
+        self, detection: Detection, metadata: ImageMetadata
+    ):  # Tensor RGB (1, 3, H, W)
         mask_w, mask_h = 32, 64
         image = metadata.image
         bbox_ltwh = detection.bbox
@@ -104,14 +109,24 @@ class BPBReId(ReIdentifier):
                 model=self.model,
                 verbose=False,  # FIXME @Vladimir
             )
-        
+
         if im_crops:
             reid_result = self.feature_extractor(
                 im_crops, external_parts_masks=external_parts_masks
             )
-            embeddings, visibility_scores, body_masks, _ = extract_test_embeddings(reid_result, self.test_embeddings)
-            reid_df = pd.DataFrame({'embeddings': list(embeddings), 'visibility_scores': list(visibility_scores), 'body_masks': list(body_masks)})
-            detections = detections.merge(reid_df, left_index=True, right_index=True, validate="one_to_one")
+            embeddings, visibility_scores, body_masks, _ = extract_test_embeddings(
+                reid_result, self.test_embeddings
+            )
+            reid_df = pd.DataFrame(
+                {
+                    "embeddings": list(embeddings),
+                    "visibility_scores": list(visibility_scores),
+                    "body_masks": list(body_masks),
+                }
+            )
+            detections = detections.merge(
+                reid_df, left_index=True, right_index=True, validate="one_to_one"
+            )
         return detections
 
     def train(self):
@@ -126,13 +141,16 @@ class BPBReId(ReIdentifier):
         y2 = min(int(y + h / 2), height - 1)
         return x1, y1, x2, y2
 
+
 # will be used to update higher
 class BPBReIdentifier2(ReIdentifier):
-    def __init__(self, cfg, device, tracking_dataset, dataset, save_path, model_pose, job_id):
+    def __init__(
+        self, cfg, device, tracking_dataset, dataset, save_path, model_pose, job_id
+    ):
         additional_args = {
-            'tracking_dataset': tracking_dataset,
-            'reid_config': dataset,
-            'pose_model': model_pose,
+            "tracking_dataset": tracking_dataset,
+            "reid_config": dataset,
+            "pose_model": model_pose,
         }
         torchreid.data.register_image_dataset(
             tracking_dataset.name,
@@ -152,11 +170,11 @@ class BPBReIdentifier2(ReIdentifier):
         self.feature_extractor = None
         self.model = None
         self.transform = CocoToSixBodyMasks()
-        
+
         self.device = device
         self.cfg = CN(OmegaConf.to_container(cfg, resolve=True))
         self.cfg = build_config(config_file=self.cfg)
-        '''
+        """
         datamanager = build_datamanager(cfg)
         self.model = torchreid.models.build_model(
             name=cfg.model.name,
@@ -166,8 +184,8 @@ class BPBReIdentifier2(ReIdentifier):
             use_gpu=cfg.use_gpu,
             config=cfg
         )
-        '''
-    
+        """
+
     def pre_process(self, detection, image):
         mask_w, mask_h = 32, 64
         l, t, r, b = detection.bbox_ltrb.astype(int)
@@ -185,7 +203,7 @@ class BPBReIdentifier2(ReIdentifier):
             "pixels_parts_probabilities": pixels_parts_probabilities,
             "detection": detection,
         }
-        
+
     def process(self, pre_processed_batch):
         if self.feature_extractor is None:
             self.feature_extractor = FeatureExtractor(
@@ -201,8 +219,8 @@ class BPBReIdentifier2(ReIdentifier):
         detection = pre_processed_batch["detection"]
         external_parts_masks = np.expand_dims(pixels_parts_probabilities, axis=0)
         embeddings, visibility_scores, body_masks, _ = self.feature_extractor(
-                [crop], external_parts_masks=external_parts_masks
-            )
+            [crop], external_parts_masks=external_parts_masks
+        )
         detection.reid_features = embeddings[0]
         detection.visibility_score = visibility_scores[0]
         detection.body_mask = body_masks[0]

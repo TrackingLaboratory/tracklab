@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def kp_to_bbox(kp_xy):
     """Extract bounding box from keypoints.
     Args:
@@ -13,6 +14,7 @@ def kp_to_bbox(kp_xy):
     h = br[1] - lt[1]
     return np.array([lt[0], lt[1], w, h])
 
+
 def kp_to_bbox_w_threshold(kp_xyc, vis_threshold=0.1):
     """Extract bounding box from keypoints with visibility threshold.
     Args:
@@ -22,6 +24,7 @@ def kp_to_bbox_w_threshold(kp_xyc, vis_threshold=0.1):
     """
     kp_xy = kp_xyc[kp_xyc[:, 2] > vis_threshold][:, :2]
     return kp_to_bbox(kp_xy)
+
 
 def kp_img_to_kp_bbox(kp_xyc_img, bbox_ltwh):
     """
@@ -41,11 +44,13 @@ def kp_img_to_kp_bbox(kp_xyc_img, bbox_ltwh):
     kp_xyc_bbox[:, 1] = kp_xyc_img[:, 1] - t
 
     # remove out of bbox keypoints
-    kp_xyc_bbox[(kp_xyc_bbox[:, 2] == 0)
-                | (kp_xyc_bbox[:, 0] < 0)
-                | (kp_xyc_bbox[:, 0] >= w)
-                | (kp_xyc_bbox[:, 1] < 0)
-                | (kp_xyc_bbox[:, 1] >= h)] = 0
+    kp_xyc_bbox[
+        (kp_xyc_bbox[:, 2] == 0)
+        | (kp_xyc_bbox[:, 0] < 0)
+        | (kp_xyc_bbox[:, 0] >= w)
+        | (kp_xyc_bbox[:, 1] < 0)
+        | (kp_xyc_bbox[:, 1] >= h)
+    ] = 0
 
     return kp_xyc_bbox
 
@@ -82,7 +87,9 @@ def clip_to_img_dim(bbox_ltwh, img_w, img_h):
     t = np.clip(t, 0, img_h)
     w = np.clip(w, 0, img_w - l)
     h = np.clip(h, 0, img_h - t)
-    assert np.equal(np.array([l, t, w, h]), clip_to_img_dim_old(bbox_ltwh, img_w, img_h)).all()
+    assert np.equal(
+        np.array([l, t, w, h]), clip_to_img_dim_old(bbox_ltwh, img_w, img_h)
+    ).all()
     return np.array([l, t, w, h])
 
 
@@ -100,6 +107,6 @@ def clip_to_img_dim_old(bbox_ltwh, img_w, img_h):
     l, t, w, h = bbox_ltwh.copy()
     l = max(l, 0)
     t = max(t, 0)
-    w = min(l+w, img_w) - l
-    h = min(t+h, img_h) - t
+    w = min(l + w, img_w) - l
+    h = min(t + h, img_h) - t
     return np.array([l, t, w, h])

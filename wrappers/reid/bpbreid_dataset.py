@@ -17,6 +17,7 @@ from pbtrack.utils.coordinates import (
 )
 from pbtrack.utils.images import overlay_heatmap
 from hydra.utils import to_absolute_path
+
 sys.path.append(to_absolute_path("plugins/reid/bpbreid"))
 from torchreid.data import ImageDataset
 from torchreid.utils.imagetools import gkern, build_gaussian_heatmaps
@@ -57,7 +58,7 @@ class ReidDataset(ImageDataset):
         tracking_dataset: TrackingDataset,
         reid_config,
         pose_model=None,
-        masks_dir='',
+        masks_dir="",
         **kwargs
     ):
         # Init
@@ -67,10 +68,12 @@ class ReidDataset(ImageDataset):
         self.dataset_path = Path(self.tracking_dataset.dataset_path)
         self.masks_dir = masks_dir
         assert (
-            self.reid_config.train.max_samples_per_id >= self.reid_config.train.min_samples_per_id
+            self.reid_config.train.max_samples_per_id
+            >= self.reid_config.train.min_samples_per_id
         ), "max_samples_per_id must be >= min_samples_per_id"
         assert (
-            self.reid_config.test.max_samples_per_id >= self.reid_config.test.min_samples_per_id
+            self.reid_config.test.max_samples_per_id
+            >= self.reid_config.test.min_samples_per_id
         ), "max_samples_per_id must be >= min_samples_per_id"
 
         if self.masks_dir in self.masks_dirs:  # TODO
@@ -90,15 +93,11 @@ class ReidDataset(ImageDataset):
 
         # Build ReID dataset from MOT dataset
         self.build_reid_set(
-            tracking_dataset.train_set,
-            self.reid_config,
-            is_test_set=False,
+            tracking_dataset.train_set, self.reid_config, is_test_set=False,
         )
 
         self.build_reid_set(
-            tracking_dataset.val_set,
-            self.reid_config,
-            is_test_set=True,
+            tracking_dataset.val_set, self.reid_config, is_test_set=True,
         )
 
         train_gt_dets = tracking_dataset.train_set.detections
@@ -114,9 +113,7 @@ class ReidDataset(ImageDataset):
 
         super().__init__(train, query, gallery, **kwargs)
 
-    def build_reid_set(
-        self, tracking_set, reid_config, is_test_set
-    ):
+    def build_reid_set(self, tracking_set, reid_config, is_test_set):
         """
         Build ReID metadata for a given MOT dataset split.
         Only a subset of all MOT groundtruth detections is used for ReID.
@@ -161,18 +158,19 @@ class ReidDataset(ImageDataset):
         )
 
         # Load reid masks metadata into existing ground truth detections dataframe
-        self.load_reid_annotations(
-            detections,
-            masks_anns_filepath,
-            ["masks_path"]
-        )
+        self.load_reid_annotations(detections, masks_anns_filepath, ["masks_path"])
 
         # Sampling of detections to be used to create the ReID dataset
         self.sample_detections_for_reid(detections, reid_set_cfg)
 
         # Save ReID detections crops and related metadata. Apply only on sampled detections
         self.save_reid_img_crops(
-            detections, reid_img_path, split, reid_anns_filepath, metadatas, max_crop_size
+            detections,
+            reid_img_path,
+            split,
+            reid_anns_filepath,
+            metadatas,
+            max_crop_size,
         )
 
         # Save human parsing pseudo ground truth and related metadata. Apply only on sampled detections
@@ -238,7 +236,9 @@ class ReidDataset(ImageDataset):
         # Filter detections by uniform sampling along each tracklet
         dets_df_f3 = (
             dets_df_f2.groupby("person_id")
-            .apply(self.uniform_tracklet_sampling, reid_cfg.max_samples_per_id, "image_id")
+            .apply(
+                self.uniform_tracklet_sampling, reid_cfg.max_samples_per_id, "image_id"
+            )
             .reset_index(drop=True)
             .copy()
         )
@@ -274,7 +274,13 @@ class ReidDataset(ImageDataset):
         print("{} filtered size = {}".format(self.__class__.__name__, len(dets_df_f5)))
 
     def save_reid_img_crops(
-        self, gt_dets, save_path, set_name, reid_anns_filepath, metadatas_df, max_crop_size
+        self,
+        gt_dets,
+        save_path,
+        set_name,
+        reid_anns_filepath,
+        metadatas_df,
+        max_crop_size,
     ):
         """
         Save on disk all detections image crops from the ground truth dataset to build the reid dataset.
@@ -526,7 +532,9 @@ class ReidDataset(ImageDataset):
         num_det = len(_df)
         if num_det > max_samples_per_id:
             # Select 'max_samples_per_id' evenly spaced indices, including first and last
-            indices = np.round(np.linspace(0, num_det - 1, max_samples_per_id)).astype(int)
+            indices = np.round(np.linspace(0, num_det - 1, max_samples_per_id)).astype(
+                int
+            )
             assert len(indices) == max_samples_per_id
             return _df.iloc[indices]
         else:

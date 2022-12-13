@@ -1,6 +1,10 @@
 from hydra._internal.instantiate._instantiate2 import *
-from hydra._internal.instantiate._instantiate2 import _extract_pos_args, _convert_target_to_string
+from hydra._internal.instantiate._instantiate2 import (
+    _extract_pos_args,
+    _convert_target_to_string,
+)
 from hydra._internal.instantiate import _instantiate2
+
 
 def call_target(
     _target_: Callable[..., Any],
@@ -35,5 +39,6 @@ def call_target(
         return functools.partial(_target_, *args, **kwargs)
     else:
         return _target_(*args, **kwargs)
+
 
 _instantiate2._call_target = call_target

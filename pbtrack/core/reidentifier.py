@@ -1,8 +1,9 @@
 from typing import List
-from abc import abstractmethod, ABC
 
+from abc import abstractmethod, ABC
 from pbtrack.datastruct.detections import Detection, Detections
 from pbtrack.datastruct.image_metadatas import ImageMetadata
+
 
 class ReIdentifier(ABC):
     """ Abstract class to implement for the integration of a new reidentifier
@@ -10,6 +11,7 @@ class ReIdentifier(ABC):
         (optional), preprocess and process. A description of the expected 
         behavior is provided below.
     """
+
     @abstractmethod
     def __init__(self, cfg, device):
         """ Init function
@@ -19,9 +21,9 @@ class ReIdentifier(ABC):
         """
         self.cfg = cfg
         self.device = device
-    
+
     @abstractmethod
-    def preprocess(self, detection: Detection, metadata: ImageMetadata)-> object:
+    def preprocess(self, detection: Detection, metadata: ImageMetadata) -> object:
         """ Your pre-processing function to adapt the input to your 
             reidentifier
         Args:
@@ -32,7 +34,7 @@ class ReIdentifier(ABC):
         """
         pass
         # return pre_processed tel que collate_fn is OK nativement
-    
+
     @abstractmethod
     def process(self, preprocessed_batch, detections: Detections) -> List[Detection]:
         """ Your processing function to run the reidentifier
@@ -43,7 +45,7 @@ class ReIdentifier(ABC):
             detections (List[Detection]): updated detections for the batch
         """
         pass
-    
+
     def train(self):
         """ Training function for your reidentifier
         """

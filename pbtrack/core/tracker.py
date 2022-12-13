@@ -2,7 +2,6 @@ from abc import abstractmethod, ABC
 from pbtrack.datastruct.detections import Detections
 
 
-# TODO Baptiste
 class Tracker(ABC):
     @abstractmethod
     def run(self, detections: Detections):
