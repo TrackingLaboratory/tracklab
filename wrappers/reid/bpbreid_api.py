@@ -93,7 +93,6 @@ class BPBReId(ReIdentifier):
 
         # pixels_parts_probabilities = pixels_parts_probabilities[np.newaxis, ...]
         crop = Unbatchable([crop])
-        print(pixels_parts_probabilities.shape)
         return crop, pixels_parts_probabilities
 
     def process(self, batch, detections, metadatas):
