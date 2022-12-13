@@ -22,7 +22,7 @@ class EngineDatapipe(Dataset):
             detection = self.detections.iloc[idx]
             metadata = self.metadatas.loc[detection.image_id]
             sample = (
-                idx,
+                detection.name,
                 self.model.preprocess(detection=detection, metadata=metadata),
             )
             return sample

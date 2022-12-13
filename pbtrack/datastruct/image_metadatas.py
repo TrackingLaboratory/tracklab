@@ -4,20 +4,6 @@ from pbtrack.utils.images import cv2_load_image
 
 
 class ImageMetadatas(pd.DataFrame):
-    def __init__(self, data, *args, **kwargs) -> None:
-        """FIXME ?
-        if isinstance(data, list):
-            if isinstance(data[0], ImageMetadata):
-                indices = [x.id for x in data]
-            elif isinstance(data[0], dict):
-                indices = [x["id"] for x in data]
-        else:
-            indices = None
-        kwargs = {**kwargs, "index": indices}
-        """
-        super().__init__(data, *args, **kwargs)
-
-    # Required for DataFrame subclassing
     @property
     def _constructor(self):
         return ImageMetadatas
@@ -51,6 +37,7 @@ class ImageMetadata(pd.Series):
                 file_path=file_path,
                 **kwargs
             ),
+            name=id,
         )
 
     # Required for DataFrame subclassing

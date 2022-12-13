@@ -1,10 +1,14 @@
 from abc import abstractmethod, ABC
-from pbtrack.datastruct.detections import Detections
+from pbtrack.datastruct import Detections, Detection, ImageMetadata, ImageMetadatas
 
 
 class Tracker(ABC):
     @abstractmethod
-    def run(self, detections: Detections):
+    def preprocess(self, detection: Detection, metadata: ImageMetadata):
+        pass
+
+    @abstractmethod
+    def process(self, batch, detections: Detections, metadatas: ImageMetadatas):
         pass
 
     @abstractmethod
@@ -21,10 +25,5 @@ class OfflineTracker(Tracker):
 
 
 class OnlineTracker(Tracker):
-    @abstractmethod
-    def run(self, frame_dets: Detections):
-        # update frame_dets
-        pass
-
     def reset(self):
         pass
