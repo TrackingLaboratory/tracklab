@@ -1,2 +1,4 @@
 _target_: pbtrack.datasets.posetrack.posetrack21.PoseTrack21
 dataset_path: ${data_dir}/PoseTrack21
+nvid: 2
+nframes: 3
