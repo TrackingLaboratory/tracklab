@@ -43,7 +43,7 @@ class PoseTrack21(TrackingDataset):
         val_set = load_tracking_set(self.anns_path, self.dataset_path, "val")
         test_set = None  # TODO no json, load images
 
-        super().__init__(dataset_path, train_set, val_set, test_set)
+        super().__init__(dataset_path, train_set, val_set, test_set, *args, **kwargs)
 
 
 def load_tracking_set(anns_path, dataset_path, split):

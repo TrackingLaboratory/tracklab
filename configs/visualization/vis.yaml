@@ -16,10 +16,10 @@ vis_cfg:
       print_conf: True
     pose:
       show: True
-      radius: 2
+      radius: 1
       color: [255, 0, 0]
-      thickness: 2
-      print_conf: True
+      thickness: 1
+      print_conf: False
   tracking:
     show: True
     color: [255, 0, 0]

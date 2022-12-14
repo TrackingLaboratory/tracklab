@@ -49,7 +49,6 @@ class Detection(pd.Series):
         id,
         bbox_ltwh=None,
         keypoints_xyc=None,
-        track_id=None,
         person_id=None,
         category_id=None,
         **kwargs
@@ -60,7 +59,6 @@ class Detection(pd.Series):
                 id=id,
                 bbox_ltwh=bbox_ltwh,
                 keypoints_xyc=keypoints_xyc,
-                track_id=track_id,
                 person_id=person_id,
                 category_id=category_id,
                 **kwargs

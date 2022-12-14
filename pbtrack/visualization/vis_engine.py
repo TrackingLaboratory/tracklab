@@ -111,7 +111,7 @@ class VisEngine:
 
     def _plot_track(self, detections, patch):
         bboxes = detections.bbox_ltrb
-        ids = detections[["person_id"]].values
+        ids = detections[["track_id"]].values
         for bbox, id in zip(bboxes, ids):
             p1, p2 = (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]))
             cv2.rectangle(

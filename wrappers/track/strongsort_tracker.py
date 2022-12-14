@@ -57,7 +57,7 @@ class StrongSORTTracker(OnlineTracker):
                 {
                     "track_bbox_tlwh": list(results[:, 0:4]),
                     "track_bbox_conf": results[:, 6],
-                    "person_id": results[:, 4].astype(int),
+                    "track_id": results[:, 4].astype(int),
                 },
                 index=results[:, -1].astype(int),
             )
