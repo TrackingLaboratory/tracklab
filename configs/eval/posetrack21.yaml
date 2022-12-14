@@ -1,0 +1,48 @@
+_target_: pbtrack.datasets.posetrack.posetrack21.PoseTrack21Eval
+
+cfg:
+  on_val: True
+  on_train: True
+
+  eval_pose_estimation: True
+  eval_mot: True
+  eval_pose_tracking: True
+  eval_reid_pose_tracking: True
+
+  mot_evaluator:
+    BREAK_ON_ERROR: True # Raises exception and exits with error
+    RETURN_ON_ERROR: False # if not BREAK_ON_ERROR, then returns from function on error
+    LOG_ON_ERROR: null # if not None, save any errors into specified log file
+    PRINT_COMBINED_SUMMARY_ONLY: True
+    TIME_PROGRESS: True
+    DISPLAY_LESS_PROGRESS: False
+    OUTPUT_PAPER_SUMMARY: True
+    OUTPUT_EMPTY_CLASSES: True # If False, summary files are not output for classes with no detections
+    OUTPUT_DETAILED: True
+
+  mot_dataset:
+    PRINT_CONFIG: True
+    ASSURE_SINGLE_TRACKER: False
+    TRACKERS_FOLDER: "eval/mot"
+    GT_FOLDER: "${dataset.dataset_path}/posetrack_mot/mot"
+
+  posetrack_evaluator:
+    USE_PARALLEL: False # TODO broken, to investigate
+    NUM_PARALLEL_CORES: 4
+    BREAK_ON_ERROR: True # Raises exception and exits with error
+    RETURN_ON_ERROR: False # if not BREAK_ON_ERROR, then returns from function on error
+    LOG_ON_ERROR: null # if not None, save any errors into specified log file
+    PRINT_RESULTS: True
+    PRINT_COMBINED_SUMMARY_ONLY: True
+    PRINT_PAPER_SUMMARY: True
+    TIME_PROGRESS: True
+    DISPLAY_LESS_PROGRESS: False
+    OUTPUT_PAPER_SUMMARY: True
+    OUTPUT_EMPTY_CLASSES: True # If False, summary files are not output for classes with no detections
+    OUTPUT_DETAILED: True
+
+  posetrack_dataset:
+    PRINT_CONFIG: True
+    ASSURE_SINGLE_TRACKER: False
+    TRACKERS_FOLDER: "eval/posetrack" # maybe will bug
+    GT_FOLDER: "${dataset.dataset_path}/posetrack_data"
