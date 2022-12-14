@@ -263,10 +263,10 @@ class PoseTrack21Eval(Evaluator):
             file_path = os.path.join(save_path, f"{video_name}.txt")
             video_df = df[df["video_name"] == video_name]
             video_df.sort_values(by="frame", inplace=True)
-            video_df["bb_left"] = video_df["bbox"].apply(lambda x: x[0])
-            video_df["bb_top"] = video_df["bbox"].apply(lambda x: x[1])
-            video_df["bb_width"] = video_df["bbox"].apply(lambda x: x[2])
-            video_df["bb_height"] = video_df["bbox"].apply(lambda x: x[0])
+            video_df["bb_left"] = video_df["bbox_ltwh"].apply(lambda x: x[0])
+            video_df["bb_top"] = video_df["bbox_ltwh"].apply(lambda x: x[1])
+            video_df["bb_width"] = video_df["bbox_ltwh"].apply(lambda x: x[2])
+            video_df["bb_height"] = video_df["bbox_ltwh"].apply(lambda x: x[0])
             video_df["conf"] = video_df["keypoints_xyc"].apply(
                 lambda x: np.mean(x[:, 2])
             )
@@ -329,7 +329,8 @@ class PoseTrack21Eval(Evaluator):
                 detections["image_id"].isin(image_metadatas_video["id"])
             ]
             detections_video.rename(
-                columns={"keypoints_xyc": "keypoints"}, inplace=True
+                columns={"keypoints_xyc": "keypoints", "bbox_ltwh": "bbox"},
+                inplace=True,
             )
             detections_video["scores"] = detections_video["keypoints"].apply(
                 lambda x: x[:, 2]

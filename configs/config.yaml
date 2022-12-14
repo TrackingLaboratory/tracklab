@@ -1,9 +1,10 @@
 defaults:
   - _self_
-  - detection: openpifpaf
+  - detection: dekr
   - track: track
   - reid: bpbreid
   - dataset: posetrack21
+  - eval: posetrack21
 data_dir: "???"
 project_dir: "${hydra:runtime.cwd}"
 job_id: "???"
