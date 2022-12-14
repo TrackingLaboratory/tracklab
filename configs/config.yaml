@@ -1,6 +1,6 @@
 defaults:
   - _self_
-  - detection: dekr
+  - detection: openpifpaf
   - track: track
   - reid: bpbreid
   - visualization: vis
