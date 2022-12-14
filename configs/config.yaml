@@ -3,10 +3,12 @@ defaults:
   - detection: openpifpaf
   - track: track
   - reid: bpbreid
+  - visualization: vis
   - dataset: posetrack21
 data_dir: "???"
 project_dir: "${hydra:runtime.cwd}"
 job_id: "???"
+save_dir: "???"
 
 hydra:
   job:

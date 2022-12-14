@@ -42,7 +42,7 @@ class TrackingDataset(ABC):
 
     def _subsample(self, tracking_set, nvid=2, nframes=5):
         # filter videos:
-        videos_to_keep = tracking_set.video_metadatas.index[:nvid]
+        videos_to_keep = tracking_set.video_metadatas.sample(nvid, random_state=3).index
         tiny_video_metadatas = tracking_set.video_metadatas.loc[videos_to_keep]
 
         # filter images:

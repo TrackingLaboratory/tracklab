@@ -50,6 +50,12 @@ class ImageMetadata(pd.Series):
     def _constructor(self):
         return ImageMetadata
 
+    # use this to view the base class, needed for debugging in some IDEs.
+    @property
+    def aaa_base_class_view(self):
+        # use this to view the base class, needed for debugging in some IDEs.
+        return pd.DataFrame(self)
+
     # Allows to convert automatically from ImageMetadata to ImageMetadatas
     # and use their @property methods
     def __getattr__(

@@ -38,9 +38,7 @@ class Detections(pd.DataFrame):
     @property
     def keypoints_bbox_xyc(self):
         """Converts from keypoints in image coordinates to keypoints in bbox coordinates"""
-        return self.bbox_ltwh.apply(
-            lambda r: kp_img_to_kp_bbox(r.keypoints_xyc, r.bbox_ltwh), axis=1
-        )
+        return self.apply(lambda r: kp_img_to_kp_bbox(r.keypoints_xyc, r.bbox_ltwh))
 
 
 class Detection(pd.Series):

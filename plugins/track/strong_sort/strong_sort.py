@@ -5,34 +5,49 @@ from .sort.nn_matching import NearestNeighborDistanceMetric
 from .sort.detection import Detection
 from .sort.tracker import Tracker
 
-__all__ = ['StrongSORT']
+__all__ = ["StrongSORT"]
 
 
 class StrongSORT(object):
-    def __init__(self,
-                 max_dist=0.2,
-                 max_iou_distance=0.7,
-                 max_age=70, n_init=3,
-                 nn_budget=100,
-                ):
+    def __init__(
+        self, max_dist=0.2, max_iou_distance=0.7, max_age=70, n_init=3, nn_budget=100,
+    ):
 
         self.max_dist = max_dist
-        metric = NearestNeighborDistanceMetric(
-            "part_based", self.max_dist, nn_budget)
+        metric = NearestNeighborDistanceMetric("part_based", self.max_dist, nn_budget)
         self.tracker = Tracker(
-            metric, max_iou_distance=max_iou_distance, max_age=max_age, n_init=n_init)
+            metric, max_iou_distance=max_iou_distance, max_age=max_age, n_init=n_init
+        )
 
-    def update(self, bbox_xywh, reid_features, visibility_scores, confidences, classes, ori_img):
+    def update(
+        self,
+        ids,
+        bbox_xywh,
+        reid_features,
+        visibility_scores,
+        confidences,
+        classes,
+        ori_img,
+    ):
         self.height, self.width = ori_img.shape[:2]
         # generate detections
         bbox_tlwh = self._xywh_to_tlwh(bbox_xywh)
-        detections = [Detection(i,
-                                bbox_tlwh[i],
-                                conf,
-                                {"reid_features":  np.asarray(reid_features[i].cpu(), dtype=np.float32),
-                                 "visibility_scores": np.asarray(visibility_scores[i].cpu(), dtype=np.float32)}
-                                )
-                      for i, conf in enumerate(confidences)]
+        detections = [
+            Detection(
+                ids[i],
+                bbox_tlwh[i],
+                conf,
+                {
+                    "reid_features": np.asarray(
+                        reid_features[i].cpu(), dtype=np.float32
+                    ),
+                    "visibility_scores": np.asarray(
+                        visibility_scores[i].cpu(), dtype=np.float32
+                    ),
+                },
+            )
+            for i, conf in enumerate(confidences)
+        ]
 
         # run on non-maximum supression
         boxes = np.array([d.tlwh for d in detections])
@@ -49,14 +64,16 @@ class StrongSORT(object):
                 continue
 
             det = track.last_detection_to_tlwh()
-            x1, y1, x2, y2 = self._tlwh_to_xyxy(det.tlwh)
-            
+
+            t, l, w, h = det.tlwh
             track_id = track.track_id
             class_id = track.class_id
             conf = track.conf
-            outputs.append(np.array([x1, y1, x2, y2, track_id, class_id, conf, det.idx]))
+            outputs.append(np.array([t, l, w, h, track_id, class_id, conf, det.id]))
         if len(outputs) > 0:
             outputs = np.stack(outputs, axis=0)
+        else:
+            outputs = np.empty((0, 8))
         return outputs
 
     """
@@ -64,14 +81,15 @@ class StrongSORT(object):
         Convert bbox from xc_yc_w_h to xtl_ytl_w_h
     Thanks JieChen91@github.com for reporting this bug!
     """
+
     @staticmethod
     def _xywh_to_tlwh(bbox_xywh):
         if isinstance(bbox_xywh, np.ndarray):
             bbox_tlwh = bbox_xywh.copy()
         elif isinstance(bbox_xywh, torch.Tensor):
             bbox_tlwh = bbox_xywh.clone()
-        bbox_tlwh[:, 0] = bbox_xywh[:, 0] - bbox_xywh[:, 2] / 2.
-        bbox_tlwh[:, 1] = bbox_xywh[:, 1] - bbox_xywh[:, 3] / 2.
+        bbox_tlwh[:, 0] = bbox_xywh[:, 0] - bbox_xywh[:, 2] / 2.0
+        bbox_tlwh[:, 1] = bbox_xywh[:, 1] - bbox_xywh[:, 3] / 2.0
         return bbox_tlwh
 
     def _xywh_to_xyxy(self, bbox_xywh):
@@ -90,9 +108,9 @@ class StrongSORT(object):
         """
         x, y, w, h = bbox_tlwh
         x1 = max(int(x), 0)
-        x2 = min(int(x+w), self.width - 1)
+        x2 = min(int(x + w), self.width - 1)
         y1 = max(int(y), 0)
-        y2 = min(int(y+h), self.height - 1)
+        y2 = min(int(y + h), self.height - 1)
         return x1, y1, x2, y2
 
     def increment_ages(self):

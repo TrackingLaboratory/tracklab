@@ -2,12 +2,13 @@ import os
 import cv2
 import numpy as np
 
+from pbtrack.utils.images import cv2_load_image
+
 
 class VisEngine:
-    def __init__(self, vis_cfg, save_dir, tracker):
+    def __init__(self, vis_cfg, save_dir):
         self.cfg = vis_cfg
         self.save_dir = save_dir
-        self.tracker = tracker
 
         self.save_img = self.cfg["images"]["save"]
         self.save_vid = self.cfg["video"]["save"]
@@ -19,29 +20,48 @@ class VisEngine:
         if self.save_vid:
             self.save_video_name = os.path.join(self.save_dir, "results.mp4")
 
-    def process(self, data):
-        patch = self._process_img(data["image"])
+    def run(self, tracker_state):
+        for video in tracker_state.gt.video_metadatas.itertuples():
+
+            image_metadatas = tracker_state.gt.image_metadatas[
+                tracker_state.gt.image_metadatas.video_id == video.id
+            ]  # FIXME sort?
+            # for image_metadata in image_metadatas.itertuples():  # FIXME image_metadata is of type Panda, not ImageMetadata
+            for image_id in image_metadatas.id:
+                image_metadata = image_metadatas.loc[image_id]
+                detections = tracker_state.predictions[
+                    tracker_state.predictions.image_id == image_metadata.id
+                ]
+                self._process_video_frame(image_metadata, detections)
+            if self.save_vid:
+                self.video.release()
+
+    def _process_video_frame(self, image_metadata, detections):
+        # loop on GT
+        image = cv2_load_image(image_metadata.file_path)
+        # image = self._process_img(image)
+
+        # data = file_name, width, height,
 
         if self.cfg["detection"]["bbox"]["show"]:
-            patch = self._plot_bbox(data, patch)
+            image = self._plot_bbox(detections, image)
         if self.cfg["detection"]["pose"]["show"]:
-            patch = self._plot_pose(data, patch)
+            image = self._plot_pose(detections, image)
         if self.cfg["tracking"]["show"]:
-            patch = self._plot_track(data, patch)
+            image = self._plot_track(detections, image)
 
-        patch = self._final_patch(patch)
+        image = self._final_patch(image)
         if self.save_img:
-            filepath = os.path.join(self.save_image_dir, data["file_name"])
-            assert cv2.imwrite(filepath, patch)
+            filepath = os.path.join(
+                self.save_image_dir, os.path.basename(image_metadata.file_path)
+            )
+            assert cv2.imwrite(filepath, image)
         # save video
         if self.save_vid:
-            self._update_video(patch, (data["width"], data["height"]))
+            self._update_video(image)
 
-    def _plot_bbox(self, data, patch):
-        detections = self.tracker[
-            (self.tracker.file_name == data["file_name"]) & (self.tracker.source == 1)
-        ]
-        bboxes = detections.bbox_xyxy(with_conf=True)
+    def _plot_bbox(self, detections, patch):
+        bboxes = detections.bbox_ltrb
         for bbox in bboxes:
             p1, p2 = (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]))
             cv2.rectangle(
@@ -64,11 +84,8 @@ class VisEngine:
                 )
         return patch
 
-    def _plot_pose(self, data, patch):
-        detections = self.tracker[
-            (self.tracker.file_name == data["file_name"]) & (self.tracker.source >= 1)
-        ]
-        poses = detections.pose_xy(with_conf=True)
+    def _plot_pose(self, detections, patch):
+        poses = detections.keypoints_xyc
         for pose in poses:
             for kp in pose:
                 p = (int(kp[0]), int(kp[1]))
@@ -92,11 +109,8 @@ class VisEngine:
                     )
         return patch
 
-    def _plot_track(self, data, patch):
-        detections = self.tracker[
-            (self.tracker.file_name == data["file_name"]) & (self.tracker.source == 2)
-        ]
-        bboxes = detections.bbox_xyxy(with_conf=True)
+    def _plot_track(self, detections, patch):
+        bboxes = detections.bbox_ltrb
         ids = detections[["person_id"]].values
         for bbox, id in zip(bboxes, ids):
             p1, p2 = (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]))
@@ -109,7 +123,7 @@ class VisEngine:
             )
             txt = ""
             if self.cfg["tracking"]["print_id"]:
-                txt += f" ID: {int(id)}"
+                txt += f" ID: {id}"
             if self.cfg["tracking"]["print_conf"]:
                 txt += f" - conf: {bbox[4]:.2}"
             p = (int(bbox[0]) + 1, int(bbox[1]) - 2)
@@ -124,22 +138,21 @@ class VisEngine:
             )
         return patch
 
-    def _update_video(self, patch, size):
+    def _update_video(self, patch):
         if not hasattr(self, "video"):
             self.video = cv2.VideoWriter(
                 self.save_video_name,
                 cv2.VideoWriter_fourcc(*"mp4v"),
-                self.cfg["video"]["fps"],
-                size,
+                int(self.cfg["video"]["fps"]),
+                (int(self.cfg["video"]["height"]), int(self.cfg["video"]["width"])),
             )
         self.video.write(patch)
 
     def _process_img(self, img):
-        patch = img.cpu().numpy()
-        patch = 255.0 * patch
-        patch = patch.transpose(1, 2, 0)
-        patch = np.ascontiguousarray(patch, dtype=np.float32)
-        return patch
+        img = 255.0 * img
+        img = img.transpose(1, 2, 0)
+        img = np.ascontiguousarray(img, dtype=np.float32)
+        return img
 
     def _final_patch(self, patch):
         patch = cv2.cvtColor(patch, cv2.COLOR_RGB2BGR)

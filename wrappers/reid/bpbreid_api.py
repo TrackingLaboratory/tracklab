@@ -124,7 +124,8 @@ class BPBReId(ReIdentifier):
                     "embeddings": list(embeddings),
                     "visibility_scores": list(visibility_scores),
                     "body_masks": list(body_masks),
-                }
+                },
+                index=detections.index,
             )
             detections = detections.merge(
                 reid_df, left_index=True, right_index=True, validate="one_to_one"

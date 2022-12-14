@@ -38,33 +38,30 @@ class StrongSORTTracker(OnlineTracker):
         score = np.mean(detection.keypoints_xyc[:, 2])
         reid_features = detection.embeddings  # .flatten()
         visibility_score = detection.visibility_scores
+        id = detection.id
         classes = np.array(0)
-        return bbox, reid_features, visibility_score, score, classes, image
+        return id, bbox, reid_features, visibility_score, score, classes, image
 
     def process(self, batch, detections: Detections, metadatas: ImageMetadatas):
-        cmwhs, reid_features, visibility_scores, scores, classes, image = batch
+        id, cmwhs, reid_features, visibility_scores, scores, classes, image = batch
         if cmwhs.numel() != 0:
             results = self.model.update(
-                cmwhs, reid_features, visibility_scores, scores, classes, image
+                id, cmwhs, reid_features, visibility_scores, scores, classes, image
             )
             detections = self._update_detections(results, detections)
         return detections
 
     def _update_detections(self, results, detections):
-        for result in results:
-            detection = detections.iloc[int(result[-1])]
-            w = result[2] - result[0]
-            h = result[3] - result[1]
-            detection.track_bbox = [result[0] + w / 2, result[1] + h / 2, w, h]
-            detection.track_bbox_conf = result[6]
-            detection.person_id = int(result[4])
+        if results.any():
             track_df = pd.DataFrame(
-                dict(
-                    track_bbox=[result[0] + w / 2, result[1] + h / 2, w, h],
-                    track_bbox_conf=result[6],
-                    person_id=int(result[4]),
-                )
+                {
+                    "track_bbox_tlwh": list(results[:, 0:4]),
+                    "track_bbox_conf": results[:, 6],
+                    "person_id": results[:, 4].astype(int),
+                },
+                index=results[:, -1].astype(int),
             )
+
             detections = detections.merge(
                 track_df, left_index=True, right_index=True, validate="one_to_one"
             )

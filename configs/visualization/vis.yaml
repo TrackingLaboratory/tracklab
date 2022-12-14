@@ -1,0 +1,28 @@
+_target_: pbtrack.visualization.vis_engine.VisEngine
+save_dir: "${save_dir}"
+vis_cfg:
+  images:
+    save: True
+  video:
+    save: True
+    fps: 30
+    height: 540
+    width: 960
+  detection:
+    bbox:
+      show: False
+      color: [255, 0, 0]
+      thickness: 2
+      print_conf: True
+    pose:
+      show: True
+      radius: 2
+      color: [255, 0, 0]
+      thickness: 2
+      print_conf: True
+  tracking:
+    show: True
+    color: [255, 0, 0]
+    print_conf: False
+    thickness: 2
+    print_id: True

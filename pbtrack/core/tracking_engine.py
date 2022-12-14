@@ -49,8 +49,8 @@ class OnlineTrackingEngine(pl.LightningModule):
         """
         idxs, batch = batch
         image_metadatas = self.metadatas.loc[idxs]
-        # 1. Detection
 
+        # 1. Detection
         detections = Detections(self.detector.process(batch, image_metadatas))
         if detections.empty:
             return detections
@@ -75,7 +75,6 @@ class OnlineTrackingEngine(pl.LightningModule):
             reid_detections = Detections()
 
         # 3. Tracking
-
         track_detections = []
         for image_id, image_metadata in image_metadatas.iterrows():
             if len(reid_detections) == 0:
@@ -100,7 +99,6 @@ class OnlineTrackingEngine(pl.LightningModule):
         #     track_input = self.tracker.preprocess(detection)
         #     track_output = self.tracker(track_input)
         #     track_detections.append(self.tracker.postprocess(track_output))
-        print(track_detections)
         if len(track_detections) > 0:
             return pd.concat(track_detections)
         else:

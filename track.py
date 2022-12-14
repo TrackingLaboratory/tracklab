@@ -31,7 +31,7 @@ def track(cfg):
     )
     model_track = instantiate(cfg.track, device=device)
     # evaluator = instantiate(cfg.eval)
-    # vis_engine = instantiate(cfg.visualization)
+    vis_engine = instantiate(cfg.visualization)
     trainer = pl.Trainer()
 
     # Train reid
@@ -63,10 +63,10 @@ def track(cfg):
         tracker_state.update(detections)
 
     # Evaluation
-    # evaluator.run(tracking_dataset)
+    # evaluator.run(tracker_state)
 
     # Visualization
-    # vis_engine.run(tracking_dataset)
+    vis_engine.run(tracker_state)
 
 
 if __name__ == "__main__":
