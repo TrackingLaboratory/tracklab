@@ -65,4 +65,8 @@ class StrongSORTTracker(OnlineTracker):
             detections = detections.merge(
                 track_df, left_index=True, right_index=True, validate="one_to_one"
             )
+        else:  # FIXME
+            detections["track_bbox_tlwh"] = np.nan
+            detections["track_bbox_conf"] = np.nan
+            detections["track_id"] = -1
         return detections

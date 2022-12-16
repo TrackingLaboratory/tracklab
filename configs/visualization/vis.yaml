@@ -1,6 +1,8 @@
 _target_: pbtrack.visualization.vis_engine.VisEngine
 save_dir: "${save_dir}"
 vis_cfg:
+  max_videos: -1
+  max_frames: -1
   images:
     save: True
   video:
@@ -20,6 +22,8 @@ vis_cfg:
       color: [255, 0, 0]
       thickness: 1
       print_conf: False
+    heatmaps:
+      show: True
   tracking:
     show: True
     color: [255, 0, 0]

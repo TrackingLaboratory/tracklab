@@ -3,7 +3,7 @@ import numpy as np
 
 
 def overlay_heatmap(
-    img, heatmap, weight=0.5, mask_threshold=0.0, color_map=cv2.COLORMAP_JET
+    img, heatmap, weight=0.5, mask_threshold=0.0, color_map=cv2.COLORMAP_JET, rgb=False
 ):
     """
     Overlay a heatmap on an image with given color map.
@@ -14,6 +14,7 @@ def overlay_heatmap(
         use the heatmap as alpha channel.
         color_map: OpenCV type colormap to use for heatmap.
         mask_threshold: heatmap values below this threshold will not be displayed.
+        rgb: if True, the heatmap will be converted to RGB before overlaying.
 
     Returns:
         Image with heatmap overlayed.
@@ -23,6 +24,8 @@ def overlay_heatmap(
     heatmap = np.clip(heatmap, 0, 1)
     heatmap_gray = (heatmap * 255).astype(np.uint8)
     heatmap_color = cv2.applyColorMap(heatmap_gray, color_map).astype(img.dtype)
+    if rgb:
+        heatmap_color = cv2.cvtColor(heatmap_color, cv2.COLOR_BGR2RGB)
     mask_alpha = np.ones_like(heatmap)
     mask_alpha[heatmap < mask_threshold] = 0
     mask_alpha = np.repeat(np.expand_dims(mask_alpha, 2), 3, 2)

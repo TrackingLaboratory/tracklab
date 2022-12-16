@@ -62,11 +62,13 @@ def track(cfg):
         detections = pd.concat(detections_list)
         tracker_state.update(detections)
 
+        # Visualization
+        vis_engine.run(tracker_state, video_id)
+
+        tracker_state.free(video_id)
+
     # Evaluation
     # evaluator.run(tracker_state)
-
-    # Visualization
-    vis_engine.run(tracker_state)
 
 
 if __name__ == "__main__":

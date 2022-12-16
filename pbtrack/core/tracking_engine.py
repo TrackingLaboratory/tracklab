@@ -92,13 +92,6 @@ class OnlineTrackingEngine(pl.LightningModule):
                     self.tracker.process(track_batch, batch_detections, batch_metadatas)
                 )
 
-        # track_detections = []
-        # track_pipe = EngineDatapipe(self.reider, self.metadatas, detections)
-        # track_dl = DataLoader(dataset=track_pipe, batch_size=None)
-        # for detection in reid_detections:
-        #     track_input = self.tracker.preprocess(detection)
-        #     track_output = self.tracker(track_input)
-        #     track_detections.append(self.tracker.postprocess(track_output))
         if len(track_detections) > 0:
             return pd.concat(track_detections)
         else:

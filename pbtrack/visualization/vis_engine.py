@@ -1,42 +1,44 @@
-import os
+from pathlib import Path
+
 import cv2
 import numpy as np
 
-from pbtrack.utils.images import cv2_load_image
+from pbtrack.utils.images import cv2_load_image, overlay_heatmap
 
 
 class VisEngine:
     def __init__(self, vis_cfg, save_dir):
         self.cfg = vis_cfg
-        self.save_dir = save_dir
+        self.save_dir = Path(save_dir) / "vis"
 
         self.save_img = self.cfg["images"]["save"]
         self.save_vid = self.cfg["video"]["save"]
 
-        if self.save_img:
-            self.save_image_dir = os.path.join(self.save_dir, "images")
-            os.makedirs(self.save_image_dir, exist_ok=True)
+        self.video_counter = 0
 
+    def run(self, tracker_state, video_id):
+        video_save_dir = self.save_dir / tracker_state.gt.split / str(video_id)
+        if self.video_counter > self.cfg.max_videos != -1:
+            return
+        image_metadatas = tracker_state.gt.image_metadatas[
+            tracker_state.gt.image_metadatas.video_id == video_id
+        ]  # FIXME sort?
+        for i, image_id in enumerate(image_metadatas.id):
+            if i > self.cfg.max_frames != -1:
+                break
+            image_metadata = image_metadatas.loc[image_id]
+            detections = tracker_state.predictions[
+                tracker_state.predictions.image_id == image_metadata.id
+            ]
+            self._process_video_frame(
+                image_metadata, detections, video_save_dir, video_id
+            )
         if self.save_vid:
-            self.save_video_name = os.path.join(self.save_dir, "results.mp4")
+            self.video.release()
 
-    def run(self, tracker_state):
-        for video in tracker_state.gt.video_metadatas.itertuples():
-
-            image_metadatas = tracker_state.gt.image_metadatas[
-                tracker_state.gt.image_metadatas.video_id == video.id
-            ]  # FIXME sort?
-            # for image_metadata in image_metadatas.itertuples():  # FIXME image_metadata is of type Panda, not ImageMetadata
-            for image_id in image_metadatas.id:
-                image_metadata = image_metadatas.loc[image_id]
-                detections = tracker_state.predictions[
-                    tracker_state.predictions.image_id == image_metadata.id
-                ]
-                self._process_video_frame(image_metadata, detections)
-            if self.save_vid:
-                self.video.release()
-
-    def _process_video_frame(self, image_metadata, detections):
+    def _process_video_frame(
+        self, image_metadata, detections, video_save_dir, video_id
+    ):
         # loop on GT
         image = cv2_load_image(image_metadata.file_path)
         # image = self._process_img(image)
@@ -47,18 +49,19 @@ class VisEngine:
             image = self._plot_bbox(detections, image)
         if self.cfg["detection"]["pose"]["show"]:
             image = self._plot_pose(detections, image)
+        if self.cfg["detection"]["heatmaps"]["show"]:
+            image = self._show_heatmaps(detections, image)
         if self.cfg["tracking"]["show"]:
             image = self._plot_track(detections, image)
 
         image = self._final_patch(image)
         if self.save_img:
-            filepath = os.path.join(
-                self.save_image_dir, os.path.basename(image_metadata.file_path)
-            )
-            assert cv2.imwrite(filepath, image)
+            filepath = video_save_dir / "images" / Path(image_metadata.file_path).name
+            filepath.parent.mkdir(parents=True, exist_ok=True)
+            assert cv2.imwrite(str(filepath), image)
         # save video
         if self.save_vid:
-            self._update_video(image)
+            self._update_video(image, video_save_dir, video_id)
 
     def _plot_bbox(self, detections, patch):
         bboxes = detections.bbox_ltrb
@@ -109,6 +112,15 @@ class VisEngine:
                     )
         return patch
 
+    def _show_heatmaps(self, detections, patch):
+        for i, detection in detections.iterrows():
+            l, t, r, b = detection.bbox_ltrb.astype(np.int)
+            body_masks = detection.body_masks
+            img_crop = patch[t:b, l:r]
+            img_crop_with_mask = overlay_heatmap(img_crop, body_masks[0])
+            patch[t:b, l:r] = img_crop_with_mask
+        return patch
+
     def _plot_track(self, detections, patch):
         bboxes = detections.bbox_ltrb
         ids = detections[["track_id"]].values
@@ -138,10 +150,12 @@ class VisEngine:
             )
         return patch
 
-    def _update_video(self, patch):
+    def _update_video(self, patch, video_save_dir, video_id):
         if not hasattr(self, "video"):
+            filepath = video_save_dir / "video" / f"{video_id}.mp4"
+            filepath.parent.mkdir(parents=True, exist_ok=True)
             self.video = cv2.VideoWriter(
-                self.save_video_name,
+                str(filepath),
                 cv2.VideoWriter_fourcc(*"mp4v"),
                 int(self.cfg["video"]["fps"]),
                 (int(self.cfg["video"]["height"]), int(self.cfg["video"]["width"])),

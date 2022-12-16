@@ -8,6 +8,11 @@ class TrackerState:
         self.gt = tracking_set
         self.predictions = None
 
+    def free(self, video_id):
+        """Remove all heavy data associated with a video"""
+        # TODO remove embeddings, masks, etc
+        pass
+
     def update(self, detections):
         if self.predictions is None:
             self.predictions = detections
