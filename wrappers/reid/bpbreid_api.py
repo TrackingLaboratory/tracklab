@@ -87,18 +87,27 @@ class BPBReId(ReIdentifier):
         kp_xyc_mask = rescale_keypoints(
             kp_xyc_bbox, (bbox_ltwh[2], bbox_ltwh[3]), (mask_w, mask_h)
         )
-        pixels_parts_probabilities = build_gaussian_heatmaps(
-            kp_xyc_mask, mask_w, mask_h
-        )
+        crop = Unbatchable([crop])
+        batch = {
+            "img": crop,
+        }
+        if not self.cfg.model.bpbreid.learnable_attention_enabled:
+            pixels_parts_probabilities = build_gaussian_heatmaps(
+                kp_xyc_mask, mask_w, mask_h
+            )
+            batch["masks"] = pixels_parts_probabilities
 
         # pixels_parts_probabilities = pixels_parts_probabilities[np.newaxis, ...]
-        crop = Unbatchable([crop])
-        return crop, pixels_parts_probabilities
+        return batch
 
     def process(self, batch, detections, metadatas):
-        im_crops, external_parts_masks = batch
+        im_crops = batch["img"]
         im_crops = [im_crop.numpy() for im_crop in im_crops]
-        external_parts_masks = external_parts_masks.numpy()
+        if "masks" in batch:
+            external_parts_masks = batch["masks"]
+            external_parts_masks = external_parts_masks.numpy()
+        else:
+            external_parts_masks = None
         if self.feature_extractor is None:
             self.feature_extractor = FeatureExtractor(
                 self.cfg,
@@ -109,27 +118,26 @@ class BPBReId(ReIdentifier):
                 verbose=False,  # FIXME @Vladimir
             )
 
-        if im_crops:
-            reid_result = self.feature_extractor(
-                im_crops, external_parts_masks=external_parts_masks
-            )
-            embeddings, visibility_scores, body_masks, _ = extract_test_embeddings(
-                reid_result, self.test_embeddings
-            )
-            embeddings = embeddings.cpu().detach().numpy()
-            visibility_scores = visibility_scores.cpu().detach().numpy()
-            body_masks = body_masks.cpu().detach().numpy()
-            reid_df = pd.DataFrame(
-                {
-                    "embeddings": list(embeddings),
-                    "visibility_scores": list(visibility_scores),
-                    "body_masks": list(body_masks),
-                },
-                index=detections.index,
-            )
-            detections = detections.merge(
-                reid_df, left_index=True, right_index=True, validate="one_to_one"
-            )
+        reid_result = self.feature_extractor(
+            im_crops, external_parts_masks=external_parts_masks
+        )
+        embeddings, visibility_scores, body_masks, _ = extract_test_embeddings(
+            reid_result, self.test_embeddings
+        )
+        embeddings = embeddings.cpu().detach().numpy()
+        visibility_scores = visibility_scores.cpu().detach().numpy()
+        body_masks = body_masks.cpu().detach().numpy()
+        reid_df = pd.DataFrame(
+            {
+                "embeddings": list(embeddings),
+                "visibility_scores": list(visibility_scores),
+                "body_masks": list(body_masks),
+            },
+            index=detections.index,
+        )
+        detections = detections.merge(
+            reid_df, left_index=True, right_index=True, validate="one_to_one"
+        )
         return detections
 
     def train(self):
