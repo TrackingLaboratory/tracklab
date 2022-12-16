@@ -15,7 +15,7 @@ class StrongSORTTracker(OnlineTracker):
         self.reset()
 
     def reset(self):
-        """ Reset the tracker state to start tracking in a new video."""
+        """Reset the tracker state to start tracking in a new video."""
         self.model = StrongSORT(
             max_dist=self.cfg.STRONGSORT.MAX_DIST,
             max_iou_distance=self.cfg.STRONGSORT.MAX_IOU_DISTANCE,
@@ -58,6 +58,7 @@ class StrongSORTTracker(OnlineTracker):
                     "track_bbox_tlwh": list(results[:, 0:4]),
                     "track_bbox_conf": results[:, 6],
                     "track_id": results[:, 4].astype(int),
+                    "person_id": results[:, 4].astype(int),
                 },
                 index=results[:, -1].astype(int),
             )

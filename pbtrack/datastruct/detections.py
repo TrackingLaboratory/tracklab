@@ -47,10 +47,10 @@ class Detection(pd.Series):
         cls,
         image_id,
         id,
-        bbox_ltwh=None,
-        keypoints_xyc=None,
-        person_id=None,
-        category_id=None,
+        bbox_ltwh=pd.NA,
+        keypoints_xyc=pd.NA,
+        person_id=pd.NA,
+        category_id=pd.NA,
         **kwargs
     ):
         return cls(

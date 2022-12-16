@@ -30,7 +30,7 @@ def track(cfg):
         model_pose=model_pose,
     )
     model_track = instantiate(cfg.track, device=device)
-    # evaluator = instantiate(cfg.eval)
+    evaluator = instantiate(cfg.eval)
     vis_engine = instantiate(cfg.visualization)
     trainer = pl.Trainer()
 
@@ -50,7 +50,7 @@ def track(cfg):
             dataset=EngineDatapipe(
                 model_pose, imgs_meta[imgs_meta.video_id == video_id]
             ),
-            batch_size=2,
+            batch_size=2,  # TODO link this to openpifpaf eval config
         )
         model_track.reset()
         tracking_engine = OnlineTrackingEngine(
@@ -63,7 +63,7 @@ def track(cfg):
         tracker_state.update(detections)
 
     # Evaluation
-    # evaluator.run(tracker_state)
+    evaluator.run(tracker_state)
 
     # Visualization
     vis_engine.run(tracker_state)
