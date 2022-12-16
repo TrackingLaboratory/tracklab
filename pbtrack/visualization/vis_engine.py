@@ -117,7 +117,7 @@ class VisEngine:
             l, t, r, b = detection.bbox_ltrb.astype(np.int)
             body_masks = detection.body_masks
             img_crop = patch[t:b, l:r]
-            img_crop_with_mask = overlay_heatmap(img_crop, body_masks[0])
+            img_crop_with_mask = overlay_heatmap(img_crop, body_masks[0], rgb=True)
             patch[t:b, l:r] = img_crop_with_mask
         return patch
 
