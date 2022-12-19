@@ -69,5 +69,5 @@ class StrongSORTTracker(OnlineTracker):
         else:  # FIXME
             detections["track_bbox_tlwh"] = np.nan
             detections["track_bbox_conf"] = np.nan
-            detections["track_id"] = -1
+            detections["track_id"] = pd.NA
         return detections
