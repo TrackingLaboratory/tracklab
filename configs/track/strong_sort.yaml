@@ -1,4 +1,4 @@
-_target_: wrappers.track.strongsort_tracker.StrongSORTTracker
+_target_: pbtrack.wrappers.track.strongsort_tracker.StrongSORTTracker
 cfg:
   STRONGSORT:
     ECC: True # activate camera motion compensation

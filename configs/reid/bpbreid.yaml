@@ -1,7 +1,7 @@
 defaults:
   - dataset: default
 
-_target_: wrappers.reid.bpbreid_api.BPBReId
+_target_: pbtrack.wrappers.reid.bpbreid_api.BPBReId
 job_id: "${oc.env:SLURM_JOBID,0}" # TODO
 save_path: reid
 cfg:
@@ -54,9 +54,9 @@ cfg:
       shared_parts_id_classifier: False
       hrnet_pretrained_path: "" # FIXME refactor model loading (use urls)
       masks:
-        type: 'disk'
-        dir: 'gaussian'
-        preprocess: 'cc6'
+        type: "disk"
+        dir: "gaussian"
+        preprocess: "cc6"
 
   test:
     evaluate: True # test only

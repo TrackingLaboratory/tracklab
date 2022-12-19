@@ -1,9 +1,9 @@
-_target_: wrappers.detect.openpifpaf_api.OpenPifPaf
+_target_: pbtrack.wrappers.detect.openpifpaf_api.OpenPifPaf
 cfg:
   checkpoint: shufflenetv2k16
   batch_size: 2 # TODO get from engine config
   train:
-    dataset: posetrack2021-cocokpst 
+    dataset: posetrack2021-cocokpst
     loader-workers: 8
     batch-size: 32
     lr: 0.0003
@@ -14,7 +14,7 @@ cfg:
     weight-decay: 0.00001
     stride-apply: 2
     posetrack-upsample: 2
-    cocokp-upsample: 2 
+    cocokp-upsample: 2
     cocokp-orientation-invariant: 0.1
     cocokp-blur: 0.1
     posetrack2021-train-annotations: "YOURPATH/*.json"

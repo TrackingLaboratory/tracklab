@@ -1,4 +1,4 @@
-_target_: wrappers.eval.posetrack21_evaluator.PoseTrack21
+_target_: pbtrack.wrappers.eval.posetrack21_evaluator.PoseTrack21
 
 cfg:
   eval_pose_estimation: True
@@ -10,7 +10,7 @@ cfg:
     BREAK_ON_ERROR: False # Raises exception and exits with error
     RETURN_ON_ERROR: False # if not BREAK_ON_ERROR, then returns from function on error
     LOG_ON_ERROR: null # if not None, save any errors into specified log file
-    PRINT_COMBINED_SUMMARY_ONLY: False # Combines metrics across all classes 
+    PRINT_COMBINED_SUMMARY_ONLY: False # Combines metrics across all classes
     TIME_PROGRESS: False # Profiling option for the evaluation
     DISPLAY_LESS_PROGRESS: False # show less progress information
     OUTPUT_PAPER_SUMMARY: True # Output latex paper summary
@@ -30,7 +30,7 @@ cfg:
     RETURN_ON_ERROR: False # if not BREAK_ON_ERROR, then returns from function on error
     LOG_ON_ERROR: null # if not None, save any errors into specified log file
     PRINT_RESULTS: True # show the results in the terminal
-    PRINT_COMBINED_SUMMARY_ONLY: False # Combines metrics across all classes 
+    PRINT_COMBINED_SUMMARY_ONLY: False # Combines metrics across all classes
     PRINT_PAPER_SUMMARY: False # Output latex paper summary
     TIME_PROGRESS: True # Profiling option for the evaluation
     DISPLAY_LESS_PROGRESS: True # show less progress information
@@ -38,7 +38,7 @@ cfg:
     OUTPUT_EMPTY_CLASSES: True # If False, summary files are not output for classes with no detections
     OUTPUT_DETAILED: True # Show more details. Not implemented for mAP
 
-  posetrack_dataset: 
+  posetrack_dataset:
     PRINT_CONFIG: False # print the config of the dataset
     ASSURE_SINGLE_TRACKER: False
     TRACKERS_FOLDER: "eval/posetrack"
