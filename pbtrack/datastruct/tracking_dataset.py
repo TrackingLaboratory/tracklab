@@ -36,7 +36,7 @@ class TrackingDataset(ABC):
         self.val_set = val_set
         self.test_set = test_set
 
-        if nvid > 0 or nframes > 0:
+        if nvid > 0 or nframes > 0:  # TODO nvid can be -1 and nframes can be > 0
             self.train_set = self._subsample(self.train_set, nvid, nframes)
             self.val_set = self._subsample(self.val_set, nvid, nframes)
 
