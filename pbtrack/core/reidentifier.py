@@ -1,8 +1,8 @@
 from typing import List
 
 from abc import abstractmethod, ABC
-from pbtrack.datastruct.detections import Detection, Detections
-from pbtrack.datastruct.image_metadatas import ImageMetadata
+from pbtrack.core.datastruct import Detection, Detections
+from pbtrack.core.datastruct.image_metadatas import ImageMetadata
 
 
 class ReIdentifier(ABC):

@@ -7,7 +7,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-from pbtrack.datastruct.detections import Detection
+from pbtrack.core.datastruct import Detection
 from pbtrack.core.detector import Detector
 from pbtrack.utils.coordinates import kp_to_bbox
 
@@ -15,7 +15,6 @@ from hydra.utils import to_absolute_path
 
 sys.path.append(to_absolute_path("plugins/detect/DEKR/lib"))
 
-import models
 from core.inference import get_multi_stage_outputs
 from core.inference import aggregate_results
 from core.nms import pose_nms

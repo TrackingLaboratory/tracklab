@@ -1,5 +1,5 @@
 from abc import abstractmethod, ABC
-from pbtrack.datastruct import Detections, Detection, ImageMetadata, ImageMetadatas
+from pbtrack.core.datastruct import Detections, Detection, ImageMetadata, ImageMetadatas
 
 
 class Tracker(ABC):

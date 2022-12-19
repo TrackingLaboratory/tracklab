@@ -1,8 +1,8 @@
 from typing import List
 
 from abc import abstractmethod, ABC
-from pbtrack.datastruct.detections import Detection
-from pbtrack.datastruct.image_metadatas import ImageMetadata, ImageMetadatas
+from pbtrack.core.datastruct import Detection
+from pbtrack.core.datastruct.image_metadatas import ImageMetadata, ImageMetadatas
 
 
 class Detector(ABC):

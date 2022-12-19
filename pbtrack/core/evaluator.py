@@ -1,5 +1,5 @@
 from abc import abstractmethod, ABC
-from pbtrack.datastruct.tracker_state import TrackerState
+from pbtrack.core.datastruct.tracker_state import TrackerState
 
 
 class Evaluator(ABC):

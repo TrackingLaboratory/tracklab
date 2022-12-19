@@ -2,8 +2,8 @@ import pytorch_lightning as pl
 import pandas as pd
 from torch.utils.data import DataLoader
 from pbtrack.core import Detector, ReIdentifier, Tracker, EngineDatapipe
-from pbtrack.datastruct.detections import Detections
-from pbtrack.datastruct.image_metadatas import ImageMetadatas
+from pbtrack.core.datastruct import Detections
+from pbtrack.core.datastruct.image_metadatas import ImageMetadatas
 from pbtrack.utils.collate import default_collate
 
 

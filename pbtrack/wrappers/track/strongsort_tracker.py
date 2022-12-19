@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 from pbtrack.core.tracker import OnlineTracker
-from pbtrack.datastruct import Detections, ImageMetadatas, Detection, ImageMetadata
+from pbtrack.core.datastruct import Detections, ImageMetadatas, Detection, ImageMetadata
 from pbtrack.utils.images import cv2_load_image
 from plugins.track.strong_sort import StrongSORT
 

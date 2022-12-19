@@ -1,7 +1,7 @@
 import sys
 
 from pbtrack.core.detector import Detector
-from pbtrack.datastruct.detections import Detection
+from pbtrack.core.datastruct import Detection
 from pbtrack.utils.coordinates import kp_to_bbox_w_threshold
 from hydra.utils import to_absolute_path
 

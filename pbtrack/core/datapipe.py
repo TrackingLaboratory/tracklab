@@ -1,4 +1,4 @@
-from pbtrack.datastruct import ImageMetadatas, Detections
+from pbtrack.core.datastruct import ImageMetadatas, Detections
 from typing import Optional
 from torch.utils.data import Dataset
 

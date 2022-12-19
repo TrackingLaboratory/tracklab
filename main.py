@@ -4,7 +4,7 @@ import logging
 import pandas as pd
 import torch
 from hydra.utils import instantiate
-from pbtrack.datastruct.tracker_state import TrackerState
+from pbtrack.core.datastruct.tracker_state import TrackerState
 from pbtrack.core import EngineDatapipe
 from pbtrack.core.tracking_engine import OnlineTrackingEngine
 import pytorch_lightning as pl
@@ -43,6 +43,7 @@ def track(cfg):
         model_pose.train()
 
     tracker_state = TrackerState(tracking_dataset.val_set)
+
     # Run tracking
     imgs_meta = tracker_state.gt.image_metadatas
     for video_id in tracker_state.gt.video_metadatas.id:
@@ -50,7 +51,7 @@ def track(cfg):
             dataset=EngineDatapipe(
                 model_pose, imgs_meta[imgs_meta.video_id == video_id]
             ),
-            batch_size=2,  # TODO link this to openpifpaf eval config
+            batch_size=30,  # TODO link this to openpifpaf eval config
         )
         model_track.reset()
         tracking_engine = OnlineTrackingEngine(
