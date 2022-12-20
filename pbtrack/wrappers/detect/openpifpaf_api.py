@@ -4,12 +4,31 @@ from pbtrack.core.detector import Detector
 from pbtrack.core.datastruct import Detection
 from pbtrack.utils.coordinates import kp_to_bbox_w_threshold
 from hydra.utils import to_absolute_path
+from pbtrack.utils.images import cv2_load_image
+from PIL import Image
+import torch
+
 
 sys.path.append(to_absolute_path("plugins/detect/openpifpaf/src"))
 import openpifpaf
 
 
+def collate_images_anns_meta(batch):
+    idxs = [b[0] for b in batch]
+    batch = [b[1] for b in batch]
+    anns = [b[-2] for b in batch]
+    metas = [b[-1] for b in batch]
+
+    processed_images = torch.utils.data.dataloader.default_collate(
+        [b[0] for b in batch]
+    )
+    idxs = torch.utils.data.dataloader.default_collate(idxs)
+    return idxs, (processed_images, anns, metas)
+
+
 class OpenPifPaf(Detector):
+    collate_fn = collate_images_anns_meta
+
     def __init__(self, cfg, device):
         assert (
             cfg.checkpoint or cfg.train
@@ -19,20 +38,27 @@ class OpenPifPaf(Detector):
         self.id = 0
 
         if cfg.checkpoint:
-            self.predictor = openpifpaf.Predictor(cfg.checkpoint)
-            self.predictor.model.to(device)
-            self.predictor.batch_size = cfg.batch_size
+            predictor = openpifpaf.Predictor(cfg.checkpoint)
+            self.model = predictor.model.to(device)
+            self.pifpaf_preprocess = predictor.preprocess
+            self.processor = predictor.processor
 
-    def preprocess(self, metadata):
-        return str(metadata.file_path)
+    def preprocess(self, img_meta):
+        image = Image.fromarray(cv2_load_image(img_meta.file_path))
+        processed_image, anns, meta = self.pifpaf_preprocess(image, [], {})
+        return processed_image, anns, meta
 
     def process(self, preprocessed_batch, metadatas):
+        processed_image_batch, _, metas = preprocessed_batch
+        pred_batch = self.processor.batch(
+            self.model, processed_image_batch, device=self.device
+        )
         detections = []
-        processed = self.predictor.images(preprocessed_batch)
-        for ((predictions, _, _), (_, metadata)) in zip(
-            processed, metadatas.iterrows()
+        for predictions, meta, (_, metadata) in zip(
+            pred_batch, metas, metadatas.iterrows()
         ):
             for prediction in predictions:
+                prediction = prediction.inverse_transform(meta)
                 detections.append(
                     Detection.create(
                         image_id=metadata.id,
