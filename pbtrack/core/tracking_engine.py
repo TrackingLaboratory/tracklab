@@ -1,9 +1,10 @@
-import pytorch_lightning as pl
 import pandas as pd
+import pytorch_lightning as pl
+
 from torch.utils.data import DataLoader
+
 from pbtrack.core import Detector, ReIdentifier, Tracker, EngineDatapipe
 from pbtrack.core.datastruct import Detections
-from pbtrack.core.datastruct.image_metadatas import ImageMetadatas
 from pbtrack.core.datastruct.tracker_state import TrackerState
 from pbtrack.utils.collate import default_collate
 
@@ -66,6 +67,7 @@ class OnlineTrackingEngine(pl.LightningModule):
                 self.detector, imgs_meta[imgs_meta.video_id == video_id]
             ),
             batch_size=self.detect_batchsize,
+            collate_fn=type(self.detector).collate_fn,
         )
         self.tracker.reset()
 
