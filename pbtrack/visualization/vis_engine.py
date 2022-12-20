@@ -2,6 +2,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+from pbtrack.utils.coordinates import clip_bbox_ltrb_to_img_dim
 
 from pbtrack.utils.images import cv2_load_image, overlay_heatmap
 
@@ -64,9 +65,12 @@ class VisEngine:
             self._update_video(image, video_save_dir, video_id)
 
     def _plot_bbox(self, detections, patch):
-        bboxes = detections.bbox_ltrb
-        for bbox in bboxes:
-            p1, p2 = (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]))
+        for i, detection in detections.iterrows():
+            bbox = detection.bbox_ltrb
+            bbox = clip_bbox_ltrb_to_img_dim(
+                bbox, patch.shape[1], patch.shape[0]
+            ).astype(int)
+            p1, p2 = (bbox[0], bbox[1]), (bbox[2], bbox[3])
             cv2.rectangle(
                 patch,
                 p1,
@@ -75,10 +79,10 @@ class VisEngine:
                 thickness=self.cfg["detection"]["bbox"]["thickness"],
             )
             if self.cfg["detection"]["bbox"]["print_conf"]:
-                p = (int(bbox[0]) + 1, int(bbox[1]) - 2)
+                p = (bbox[0] + 1, bbox[1] - 2)
                 cv2.putText(
                     patch,
-                    f" {bbox[4]:.2}",
+                    f" {np.mean(detection.keypoints_xyc[:,2]):.2}",
                     p,
                     fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL,
                     fontScale=0.75,
@@ -100,7 +104,7 @@ class VisEngine:
                     thickness=self.cfg["detection"]["pose"]["thickness"],
                 )
                 if self.cfg["detection"]["pose"]["print_conf"]:
-                    p = (int(kp[0]) + 1, int(kp[1]) - 2)
+                    p = (int(kp[0] + 1), int(kp[1] - 2))
                     cv2.putText(
                         patch,
                         f"{kp[2]:.2}",
@@ -114,18 +118,23 @@ class VisEngine:
 
     def _show_heatmaps(self, detections, patch):
         for i, detection in detections.iterrows():
-            l, t, r, b = detection.bbox_ltrb.astype(np.int)
-            body_masks = detection.body_masks
+            ltrb = detection.bbox_ltrb
+            l, t, r, b = clip_bbox_ltrb_to_img_dim(
+                ltrb, patch.shape[1], patch.shape[0]
+            ).astype(int)
             img_crop = patch[t:b, l:r]
+            body_masks = detection.body_masks
             img_crop_with_mask = overlay_heatmap(img_crop, body_masks[0], rgb=True)
             patch[t:b, l:r] = img_crop_with_mask
         return patch
 
     def _plot_track(self, detections, patch):
-        bboxes = detections.bbox_ltrb
-        ids = detections[["track_id"]].values
-        for bbox, id in zip(bboxes, ids):
-            p1, p2 = (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]))
+        for i, detection in detections.iterrows():
+            bbox = detection.bbox_ltrb
+            bbox = clip_bbox_ltrb_to_img_dim(
+                bbox, patch.shape[1], patch.shape[0]
+            ).astype(int)
+            p1, p2 = (bbox[0], bbox[1]), (bbox[2], bbox[3])
             cv2.rectangle(
                 patch,
                 p1,
@@ -135,19 +144,20 @@ class VisEngine:
             )
             txt = ""
             if self.cfg["tracking"]["print_id"]:
-                txt += f" ID: {id}"
+                txt += f" ID: {detection.track_id}"
             if self.cfg["tracking"]["print_conf"]:
-                txt += f" - conf: {bbox[4]:.2}"
-            p = (int(bbox[0]) + 1, int(bbox[1]) - 2)
-            cv2.putText(
-                patch,
-                txt,
-                p,
-                fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                fontScale=0.75,
-                color=self.cfg["tracking"]["color"],
-                thickness=1,
-            )
+                txt += f" - conf: {np.mean(detection.keypoints_xyc[:,2]):.2}"
+            if txt != "":
+                p = (bbox[0] + 1, bbox[1] - 2)
+                cv2.putText(
+                    patch,
+                    txt,
+                    p,
+                    fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL,
+                    fontScale=0.75,
+                    color=self.cfg["tracking"]["color"],
+                    thickness=1,
+                )
         return patch
 
     def _update_video(self, patch, video_save_dir, video_id):

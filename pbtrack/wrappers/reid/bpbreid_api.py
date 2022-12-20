@@ -10,7 +10,11 @@ from pbtrack.utils.images import cv2_load_image
 from .bpbreid_dataset import ReidDataset
 from pbtrack.core.datastruct import ImageMetadata, Detection
 from pbtrack.core.reidentifier import ReIdentifier
-from pbtrack.utils.coordinates import kp_img_to_kp_bbox, rescale_keypoints
+from pbtrack.utils.coordinates import (
+    clip_bbox_ltrb_to_img_dim,
+    kp_img_to_kp_bbox,
+    rescale_keypoints,
+)
 from plugins.reid.bpbreid.scripts.main import build_config, build_torchreid_model_engine
 from plugins.reid.bpbreid.tools.feature_extractor import FeatureExtractor
 from plugins.reid.bpbreid.torchreid.utils.imagetools import build_gaussian_heatmaps
@@ -79,7 +83,10 @@ class BPBReId(ReIdentifier):
         mask_w, mask_h = 32, 64
         # image = metadata.load_image()  # FIXME load_image() doesn't work because of ImageMetadata.__getattr__(
         image = cv2_load_image(metadata.file_path)
-        l, t, r, b = detection.bbox_ltrb.astype(int)
+        ltrb = detection.bbox_ltrb
+        l, t, r, b = clip_bbox_ltrb_to_img_dim(
+            ltrb, image.shape[1], image.shape[0]
+        ).astype(int)
         crop = image[t:b, l:r]
         keypoints = detection.keypoints_xyc
         bbox_ltwh = np.array([l, t, r - l, b - t])
@@ -96,7 +103,6 @@ class BPBReId(ReIdentifier):
                 kp_xyc_mask, mask_w, mask_h
             )
             batch["masks"] = pixels_parts_probabilities
-
         # pixels_parts_probabilities = pixels_parts_probabilities[np.newaxis, ...]
         return batch
 
@@ -117,7 +123,6 @@ class BPBReId(ReIdentifier):
                 model=self.model,
                 verbose=False,  # FIXME @Vladimir
             )
-
         reid_result = self.feature_extractor(
             im_crops, external_parts_masks=external_parts_masks
         )

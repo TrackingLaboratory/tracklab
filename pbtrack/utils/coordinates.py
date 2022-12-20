@@ -72,7 +72,7 @@ def rescale_keypoints(rf_keypoints, size, new_size):
     return rf_keypoints
 
 
-def clip_to_img_dim(bbox_ltwh, img_w, img_h):
+def clip_bbox_ltwh_to_img_dim(bbox_ltwh, img_w, img_h):
     """
     Clip bounding box to image dimensions.
     Args:
@@ -88,12 +88,12 @@ def clip_to_img_dim(bbox_ltwh, img_w, img_h):
     w = np.clip(w, 0, img_w - l)
     h = np.clip(h, 0, img_h - t)
     assert np.equal(
-        np.array([l, t, w, h]), clip_to_img_dim_old(bbox_ltwh, img_w, img_h)
+        np.array([l, t, w, h]), clip_bbox_ltwh_to_img_dim_old(bbox_ltwh, img_w, img_h)
     ).all()
     return np.array([l, t, w, h])
 
 
-def clip_to_img_dim_old(bbox_ltwh, img_w, img_h):
+def clip_bbox_ltwh_to_img_dim_old(bbox_ltwh, img_w, img_h):
     """
     Clip bounding box to image dimensions.
     Args:
@@ -110,3 +110,20 @@ def clip_to_img_dim_old(bbox_ltwh, img_w, img_h):
     w = min(l + w, img_w) - l
     h = min(t + h, img_h) - t
     return np.array([l, t, w, h])
+
+def clip_bbox_ltrb_to_img_dim(bbox_ltrb, img_w, img_h):
+    """
+    Clip bounding box to image dimensions.
+    Args:
+        bbox_ltrb (np.ndarray): bounding box, shape (4,)
+        img_w (int): image width
+        img_h (int): image height
+    Returns:
+        bbox_ltrb (np.ndarray): clipped bounding box, shape (4,)
+    """
+    l, t, r, b = bbox_ltrb
+    l = np.clip(l, 0, img_w)
+    t = np.clip(t, 0, img_h)
+    r = np.clip(r, 0, img_w)
+    b = np.clip(b, 0, img_h)
+    return np.array([l, t, r, b])
