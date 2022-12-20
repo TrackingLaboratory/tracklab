@@ -4,4 +4,5 @@ reider: "???"
 tracker: "???"
 tracker_state: "???"
 reid_batchsize: 8
-detect_batchsize: 8
+detect_batchsize: 2
+num_workers: 8
