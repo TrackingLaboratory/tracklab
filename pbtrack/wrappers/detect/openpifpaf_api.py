@@ -1,13 +1,13 @@
 import sys
+import torch
+from PIL import Image
 
 from pbtrack.core.detector import Detector
 from pbtrack.core.datastruct import Detection
-from pbtrack.utils.coordinates import kp_to_bbox_w_threshold
-from hydra.utils import to_absolute_path
 from pbtrack.utils.images import cv2_load_image
-from PIL import Image
-import torch
+from pbtrack.utils.coordinates import kp_to_bbox_w_threshold
 
+from hydra.utils import to_absolute_path
 
 sys.path.append(to_absolute_path("plugins/detect/openpifpaf/src"))
 import openpifpaf

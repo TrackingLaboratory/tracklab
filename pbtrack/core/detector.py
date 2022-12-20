@@ -1,6 +1,8 @@
 from typing import List
-from torch.utils.data.dataloader import default_collate
 from abc import abstractmethod, ABC
+
+from torch.utils.data.dataloader import default_collate
+
 from pbtrack.core.datastruct import Detection
 from pbtrack.core.datastruct.image_metadatas import ImageMetadata, ImageMetadatas
 
@@ -21,7 +23,7 @@ class Detector(ABC):
             cfg (NameSpace): configuration file from Hydra for the detector
             device (str): device to use for the detector
         Attributes:
-            id (int): id of the detection
+            id (int): id of the current detection
         """
         self.cfg = cfg
         self.device = device
@@ -31,7 +33,7 @@ class Detector(ABC):
     def preprocess(self, metadata: ImageMetadata) -> object:
         """Your preprocessing function to adapt the input to your detector
         Args:
-            image (ImageMetadata): the image metadata to process
+            metadata (ImageMetadata): the image metadata to process
         Returns:
             preprocessed (object): preprocessed input for process()
         """
