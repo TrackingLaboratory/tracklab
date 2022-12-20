@@ -1,0 +1,7 @@
+_target_: pbtrack.OnlineTrackingEngine
+detector: "???"
+reider: "???"
+tracker: "???"
+tracker_state: "???"
+reid_batchsize: 8
+detect_batchsize: 8

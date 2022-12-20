@@ -1,7 +1,7 @@
 _target_: pbtrack.wrappers.detect.openpifpaf_api.OpenPifPaf
 cfg:
   checkpoint: shufflenetv2k16
-  batch_size: 2 # TODO get from engine config
+  batch_size: ${engine.detect_batchsize}
   train:
     dataset: posetrack2021-cocokpst
     loader-workers: 8

@@ -6,6 +6,7 @@ defaults:
   - visualization: vis
   - dataset: posetrack21
   - eval: posetrack21
+  - engine: online
 data_dir: "???"
 project_dir: "${hydra:runtime.cwd}"
 job_id: "???"

@@ -32,7 +32,6 @@ def track(cfg):
     model_track = instantiate(cfg.track, device=device)
     evaluator = instantiate(cfg.eval)
     vis_engine = instantiate(cfg.visualization)
-    trainer = pl.Trainer()
 
     # Train reid
     if train_reid:
@@ -45,28 +44,15 @@ def track(cfg):
     tracker_state = TrackerState(tracking_dataset.val_set)
 
     # Run tracking
-    imgs_meta = tracker_state.gt.image_metadatas
-    for video_id in tracker_state.gt.video_metadatas.id:
-        detection_datapipe = DataLoader(
-            dataset=EngineDatapipe(
-                model_pose, imgs_meta[imgs_meta.video_id == video_id]
-            ),
-            batch_size=30,  # TODO link this to openpifpaf eval config
-        )
-        model_track.reset()
-        tracking_engine = OnlineTrackingEngine(
-            model_pose, model_reid, model_track, imgs_meta
-        )
-        detections_list = trainer.predict(
-            tracking_engine, dataloaders=detection_datapipe
-        )
-        detections = pd.concat(detections_list)
-        tracker_state.update(detections)
-
-        # Visualization
-        vis_engine.run(tracker_state, video_id)
-
-        tracker_state.free(video_id)
+    tracking_engine = instantiate(
+        cfg.engine,
+        detector=model_pose,
+        reider=model_reid,
+        tracker=model_track,
+        tracker_state=tracker_state,
+        vis_engine=vis_engine,
+    )
+    tracking_engine.run()
 
     # Evaluation
     evaluator.run(tracker_state)
