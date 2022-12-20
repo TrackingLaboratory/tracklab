@@ -32,6 +32,7 @@ class OnlineTrackingEngine(pl.LightningModule):
         vis_engine,
         detect_batchsize: int,
         reid_batchsize: int,
+        num_workers: int,
     ):
         super().__init__()
         self.trainer = pl.Trainer()
@@ -44,6 +45,29 @@ class OnlineTrackingEngine(pl.LightningModule):
         self.video_metadatas = tracker_state.gt.video_metadatas
         self.detect_batchsize = detect_batchsize
         self.reid_batchsize = reid_batchsize
+        self.detection_datapipe = EngineDatapipe(self.detector)
+        self.detection_dl = DataLoader(
+            dataset=self.detection_datapipe,
+            batch_size=self.detect_batchsize,
+            collate_fn=type(self.detector).collate_fn,
+            num_workers=num_workers,
+            persistent_workers=True,
+        )
+        self.reid_datapipe = EngineDatapipe(self.reider)
+        self.reid_dl = DataLoader(
+            dataset=self.reid_datapipe,
+            batch_size=self.reid_batchsize,
+            num_workers=num_workers,
+            collate_fn=default_collate,
+            persistent_workers=True,
+        )
+        self.track_datapipe = EngineDatapipe(self.tracker)
+        self.track_dl = DataLoader(
+            dataset=self.track_datapipe,
+            batch_size=2**16,
+            num_workers=num_workers,
+            persistent_workers=True,
+        )
 
     def run(self):
         for video_idx, video in self.video_metadatas.iterrows():
@@ -61,16 +85,10 @@ class OnlineTrackingEngine(pl.LightningModule):
 
         """
         imgs_meta = self.img_metadatas
-        detection_datapipe = DataLoader(
-            dataset=EngineDatapipe(
-                self.detector, imgs_meta[imgs_meta.video_id == video_id]
-            ),
-            batch_size=self.detect_batchsize,
-            collate_fn=type(self.detector).collate_fn,
-        )
+        self.detection_datapipe.update(imgs_meta[imgs_meta.video_id == video_id])
         self.tracker.reset()
 
-        detections_list = self.trainer.predict(self, dataloaders=detection_datapipe)
+        detections_list = self.trainer.predict(self, dataloaders=self.detection_dl)
         detections = pd.concat(detections_list)
         self.tracker_state.update(detections)
         self.vis_engine.run(self.tracker_state, video_id)
@@ -99,13 +117,8 @@ class OnlineTrackingEngine(pl.LightningModule):
 
         # 2. Reid
         reid_detections = []
-        reid_pipe = EngineDatapipe(self.reider, self.img_metadatas, detections)
-        reid_dl = DataLoader(
-            dataset=reid_pipe,
-            batch_size=self.reid_batchsize,
-            collate_fn=default_collate,
-        )
-        for idxs, reid_batch in reid_dl:
+        self.reid_datapipe.update(self.img_metadatas, detections)
+        for idxs, reid_batch in self.reid_dl:
             batch_detections = detections.loc[idxs]
             batch_metadatas = self.img_metadatas.loc[batch_detections.image_id]
             reid_detections.append(
@@ -126,10 +139,9 @@ class OnlineTrackingEngine(pl.LightningModule):
             detections = reid_detections[reid_detections.image_id == image_id]
             if len(detections) == 0:
                 continue
-            track_pipe = EngineDatapipe(self.tracker, self.img_metadatas, detections)
-            track_dl = DataLoader(dataset=track_pipe, batch_size=2**16)
-            for idxs, track_batch in track_dl:
-                batch_detections = detections.loc[idxs]
+            self.track_datapipe.update(self.img_metadatas, detections)
+            for idxs, track_batch in self.track_dl:
+                batch_detections = detections.iloc[idxs]
                 batch_metadatas = self.img_metadatas.loc[batch_detections.image_id]
                 track_detections.append(
                     self.tracker.process(track_batch, batch_detections, batch_metadatas)
