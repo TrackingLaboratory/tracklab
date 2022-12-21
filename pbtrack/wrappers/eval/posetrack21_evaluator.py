@@ -8,6 +8,10 @@ from pbtrack.core.evaluator import Evaluator
 
 from hydra.utils import to_absolute_path
 
+sys.path.append(to_absolute_path("plugins/eval/PoseTrack21/eval/mot"))
+from datasets.pt_warper import PTWrapper
+from evaluate_mot import get_mot_accum, evaluate_mot_accums
+
 sys.path.append(to_absolute_path("plugins/eval/PoseTrack21/eval/posetrack21"))
 from posetrack21.trackeval import (
     PoseEvaluator,
@@ -16,7 +20,12 @@ from posetrack21.trackeval import (
     EvaluatorReid,
 )
 from posetrack21.trackeval.datasets import PoseTrack, PoseTrackMOT
-from posetrack21.trackeval.metrics import PosemAP, HOTA, HOTAeypoints, HOTAReidKeypoints
+from posetrack21.trackeval.metrics import (
+    PosemAP,
+    HOTA,
+    HOTAeypoints,
+    HOTAReidKeypoints,
+)
 
 
 class PoseTrack21(Evaluator):
@@ -46,10 +55,33 @@ class PoseTrack21(Evaluator):
                 tracker_state.predictions, tracker_state.gt.image_metadatas
             )
             self._save_mot(mot_df, mot_tracker_path)
-            # run evaluator
+            # run evaluator - HOTA
             self.mot_evaluator.evaluate(
                 [PoseTrackMOT(self.cfg.mot_dataset)], self.mot_metrics
             )
+            # run evaluator - MOTA
+            dataset = PTWrapper(
+                self.cfg.mot_dataset.GT_FOLDER,
+                self.cfg.mot_evaluator.dataset_path,
+                vis_threshold=0.1,
+            )
+            mot_accums = []
+            for seq in dataset:
+                results = seq.load_results(mot_tracker_path)
+                mot_accums.append(
+                    get_mot_accum(
+                        results,
+                        seq,
+                        use_ignore_regions=self.cfg.mot_evaluator.use_ignore_regions,
+                        ignore_iou_thres=self.cfg.mot_evaluator.ignore_iou_thres,
+                    )
+                )
+            if mot_accums:
+                evaluate_mot_accums(
+                    mot_accums,
+                    [str(s) for s in dataset if not s.no_gt],
+                    generate_overall=True,
+                )
 
         if any(
             (
