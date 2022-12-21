@@ -1,4 +1,4 @@
-_target_: pbtrack.OnlineTrackingEngine
+_target_: pbtrack.OfflineTrackingEngine
 model_detect: "???"
 model_reid: "???"
 model_track: "???"

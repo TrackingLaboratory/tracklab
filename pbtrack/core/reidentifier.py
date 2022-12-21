@@ -1,6 +1,6 @@
 from typing import List
-
 from abc import abstractmethod, ABC
+
 from pbtrack.core.datastruct import Detection, Detections
 from pbtrack.core.datastruct.image_metadatas import ImageMetadata
 

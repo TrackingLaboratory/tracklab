@@ -1,10 +1,16 @@
-import torch
-import logging
-
 import hydra
 from hydra.utils import instantiate
 
 from pbtrack.core.datastruct.tracker_state import TrackerState
+
+import torch
+import torch.multiprocessing
+
+torch.multiprocessing.set_sharing_strategy(
+    "file_system"
+)  # FIXME : why are we using too much file descriptors ?
+
+import logging
 
 log = logging.getLogger(__name__)
 
@@ -37,9 +43,9 @@ def main(cfg):
     # Run tracking and visualization
     tracking_engine = instantiate(
         cfg.engine,
-        detector=model_detect,
-        reider=model_reid,
-        tracker=model_track,
+        model_detect=model_detect,
+        model_reid=model_reid,
+        model_track=model_track,
         tracker_state=tracker_state,
         vis_engine=vis_engine,
     )
