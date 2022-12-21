@@ -1,5 +1,5 @@
-_target_: pbtrack.OnlineTrackingEngine
-model_detec: "???"
+_target_: pbtrack.OfflineTrackingEngine
+model_detect: "???"
 model_reid: "???"
 model_track: "???"
 tracker_state: "???"

@@ -6,6 +6,15 @@ from hydra.utils import instantiate
 import torch
 
 from pbtrack.core.datastruct.tracker_state import TrackerState
+from pbtrack.core import EngineDatapipe
+from pbtrack.core.tracking_engine import OnlineTrackingEngine
+import pytorch_lightning as pl
+from torch.utils.data import DataLoader
+import torch.multiprocessing
+
+torch.multiprocessing.set_sharing_strategy(
+    "file_system"
+)  # FIXME : why are we using too much file descriptors ?
 
 log = logging.getLogger(__name__)
 
@@ -43,9 +52,9 @@ def track(cfg):
     # Run tracking
     tracking_engine = instantiate(
         cfg.engine,
-        detector=model_pose,
-        reider=model_reid,
-        tracker=model_track,
+        model_detect=model_pose,
+        model_reid=model_reid,
+        model_track=model_track,
         tracker_state=tracker_state,
         vis_engine=vis_engine,
     )

@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from functools import lru_cache
 
 
 def overlay_heatmap(
@@ -38,6 +39,7 @@ def overlay_heatmap(
     return img_with_heatmap
 
 
+@lru_cache(maxsize=32)
 def cv2_load_image(file_path):
     image = cv2.imread(str(file_path))
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
