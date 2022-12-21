@@ -1,8 +1,4 @@
-from pbtrack.core.datastruct import ImageMetadatas, Detections
-from typing import Optional
 from torch.utils.data import Dataset
-
-from pbtrack.core.tracker import Tracker
 
 
 class EngineDatapipe(Dataset):
@@ -31,7 +27,6 @@ class EngineDatapipe(Dataset):
                 detection.name,
                 self.model.preprocess(detection=detection, metadata=metadata),
             )
-            print(type(self.model), detection.name)
             return sample
         else:
             metadata = self.img_metadatas.iloc[idx]
