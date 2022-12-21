@@ -4,4 +4,6 @@ from .detector import Detector
 from .evaluator import Evaluator
 from .reidentifier import ReIdentifier
 from .tracker import Tracker
-from .tracking_engine import OnlineTrackingEngine
+from .datapipe import EngineDatapipe
+from .datastruct import Detections, Detection
+from .tracking_engine import OnlineTrackingEngine, OfflineTrackingEngine
