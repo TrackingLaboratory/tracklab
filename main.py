@@ -1,14 +1,11 @@
-import hydra
 import logging
 
-import pandas as pd
-import torch
+import hydra
 from hydra.utils import instantiate
+
+import torch
+
 from pbtrack.core.datastruct.tracker_state import TrackerState
-from pbtrack.core import EngineDatapipe
-from pbtrack.core.tracking_engine import OnlineTrackingEngine
-import pytorch_lightning as pl
-from torch.utils.data import DataLoader
 
 log = logging.getLogger(__name__)
 
