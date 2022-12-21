@@ -43,11 +43,13 @@ class OpenPifPaf(Detector):
             self.pifpaf_preprocess = predictor.preprocess
             self.processor = predictor.processor
 
+    @torch.no_grad()
     def preprocess(self, img_meta):
         image = Image.fromarray(cv2_load_image(img_meta.file_path))
         processed_image, anns, meta = self.pifpaf_preprocess(image, [], {})
         return processed_image, anns, meta
 
+    @torch.no_grad()
     def process(self, preprocessed_batch, metadatas):
         processed_image_batch, _, metas = preprocessed_batch
         pred_batch = self.processor.batch(
@@ -73,6 +75,7 @@ class OpenPifPaf(Detector):
         return detections
 
     def train(self):
+        pass
         saved_argv = sys.argv
         sys.argv += [
             f"--{str(k)}={str(v)}" for k, v in self.cfg.train.items()
