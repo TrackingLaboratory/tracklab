@@ -1,4 +1,5 @@
 from abc import abstractmethod, ABC
+
 from pbtrack.core.datastruct.tracker_state import TrackerState
 
 

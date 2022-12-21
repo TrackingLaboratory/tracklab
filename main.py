@@ -1,19 +1,16 @@
-import torch
-import logging
-
 import hydra
 from hydra.utils import instantiate
 
 from pbtrack.core.datastruct.tracker_state import TrackerState
-from pbtrack.core import EngineDatapipe
-from pbtrack.core.tracking_engine import OnlineTrackingEngine
-import pytorch_lightning as pl
-from torch.utils.data import DataLoader
+
+import torch
 import torch.multiprocessing
 
 torch.multiprocessing.set_sharing_strategy(
     "file_system"
 )  # FIXME : why are we using too much file descriptors ?
+
+import logging
 
 log = logging.getLogger(__name__)
 

@@ -2,12 +2,13 @@ import pandas as pd
 import pytorch_lightning as pl
 
 from torch.utils.data import DataLoader
+from timeit import default_timer as timer
 
 from pbtrack.core import Detector, ReIdentifier, Tracker, EngineDatapipe
 from pbtrack.core.datastruct import Detections
 from pbtrack.core.datastruct.tracker_state import TrackerState
 from pbtrack.utils.collate import default_collate
-from timeit import default_timer as timer
+
 import logging
 
 log = logging.getLogger(__name__)

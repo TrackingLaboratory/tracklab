@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABC
-from pbtrack.core.datastruct import Detections, Detection, ImageMetadata, ImageMetadatas
+
+from pbtrack.core.datastruct import Detections, Detection, ImageMetadatas, ImageMetadata
 
 
 class Tracker(ABC):
@@ -13,7 +14,7 @@ class Tracker(ABC):
 
     @abstractmethod
     def reset(self):
-        """ Reset the tracker state to start tracking in a new video."""
+        """Reset the tracker state to start tracking in a new video."""
         pass
 
 
