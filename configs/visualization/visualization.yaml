@@ -1,0 +1,32 @@
+_target_: pbtrack.visualization.vis_engine.VisEngine
+cfg:
+  save_images: True
+  save_videos: True
+
+  process_n_videos: -1 # -1 to process all videos
+  process_n_frames_by_video: -1 # -1 to process all the frames
+  video_fps: 15
+  # detection related
+  bbox:
+    show: True
+    color: [255, 0, 0] # BGR
+    thickness: 2
+    print_confidence: True
+    font_scale: 0.7
+    font_color: ${visualization.cfg.bbox.color}
+    font_thickness: 1
+  keypoints:
+    show: True
+    # show_squeleton: True # TODO
+    radius: 1
+    color: [255, 0, 0] # BGR
+    thickness: 1
+    print_confidence: True
+    font_scale: 0.7
+    font_color: ${visualization.cfg.keypoints.color}
+    font_thickness: 1
+  heatmaps:
+    show: True
+  
+  # TODO add automatic colors by ID
+  # TODO add possibility to visualize the groundtruths

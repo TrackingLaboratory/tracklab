@@ -1,17 +1,26 @@
 defaults:
   - _self_
-  - detection: openpifpaf
-  - track: track
+  - detect: openpifpaf
   - reid: bpbreid
-  - visualization: vis
+  - track: strong_sort
+  - engine: online
+  - visualization: visualization
   - dataset: posetrack21
   - eval: posetrack21
   - engine: offline
+experiment_name: "???"
 data_dir: "???"
-project_dir: "${hydra:runtime.cwd}"
-job_id: "???"
-save_dir: "???"
 
+train_detect: false
+train_reid: false
+
+# configure Hydra to use the current working directory
+# and set up the output directory according to experiment_name
+project_dir: "${hydra:runtime.cwd}"
 hydra:
   job:
-    chdir: true # TODO : do we want this ?
+    chdir: true
+  run:
+    dir: "outputs/${experiment_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}"
+  sweep:
+    dir: "multirun_outputs/${experiment_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}"

@@ -9,4 +9,4 @@ from .detect.openpifpaf_api import OpenPifPaf
 from .reid.bpbreid_api import BPBReId
 
 # Tracking
-from .track.strongsort_tracker import StrongSORTTracker
+from .track.strong_sort_api import StrongSORT

@@ -10,13 +10,25 @@ __all__ = ["StrongSORT"]
 
 class StrongSORT(object):
     def __init__(
-        self, max_dist=0.2, max_iou_distance=0.7, max_age=70, n_init=3, nn_budget=100,
+        self,
+        ema_alpha=0.9,
+        mc_lambda=0.995,
+        max_dist=0.2,
+        max_iou_distance=0.7,
+        max_age=30,
+        n_init=3,
+        nn_budget=100,
     ):
 
         self.max_dist = max_dist
         metric = NearestNeighborDistanceMetric("part_based", self.max_dist, nn_budget)
         self.tracker = Tracker(
-            metric, max_iou_distance=max_iou_distance, max_age=max_age, n_init=n_init
+            metric,
+            max_iou_distance=max_iou_distance,
+            max_age=max_age,
+            n_init=n_init,
+            ema_alpha=ema_alpha,
+            mc_lambda=mc_lambda,
         )
 
     def update(
@@ -48,10 +60,6 @@ class StrongSORT(object):
             )
             for i, conf in enumerate(confidences)
         ]
-
-        # run on non-maximum supression
-        boxes = np.array([d.tlwh for d in detections])
-        scores = np.array([d.confidence for d in detections])
 
         # update tracker
         self.tracker.predict()

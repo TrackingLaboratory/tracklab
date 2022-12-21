@@ -1,9 +1,8 @@
+import torch
 import logging
 
 import hydra
 from hydra.utils import instantiate
-
-import torch
 
 from pbtrack.core.datastruct.tracker_state import TrackerState
 from pbtrack.core import EngineDatapipe
@@ -20,39 +19,34 @@ log = logging.getLogger(__name__)
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
-def track(cfg):
+def main(cfg):
     device = "cuda" if torch.cuda.is_available() else "cpu"  # TODO support Mac chips
 
-    train_reid = False  # FIXME put in config
-    train_pose = False  # FIXME put in config
-
-    # Init
+    # Initiate all the instances
     tracking_dataset = instantiate(cfg.dataset)
-    model_pose = instantiate(cfg.detection, device=device)
+    model_detect = instantiate(cfg.detect, device=device)
     model_reid = instantiate(
         cfg.reid,
         tracking_dataset=tracking_dataset,
         device=device,
-        model_pose=model_pose,
+        model_detect=model_detect,
     )
     model_track = instantiate(cfg.track, device=device)
-    evaluator = instantiate(cfg.eval)
     vis_engine = instantiate(cfg.visualization)
+    evaluator = instantiate(cfg.eval)
 
-    # Train reid
-    if train_reid:
+    if cfg.train_detect:
+        model_detect.train()
+
+    if cfg.train_reid:
         model_reid.train()
-
-    # Train pose
-    if train_pose:
-        model_pose.train()
 
     tracker_state = TrackerState(tracking_dataset.val_set)
 
-    # Run tracking
+    # Run tracking and visualization
     tracking_engine = instantiate(
         cfg.engine,
-        model_detect=model_pose,
+        model_detect=model_detect,
         model_reid=model_reid,
         model_track=model_track,
         tracker_state=tracker_state,
@@ -65,4 +59,4 @@ def track(cfg):
 
 
 if __name__ == "__main__":
-    track()
+    main()

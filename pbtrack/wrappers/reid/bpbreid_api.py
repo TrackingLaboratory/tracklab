@@ -48,14 +48,14 @@ class BPBReId(ReIdentifier):
     """
 
     def __init__(
-        self, cfg, tracking_dataset, dataset, device, save_path, model_pose, job_id
+        self, cfg, tracking_dataset, dataset, device, save_path, model_detect, job_id
     ):
         tracking_dataset.name = dataset.name
         tracking_dataset.nickname = dataset.nickname
         additional_args = {
             "tracking_dataset": tracking_dataset,
             "reid_config": dataset,
-            "pose_model": model_pose,
+            "pose_model": model_detect,
         }
         torchreid.data.register_image_dataset(
             tracking_dataset.name,
@@ -77,6 +77,7 @@ class BPBReId(ReIdentifier):
         self.model = None
         self.transform = CocoToSixBodyMasks()
 
+    @torch.no_grad()
     def preprocess(
         self, detection: Detection, metadata: ImageMetadata
     ):  # Tensor RGB (1, 3, H, W)
@@ -106,6 +107,7 @@ class BPBReId(ReIdentifier):
         # pixels_parts_probabilities = pixels_parts_probabilities[np.newaxis, ...]
         return batch
 
+    @torch.no_grad()
     def process(self, batch, detections, metadatas):
         im_crops = batch["img"]
         im_crops = [im_crop.numpy() for im_crop in im_crops]

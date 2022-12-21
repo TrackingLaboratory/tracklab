@@ -7,15 +7,20 @@ cfg:
   eval_reid_pose_tracking: False # TODO broken for the moment (person_id is not binded)
 
   mot_evaluator:
+  # for HOTA metrics
     BREAK_ON_ERROR: False # Raises exception and exits with error
     RETURN_ON_ERROR: False # if not BREAK_ON_ERROR, then returns from function on error
     LOG_ON_ERROR: null # if not None, save any errors into specified log file
     PRINT_COMBINED_SUMMARY_ONLY: False # Combines metrics across all classes
-    TIME_PROGRESS: False # Profiling option for the evaluation
-    DISPLAY_LESS_PROGRESS: False # show less progress information
+    TIME_PROGRESS: True # Profiling option for the evaluation
+    DISPLAY_LESS_PROGRESS: True # show less progress information
     OUTPUT_PAPER_SUMMARY: True # Output latex paper summary
     OUTPUT_EMPTY_CLASSES: True # If False, summary files are not output for classes with no detections
     OUTPUT_DETAILED: True # Show more details
+    # for MOTA metrics
+    dataset_path: "${dataset.dataset_path}"
+    use_ignore_regions: False
+    ignore_iou_thres: 0.1
 
   mot_dataset:
     PRINT_CONFIG: False # print the config of the dataset
@@ -30,8 +35,8 @@ cfg:
     RETURN_ON_ERROR: False # if not BREAK_ON_ERROR, then returns from function on error
     LOG_ON_ERROR: null # if not None, save any errors into specified log file
     PRINT_RESULTS: True # show the results in the terminal
-    PRINT_COMBINED_SUMMARY_ONLY: False # Combines metrics across all classes
-    PRINT_PAPER_SUMMARY: False # Output latex paper summary
+    PRINT_COMBINED_SUMMARY_ONLY: True # Combines metrics across all classes
+    PRINT_PAPER_SUMMARY: True # Output latex paper summary
     TIME_PROGRESS: True # Profiling option for the evaluation
     DISPLAY_LESS_PROGRESS: True # show less progress information
     OUTPUT_PAPER_SUMMARY: True # Output latex paper summary

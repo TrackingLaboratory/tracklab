@@ -1,31 +1,31 @@
-from pathlib import Path
-
 import cv2
 import numpy as np
-from pbtrack.utils.coordinates import clip_bbox_ltrb_to_img_dim
 
+from pathlib import Path
+
+from pbtrack.utils.coordinates import clip_bbox_ltrb_to_img_dim
 from pbtrack.utils.images import cv2_load_image, overlay_heatmap
 
 
+# TODO add automatic colors by ID
+# TODO add ID print next to bbox
+# TODO show person's squeleton
+# TODO add possibility to visualize the groundtruths
 class VisEngine:
-    def __init__(self, vis_cfg, save_dir):
-        self.cfg = vis_cfg
-        self.save_dir = Path(save_dir) / "vis"
-
-        self.save_img = self.cfg["images"]["save"]
-        self.save_vid = self.cfg["video"]["save"]
-
-        self.video_counter = 0
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.save_dir = Path("visualization")
+        self.processed_video_counter = 0
 
     def run(self, tracker_state, video_id):
         video_save_dir = self.save_dir / tracker_state.gt.split / str(video_id)
-        if self.video_counter > self.cfg.max_videos != -1:
+        if self.processed_video_counter >= self.cfg.process_n_videos != -1:
             return
         image_metadatas = tracker_state.gt.image_metadatas[
             tracker_state.gt.image_metadatas.video_id == video_id
         ]  # FIXME sort?
         for i, image_id in enumerate(image_metadatas.id):
-            if i > self.cfg.max_frames != -1:
+            if i > self.cfg.process_n_frames_by_video != -1:
                 break
             image_metadata = image_metadatas.loc[image_id]
             detections = tracker_state.predictions[
@@ -34,34 +34,29 @@ class VisEngine:
             self._process_video_frame(
                 image_metadata, detections, video_save_dir, video_id
             )
-        if self.save_vid:
-            self.video.release()
+        if self.cfg.save_videos:
+            self.video_writer.release()
+            delattr(self, "video_writer")
+        self.processed_video_counter += 1
 
     def _process_video_frame(
         self, image_metadata, detections, video_save_dir, video_id
     ):
-        # loop on GT
         image = cv2_load_image(image_metadata.file_path)
-        # image = self._process_img(image)
 
-        # data = file_name, width, height,
-
-        if self.cfg["detection"]["bbox"]["show"]:
+        if self.cfg.bbox.show:
             image = self._plot_bbox(detections, image)
-        if self.cfg["detection"]["pose"]["show"]:
-            image = self._plot_pose(detections, image)
-        if self.cfg["detection"]["heatmaps"]["show"]:
+        if self.cfg.keypoints.show:
+            image = self._plot_keypoints(detections, image)
+        if self.cfg.heatmaps.show:
             image = self._show_heatmaps(detections, image)
-        if self.cfg["tracking"]["show"]:
-            image = self._plot_track(detections, image)
 
         image = self._final_patch(image)
-        if self.save_img:
+        if self.cfg.save_images:
             filepath = video_save_dir / "images" / Path(image_metadata.file_path).name
             filepath.parent.mkdir(parents=True, exist_ok=True)
             assert cv2.imwrite(str(filepath), image)
-        # save video
-        if self.save_vid:
+        if self.cfg.save_videos:
             self._update_video(image, video_save_dir, video_id)
 
     def _plot_bbox(self, detections, patch):
@@ -75,44 +70,45 @@ class VisEngine:
                 patch,
                 p1,
                 p2,
-                color=self.cfg["detection"]["bbox"]["color"],
-                thickness=self.cfg["detection"]["bbox"]["thickness"],
+                color=self.cfg.bbox.color,
+                thickness=self.cfg.bbox.thickness,
             )
-            if self.cfg["detection"]["bbox"]["print_conf"]:
+            # TODO add ID
+            if self.cfg.bbox.print_confidence:
                 p = (bbox[0] + 1, bbox[1] - 2)
                 cv2.putText(
                     patch,
-                    f" {np.mean(detection.keypoints_xyc[:,2]):.2}",
+                    f"{np.mean(detection.keypoints_xyc[:,2]):.2}",
                     p,
                     fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                    fontScale=0.75,
-                    color=self.cfg["detection"]["bbox"]["color"],
-                    thickness=1,
+                    fontScale=self.cfg.bbox.font_scale,
+                    color=self.cfg.bbox.font_color,
+                    thickness=self.cfg.bbox.font_thickness,
                 )
         return patch
 
-    def _plot_pose(self, detections, patch):
-        poses = detections.keypoints_xyc
-        for pose in poses:
-            for kp in pose:
+    def _plot_keypoints(self, detections, patch):
+        all_keypoints = detections.keypoints_xyc
+        for keypoints in all_keypoints:
+            for kp in keypoints:
                 p = (int(kp[0]), int(kp[1]))
                 cv2.circle(
                     patch,
                     p,
-                    radius=self.cfg["detection"]["pose"]["radius"],
-                    color=self.cfg["detection"]["pose"]["color"],
-                    thickness=self.cfg["detection"]["pose"]["thickness"],
+                    radius=self.cfg.keypoints.radius,
+                    color=self.cfg.keypoints.color,
+                    thickness=self.cfg.keypoints.thickness,
                 )
-                if self.cfg["detection"]["pose"]["print_conf"]:
+                if self.cfg.keypoints.print_confidence:
                     p = (int(kp[0] + 1), int(kp[1] - 2))
                     cv2.putText(
                         patch,
                         f"{kp[2]:.2}",
                         p,
                         fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                        fontScale=0.75,
-                        color=self.cfg["detection"]["pose"]["color"],
-                        thickness=1,
+                        fontScale=self.cfg.keypoints.font_scale,
+                        color=self.cfg.keypoints.font_color,
+                        thickness=self.cfg.keypoints.font_thickness,
                     )
         return patch
 
@@ -128,57 +124,17 @@ class VisEngine:
             patch[t:b, l:r] = img_crop_with_mask
         return patch
 
-    def _plot_track(self, detections, patch):
-        for i, detection in detections.iterrows():
-            bbox = detection.bbox_ltrb
-            bbox = clip_bbox_ltrb_to_img_dim(
-                bbox, patch.shape[1], patch.shape[0]
-            ).astype(int)
-            p1, p2 = (bbox[0], bbox[1]), (bbox[2], bbox[3])
-            cv2.rectangle(
-                patch,
-                p1,
-                p2,
-                color=self.cfg["tracking"]["color"],
-                thickness=self.cfg["tracking"]["thickness"],
-            )
-            txt = ""
-            if self.cfg["tracking"]["print_id"]:
-                txt += f" ID: {detection.track_id}"
-            if self.cfg["tracking"]["print_conf"]:
-                txt += f" - conf: {np.mean(detection.keypoints_xyc[:,2]):.2}"
-            if txt != "":
-                p = (bbox[0] + 1, bbox[1] - 2)
-                cv2.putText(
-                    patch,
-                    txt,
-                    p,
-                    fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                    fontScale=0.75,
-                    color=self.cfg["tracking"]["color"],
-                    thickness=1,
-                )
-        return patch
-
     def _update_video(self, patch, video_save_dir, video_id):
-        if not hasattr(self, "video"):
+        if not hasattr(self, "video_writer"):
             filepath = video_save_dir / "video" / f"{video_id}.mp4"
             filepath.parent.mkdir(parents=True, exist_ok=True)
-            self.video = cv2.VideoWriter(
+            self.video_writer = cv2.VideoWriter(
                 str(filepath),
                 cv2.VideoWriter_fourcc(*"mp4v"),
-                int(self.cfg["video"]["fps"]),
-                (int(self.cfg["video"]["height"]), int(self.cfg["video"]["width"])),
+                float(self.cfg.video_fps),
+                (patch.shape[1], patch.shape[0]),
             )
-        self.video.write(patch)
-
-    def _process_img(self, img):
-        img = 255.0 * img
-        img = img.transpose(1, 2, 0)
-        img = np.ascontiguousarray(img, dtype=np.float32)
-        return img
+        self.video_writer.write(patch)
 
     def _final_patch(self, patch):
-        patch = cv2.cvtColor(patch, cv2.COLOR_RGB2BGR)
-        patch = patch.astype(np.uint8)
-        return patch
+        return cv2.cvtColor(patch, cv2.COLOR_RGB2BGR).astype(np.uint8)
