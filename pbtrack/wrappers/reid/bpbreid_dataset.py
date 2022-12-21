@@ -13,7 +13,7 @@ from tqdm import tqdm
 from pbtrack.core.datastruct.tracking_dataset import TrackingDataset
 from pbtrack.utils.coordinates import (
     rescale_keypoints,
-    clip_to_img_dim,
+    clip_bbox_ltwh_to_img_dim,
 )
 from pbtrack.utils.images import overlay_heatmap
 from hydra.utils import to_absolute_path
@@ -93,11 +93,15 @@ class ReidDataset(ImageDataset):
 
         # Build ReID dataset from MOT dataset
         self.build_reid_set(
-            tracking_dataset.train_set, self.reid_config, is_test_set=False,
+            tracking_dataset.train_set,
+            self.reid_config,
+            is_test_set=False,
         )
 
         self.build_reid_set(
-            tracking_dataset.val_set, self.reid_config, is_test_set=True,
+            tracking_dataset.val_set,
+            self.reid_config,
+            is_test_set=True,
         )
 
         train_gt_dets = tracking_dataset.train_set.detections
@@ -308,7 +312,9 @@ class ReidDataset(ImageDataset):
                 for det_metadata in dets_from_img.itertuples():
                     # crop and resize bbox from image
                     bbox_ltwh = det_metadata.bbox_ltwh
-                    bbox_ltwh = clip_to_img_dim(bbox_ltwh, img.shape[1], img.shape[0])
+                    bbox_ltwh = clip_bbox_ltwh_to_img_dim(
+                        bbox_ltwh, img.shape[1], img.shape[0]
+                    )
                     pid = det_metadata.person_id
                     l, t, w, h = bbox_ltwh.astype(int)
                     img_crop = img[t : t + h, l : l + w]
@@ -417,7 +423,7 @@ class ReidDataset(ImageDataset):
                         )
                     elif mode == "pose_on_img":
                         # compute human parsing heatmaps using output of pose model on full image
-                        bbox_ltwh = clip_to_img_dim(
+                        bbox_ltwh = clip_bbox_ltwh_to_img_dim(
                             det_metadata.bbox_ltwh, img.shape[1], img.shape[0]
                         ).astype(int)
                         l, t, w, h = bbox_ltwh
