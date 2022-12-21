@@ -3,6 +3,6 @@ model_detect: "???"
 model_reid: "???"
 model_track: "???"
 tracker_state: "???"
+detect_batchsize: 8
 reid_batchsize: 128
-detect_batchsize: 16
 num_workers: 8

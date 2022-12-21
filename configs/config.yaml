@@ -3,11 +3,10 @@ defaults:
   - detect: openpifpaf
   - reid: bpbreid
   - track: strong_sort
-  - engine: online
+  - engine: offline
   - visualization: visualization
   - dataset: posetrack21
   - eval: posetrack21
-  - engine: offline
 experiment_name: "???"
 data_dir: "???"
 
