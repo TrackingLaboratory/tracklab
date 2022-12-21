@@ -1,4 +1,4 @@
 _target_: pbtrack.wrappers.datasets.posetrack.posetrack21.PoseTrack21
 dataset_path: ${data_dir}/PoseTrack21
-nvid: 2
-nframes: 3
+nvid: -1 # process all the videos
+nframes: -1 # process all the frames by video
