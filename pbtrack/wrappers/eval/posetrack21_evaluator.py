@@ -1,18 +1,19 @@
 import os
+from pathlib import Path
 import sys
 import json
 import numpy as np
 import pandas as pd
 
 from pbtrack.core.evaluator import Evaluator
+import pbtrack
 
-from hydra.utils import to_absolute_path
-
-sys.path.append(to_absolute_path("plugins/eval/PoseTrack21/eval/mot"))
+root_dir = Path(pbtrack.__file__).parents[1]
+sys.path.append(str((root_dir / "plugins/eval/PoseTrack21/eval/mot").resolve()))
 from datasets.pt_warper import PTWrapper
 from evaluate_mot import get_mot_accum, evaluate_mot_accums
 
-sys.path.append(to_absolute_path("plugins/eval/PoseTrack21/eval/posetrack21"))
+sys.path.append(str((root_dir / "plugins/eval/PoseTrack21/eval/posetrack21").resolve()))
 from posetrack21.trackeval import (
     PoseEvaluator,
     Evaluator,

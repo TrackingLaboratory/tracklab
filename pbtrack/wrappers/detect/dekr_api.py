@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 import cv2
 import torch
@@ -11,9 +12,10 @@ from pbtrack.core.datastruct import Detection
 from pbtrack.core.detector import Detector
 from pbtrack.utils.coordinates import kp_to_bbox
 
-from hydra.utils import to_absolute_path
+import pbtrack
 
-sys.path.append(to_absolute_path("plugins/detect/DEKR/lib"))
+root_dir = Path(pbtrack.__file__).parents[1]
+sys.path.append(str((root_dir / "plugins/detect/DEKR/lib").resolve()))
 
 from core.inference import get_multi_stage_outputs
 from core.inference import aggregate_results

@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 import numpy as np
 import pandas as pd
@@ -22,8 +23,12 @@ from pbtrack.utils.collate import Unbatchable
 
 from hydra.utils import to_absolute_path
 
-sys.path.append(to_absolute_path("plugins/reid/bpbreid"))  # FIXME ugly
-sys.path.append(to_absolute_path("plugins/reid"))  # FIXME ugly
+import pbtrack
+
+root_dir = Path(pbtrack.__file__).parents[1]
+sys.path.append(str((root_dir / "plugins/reid/bpbreid").resolve()))  # FIXME : ugly
+sys.path.append(str((root_dir / "plugins/reid").resolve()))  # FIXME : ugly
+
 import torchreid
 from plugins.reid.bpbreid.torchreid.utils.tools import extract_test_embeddings
 from plugins.reid.bpbreid.torchreid.data.masks_transforms import CocoToSixBodyMasks
