@@ -32,6 +32,12 @@ def load_from_overrides(overrides=[]) -> TrackEngine:
         from pbtrack.utils import load_from_overrides
 
         load_from_overrides(["train_detect=false"])
+
+    Args:
+        overrides: list of strings as used in hydra commandline
+
+    Returns:
+        track_engine: a tuple containing : cfg, engine, state, evaluator, dataset
     """
     if hasattr(load_from_overrides, "orig_dir"):
         os.chdir(load_from_overrides.orig_dir)
