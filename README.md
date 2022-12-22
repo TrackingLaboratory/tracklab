@@ -2,21 +2,20 @@
 
 Work in progress
 
-## Installation guide
+## Installation guide[^1]
 
-(tested on `Python 3.9.12`, `conda 22.11.1`, `pip 22.3.1`, `g++ 11.3.0`, `gcc 11.3.0`)
+[^1]: Tested on `conda 22.11.1`, `Python 3.10.8`, `pip 22.3.1`, `g++ 11.3.0` and `gcc 11.3.0`
 
 ### Clone the repository
 
 ```bash
 git clone https://github.com/PbTrack/pb-track.git --recurse-submodules
+cd pb-track
 ```
 
-or
+If you cloned the repo without using the `--recurse-submodules` option, you can still download the submodules with :
 
 ```bash
-git clone git@github.com:PbTrack/pb-track.git
-cd pb-track
 git submodule update --init --recursive
 ```
 
@@ -25,7 +24,7 @@ git submodule update --init --recursive
 #### Create and activate a new environment
 
 ```bash
-conda create -n "pbtrack"
+conda create -y --name "pbtrack" python pip
 conda activate pbtrack
 ```
 
@@ -33,7 +32,6 @@ conda activate pbtrack
 Get into your repo and install the requirements.
 
 ```bash
-cd pb-track
 pip install -r requirements.txt
 ```
 

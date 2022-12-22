@@ -1,6 +1,6 @@
 [submodule "plugins/eval/PoseTrack21"]
 	path = plugins/eval/PoseTrack21
-	url = https://github.com/anDoer/PoseTrack21.git
+	url = https://github.com/bstandaert/PoseTrack21.git
 	branch = pbtrack
 [submodule "plugins/detect/openpifpaf"]
 	path = plugins/detect/openpifpaf
