@@ -1,15 +1,17 @@
 import os
-from hydra.utils import instantiate
-from collections import namedtuple
-from pbtrack.core import TrackerState
+import copy
 import torch
+
+from pathlib import Path
+from collections import namedtuple
+from omegaconf import OmegaConf, read_write, open_dict
 
 # from hydra import initialize_config_module as init_hydra, compose
 from hydra import initialize_config_dir as init_hydra, compose
+from hydra.utils import instantiate
 from hydra.core.utils import configure_log
-from pathlib import Path
-from omegaconf import OmegaConf, read_write, open_dict
-import copy
+
+from pbtrack.core import TrackerState
 
 TrackEngine = namedtuple(
     "TrackEngine", ["cfg", "engine", "state", "evaluator", "dataset"]
