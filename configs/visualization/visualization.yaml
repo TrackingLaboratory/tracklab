@@ -3,30 +3,37 @@ cfg:
   save_images: True
   save_videos: True
 
-  process_n_videos: -1 # -1 to process all videos
-  process_n_frames_by_video: -1 # -1 to process all the frames
+  process_n_videos: -1            # -1 to process all videos
+  process_n_frames_by_video: -1   # -1 to process all the frames
   video_fps: 15
-  # detection related
+
   bbox:
-    show: True
-    color: [255, 0, 0] # BGR
-    thickness: 2
+    show_preds: True
+    show_gt: True
+    show_only_tracked: False
+    print_id: True
     print_confidence: True
-    font_scale: 0.7
-    font_color: ${visualization.cfg.bbox.color}
-    font_thickness: 1
-  keypoints:
-    show: True
-    # show_squeleton: True # TODO
-    radius: 1
-    color: [255, 0, 0] # BGR
+    color_by_id: True
+
     thickness: 1
-    print_confidence: True
+    color_preds: [255, 0, 0]      # RGB
+    color_gt: [0, 255, 0]         # RGB
     font_scale: 0.7
-    font_color: ${visualization.cfg.keypoints.color}
+    font_color: [0, 0, 0]         # RGB
     font_thickness: 1
-  heatmaps:
-    show: True
-  
-  # TODO add automatic colors by ID
-  # TODO add possibility to visualize the groundtruths
+
+  keypoints:
+    show_preds: True
+    show_gt: True
+    print_confidence: False
+
+    radius: 2
+    thickness: -1                 # -1 to fill
+    color_preds: [255, 0, 0]      # RGB
+    color_gt: [0, 255, 0]         # RGB
+    font_scale: 0.7
+    font_color: [0, 0, 0]         # RGB
+    font_thickness: 1
+
+  bpbreid:
+    show_heatmaps: False
