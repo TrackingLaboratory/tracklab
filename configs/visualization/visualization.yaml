@@ -1,41 +1,55 @@
-_target_: pbtrack.visualization.vis_engine.VisEngine
+_target_: pbtrack.visualization.visualization_engine.VisualisationEngine
 cfg:
   save_images: True
   save_videos: True
 
-  process_n_videos: -1            # -1 to process all videos
-  process_n_frames_by_video: -1   # -1 to process all the frames
+  process_n_videos: -1                      # -1 to process all videos
+  process_n_frames_by_video: -1             # -1 to process all the frames
   video_fps: 15
 
-  bbox:
-    draw_predictions: True
-    draw_ground_truth: True
-    draw_only_tracked: False
+  prediction:
+    draw_bbox: True
+    draw_keypoints: True
+    draw_skeleton: True
     print_id: True
-    print_confidence: True
-    color_by_id: True
+    print_bbox_confidence: True
+    # debug
+    print_keypoints_confidence: False
+    draw_bpbreid_heatmaps: False
 
+  ground_truth:
+    draw_bbox: True
+    draw_keypoints: True
+    draw_skeleton: True
+    # debug
+    print_id: False
+    print_bbox_confidence: False
+    print_keypoints_confidence: False
+
+  bbox: 
+    displayed: ['detect'] #TODO not working # ['detect', 'track']
     thickness: 1
-    color_preds: [255, 0, 0]      # RGB
-    color_gt: [0, 255, 0]         # RGB
-    font_scale: 0.7
-    font_color: [0, 0, 0]         # RGB
-    font_thickness: 1
+    color_tracked: null                     # RGB array or None: color by ID
+    color_untracked: [255, 0, 0]            # RGB array
+    color_ground_truth: [0, 255, 0]         # RGB array
 
-  keypoints:
-    draw_predictions: True
-    draw_ground_truth: True
-    draw_squeleton: True
-    print_confidence: False
+  text:
+    font: 0
+    scale: 0.7
+    thickness: 1
+    color_tracked: null                     # RGB array or null: color by ID
+    color_untracked: [255, 0, 0]            # RGB array
+    color_ground_truth: [0, 255, 0]         # RGB array
 
+  keypoint:
     radius: 2
-    thickness: -1                 # -1 to fill
-    squeleton_thickness: 1
-    color_preds: [255, 0, 0]      # RGB
-    color_gt: [0, 255, 0]         # RGB
-    font_scale: 0.7
-    font_color: [0, 0, 0]         # RGB
-    font_thickness: 1
+    thickness: -1                           # -1 to fill
+    color_tracked: null                     # RGB array or null: color by ID
+    color_untracked: [255, 0, 0]            # RGB array
+    color_ground_truth: [0, 255, 0]         # RGB array
 
-  bpbreid:
-    draw_heatmaps: False
+  skeleton:
+    thickness: 1
+    color_tracked: null                     # RGB array or null: color by ID
+    color_untracked: [255, 0, 0]            # RGB array
+    color_ground_truth: [0, 255, 0]         # RGB array
