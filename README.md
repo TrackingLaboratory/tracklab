@@ -24,7 +24,7 @@ git submodule update --init --recursive
 #### Create and activate a new environment
 
 ```bash
-conda create -y --name "pbtrack" python pip
+conda create -y --name "pbtrack" python pip numpy
 conda activate pbtrack
 ```
 

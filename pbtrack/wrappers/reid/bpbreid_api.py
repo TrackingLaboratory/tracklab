@@ -6,8 +6,9 @@ import torch
 from omegaconf import OmegaConf
 from yacs.config import CfgNode as CN
 
-from pbtrack.utils.images import cv2_load_image
 from .bpbreid_dataset import ReidDataset
+
+from pbtrack.utils.images import cv2_load_image
 from pbtrack.core.datastruct import ImageMetadata, Detection
 from pbtrack.core.reidentifier import ReIdentifier
 from pbtrack.utils.coordinates import (
@@ -20,10 +21,13 @@ from plugins.reid.bpbreid.tools.feature_extractor import FeatureExtractor
 from plugins.reid.bpbreid.torchreid.utils.imagetools import build_gaussian_heatmaps
 from pbtrack.utils.collate import Unbatchable
 
-from hydra.utils import to_absolute_path
+import pbtrack
+from pathlib import Path
 
-sys.path.append(to_absolute_path("plugins/reid/bpbreid"))  # FIXME ugly
-sys.path.append(to_absolute_path("plugins/reid"))  # FIXME ugly
+root_dir = Path(pbtrack.__file__).parents[1]
+sys.path.append(str((root_dir / "plugins/reid/bpbreid").resolve()))  # FIXME : ugly
+sys.path.append(str((root_dir / "plugins/reid").resolve()))  # FIXME : ugly
+
 import torchreid
 from plugins.reid.bpbreid.torchreid.utils.tools import extract_test_embeddings
 from plugins.reid.bpbreid.torchreid.data.masks_transforms import CocoToSixBodyMasks

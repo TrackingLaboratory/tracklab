@@ -17,8 +17,10 @@ from pbtrack.utils.coordinates import (
 )
 from pbtrack.utils.images import overlay_heatmap
 from hydra.utils import to_absolute_path
+import pbtrack
 
-sys.path.append(to_absolute_path("plugins/reid/bpbreid"))
+root_dir = Path(pbtrack.__file__).parents[1]
+sys.path.append(str((root_dir / "plugins/reid/bpbreid").resolve()))  # FIXME : ugly
 from torchreid.data import ImageDataset
 from torchreid.utils.imagetools import gkern, build_gaussian_heatmaps
 
