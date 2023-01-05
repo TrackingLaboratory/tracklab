@@ -8,9 +8,9 @@ cfg:
   video_fps: 15
 
   bbox:
-    show_preds: True
-    show_gt: True
-    show_only_tracked: False
+    draw_predictions: True
+    draw_ground_truth: True
+    draw_only_tracked: False
     print_id: True
     print_confidence: True
     color_by_id: True
@@ -23,12 +23,14 @@ cfg:
     font_thickness: 1
 
   keypoints:
-    show_preds: True
-    show_gt: True
+    draw_predictions: True
+    draw_ground_truth: True
+    draw_squeleton: True
     print_confidence: False
 
     radius: 2
     thickness: -1                 # -1 to fill
+    squeleton_thickness: 1
     color_preds: [255, 0, 0]      # RGB
     color_gt: [0, 255, 0]         # RGB
     font_scale: 0.7
@@ -36,4 +38,4 @@ cfg:
     font_thickness: 1
 
   bpbreid:
-    show_heatmaps: False
+    draw_heatmaps: False
