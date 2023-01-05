@@ -2,179 +2,40 @@
 
 Work in progress
 
-## Installation guide
+## Installation guide[^1]
 
-(tested on python 3.8.6)
+[^1]: Tested on `conda 22.11.1`, `Python 3.10.8`, `pip 22.3.1`, `g++ 11.3.0` and `gcc 11.3.0`
 
-### Clone the repo
+### Clone the repository
 
 ```bash
 git clone https://github.com/PbTrack/pb-track.git --recurse-submodules
+cd pb-track
 ```
 
-or
+If you cloned the repo without using the `--recurse-submodules` option, you can still download the submodules with :
 
 ```bash
-git clone git@github.com:PbTrack/pb-track.git
-cd pb-track
 git submodule update --init --recursive
 ```
 
-### Manage environment
+### Manage the environment
 
-#### Create a new environment
+#### Create and activate a new environment
 
 ```bash
-conda create -n "pb-track" python=3.8 ipython
-conda activate pb-track
+conda create -y --name "pbtrack" python pip numpy
+conda activate pbtrack
 ```
 
 #### Install the dependencies
-
-**TODO**
-
-Vérifier si un seul call à requirements.txt dans notre folder de base suffit.
-
-**END TODO**
-
-##### plugins/detect/DEKR
-
-**TODO**
-
-(Sera viré si on arrive à utiliser MMPose)
-
-**END TODO**
-
-```bash
-pip install -r plugins/detect/DEKR/requirements.txt
-```
-
-[COCOAPI](https://github.com/cocodataset/cocoapi) installation
-
-```bash
-git clone https://github.com/cocodataset/cocoapi.git ../cocoapi
-cd ../cocoapi/PythonAPI
-pip install Cython
-make install
-cd ../../pb-track
-```
-
-[CrowdPose](https://github.com/Jeff-sjtu/CrowdPose) installation
-
-```bash
-git clone https://github.com/Jeff-sjtu/CrowdPose.git ../CrowdPose
-cd ../CrowdPose/crowdpose-api/PythonAPI/
-sh install.sh
-cd ../../../pb-track
-```
-
-[download the weights](https://mailustceducn-my.sharepoint.com/:f:/g/personal/aa397601_mail_ustc_edu_cn/EmoNwNpq4L1FgUsC9KbWezABSotd3BGOlcWCdkBi91l50g?e=HWuluh) and make the modules/detect/DEKR/ directory look like
-
-```text
-${plugins/detect/DEKR}
-|-- model
-`-- |-- imagenet
-    |   |-- hrnet_w32-36af842e.pth
-    |   `-- hrnetv2_w48_imagenet_pretrained.pth
-    |-- pose_coco
-    |   |-- pose_dekr_hrnetw32_coco.pth
-    |   `-- pose_dekr_hrnetw48_coco.pth
-    |-- pose_crowdpose
-    |   |-- pose_dekr_hrnetw32_crowdpose.pth
-    |   `-- pose_dekr_hrnetw48_crowdpose.pth
-    `-- rescore
-        |-- final_rescore_coco_kpt.pth
-        `-- final_rescore_crowd_pose_kpt.pth
-```
-
-##### plugins/detect/openpifpaf
-
-```bash
-pip3 install --editable '.[dev,train,test]'
-```
-
-[Deprecated] You will certainly need to install `torch 1.9.0` and `torchvision 0.10.0`.
-
-```bash
-pip install torch==1.9.0+cu111
-torchvision==0.10.0+cu111
-torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
-```
-
-##### plugins/eval/PoseTrack21
-
-First, [get the dataset](https://github.com/anDoer/PoseTrack21/tree/35bd7033ec4e1a352ae39b9522df5a683f83781b#how-to-get-the-dataset).
-
-Then, install requirements
-
-```bash
-pip install -r plugins/eval/PoseTrack21/eval/posetrack21/requirements.txt
-```
-
-If you encounter the error `Could not find library geos_c or load any of its variants`, try to install geos:
-
-```bash
-sudo apt-get install libgeos-dev
-```
-
-or
-
-```bash
-brew install geos
-```
-
-##### plugins/reid/bpreid
-
-```bash
-cd plugins/reid/bpbreid/
-pip install -r requirements.txt
-python setup.py develop
-cd ../../..
-```
-
-##### plugins/track/yolov5
-
-```bash
-pip install -r plugins/track/yolov5/requirements.txt
-```
-
-##### bptrack
+Get into your repo and install the requirements.
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Directory structure
+### External dependencies
 
-**TODO**
-
-Finish this once it is fixed.
-
-**END TODO**
-
-```text
-pb-track
-|-- configs
-|   |-- bpreid
-|   |   `-- *.yaml
-|   |-- strongsort
-|   |    `-- *.yaml
-|   `-- *.yaml
-|-- plugins
-|   |-- detect
-|   |   `-- DEKR
-|   |       `-- *
-|   |-- eval
-|   |   `-- PoseTrack21
-|   |       `-- *
-|   |-- reid
-|   |   `-- bpbreid
-|   |       `-- *
-|   |-- track
-|   |   |-- strong_sort
-|   |   |   `-- *
-|   |   `-- yolov5
-|   |       `-- *
-|-- pbtrack
-...
-```
+- Get the **PoseTrack21** dataset [here](https://github.com/anDoer/PoseTrack21/tree/35bd7033ec4e1a352ae39b9522df5a683f83781b#how-to-get-the-dataset).
+- Get the pretrained weights of **BPBReID** [here](https://github.com/VlSomers/bpbreid#download-the-pre-trained-models).
