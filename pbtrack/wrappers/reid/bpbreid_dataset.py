@@ -14,6 +14,7 @@ from pbtrack.core.datastruct.tracking_dataset import TrackingDataset
 from pbtrack.utils.coordinates import (
     rescale_keypoints,
     clip_bbox_ltwh_to_img_dim,
+    kp_img_to_kp_bbox,
 )
 from pbtrack.utils.images import overlay_heatmap
 from hydra.utils import to_absolute_path
@@ -95,15 +96,11 @@ class ReidDataset(ImageDataset):
 
         # Build ReID dataset from MOT dataset
         self.build_reid_set(
-            tracking_dataset.train_set,
-            self.reid_config,
-            is_test_set=False,
+            tracking_dataset.train_set, self.reid_config, is_test_set=False,
         )
 
         self.build_reid_set(
-            tracking_dataset.val_set,
-            self.reid_config,
-            is_test_set=True,
+            tracking_dataset.val_set, self.reid_config, is_test_set=True,
         )
 
         train_gt_dets = tracking_dataset.train_set.detections
@@ -165,7 +162,6 @@ class ReidDataset(ImageDataset):
 
         # Load reid masks metadata into existing ground truth detections dataframe
         self.load_reid_annotations(detections, masks_anns_filepath, ["masks_path"])
-
         # Sampling of detections to be used to create the ReID dataset
         self.sample_detections_for_reid(detections, reid_set_cfg)
 
@@ -200,18 +196,16 @@ class ReidDataset(ImageDataset):
 
     def load_reid_annotations(self, gt_dets, reid_anns_filepath, columns):
         if reid_anns_filepath.exists():
-            reid_anns = pd.read_json(reid_anns_filepath)
+            reid_anns = pd.read_json(
+                reid_anns_filepath, convert_dates=False, convert_axes=False
+            )
+            reid_anns.set_index("id", drop=False, inplace=True)
             assert len(reid_anns) == len(gt_dets), (
                 "reid_anns_filepath and gt_dets must have the same length. Delete "
                 "'{}' and re-run the script.".format(reid_anns_filepath)
             )
             tmp_df = gt_dets.merge(
-                reid_anns,
-                left_index=False,
-                right_index=False,
-                left_on="id",
-                right_on="id",
-                validate="one_to_one",
+                reid_anns, left_index=True, right_index=True, validate="one_to_one",
             )
             gt_dets[columns] = tmp_df[columns]
         else:
@@ -308,9 +302,8 @@ class ReidDataset(ImageDataset):
             desc="Extracting all {} reid crops".format(set_name),
         ) as pbar:
             for (video_id, image_id), dets_from_img in grp_gt_dets:
-                img_metadata = metadatas_df[metadatas_df.image_id == image_id].iloc[0]
-                filename = img_metadata.file_name
-                img = cv2.imread(str(self.dataset_path / filename))
+                img_metadata = metadatas_df[metadatas_df.id == image_id].iloc[0]
+                img = cv2.imread(img_metadata.file_path)
                 for det_metadata in dets_from_img.itertuples():
                     # crop and resize bbox from image
                     bbox_ltwh = det_metadata.bbox_ltwh
@@ -325,7 +318,7 @@ class ReidDataset(ImageDataset):
 
                     # save crop to disk
                     filename = "{}_{}_{}{}".format(
-                        pid, video_id, img_metadata.image_id, self.img_ext
+                        pid, video_id, img_metadata.id, self.img_ext
                     )
                     rel_filepath = Path(video_id, filename)
                     abs_filepath = Path(save_path, rel_filepath)
@@ -383,11 +376,10 @@ class ReidDataset(ImageDataset):
             desc="Extracting all {} human parsing labels".format(set_name),
         ) as pbar:
             for (video_id, image_id), dets_from_img in grp_gt_dets:
-                img_metadata = metadatas_df[metadatas_df.image_id == image_id].iloc[0]
-                filename = img_metadata.file_name
+                img_metadata = metadatas_df[metadatas_df.id == image_id].iloc[0]
                 # load image once to get video frame size
                 if mode == "pose_on_img":
-                    img = cv2.imread(str(self.dataset_path / filename))
+                    img = cv2.imread(img_metadata.file_path)
                     _, masks_gt_or = self.pose_model.run(
                         torch.from_numpy(img).permute((2, 0, 1)).unsqueeze(0)
                     )  # TODO check if pose_model need BRG or RGB
@@ -405,7 +397,11 @@ class ReidDataset(ImageDataset):
                         img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
                         l, t, w, h = det_metadata.bbox_ltwh
                         keypoints_xyc = rescale_keypoints(
-                            det_metadata.keypoints_bbox_xyc, (w, h), (mask_w, mask_h)
+                            kp_img_to_kp_bbox(
+                                det_metadata.keypoints_xyc, det_metadata.bbox_ltwh
+                            ),
+                            (w, h),
+                            (mask_w, mask_h),
                         )
                         masks_gt_crop = build_gaussian_heatmaps(
                             keypoints_xyc, mask_w, mask_h, gaussian=gaussian
@@ -516,7 +512,6 @@ class ReidDataset(ImageDataset):
             df["camid"] = df["video_id"]
             df["img_path"] = df["reid_crop_path"]
             # remove bbox_head as it is not available for each sample
-            df.drop(columns="bbox_head", inplace=True)
             # df to list of dict
             data_list = df.sort_values(by=["pid"])
             # use only necessary annotations: using them all caused a
