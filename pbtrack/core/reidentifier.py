@@ -7,7 +7,7 @@ from pbtrack.core.datastruct.image_metadatas import ImageMetadata
 
 class ReIdentifier(ABC):
     """Abstract class to implement for the integration of a new reidentifier
-    in wrapper/reid. The functions to implement are __init__, train
+    in wrappers/reid. The functions to implement are __init__, train
     (optional), preprocess and process. A description of the expected
     behavior is provided below.
     """
@@ -24,8 +24,7 @@ class ReIdentifier(ABC):
 
     @abstractmethod
     def preprocess(self, detection: Detection, metadata: ImageMetadata) -> object:
-        """Your pre-processing function to adapt the input to your
-            reidentifier
+        """Your pre-processing function to adapt the input to your reidentifier
         Args:
             detection (Detection): the detection to process
             metadata (ImageMetadata): the image metadata associated to the detection

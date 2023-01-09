@@ -9,7 +9,7 @@ from pbtrack.core.datastruct.image_metadatas import ImageMetadata, ImageMetadata
 
 class Detector(ABC):
     """Abstract class to implement for the integration of a new detector
-    in wrapper/detect. The functions to implement are __init__, train
+    in wrappers/detect. The functions to implement are __init__, train
     (optional), preprocess and process. A description of the expected
     behavior is provided below.
     """
