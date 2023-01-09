@@ -29,7 +29,7 @@ conda activate pbtrack
 ```
 
 #### Install the dependencies
-Get into your repo and install the requirements.
+Get into your repo and install the requirements with :
 
 ```bash
 pip install -r requirements.txt
