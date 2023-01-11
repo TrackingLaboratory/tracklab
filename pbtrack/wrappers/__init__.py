@@ -2,7 +2,6 @@
 from .datasets.posetrack.posetrack21 import PoseTrack21
 
 # Detection
-from .detect.dekr_api import DEKR
 from .detect.openpifpaf_api import OpenPifPaf
 
 # Reid
