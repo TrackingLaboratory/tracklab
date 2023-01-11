@@ -1,35 +1,5 @@
-albumentations
-coremltools
-Cython
-easydict
-Flask
-gdown
-h5py
-imageio
-ipdb
-ipython
-json_tricks
-matplotlib
-numpy
-opencv-python
-ortools
-pafy
-pandas
-Pillow
-psutil
-pycocotools
-pytest
-PyYAML
-requests
-scipy
-setuptools
-Shapely
-six
-tensorboard
-torch
-torchvision
-tqdm
-xmltodict
-yacs
+-e './plugins/detect/openpifpaf[dev,train,test]'
+-r './plugins/reid/bpbreid/requirements.txt'
+-r './plugins/eval/PoseTrack21/eval/posetrack21/requirements.txt'
 hydra-core
 pytorch_lightning

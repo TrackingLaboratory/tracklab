@@ -1,19 +1,24 @@
 import os
-from pathlib import Path
 import sys
 import json
 import numpy as np
 import pandas as pd
 
 from pbtrack.core.evaluator import Evaluator
+
 import pbtrack
+from pathlib import Path
 
 root_dir = Path(pbtrack.__file__).parents[1]
-sys.path.append(str((root_dir / "plugins/eval/PoseTrack21/eval/mot").resolve()))
+sys.path.append(
+    str((root_dir / "plugins/eval/PoseTrack21/eval/mot").resolve())
+)  # FIXME : ugly
 from datasets.pt_warper import PTWrapper
 from evaluate_mot import get_mot_accum, evaluate_mot_accums
 
-sys.path.append(str((root_dir / "plugins/eval/PoseTrack21/eval/posetrack21").resolve()))
+sys.path.append(
+    str((root_dir / "plugins/eval/PoseTrack21/eval/posetrack21").resolve())
+)  # FIXME : ugly
 from posetrack21.trackeval import (
     PoseEvaluator,
     Evaluator,

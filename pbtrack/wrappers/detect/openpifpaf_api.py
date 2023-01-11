@@ -7,9 +7,11 @@ from pbtrack.core.datastruct import Detection
 from pbtrack.utils.images import cv2_load_image
 from pbtrack.utils.coordinates import kp_to_bbox_w_threshold
 
-from hydra.utils import to_absolute_path
+import pbtrack
+from pathlib import Path
 
-sys.path.append(to_absolute_path("plugins/detect/openpifpaf/src"))
+root_dir = Path(pbtrack.__file__).parents[1]
+sys.path.append(str((root_dir / "plugins/detect/openpifpaf/src").resolve())) # FIXME : ugly
 import openpifpaf
 
 
