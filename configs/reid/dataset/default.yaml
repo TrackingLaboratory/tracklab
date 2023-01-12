@@ -3,6 +3,7 @@ nickname: "pt21"
 fig_size: [384, 128]
 mask_size: [64, 32]
 max_crop_size: [256, 128]
+masks_mode: "gaussian_keypoints"
 train:
   min_vis: 0.3
   min_h: 50

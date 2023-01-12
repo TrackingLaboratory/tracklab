@@ -3,7 +3,7 @@ defaults:
   - detect: openpifpaf
   - reid: bpbreid
   - track: strong_sort
-  - engine: offline
+  - engine: online
   - visualization: visualization
   - dataset: posetrack21
   - eval: posetrack21
@@ -12,6 +12,7 @@ data_dir: "???"
 
 train_detect: false
 train_reid: false
+test_tracking: true
 
 # configure Hydra to use the current working directory
 # and set up the output directory according to experiment_name

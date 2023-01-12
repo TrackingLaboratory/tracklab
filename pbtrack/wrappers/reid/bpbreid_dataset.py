@@ -132,6 +132,7 @@ class ReidDataset(ImageDataset):
         mask_size = reid_config.mask_size
         max_crop_size = reid_config.max_crop_size
         reid_set_cfg = reid_config.test if is_test_set else reid_config.train
+        masks_mode = reid_config.masks_mode
 
         print("Loading {} set...".format(split))
 
@@ -185,6 +186,7 @@ class ReidDataset(ImageDataset):
             image_metadatas,
             fig_size,
             mask_size,
+            mode=masks_mode,
         )
 
         # Add 0-based pid column (for Torchreid compatibility) to sampled detections

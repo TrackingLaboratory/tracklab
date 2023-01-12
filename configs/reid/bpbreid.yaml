@@ -6,10 +6,10 @@ job_id: "${oc.env:SLURM_JOBID,0}" # TODO
 save_path: reid
 cfg:
   project:
-    name: "Reconnaissance"
+    name: "PbTrack"
     experiment_name: ""
     notes: ""
-    tags: ["test"]
+    tags: []
     logger:
       use_clearml: False
       use_neptune: False
@@ -20,12 +20,12 @@ cfg:
     type: "image"
     sources: ["PoseTrack21"]
     targets: ["PoseTrack21"]
-    height: 256
-    width: 32
+    height: 384
+    width: 128
     combineall: False
     transforms: ["rc", "re"]
     save_dir: ""
-    workers: 0
+    workers: 8
 
   sampler:
     train_sampler: RandomIdentitySampler # sampler for source train loader
@@ -45,10 +45,10 @@ cfg:
       training_binary_visibility_score: True
       testing_binary_visibility_score: True
       last_stride: 1
-      learnable_attention_enabled: False
+      learnable_attention_enabled: True
       dim_reduce: "after_pooling" # 'none', 'before_pooling', 'after_pooling', 'after_pooling_with_dropout'
       dim_reduce_output: 256
-      backbone: "resnet50" # 'hrnet32' 'resnet50' 'fastreid_resnet' 'fastreid_resnet_ibn' 'fastreid_resnet_nl' 'fastreid_resnet_ibn_nl'
+      backbone: "hrnet32" # 'hrnet32' 'resnet50' 'fastreid_resnet' 'fastreid_resnet_ibn' 'fastreid_resnet_nl' 'fastreid_resnet_ibn_nl'
       test_embeddings: ["bn_foreg", "parts"] #  ['globl', 'foreg', 'conct', 'parts']
       test_use_target_segmentation: "none" # 'none' 'hard' 'soft'
       shared_parts_id_classifier: False
@@ -58,10 +58,36 @@ cfg:
         dir: "gaussian"
         preprocess: "cc6"
 
+  loss:
+    name: 'part_based'
+    part_based:
+      name: 'part_averaged_triplet_loss'
+      ppl: 'cl'
+      weights:
+        globl:
+          id: 1.
+          tr: 0.
+        foreg:
+          id: 1.
+          tr: 0.
+        conct:
+          id: 1.
+          tr: 0.
+        parts:
+          id: 0.
+          tr: 1.
+        pixls:
+          ce: 0.35
+
+  train:
+    batch_size: 32
+    max_epoch: 120
+
   test:
-    evaluate: True # test only
+    evaluate: True
+    detailed_ranking: False
     start_eval: 40
-    batch_size: 1
+    batch_size: 64
     batch_size_pairwise_dist_matrix: 5000
     normalize_feature: True
     dist_metric: "euclidean" # ['euclidean', 'cosine']

@@ -38,21 +38,22 @@ def main(cfg):
     if cfg.train_reid:
         model_reid.train()
 
-    tracker_state = TrackerState(tracking_dataset.val_set)
+    if cfg.test_tracking:
+        tracker_state = TrackerState(tracking_dataset.val_set)
 
-    # Run tracking and visualization
-    tracking_engine = instantiate(
-        cfg.engine,
-        model_detect=model_detect,
-        model_reid=model_reid,
-        model_track=model_track,
-        tracker_state=tracker_state,
-        vis_engine=vis_engine,
-    )
-    tracking_engine.run()
+        # Run tracking and visualization
+        tracking_engine = instantiate(
+            cfg.engine,
+            model_detect=model_detect,
+            model_reid=model_reid,
+            model_track=model_track,
+            tracker_state=tracker_state,
+            vis_engine=vis_engine,
+        )
+        tracking_engine.run()
 
-    # Evaluation
-    evaluator.run(tracker_state)
+        # Evaluation
+        evaluator.run(tracker_state)
 
 
 if __name__ == "__main__":

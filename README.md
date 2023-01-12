@@ -35,6 +35,13 @@ Get into your repo and install the requirements with :
 pip install -r requirements.txt
 ```
 
+#### Setup reid
+
+```bash
+cd plugins/reid/bpbreid/
+python setup.py develop
+```
+
 ### External dependencies
 
 - Get the **PoseTrack21** dataset [here](https://github.com/anDoer/PoseTrack21/tree/35bd7033ec4e1a352ae39b9522df5a683f83781b#how-to-get-the-dataset).
