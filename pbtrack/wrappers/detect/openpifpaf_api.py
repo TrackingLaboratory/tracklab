@@ -32,18 +32,19 @@ class OpenPifPaf(Detector):
     collate_fn = collate_images_anns_meta
 
     def __init__(self, cfg, device):
-        assert (
-            cfg.checkpoint or cfg.train
-        ), "Either a checkpoint or train must be declared"
         self.cfg = cfg
         self.device = device
         self.id = 0
 
-        if cfg.checkpoint:
-            predictor = openpifpaf.Predictor(cfg.checkpoint)
-            self.model = predictor.model.to(device)
-            self.pifpaf_preprocess = predictor.preprocess
-            self.processor = predictor.processor
+        old_argv = sys.argv
+        sys.argv = hydra_to_argv(cfg)
+        openpifpaf.predict.pbtrack_cli()
+        predictor = openpifpaf.Predictor()
+        sys.argv = old_argv
+
+        self.model = predictor.model
+        self.pifpaf_preprocess = predictor.preprocess
+        self.processor = predictor.processor
 
     @torch.no_grad()
     def preprocess(self, img_meta):
@@ -76,14 +77,14 @@ class OpenPifPaf(Detector):
                 self.id += 1
         return detections
 
-    def train(self):
-        pass
-        saved_argv = sys.argv
-        sys.argv += [
-            f"--{str(k)}={str(v)}" for k, v in self.cfg.train.items()
-        ]  # FIXME add multiple args
-        self.cfg.checkpoint = openpifpaf.train.main()
-        sys.argv = saved_argv
-        self.predictor = openpifpaf.Predictor(self.cfg.checkpoint)
-        self.predictor.model.to(self.device)
-        self.predictor.batch_size = self.cfg.batch_size
+def hydra_to_argv(cfg):
+    new_argv = ["argv_from_hydra"]
+    for k, v in cfg.items():
+        new_arg = f"--{str(k)}"
+        if isinstance(v, list):
+            for item in v:
+                new_arg += f" {str(item)}"
+        elif v is not None:
+            new_arg += f"={str(v)}"
+        new_argv.append(new_arg)
+    return new_argv

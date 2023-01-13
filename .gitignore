@@ -6,6 +6,7 @@ multiruns/
 pb-track/
 .vscode/
 notebooks/
+weights/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
