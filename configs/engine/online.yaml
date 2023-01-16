@@ -1,8 +1,9 @@
 _target_: pbtrack.OnlineTrackingEngine
+
 model_detect: "???"
 model_reid: "???"
 model_track: "???"
 tracker_state: "???"
 detect_batchsize: 8
-reid_batchsize: 128
+reid_batchsize: 32
 num_workers: 8

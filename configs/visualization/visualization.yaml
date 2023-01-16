@@ -1,7 +1,7 @@
 _target_: pbtrack.visualization.visualization_engine.VisualisationEngine
 cfg:
   save_images: True
-  save_videos: True
+  save_videos: False
 
   process_n_videos: -1                      # -1 to process all videos
   process_n_frames_by_video: -1             # -1 to process all the frames
@@ -18,9 +18,9 @@ cfg:
     draw_bpbreid_heatmaps: False
 
   ground_truth:
-    draw_bbox: True
-    draw_keypoints: True
-    draw_skeleton: True
+    draw_bbox: False
+    draw_keypoints: False
+    draw_skeleton: False
     # debug
     print_id: False
     print_bbox_confidence: False

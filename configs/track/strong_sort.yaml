@@ -1,4 +1,5 @@
-_target_: pbtrack.wrappers.track.strong_sort_api.StrongSORT
+_target_: pbtrack.wrappers.StrongSORT
+
 cfg:
   ecc: True # activate camera motion compensation
   ema_alpha: 0.9 # updates  appearance  state in  an exponential moving average manner # FIXME is it still used?
