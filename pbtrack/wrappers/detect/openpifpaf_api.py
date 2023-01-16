@@ -1,18 +1,26 @@
 import sys
 import torch
+
 from PIL import Image
+from omegaconf.listconfig import ListConfig
 
 from pbtrack.core.detector import Detector
 from pbtrack.core.datastruct import Detection
 from pbtrack.utils.images import cv2_load_image
-from pbtrack.utils.coordinates import kp_to_bbox_w_threshold
+from pbtrack.utils.coordinates import openpifpaf_kp_to_bbox
 
-import pbtrack
 from pathlib import Path
+import pbtrack
 
 root_dir = Path(pbtrack.__file__).parents[1]
-sys.path.append(str((root_dir / "plugins/detect/openpifpaf/src").resolve())) # FIXME : ugly
+sys.path.append(
+    str((root_dir / "plugins/detect/openpifpaf/src").resolve())
+)  # FIXME : ugly
 import openpifpaf
+
+import logging
+
+log = logging.getLogger(__name__)
 
 
 def collate_images_anns_meta(batch):
@@ -36,15 +44,19 @@ class OpenPifPaf(Detector):
         self.device = device
         self.id = 0
 
-        old_argv = sys.argv
-        sys.argv = hydra_to_argv(cfg)
-        openpifpaf.predict.pbtrack_cli()
-        predictor = openpifpaf.Predictor()
-        sys.argv = old_argv
+        if cfg.predict.checkpoint:
+            old_argv = sys.argv
+            sys.argv = self._hydra_to_argv(cfg.predict)
+            openpifpaf.predict.pbtrack_cli()
+            predictor = openpifpaf.Predictor()
+            sys.argv = old_argv
 
-        self.model = predictor.model
-        self.pifpaf_preprocess = predictor.preprocess
-        self.processor = predictor.processor
+            self.model = predictor.model
+            self.pifpaf_preprocess = predictor.preprocess
+            self.processor = predictor.processor
+            log.info(
+                f"Loaded detection model from checkpoint: {cfg.predict.checkpoint}"
+            )
 
     @torch.no_grad()
     def preprocess(self, img_meta):
@@ -69,22 +81,40 @@ class OpenPifPaf(Detector):
                         image_id=metadata.id,
                         id=self.id,
                         keypoints_xyc=prediction.data,
-                        bbox_ltwh=kp_to_bbox_w_threshold(
-                            prediction.data, vis_threshold=0.05
-                        ),
+                        bbox_ltwh=openpifpaf_kp_to_bbox(prediction.data),
                     )
                 )
                 self.id += 1
         return detections
 
-def hydra_to_argv(cfg):
-    new_argv = ["argv_from_hydra"]
-    for k, v in cfg.items():
-        new_arg = f"--{str(k)}"
-        if isinstance(v, list):
-            for item in v:
-                new_arg += f" {str(item)}"
-        elif v is not None:
-            new_arg += f"={str(v)}"
-        new_argv.append(new_arg)
-    return new_argv
+    def train(self):
+        old_argv = sys.argv
+        sys.argv = self._hydra_to_argv(self.cfg.train)
+        log.info(f"Starting training of the detection model")
+        self.cfg.predict.checkpoint = openpifpaf.train.main()
+        sys.argv = self._hydra_to_argv(self.cfg.predict)
+        openpifpaf.predict.pbtrack_cli()
+        predictor = openpifpaf.Predictor()
+        sys.argv = old_argv
+
+        self.model = predictor.model
+        self.pifpaf_preprocess = predictor.preprocess
+        self.processor = predictor.processor
+        log.info(
+            f"Loaded trained detection model from file: {self.cfg.predict.checkpoint}"
+        )
+
+    def _hydra_to_argv(self, cfg):
+        new_argv = ["argv_from_hydra"]
+        for k, v in cfg.items():
+            new_arg = f"--{str(k)}"
+            if isinstance(v, ListConfig):
+                new_argv.append(new_arg)
+                for item in v:
+                    new_argv.append(f"{str(item)}")
+            elif v is not None:
+                new_arg += f"={str(v)}"
+                new_argv.append(new_arg)
+            else:
+                new_argv.append(new_arg)
+        return new_argv

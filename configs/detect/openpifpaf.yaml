@@ -1,4 +1,22 @@
-_target_: pbtrack.wrappers.detect.openpifpaf_api.OpenPifPaf
+_target_: pbtrack.wrappers.OpenPifPaf
+
 cfg:
-  checkpoint: "shufflenetv2k16"
-  long-edge: 801
+  predict:
+    checkpoint: "shufflenetv2k16"
+    long-edge: 801
+    quiet: null                                 # only show warning messages 
+  train:
+    output: "???"
+    checkpoint: "shufflenetv2k16"
+    lr: 0.00005
+    epochs: 300
+    lr-decay: [280, 290] 
+    lr-decay-epochs: 10
+    weight-decay: 0.00005
+    batch-size: 32
+    loader-workers: 32
+    dataset: "posetrack2021"
+    posetrack2021-train-annotations: "${dataset.dataset_path}/posetrack_data/train/*.json" 
+    posetrack2021-val-annotations: "${dataset.dataset_path}/posetrack_data/val/*.json" 
+    posetrack2021-data-root: "${dataset.dataset_path}"
+    
