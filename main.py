@@ -18,6 +18,7 @@ log = logging.getLogger(__name__)
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def main(cfg):
     device = "cuda" if torch.cuda.is_available() else "cpu"  # TODO support Mac chips
+    log.info(f"Using device: {device}. Starting instantiation of all the instances.")
 
     # Initiate all the instances
     tracking_dataset = instantiate(cfg.dataset)
@@ -33,12 +34,15 @@ def main(cfg):
     evaluator = instantiate(cfg.eval)
 
     if cfg.train_detect:
+        log.info("Training detection model.")
         model_detect.train()
 
     if cfg.train_reid:
+        log.info("Training reid model.")
         model_reid.train()
 
     if cfg.test_tracking:
+        log.info("Starting tracking operation.")
         tracker_state = TrackerState(tracking_dataset.val_set)
 
         # Run tracking and visualization
@@ -53,6 +57,7 @@ def main(cfg):
         tracking_engine.run()
 
         # Evaluation
+        log.info("Starting evaluation.")
         evaluator.run(tracker_state)
 
 
