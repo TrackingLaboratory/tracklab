@@ -99,36 +99,3 @@ class StrongSORT(object):
         bbox_tlwh[:, 0] = bbox_xywh[:, 0] - bbox_xywh[:, 2] / 2.0
         bbox_tlwh[:, 1] = bbox_xywh[:, 1] - bbox_xywh[:, 3] / 2.0
         return bbox_tlwh
-
-    def _xywh_to_xyxy(self, bbox_xywh):
-        x, y, w, h = bbox_xywh
-        x1 = max(int(x - w / 2), 0)
-        x2 = min(int(x + w / 2), self.width - 1)
-        y1 = max(int(y - h / 2), 0)
-        y2 = min(int(y + h / 2), self.height - 1)
-        return x1, y1, x2, y2
-
-    def _tlwh_to_xyxy(self, bbox_tlwh):
-        """
-        TODO:
-            Convert bbox from xtl_ytl_w_h to xc_yc_w_h
-        Thanks JieChen91@github.com for reporting this bug!
-        """
-        x, y, w, h = bbox_tlwh
-        x1 = max(int(x), 0)
-        x2 = min(int(x + w), self.width - 1)
-        y1 = max(int(y), 0)
-        y2 = min(int(y + h), self.height - 1)
-        return x1, y1, x2, y2
-
-    def increment_ages(self):
-        self.tracker.increment_ages()
-
-    def _xyxy_to_tlwh(self, bbox_xyxy):
-        x1, y1, x2, y2 = bbox_xyxy
-
-        t = x1
-        l = y1
-        w = int(x2 - x1)
-        h = int(y2 - y1)
-        return t, l, w, h
