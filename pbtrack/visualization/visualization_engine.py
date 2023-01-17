@@ -116,6 +116,12 @@ class VisualisationEngine:
         bbox = clip_bbox_ltrb_to_img_dim(bbox, patch.shape[1], patch.shape[0]).astype(
             int
         )
+        # bpbreid heatmap (draw before other elements, so that they are not covered by heatmap)
+        if is_prediction and self.cfg.prediction.draw_bpbreid_heatmaps:
+            img_crop = patch[bbox[1] : bbox[3], bbox[0] : bbox[2]]
+            body_masks = detection.body_masks
+            img_crop_with_mask = overlay_heatmap(img_crop, body_masks[0], rgb=True)
+            patch[bbox[1] : bbox[3], bbox[0] : bbox[2]] = img_crop_with_mask
         if (is_prediction and self.cfg.prediction.draw_bbox) or (
             not is_prediction and self.cfg.ground_truth.draw_bbox
         ):
@@ -165,14 +171,8 @@ class VisualisationEngine:
                 if keypoints_c[bone[0] - 1] > 0 and keypoints_c[bone[1] - 1] > 0:
                     cv2.line(
                         patch,
-                        (
-                            keypoints_xy[bone[0] - 1, 0],
-                            keypoints_xy[bone[0] - 1, 1],
-                        ),
-                        (
-                            keypoints_xy[bone[1] - 1, 0],
-                            keypoints_xy[bone[1] - 1, 1],
-                        ),
+                        (keypoints_xy[bone[0] - 1, 0], keypoints_xy[bone[0] - 1, 1],),
+                        (keypoints_xy[bone[1] - 1, 0], keypoints_xy[bone[1] - 1, 1],),
                         color=color_skeleton,
                         thickness=self.cfg.skeleton.thickness,
                         lineType=cv2.LINE_AA,
@@ -205,12 +205,6 @@ class VisualisationEngine:
                 color=color_text,
                 lineType=cv2.LINE_AA,
             )
-        # bpbreid heatmap
-        if is_prediction and self.cfg.prediction.draw_bpbreid_heatmaps:
-            img_crop = patch[bbox[1] : bbox[3], bbox[0] : bbox[2]]
-            body_masks = detection.body_masks
-            img_crop_with_mask = overlay_heatmap(img_crop, body_masks[0], rgb=True)
-            patch[bbox[1] : bbox[3], bbox[0] : bbox[2]] = img_crop_with_mask
 
     def _colors(self, detection, is_prediction):
         if is_prediction:
