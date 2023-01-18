@@ -14,6 +14,21 @@ def kp_to_bbox(kp_xy):
     h = br[1] - lt[1]
     return np.array([lt[0], lt[1], w, h])
 
+def openpifpaf_kp_to_bbox(kp_xy):
+    """Extract bounding box from keypoints for openpifpaf framework.
+    Args:
+        kp_xy (np.ndarray): keypoints in image coordinates, shape (K, 2)
+    Returns:
+        bbox (np.ndarray): bounding box tlwh (COCO format), shape (4,)
+    """
+    # remove keypoints that have not been found
+    kp_xy = kp_xy[kp_xy[:, 2] > 0]
+    lt = np.amin(kp_xy, axis=0)
+    br = np.amax(kp_xy, axis=0)
+    w = br[0] - lt[0]
+    h = br[1] - lt[1]
+    return np.array([lt[0], lt[1], w, h])
+
 
 def kp_to_bbox_w_threshold(kp_xyc, vis_threshold=0.1):
     """Extract bounding box from keypoints with visibility threshold.
@@ -22,7 +37,7 @@ def kp_to_bbox_w_threshold(kp_xyc, vis_threshold=0.1):
     Returns:
         bbox (np.ndarray): bounding box tlwh (COCO format), shape (4,)
     """
-    kp_xy = kp_xyc[kp_xyc[:, 2] > vis_threshold][:, :2]
+    kp_xy = kp_xyc[kp_xyc[:, 2] > vis_threshold]
     return kp_to_bbox(kp_xy)
 
 
@@ -83,10 +98,10 @@ def clip_bbox_ltwh_to_img_dim(bbox_ltwh, img_w, img_h):
         bbox_ltwh (np.ndarray): clipped bounding box, shape (4,)
     """
     l, t, w, h = bbox_ltwh
-    l = np.clip(l, 0, img_w)
-    t = np.clip(t, 0, img_h)
-    w = np.clip(w, 0, img_w - l)
-    h = np.clip(h, 0, img_h - t)
+    l = np.clip(l, 0, img_w - 1)
+    t = np.clip(t, 0, img_h - 1)
+    w = np.clip(w, 0, img_w - 1 - l)
+    h = np.clip(h, 0, img_h - 1 - t)
     assert np.equal(
         np.array([l, t, w, h]), clip_bbox_ltwh_to_img_dim_old(bbox_ltwh, img_w, img_h)
     ).all()
@@ -97,18 +112,18 @@ def clip_bbox_ltwh_to_img_dim_old(bbox_ltwh, img_w, img_h):
     """
     Clip bounding box to image dimensions.
     Args:
-        bbox_ltwh:
-        img_w:
-        img_h:
+        bbox_ltwh (np.ndarray): bounding box, shape (4,)
+        img_w (int): image width
+        img_h (int): image height
 
     Returns:
-
+        bbox_ltwh (np.ndarray): clipped bounding box, shape (4,)
     """
     l, t, w, h = bbox_ltwh.copy()
     l = max(l, 0)
     t = max(t, 0)
-    w = min(l + w, img_w) - l
-    h = min(t + h, img_h) - t
+    w = min(l + w, img_w - 1) - l
+    h = min(t + h, img_h - 1) - t
     return np.array([l, t, w, h])
 
 def clip_bbox_ltrb_to_img_dim(bbox_ltrb, img_w, img_h):
@@ -122,8 +137,8 @@ def clip_bbox_ltrb_to_img_dim(bbox_ltrb, img_w, img_h):
         bbox_ltrb (np.ndarray): clipped bounding box, shape (4,)
     """
     l, t, r, b = bbox_ltrb
-    l = np.clip(l, 0, img_w)
-    t = np.clip(t, 0, img_h)
-    r = np.clip(r, 0, img_w)
-    b = np.clip(b, 0, img_h)
+    l = np.clip(l, 0, img_w - 1)
+    t = np.clip(t, 0, img_h - 1)
+    r = np.clip(r, 0, img_w - 1)
+    b = np.clip(b, 0, img_h - 1)
     return np.array([l, t, r, b])

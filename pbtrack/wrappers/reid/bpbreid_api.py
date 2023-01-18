@@ -89,9 +89,10 @@ class BPBReId(ReIdentifier):
         # image = metadata.load_image()  # FIXME load_image() doesn't work because of ImageMetadata.__getattr__(
         image = cv2_load_image(metadata.file_path)
         ltrb = detection.bbox_ltrb
-        l, t, r, b = clip_bbox_ltrb_to_img_dim(
+        l, t, r, b = np.round(clip_bbox_ltrb_to_img_dim(
             ltrb, image.shape[1], image.shape[0]
-        ).astype(int)
+        )).astype(int)
+        # TODO add a check to see if the bbox is not empty. t == b or l == r -> return error
         crop = image[t:b, l:r]
         keypoints = detection.keypoints_xyc
         bbox_ltwh = np.array([l, t, r - l, b - t])
@@ -154,11 +155,3 @@ class BPBReId(ReIdentifier):
     def train(self):
         self.engine, self.model = build_torchreid_model_engine(self.cfg)
         self.engine.run(**engine_run_kwargs(self.cfg))
-
-    def _xywh_to_xyxy(self, bbox_xywh, width, height):
-        x, y, w, h = bbox_xywh
-        x1 = max(int(x - w / 2), 0)
-        x2 = min(int(x + w / 2), width - 1)
-        y1 = max(int(y - h / 2), 0)
-        y2 = min(int(y + h / 2), height - 1)
-        return x1, y1, x2, y2

@@ -1,4 +1,4 @@
-_target_: pbtrack.wrappers.eval.posetrack21_evaluator.PoseTrack21
+_target_: pbtrack.wrappers.PoseTrack21Evaluator
 
 cfg:
   eval_pose_estimation: True
@@ -12,7 +12,7 @@ cfg:
     RETURN_ON_ERROR: False # if not BREAK_ON_ERROR, then returns from function on error
     LOG_ON_ERROR: null # if not None, save any errors into specified log file
     PRINT_COMBINED_SUMMARY_ONLY: False # Combines metrics across all classes
-    TIME_PROGRESS: True # Profiling option for the evaluation
+    TIME_PROGRESS: False # Profiling option for the evaluation
     DISPLAY_LESS_PROGRESS: True # show less progress information
     OUTPUT_PAPER_SUMMARY: True # Output latex paper summary
     OUTPUT_EMPTY_CLASSES: True # If False, summary files are not output for classes with no detections
@@ -35,9 +35,9 @@ cfg:
     RETURN_ON_ERROR: False # if not BREAK_ON_ERROR, then returns from function on error
     LOG_ON_ERROR: null # if not None, save any errors into specified log file
     PRINT_RESULTS: True # show the results in the terminal
-    PRINT_COMBINED_SUMMARY_ONLY: True # Combines metrics across all classes
+    PRINT_COMBINED_SUMMARY_ONLY: False # Combines metrics across all classes
     PRINT_PAPER_SUMMARY: True # Output latex paper summary
-    TIME_PROGRESS: True # Profiling option for the evaluation
+    TIME_PROGRESS: False # Profiling option for the evaluation
     DISPLAY_LESS_PROGRESS: True # show less progress information
     OUTPUT_PAPER_SUMMARY: True # Output latex paper summary
     OUTPUT_EMPTY_CLASSES: True # If False, summary files are not output for classes with no detections

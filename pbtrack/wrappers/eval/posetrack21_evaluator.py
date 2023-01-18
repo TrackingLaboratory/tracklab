@@ -219,7 +219,7 @@ class PoseTrack21(Evaluator):
             ]
             images[video_name] = images_by_video[
                 ["file_name", "id", "frame_id"]
-            ].to_dict("record")
+            ].to_dict("records")
         return images
 
     # TODO fuse different annotations functions
@@ -251,7 +251,7 @@ class PoseTrack21(Evaluator):
             predictions_by_video = predictions[predictions["image_id"].isin(image_ids)]
             annotations[video_name] = predictions_by_video[
                 ["bbox", "image_id", "keypoints", "scores", "person_id", "track_id"]
-            ].to_dict("record")
+            ].to_dict("records")
         return annotations
 
     def _annotations_pose_tracking_eval(self, predictions, image_metadatas):
@@ -283,7 +283,7 @@ class PoseTrack21(Evaluator):
             predictions_by_video = predictions[predictions["image_id"].isin(image_ids)]
             annotations[video_name] = predictions_by_video[
                 ["bbox", "image_id", "keypoints", "scores", "person_id", "track_id"]
-            ].to_dict("record")
+            ].to_dict("records")
         return annotations
 
     def _annotations_reid_pose_tracking_eval(self, predictions, image_metadatas):
@@ -310,7 +310,7 @@ class PoseTrack21(Evaluator):
             predictions_by_video = predictions[predictions["image_id"].isin(image_ids)]
             annotations[video_name] = predictions_by_video[
                 ["bbox", "image_id", "keypoints", "scores", "person_id", "track_id"]
-            ].to_dict("record")
+            ].to_dict("records")
         return annotations
 
     def _save_json(self, images, annotations, path):

@@ -90,15 +90,26 @@ class OnlineTrackingEngine(pl.LightningModule):
             video_id: the video id. must be the same as video.name
 
         """
+        start = timer()
+        log.info(f"Starting tracking on video: {video_id}")
         imgs_meta = self.img_metadatas
         self.detection_datapipe.update(imgs_meta[imgs_meta.video_id == video_id])
         self.model_track.reset()
 
+        start_process = timer()
         detections_list = self.trainer.predict(self, dataloaders=self.detection_dl)
+        process_time = timer() - start_process
         detections = pd.concat(detections_list)
         self.tracker_state.update(detections)
+        start_vis = timer()
         self.vis_engine.run(self.tracker_state, video_id)
+        vis_time = timer() - start_vis
         self.tracker_state.free(video_id)
+        video_time = timer() - start
+        log.info(
+            f"Completed video in {video_time:0.2f}s. (Detect+reid+track {process_time:0.2f}s, "
+            + f"visualization {vis_time:0.2f}s and rest is {(video_time - process_time - vis_time):0.2f}s)"
+        )
 
     def predict_step(self, batch, batch_idx):
         """Steps through tracking predictions for one image.
@@ -166,21 +177,27 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
 
     def video_step(self, video, video_id):
         start = timer()
+        log.info(f"Starting tracking on video: {video_id}")
         self.trainer = pl.Trainer()
         self.model_track.reset()
         imgs_meta = self.img_metadatas[self.img_metadatas.video_id == video_id]
         self.detection_datapipe.update(imgs_meta)
         model_detect = OfflineDetector(self.model_detect, imgs_meta)
+        start_detect = timer()
         detections_list = self.trainer.predict(
             model_detect, dataloaders=self.detection_dl
         )
+        detect_time = timer() - start_detect
         detections = pd.concat(detections_list)
 
         self.reid_datapipe.update(imgs_meta, detections)
         model_reid = OfflineReider(self.model_reid, imgs_meta, detections)
+        start_reid = timer()
         detections_list = self.trainer.predict(model_reid, dataloaders=self.reid_dl)
+        reid_time = timer() - start_reid
         reid_detections = pd.concat(detections_list)
 
+        tracking_time = 0
         track_detections = []
         for image_id in imgs_meta.index:
             if len(reid_detections) == 0:
@@ -192,9 +209,11 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
             model_track = OfflineTracker(
                 self.model_track, imgs_meta.loc[[image_id]], detections
             )
+            start_track = timer()
             detections_list = self.trainer.predict(
                 model_track, dataloaders=self.track_dl
             )
+            tracking_time += timer() - start_track
             track_detections += detections_list
 
         if len(track_detections) > 0:
@@ -203,10 +222,16 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
             detections = Detections()
 
         self.tracker_state.update(detections)
+        start_vis = timer()
         self.vis_engine.run(self.tracker_state, video_id)
+        vis_time = timer() - start_vis
         self.tracker_state.free(video_id)
-        end = timer()
-        log.info(f"Completed video {video_id} in {end-start}s")
+        video_time = timer() - start
+        log.info(
+            f"Completed video in {video_time:0.2f}s. (Detect {detect_time:0.2f}s, reid "
+            + f"{reid_time:0.2f}s, track {tracking_time:0.2f}s, visualization {vis_time:0.2f}s "
+            + f"and rest {(video_time - detect_time - reid_time - tracking_time - vis_time):0.2f}s)"
+        )
 
 
 class OfflineDetector(pl.LightningModule):
