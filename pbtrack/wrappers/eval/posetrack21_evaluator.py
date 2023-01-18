@@ -4,7 +4,7 @@ import json
 import numpy as np
 import pandas as pd
 
-from pbtrack.core.evaluator import Evaluator
+from pbtrack.core.evaluator import Evaluator as EvaluatorBase
 
 import pbtrack
 from pathlib import Path
@@ -34,7 +34,7 @@ from posetrack21.trackeval.metrics import (
 )
 
 
-class PoseTrack21(Evaluator):
+class PoseTrack21(EvaluatorBase):
     def __init__(self, cfg):
         self.cfg = cfg
 
@@ -61,6 +61,7 @@ class PoseTrack21(Evaluator):
                 tracker_state.predictions, tracker_state.gt.image_metadatas
             )
             self._save_mot(mot_df, mot_tracker_path)
+            self.cfg.mot_dataset.TRACKERS_FOLDER = os.path.abspath(self.cfg.mot_dataset.TRACKERS_FOLDER)
             # run evaluator - HOTA
             self.mot_evaluator.evaluate(
                 [PoseTrackMOT(self.cfg.mot_dataset)], self.mot_metrics
@@ -123,6 +124,7 @@ class PoseTrack21(Evaluator):
                 tracker_state.predictions, tracker_state.gt.image_metadatas
             )
             self._save_json(images, annotations, dataset_cfg.TRACKERS_FOLDER)
+            dataset_cfg.TRACKERS_FOLDER = os.path.abspath(dataset_cfg.TRACKERS_FOLDER)
             # run evaluator
             self.pose_tracking_evaluator.evaluate(
                 [PoseTrack(dataset_cfg)], self.pose_tracking_metrics
@@ -151,17 +153,13 @@ class PoseTrack21(Evaluator):
             left_on="id",
             right_on="image_id",
         )
+        len_before_drop = len(df)
         df.dropna(
-            subset=[
-                "video_name",
-                "frame",
-                "track_id",
-                "bbox_ltwh",
-                "keypoints_xyc",
-            ],
+            subset=["video_name", "frame", "track_id", "bbox_ltwh", "keypoints_xyc",],
             how="any",
             inplace=True,
         )
+        print("Dropped {} rows with NA values".format(len_before_drop - len(df)))
         df["bb_left"] = df["bbox_ltwh"].apply(lambda x: x[0])
         df["bb_top"] = df["bbox_ltwh"].apply(lambda x: x[1])
         df["bb_width"] = df["bbox_ltwh"].apply(lambda x: x[2])
@@ -191,22 +189,13 @@ class PoseTrack21(Evaluator):
                     "z",
                 ]
             ].to_csv(
-                file_path,
-                header=False,
-                index=False,
+                file_path, header=False, index=False,
             )
 
     # PoseTrack helper functions
     def _images(self, image_metadatas):
         image_metadatas.dropna(
-            subset=[
-                "video_name",
-                "file_path",
-                "id",
-                "frame",
-            ],
-            how="any",
-            inplace=True,
+            subset=["video_name", "file_path", "id", "frame",], how="any", inplace=True,
         )
         image_metadatas.rename(columns={"file_path": "file_name"}, inplace=True)
         image_metadatas["frame_id"] = image_metadatas["id"]
@@ -226,17 +215,10 @@ class PoseTrack21(Evaluator):
     def _annotations_pose_estimation_eval(self, predictions, image_metadatas):
         predictions = predictions.copy()  # FIXME is it required ?
         predictions.dropna(
-            subset=[
-                "keypoints_xyc",
-                "bbox_ltwh",
-                "image_id",
-            ],
-            how="any",
-            inplace=True,
+            subset=["keypoints_xyc", "bbox_ltwh", "image_id",], how="any", inplace=True,
         )
         predictions.rename(
-            columns={"keypoints_xyc": "keypoints", "bbox_ltwh": "bbox"},
-            inplace=True,
+            columns={"keypoints_xyc": "keypoints", "bbox_ltwh": "bbox"}, inplace=True,
         )
         predictions["scores"] = predictions["keypoints"].apply(
             lambda x: x[:, 2]
@@ -257,18 +239,12 @@ class PoseTrack21(Evaluator):
     def _annotations_pose_tracking_eval(self, predictions, image_metadatas):
         predictions = predictions.copy()  # FIXME is it required ?
         predictions.dropna(
-            subset=[
-                "keypoints_xyc",
-                "bbox_ltwh",
-                "image_id",
-                "track_id",
-            ],
+            subset=["keypoints_xyc", "bbox_ltwh", "image_id", "track_id",],
             how="any",
             inplace=True,
         )
         predictions.rename(
-            columns={"keypoints_xyc": "keypoints", "bbox_ltwh": "bbox"},
-            inplace=True,
+            columns={"keypoints_xyc": "keypoints", "bbox_ltwh": "bbox"}, inplace=True,
         )
         predictions["scores"] = predictions["keypoints"].apply(
             lambda x: x[:, 2]
@@ -294,8 +270,7 @@ class PoseTrack21(Evaluator):
             inplace=True,
         )
         predictions.rename(
-            columns={"keypoints_xyc": "keypoints", "bbox_ltwh": "bbox"},
-            inplace=True,
+            columns={"keypoints_xyc": "keypoints", "bbox_ltwh": "bbox"}, inplace=True,
         )
         predictions["scores"] = predictions["keypoints"].apply(
             lambda x: x[:, 2]
