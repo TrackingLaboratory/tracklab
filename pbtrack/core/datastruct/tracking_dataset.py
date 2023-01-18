@@ -28,6 +28,7 @@ class TrackingDataset(ABC):
         test_set: TrackingSet,
         nvid: int = -1,
         nframes: int = -1,
+        vids_dict: list = None,
         *args,
         **kwargs
     ):
@@ -36,14 +37,30 @@ class TrackingDataset(ABC):
         self.val_set = val_set
         self.test_set = test_set
 
-        if nvid > 0 or nframes > 0:  # TODO nvid can be -1 and nframes can be > 0
-            self.train_set = self._subsample(self.train_set, nvid, nframes)
-            self.val_set = self._subsample(self.val_set, nvid, nframes)
+        if nvid > 0 or nframes > 0 or (vids_dict is not None and len(vids_dict) > 0):
+            self.train_set = self._subsample(self.train_set, nvid, nframes, vids_dict)
+            self.val_set = self._subsample(self.val_set, nvid, nframes, vids_dict)
 
-    def _subsample(self, tracking_set, nvid=2, nframes=5):
+    def _subsample(self, tracking_set, nvid, nframes, vids_dict):
         # filter videos:
-        videos_to_keep = tracking_set.video_metadatas.sample(nvid, random_state=2).index
-        tiny_video_metadatas = tracking_set.video_metadatas.loc[videos_to_keep]
+        vids_names = (
+            set(vids_dict[tracking_set.split])
+            if tracking_set.split in vids_dict
+            else None
+        )
+        if vids_names is not None and len(vids_names) > 0:  # keep videos in vids_dict
+            videos_to_keep = tracking_set.video_metadatas[
+                tracking_set.video_metadatas.name.isin(vids_names)
+            ].index
+            tiny_video_metadatas = tracking_set.video_metadatas.loc[videos_to_keep]
+        elif nvid > 0:  # keep 'nvid' videos
+            videos_to_keep = tracking_set.video_metadatas.sample(
+                nvid, random_state=2
+            ).index
+            tiny_video_metadatas = tracking_set.video_metadatas.loc[videos_to_keep]
+        else:  # keep all videos
+            videos_to_keep = tracking_set.video_metadatas.index
+            tiny_video_metadatas = tracking_set.video_metadatas
 
         # filter images:
         # keep only images from videos to keep
