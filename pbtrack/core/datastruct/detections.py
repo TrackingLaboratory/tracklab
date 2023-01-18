@@ -49,6 +49,7 @@ class Detection(pd.Series):
         id,
         bbox_ltwh=pd.NA,
         keypoints_xyc=pd.NA,
+        heatmaps=pd.NA,
         person_id=pd.NA,
         category_id=pd.NA,
         **kwargs
@@ -59,6 +60,7 @@ class Detection(pd.Series):
                 id=id,
                 bbox_ltwh=bbox_ltwh,
                 keypoints_xyc=keypoints_xyc,
+                heatmaps=heatmaps,
                 person_id=person_id,
                 category_id=category_id,
                 **kwargs

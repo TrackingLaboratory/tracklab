@@ -9,7 +9,10 @@ import pandas as pd
 from math import ceil
 from pathlib import Path
 from skimage.transform import resize
+from torch.utils.data import DataLoader
 from tqdm import tqdm
+
+from pbtrack.core import EngineDatapipe
 from pbtrack.core.datastruct.tracking_dataset import TrackingDataset
 from pbtrack.utils.coordinates import (
     rescale_keypoints,
@@ -70,6 +73,15 @@ class ReidDataset(ImageDataset):
         self.pose_model = pose_model
         self.dataset_path = Path(self.tracking_dataset.dataset_path)
         self.masks_dir = masks_dir
+        self.pose_datapipe = EngineDatapipe(self.pose_model)
+        self.pose_dl = DataLoader(
+            dataset=self.pose_datapipe,
+            batch_size=128,
+            num_workers=0,  # FIXME issue with higher
+            collate_fn=type(self.pose_model).collate_fn,
+            persistent_workers=False,
+        )
+
         assert (
             self.reid_config.train.max_samples_per_id
             >= self.reid_config.train.min_samples_per_id
@@ -381,16 +393,27 @@ class ReidDataset(ImageDataset):
                 img_metadata = metadatas_df[metadatas_df.id == image_id].iloc[0]
                 # load image once to get video frame size
                 if mode == "pose_on_img":
-                    img = cv2.imread(img_metadata.file_path)
-                    _, masks_gt_or = self.pose_model.run(
-                        torch.from_numpy(img).permute((2, 0, 1)).unsqueeze(0)
-                    )  # TODO check if pose_model need BRG or RGB
-                    masks_gt_or = (
-                        masks_gt_or.squeeze(0).permute((1, 2, 0)).numpy()
-                    )  # TODO why that permute needed? for old resize?
-                    masks_gt = resize(
-                        masks_gt_or, (img.shape[0], img.shape[1], masks_gt_or.shape[2])
+                    detections_list = []
+                    self.pose_datapipe.update(
+                        metadatas_df[metadatas_df.id == image_id], None
                     )
+                    for idxs, pose_batch in self.pose_dl:
+                        batch_metadatas = metadatas_df.loc[idxs]
+                        dets_df = self.pose_model.process(pose_batch, batch_metadatas)
+                        detections_list.extend(dets_df)
+
+                    masks_gt_or = torch.concat(
+                        (
+                            detections_list[0].heatmaps[0][:, 1],
+                            detections_list[0].heatmaps[1][:, 1],
+                        )
+                    )
+                    img = cv2.imread(img_metadata.file_path)
+                    masks_gt = resize(
+                        masks_gt_or.numpy(),
+                        (masks_gt_or.numpy().shape[0], img.shape[0], img.shape[1]),
+                    )
+
                 # loop on detections in frame
                 for det_metadata in dets_from_img.itertuples():
                     if mode == "gaussian_keypoints":
@@ -429,9 +452,9 @@ class ReidDataset(ImageDataset):
                         l, t, w, h = bbox_ltwh
                         img_crop = img[t : t + h, l : l + w]
                         img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
-                        masks_gt_crop = masks_gt[t : t + h, l : l + w]
+                        masks_gt_crop = masks_gt[:, t : t + h, l : l + w]
                         masks_gt_crop = resize(
-                            masks_gt_crop, (fig_h, fig_w, masks_gt_crop.shape[2])
+                            masks_gt_crop, (masks_gt_crop.shape[0], fig_h, fig_w)
                         )
                     else:
                         raise ValueError("Invalid human parsing method")
