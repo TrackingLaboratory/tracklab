@@ -62,6 +62,7 @@ def load_annotations(anns_path, split):
             categories = data_dict["categories"]
             video_metadata = {
                 "id": data_dict["images"][0]["vid_id"],
+                "name": path.stem,
                 "categories": categories,
             }
             video_metadatas.append(video_metadata)

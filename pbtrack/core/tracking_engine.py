@@ -70,7 +70,7 @@ class OnlineTrackingEngine(pl.LightningModule):
         self.track_datapipe = EngineDatapipe(self.model_track)
         self.track_dl = DataLoader(
             dataset=self.track_datapipe,
-            batch_size=2**16,
+            batch_size=2 ** 16,
             num_workers=0,
             persistent_workers=False,
         )
