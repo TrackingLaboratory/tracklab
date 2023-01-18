@@ -393,20 +393,17 @@ class ReidDataset(ImageDataset):
                 img_metadata = metadatas_df[metadatas_df.id == image_id].iloc[0]
                 # load image once to get video frame size
                 if mode == "pose_on_img":
-                    detections_list = []
+                    fields_list = []
                     self.pose_datapipe.update(
                         metadatas_df[metadatas_df.id == image_id], None
                     )
                     for idxs, pose_batch in self.pose_dl:
                         batch_metadatas = metadatas_df.loc[idxs]
-                        dets_df = self.pose_model.process(pose_batch, batch_metadatas)
-                        detections_list.extend(dets_df)
+                        _, fields = self.pose_model.process(pose_batch, batch_metadatas)
+                        fields_list.extend(fields)
 
                     masks_gt_or = torch.concat(
-                        (
-                            detections_list[0].heatmaps[0][:, 1],
-                            detections_list[0].heatmaps[1][:, 1],
-                        )
+                        (fields_list[0][0][:, 1], fields_list[0][1][:, 1],)
                     )
                     img = cv2.imread(img_metadata.file_path)
                     masks_gt = resize(

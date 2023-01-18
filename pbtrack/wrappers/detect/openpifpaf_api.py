@@ -60,8 +60,8 @@ class OpenPifPaf(Detector):
             self.model, processed_image_batch, device=self.device
         )
         detections = []
-        for predictions, fields, meta, (_, metadata) in zip(
-            pred_batch, fields_batch, metas, metadatas.iterrows()
+        for predictions, meta, (_, metadata) in zip(
+            pred_batch, metas, metadatas.iterrows()
         ):
             for prediction in predictions:
                 prediction = prediction.inverse_transform(meta)
@@ -70,14 +70,13 @@ class OpenPifPaf(Detector):
                         image_id=metadata.id,
                         id=self.id,
                         keypoints_xyc=prediction.data,
-                        heatmaps=fields,
                         bbox_ltwh=kp_to_bbox_w_threshold(
                             prediction.data, vis_threshold=0.05
                         ),
                     )
                 )
                 self.id += 1
-        return detections
+        return detections, fields_batch
 
     def train(self):
         pass
