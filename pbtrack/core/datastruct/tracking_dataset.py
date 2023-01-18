@@ -69,7 +69,8 @@ class TrackingDataset(ABC):
         ]
 
         # keep only images from first nframes
-        tiny_image_metadatas = tiny_image_metadatas.groupby("video_id").head(nframes)
+        if nframes > 0:
+            tiny_image_metadatas = tiny_image_metadatas.groupby("video_id").head(nframes)
 
         # filter detections:
         tiny_detections = tracking_set.detections[
