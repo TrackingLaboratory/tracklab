@@ -13,6 +13,8 @@ import logging
 
 log = logging.getLogger(__name__)
 
+import warnings
+warnings.filterwarnings("ignore", ".*does not have many workers.*")  # Disable UserWarning for DataLoaders with num_workers=0
 
 class OnlineTrackingEngine(pl.LightningModule):
     """Online tracking engine
