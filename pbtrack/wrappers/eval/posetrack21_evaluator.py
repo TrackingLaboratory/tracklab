@@ -70,6 +70,7 @@ class PoseTrack21(EvaluatorBase):
             dataset = PTWrapper(
                 self.cfg.mot_dataset.GT_FOLDER,
                 self.cfg.mot_evaluator.dataset_path,
+                self.cfg.mot_dataset['SEQS'],
                 vis_threshold=0.1,
             )
             mot_accums = []
