@@ -189,6 +189,8 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
         )
         detect_time = timer() - start_detect
         detections = pd.concat(detections_list)
+        if detections.empty:
+            return detections
 
         self.reid_datapipe.update(imgs_meta, detections)
         model_reid = OfflineReider(self.model_reid, imgs_meta, detections)
