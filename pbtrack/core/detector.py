@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union, Tuple
 from abc import abstractmethod, ABC
 
 from torch.utils.data.dataloader import default_collate
@@ -40,7 +40,9 @@ class Detector(ABC):
         pass
 
     @abstractmethod
-    def process(self, preprocessed_batch, metadatas: ImageMetadatas) -> List[Detection]:
+    def process(
+        self, preprocessed_batch, metadatas: ImageMetadatas, return_fields=False
+    ) -> Union[List[Detection], Tuple[List[Detection], object]]:
         """Your processing function to run the detector
         Args:
             preprocessed_batch (object): output of preprocess() by batch

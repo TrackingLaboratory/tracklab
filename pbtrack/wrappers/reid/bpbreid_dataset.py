@@ -399,7 +399,9 @@ class ReidDataset(ImageDataset):
                     )
                     for idxs, pose_batch in self.pose_dl:
                         batch_metadatas = metadatas_df.loc[idxs]
-                        _, fields = self.pose_model.process(pose_batch, batch_metadatas)
+                        _, fields = self.pose_model.process(
+                            pose_batch, batch_metadatas, return_fields=True
+                        )
                         fields_list.extend(fields)
 
                     masks_gt_or = torch.concat(

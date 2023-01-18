@@ -54,7 +54,7 @@ class OpenPifPaf(Detector):
         return processed_image, anns, meta
 
     @torch.no_grad()
-    def process(self, preprocessed_batch, metadatas):
+    def process(self, preprocessed_batch, metadatas, return_fields=False):
         processed_image_batch, _, metas = preprocessed_batch
         pred_batch, fields_batch = self.processor.batch(
             self.model, processed_image_batch, device=self.device
@@ -76,7 +76,10 @@ class OpenPifPaf(Detector):
                     )
                 )
                 self.id += 1
-        return detections, fields_batch
+        if return_fields:
+            return detections, fields_batch
+        else:
+            return detections
 
     def train(self):
         pass
