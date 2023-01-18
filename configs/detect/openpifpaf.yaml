@@ -6,7 +6,7 @@ cfg:
     long-edge: 801
     quiet: null                                 # only show warning messages 
   train:
-    output: "???"
+    output: "${save_dir}/openpifpaf"
     checkpoint: "shufflenetv2k16"
     lr: 0.00005
     epochs: 300
