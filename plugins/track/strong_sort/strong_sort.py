@@ -54,7 +54,7 @@ class StrongSORT(object):
                         reid_features[i].cpu(), dtype=np.float32
                     ),
                     "visibility_scores": np.asarray(
-                        visibility_scores[i].cpu(), dtype=np.float32
+                        visibility_scores[i].cpu()
                     ),
                 },
             )
@@ -68,7 +68,15 @@ class StrongSORT(object):
         # output bbox identities
         outputs = []
         for track in self.tracker.tracks:
-            if not track.is_confirmed() or track.time_since_update > 1:
+            if not track.is_confirmed() or track.time_since_update > 0:
+                # Vlad: Before 'track.time_since_update > 0', it was 'track.time_since_update > 1', which means that a
+                # track that was not updated at the current frame but was updated at the previous frame would still be
+                # returned. Because of this, the last detection in that track would be outputted twice in a row,
+                # which is not what we want. The original StrongSORT implementation was not returning the last detection
+                # in the tracklet, but rather the predicted bbox in the current frame (computed using the Kalman filter
+                # and the tracklet history). Consequently, it could have made sense to output the predicted bbox here
+                # even if the tracklet was not updated, but why doing it onlu for tracklets with
+                # track.time_since_update = 1? Why not put that value "1" as a parameter of the tracker?
                 continue
 
             det = track.last_detection_to_tlwh()
