@@ -119,9 +119,11 @@ def _nn_part_based(y, x):
     # if np.isnan(x_features).any():
     #     raise ValueError("NaN in features")
 
-    distances = compute_distance_matrix_using_bp_features(torch.from_numpy(y_features).unsqueeze(0), torch.from_numpy(x_features), torch.from_numpy(y_visibility_scores).unsqueeze(0), torch.from_numpy(x_visibility_scores))
+    distances = compute_distance_matrix_using_bp_features(torch.from_numpy(y_features).unsqueeze(0),
+                                                          torch.from_numpy(x_features),
+                                                          torch.from_numpy(y_visibility_scores).unsqueeze(0),
+                                                          torch.from_numpy(x_visibility_scores))
     distances = distances[0]
-    distances = 1 - distances.numpy()
     return distances.mean(axis=0)
 
 
