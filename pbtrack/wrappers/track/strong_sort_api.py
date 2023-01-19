@@ -62,14 +62,14 @@ class StrongSORT(OnlineTracker):
                     "track_bbox_tlwh": list(results[:, 0:4]),
                     "track_bbox_conf": results[:, 6],
                     "track_id": results[:, 4].astype(int),
-                    "person_id": results[:, 4].astype(int),
                 },
                 index=results[:, -1].astype(int),
             )
-
-            detections = detections.merge(
-                track_df, left_index=True, right_index=True, validate="one_to_one"
-            )
+            assert track_df.index.isin(detections.index).all(), "StrongSORT returned detections with unknown indices"
+            merged_detections = detections.join(track_df, how='left')
+            assert merged_detections.index.equals(detections.index), "Merge with StrongSORT results failed, some " \
+                                                                     "detections were lost or added"
+            detections = merged_detections
         else:  # FIXME
             detections["track_bbox_tlwh"] = pd.NA
             detections["track_bbox_conf"] = pd.NA
