@@ -57,8 +57,12 @@ def main(cfg):
         tracking_engine.run()
 
         # Evaluation
-        log.info("Starting evaluation.")
-        evaluator.run(tracker_state)
+        if cfg.dataset.nframes == -1:
+            log.info("Starting evaluation.")
+            evaluator.run(tracker_state)
+        else:
+            print("Skipping evaluation because only part of video was tracked (i.e. 'cfg.dataset.nframes' was not set "
+                  "to -1)")
 
 
 if __name__ == "__main__":
