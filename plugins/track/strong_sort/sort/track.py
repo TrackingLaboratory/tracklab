@@ -88,6 +88,7 @@ class Track:
         self.kf = KalmanFilter()
         self.mean, self.covariance = self.kf.initiate(detection.to_xyah())
         self.last_detection = detection
+        self.update_state()  # update state to confirmed if n_init = 1
 
     def to_tlwh(self):
         """Get current position in bounding box format `(top left x, top left y,
@@ -302,6 +303,10 @@ class Track:
 
         self.hits += 1
         self.time_since_update = 0
+        self.update_state()
+
+    def update_state(self):
+        """Update the state of the tracklet to "confirmed" if it was updated enough times"""
         if self.state == TrackState.Tentative and self.hits >= self._n_init:
             self.state = TrackState.Confirmed
 
