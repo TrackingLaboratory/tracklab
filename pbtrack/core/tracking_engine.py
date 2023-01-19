@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 import warnings
 warnings.filterwarnings("ignore", ".*does not have many workers.*")  # Disable UserWarning for DataLoaders with num_workers=0
 
+
 class OnlineTrackingEngine(pl.LightningModule):
     """Online tracking engine
 
@@ -169,9 +170,11 @@ class OnlineTrackingEngine(pl.LightningModule):
                 )
 
         if len(track_detections) > 0:
-            return pd.concat(track_detections)
+            track_detections = pd.concat(track_detections)
         else:
-            return Detections()
+            track_detections = Detections()
+
+        return track_detections
 
 
 class OfflineTrackingEngine(OnlineTrackingEngine):
