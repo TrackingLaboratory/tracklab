@@ -222,7 +222,7 @@ class Tracker:
     def _initiate_track(self, detection, class_id, conf):
         self.tracks.append(
             Track(
-                detection.to_xyah(),
+                detection,
                 self._next_id,
                 class_id,
                 conf,

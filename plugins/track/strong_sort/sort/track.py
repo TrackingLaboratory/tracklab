@@ -86,7 +86,7 @@ class Track:
         self._max_age = max_age
 
         self.kf = KalmanFilter()
-        self.mean, self.covariance = self.kf.initiate(detection)
+        self.mean, self.covariance = self.kf.initiate(detection.to_xyah())
         self.last_detection = detection
 
     def to_tlwh(self):
