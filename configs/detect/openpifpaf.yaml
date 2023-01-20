@@ -2,21 +2,52 @@ _target_: pbtrack.wrappers.OpenPifPaf
 
 cfg:
   predict:
-    checkpoint: "shufflenetv2k16"
-    long-edge: 801
-    quiet: null                                 # only show warning messages 
+    checkpoint: "shufflenetv2k30"
+    long-edge: 501                              # rescale the long side of the image (aspect ratio maintained)
+    quiet: null                                 # only show warning messages
+    dense-connections: null                     # use denser associations
+    instance-threshold: 0.15                    # filter instances by score (default: 0.15)
+    keypoint-threshold: 0.15                    # filter keypoints by score (default: 0.15)
+
+  bbox:
+    top_extend_factor: 0.03
+    bottom_extend_factor: 0.1
+    left_right_extend_factor: 0.1
+  
   train:
-    output: "${save_dir}/openpifpaf"
-    checkpoint: "shufflenetv2k16"
-    lr: 0.00005
-    epochs: 300
-    lr-decay: [280, 290] 
-    lr-decay-epochs: 10
-    weight-decay: 0.00005
-    batch-size: 32
+    output: ""
+    checkpoint: "shufflenetv2k30"
+    posetrack2021-with-dense: null
+
+    lr: 0.0001
+    epochs: 225
+    momentum: 0.95
+    clip-grad-value: 10.0
+    encoder-suppress-invisible: null
+    lr-decay: [210, 215, 220]
+    lr-decay-epochs: 5
+    weight-decay: 0.000001
+    batch-size: 8
     loader-workers: 32
-    dataset: "posetrack2021"
-    posetrack2021-train-annotations: "${dataset.dataset_path}/posetrack_data/train/*.json" 
-    posetrack2021-val-annotations: "${dataset.dataset_path}/posetrack_data/val/*.json" 
+
+    dataset: "posetrack2021-cocokp"
+    dataset-weight: [1, 1]
+    stride-apply: 2
+    
+    posetrack2021-upsample: 2
+    posetrack2021-orientation-invariant: 0.1
+    posetrack2021-blur: 0.1
+    posetrack2021-square-edge: 513
+    posetrack2021-train-annotations: "${dataset.dataset_path}/posetrack_data/train/*.json"
+    posetrack2021-val-annotations: "${dataset.dataset_path}/posetrack_data/val/*.json"
     posetrack2021-data-root: "${dataset.dataset_path}"
+    
+    cocokp-upsample: 2
+    cocokp-orientation-invariant: 0.1
+    cocokp-blur: 0.1
+    cocokp-square-edge: 513
+    cocokp-train-annotations: "${data_dir}/COCO/annotations/person_keypoints_train2017.json"
+    cocokp-val-annotations: "${data_dir}/COCO/annotations/person_keypoints_val2017.json"
+    cocokp-train-image-dir: "${data_dir}/COCO/train2017"
+    cocokp-val-image-dir: "${data_dir}/COCO/val2017"
     
