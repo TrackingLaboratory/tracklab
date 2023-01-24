@@ -24,6 +24,7 @@ class StrongSORT(OnlineTracker):
             max_age=self.cfg.max_age,
             n_init=self.cfg.n_init,
             nn_budget=self.cfg.nn_budget,
+            min_bbox_confidence=self.cfg.min_bbox_confidence,
         )
         # For camera compensation
         self.prev_frame = None
@@ -38,19 +39,19 @@ class StrongSORT(OnlineTracker):
         image = cv2_load_image(metadata.file_path)
         self._camera_compensation(image)
         bbox = detection.bbox_cmwh
-        score = np.mean(detection.keypoints_xyc[:, 2])
+        score = np.mean(detection.keypoints_xyc[:, 2])  # TODO put as Detection property
         reid_features = detection.embeddings  # .flatten()
         visibility_score = detection.visibility_scores
         id = detection.id
         classes = np.array(0)
-        return id, bbox, reid_features, visibility_score, score, classes, image
+        return id, bbox, reid_features, visibility_score, score, classes, image, metadata.frame
 
     @torch.no_grad()
     def process(self, batch, detections: Detections, metadatas: ImageMetadatas):
-        id, cmwhs, reid_features, visibility_scores, scores, classes, image = batch
+        id, cmwhs, reid_features, visibility_scores, scores, classes, image, frame = batch
         if cmwhs.numel() != 0:
             results = self.model.update(
-                id, cmwhs, reid_features, visibility_scores, scores, classes, image
+                id, cmwhs, reid_features, visibility_scores, scores, classes, image, frame
             )
             detections = self._update_detections(results, detections)
         return detections

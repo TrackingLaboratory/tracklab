@@ -4,8 +4,9 @@ cfg:
   ecc: True # activate camera motion compensation
   ema_alpha: 0.9 # updates  appearance  state in  an exponential moving average manner # FIXME is it still used?
   mc_lambda: 0.995 # matching with both appearance (1 - MC_LAMBDA) and motion cost # FIXME is it still used?
-  max_dist: 0.2 # The matching threshold. Samples with larger distance are considered an invalid match
+  max_dist: 0.5 # The matching threshold. Samples with larger distance are considered an invalid match
   max_iou_distance: 0.7 # Gating threshold. Associations with cost larger than this value are disregarded.
-  max_age: 30 # Maximum number of missed misses before a track is deleted
+  max_age: 300 # Maximum number of missed misses before a track is deleted
   n_init: 3 # Number of frames that a track remains in initialization phase
   nn_budget: 100 # Maximum size of the appearance descriptors gallery
+  min_bbox_confidence: 0.5  # bbox below this confidence threshold are not considered for matching

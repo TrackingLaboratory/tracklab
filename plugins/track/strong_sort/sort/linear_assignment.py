@@ -49,9 +49,9 @@ def min_cost_matching(
     if len(detection_indices) == 0 or len(track_indices) == 0:
         return [], track_indices, detection_indices  # Nothing to match.
 
-    cost_matrix = distance_metric(
+    cost_matrix = distance_metric(  # return cost matrix gated by KM (too big IOU set to INF)
         tracks, detections, track_indices, detection_indices)
-    cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5
+    cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5  # GATE by reid max_dist threshold, why not inf?
     row_indices, col_indices = linear_sum_assignment(cost_matrix)
 
     matches, unmatched_tracks, unmatched_detections = [], [], []
@@ -170,5 +170,5 @@ def gate_cost_matrix(
         track = tracks[track_idx]
         gating_distance = track.kf.gating_distance(track.mean, track.covariance, measurements, only_position)
         cost_matrix[row, gating_distance > gating_threshold] = gated_cost
-        cost_matrix[row] = 0.995 * cost_matrix[row] + (1 - 0.995) *  gating_distance
+        cost_matrix[row] = 0.995 * cost_matrix[row] + (1 - 0.995) * gating_distance
     return cost_matrix

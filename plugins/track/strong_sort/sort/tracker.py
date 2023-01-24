@@ -168,8 +168,8 @@ class Tracker:
             }
 
             targets = np.array([tracks[i].track_id for i in track_indices])
-            cost_matrix = self.metric.distance(features, targets)
-            cost_matrix = linear_assignment.gate_cost_matrix(
+            cost_matrix = self.metric.distance(features, targets)  # NO thresholding until here
+            cost_matrix = linear_assignment.gate_cost_matrix(  # KF gating applied, too big values are set to INFTY
                 cost_matrix, tracks, dets, track_indices, detection_indices
             )
 
@@ -195,6 +195,8 @@ class Tracker:
             confirmed_tracks,
         )
 
+        # print(f"Matches with confirmed tracks using appearance features = {len(matches_a)}")
+
         # Associate remaining tracks together with unconfirmed tracks using IOU.
         iou_track_candidates = unconfirmed_tracks + [
             k for k in unmatched_tracks_a if self.tracks[k].time_since_update == 1
@@ -214,6 +216,7 @@ class Tracker:
             iou_track_candidates,
             unmatched_detections,
         )
+        # print(f"Remaining tracks together with unconfirmed tracks using IOU = {len(matches_b)}")
 
         matches = matches_a + matches_b
         unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))

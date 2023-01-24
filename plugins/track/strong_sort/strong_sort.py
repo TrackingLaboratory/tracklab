@@ -18,9 +18,11 @@ class StrongSORT(object):
         max_age=30,
         n_init=3,
         nn_budget=100,
+        min_bbox_confidence=0.2,
     ):
 
         self.max_dist = max_dist
+        self.min_bbox_confidence = min_bbox_confidence
         metric = NearestNeighborDistanceMetric("part_based", self.max_dist, nn_budget)
         self.tracker = Tracker(
             metric,
@@ -40,6 +42,7 @@ class StrongSORT(object):
         confidences,
         classes,
         ori_img,
+        frame
     ):
         self.height, self.width = ori_img.shape[:2]
         # generate detections
@@ -60,6 +63,8 @@ class StrongSORT(object):
             )
             for i, conf in enumerate(confidences)
         ]
+
+        detections = self.filter_detections(detections)
 
         # update tracker
         self.tracker.predict()
@@ -107,3 +112,7 @@ class StrongSORT(object):
         bbox_tlwh[:, 0] = bbox_xywh[:, 0] - bbox_xywh[:, 2] / 2.0
         bbox_tlwh[:, 1] = bbox_xywh[:, 1] - bbox_xywh[:, 3] / 2.0
         return bbox_tlwh
+
+    def filter_detections(self, detections):
+        detections = [det for det in detections if det.confidence > self.min_bbox_confidence]
+        return detections
