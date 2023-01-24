@@ -16,7 +16,7 @@ cfg:
     left_right_extend_factor: 0.1
 
   train:
-    output: ""
+    output: "${save_dir}/openpifpaf"
     checkpoint: "shufflenetv2k30"
     posetrack2021-with-dense: null
 
