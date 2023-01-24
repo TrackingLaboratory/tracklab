@@ -4,6 +4,7 @@ cfg:
   predict:
     checkpoint: "shufflenetv2k16"
     long-edge: 801
+    force-complete-pose: null
     quiet: null                                 # only show warning messages 
   train:
     output: "${save_dir}/openpifpaf"
