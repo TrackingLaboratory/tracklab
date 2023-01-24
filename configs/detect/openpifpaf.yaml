@@ -4,7 +4,7 @@ cfg:
   predict:
     checkpoint: "shufflenetv2k30"
     long-edge: 501                              # rescale the long side of the image (aspect ratio maintained)
-    force-complete-pose: null                   # force to output every pose and keypoints (?)
+#    force-complete-pose: null                   # force to output every pose and keypoints (?)
     quiet: null                                 # only show warning messages
     dense-connections: null                     # use denser associations
     instance-threshold: 0.15                    # filter instances by score (default: 0.15)
