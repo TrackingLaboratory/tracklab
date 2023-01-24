@@ -60,7 +60,7 @@ class OpenPifPaf(Detector):
 
     @torch.no_grad()
     def preprocess(self, img_meta):
-        image = Image.fromarray(cv2_load_image(img_meta.file_path))
+        image = Image.fromarray(cv2_load_image(img_meta.file_path))  # TODO Image should be loaded in track_engine (could be loaded differently, from mp4 for instance)
         processed_image, anns, meta = self.pifpaf_preprocess(image, [], {})
         return processed_image, anns, meta
 
