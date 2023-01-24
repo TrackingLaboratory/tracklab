@@ -8,8 +8,8 @@ cfg:
 
   mot_evaluator:
   # for HOTA metrics
-    BREAK_ON_ERROR: False # Raises exception and exits with error
-    RETURN_ON_ERROR: False # if not BREAK_ON_ERROR, then returns from function on error
+    BREAK_ON_ERROR: True # Raises exception and exits with error
+    RETURN_ON_ERROR: True # if not BREAK_ON_ERROR, then returns from function on error
     LOG_ON_ERROR: null # if not None, save any errors into specified log file
     PRINT_COMBINED_SUMMARY_ONLY: False # Combines metrics across all classes
     TIME_PROGRESS: False # Profiling option for the evaluation
@@ -32,8 +32,8 @@ cfg:
   posetrack_evaluator:
     USE_PARALLEL: False # TODO broken, to investigate
     NUM_PARALLEL_CORES: 4
-    BREAK_ON_ERROR: False # Raises exception and exits with error
-    RETURN_ON_ERROR: False # if not BREAK_ON_ERROR, then returns from function on error
+    BREAK_ON_ERROR: True # Raises exception and exits with error
+    RETURN_ON_ERROR: True # if not BREAK_ON_ERROR, then returns from function on error
     LOG_ON_ERROR: null # if not None, save any errors into specified log file
     PRINT_RESULTS: True # show the results in the terminal
     PRINT_COMBINED_SUMMARY_ONLY: False # Combines metrics across all classes
