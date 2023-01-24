@@ -1,11 +1,11 @@
 _target_: pbtrack.visualization.visualization_engine.VisualisationEngine
 cfg:
-  save_images: True
-  save_videos: False
+  save_images: False
+  save_videos: True
 
   process_n_videos: -1                      # -1 to process all videos
   process_n_frames_by_video: -1             # -1 to process all the frames
-  video_fps: 15
+  video_fps: 5
 
   prediction:
     draw_bbox: True
@@ -21,35 +21,36 @@ cfg:
     draw_bbox: False
     draw_keypoints: False
     draw_skeleton: False
+    draw_ignore_region: True
     # debug
     print_id: False
     print_bbox_confidence: False
     print_keypoints_confidence: False
 
   bbox: 
-    displayed: ['detect'] #TODO not working # ['detect', 'track']
+    displayed: ['detect'] # TODO not working ['detect', 'track']
     thickness: 1
-    color_tracked: null                     # RGB array or None: color by ID
-    color_untracked: [255, 0, 0]            # RGB array
-    color_ground_truth: [0, 255, 0]         # RGB array
+    color_prediction: null                  # None is color by ID or RGB array
+    color_ground_truth: null                # None is color by ID or RGB array
+    color_no_id: [0, 0, 0]                  # RGB array
 
   text:
-    font: 0
-    scale: 0.7
+    font: 2
+    scale: 0.6
     thickness: 1
-    color_tracked: null                     # RGB array or null: color by ID
-    color_untracked: [255, 0, 0]            # RGB array
-    color_ground_truth: [0, 255, 0]         # RGB array
+    color_prediction: null                  # None is color by ID or RGB array
+    color_ground_truth: null                # None is color by ID or RGB array
+    color_no_id: [0, 0, 0]                  # RGB array
 
   keypoint:
-    radius: 2
+    radius: 4
     thickness: -1                           # -1 to fill
-    color_tracked: null                     # RGB array or null: color by ID
-    color_untracked: [255, 0, 0]            # RGB array
-    color_ground_truth: [0, 255, 0]         # RGB array
+    color_prediction: null                  # None is color by ID or RGB array
+    color_ground_truth: null                # None is color by ID or RGB array
+    color_no_id: [0, 0, 0]                  # RGB array
 
   skeleton:
-    thickness: 1
-    color_tracked: null                     # RGB array or null: color by ID
-    color_untracked: [255, 0, 0]            # RGB array
-    color_ground_truth: [0, 255, 0]         # RGB array
+    thickness: 2
+    color_prediction: null                  # None is color by ID or RGB array
+    color_ground_truth: null                # None is color by ID or RGB array
+    color_no_id: [0, 0, 0]                  # RGB array

@@ -1,5 +1,6 @@
 import sys
 import torch
+import numpy as np
 
 from PIL import Image
 from omegaconf.listconfig import ListConfig
@@ -76,12 +77,34 @@ class OpenPifPaf(Detector):
         ):
             for prediction in predictions:
                 prediction = prediction.inverse_transform(meta)
+                keypoints = prediction.data
+
+                w, h = meta["width_height"]
+                keypoints[:, 0] = np.clip(keypoints[:, 0], 0, w - 1)
+                keypoints[:, 1] = np.clip(keypoints[:, 1], 0, h - 1)
+                keypoints[:, 2] = np.clip(keypoints[:, 2], 0, 1)
+
+                bbox_ltrb = self.keypoints_to_bbox(keypoints)
+                bbox_ltrb[0] = np.clip(bbox_ltrb[0], 0, w - 1)
+                bbox_ltrb[1] = np.clip(bbox_ltrb[1], 0, h - 1)
+                bbox_ltrb[2] = np.clip(bbox_ltrb[2], 0, w - 1)
+                bbox_ltrb[3] = np.clip(bbox_ltrb[3], 0, h - 1)
+                bbox_ltwh = np.array(
+                    [
+                        bbox_ltrb[0],
+                        bbox_ltrb[1],
+                        bbox_ltrb[2] - bbox_ltrb[0],
+                        bbox_ltrb[3] - bbox_ltrb[1],
+                    ]
+                )
+
                 detections.append(
                     Detection.create(
                         image_id=metadata.id,
                         id=self.id,
-                        keypoints_xyc=prediction.data,
-                        bbox_ltwh=openpifpaf_kp_to_bbox(prediction.data),
+                        keypoints_xyc=keypoints,
+                        bbox_ltwh=bbox_ltwh,
+                        bbox_c=np.mean(keypoints[:, 2], axis=0),
                     )
                 )
                 self.id += 1
@@ -89,6 +112,18 @@ class OpenPifPaf(Detector):
             return detections, fields_batch
         else:
             return detections
+
+    def keypoints_to_bbox(self, keypoints):
+        keypoints = keypoints[keypoints[:, 2] > 0]
+        lt = np.amin(keypoints[:, :2], axis=0)
+        rb = np.amax(keypoints[:, :2], axis=0)
+        bbox_w = rb[0] - lt[0]
+        bbox_h = rb[1] - lt[1]
+        lt[0] -= bbox_w * self.cfg.bbox.left_right_extend_factor
+        rb[0] += bbox_w * self.cfg.bbox.left_right_extend_factor
+        lt[1] -= bbox_h * self.cfg.bbox.top_extend_factor
+        rb[1] += bbox_h * self.cfg.bbox.bottom_extend_factor
+        return np.array([lt[0], lt[1], rb[0], rb[1]])
 
     def train(self):
         old_argv = sys.argv
