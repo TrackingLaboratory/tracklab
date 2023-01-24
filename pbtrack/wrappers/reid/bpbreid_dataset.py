@@ -45,7 +45,8 @@ class ReidDataset(ImageDataset):
 
     masks_dirs = {
         # dir_name: (masks_stack_size, contains_background_mask)
-        "gaussian": (17, False, ".npy", ["p{}".format(p) for p in range(1, 5 + 1)]),
+        "gaussian": (17, False, ".npy", ["p{}".format(p) for p in range(1, 17)]),
+        'pifpaf': (36, False, '.npy', ["p{}".format(p) for p in range(1, 36)]),
     }
 
     @staticmethod
