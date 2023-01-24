@@ -29,6 +29,7 @@ sys.path.append(str((root_dir / "plugins/reid/bpbreid").resolve()))  # FIXME : u
 sys.path.append(str((root_dir / "plugins/reid").resolve()))  # FIXME : ugly
 
 import torchreid
+from torch.nn import functional as F
 from plugins.reid.bpbreid.torchreid.utils.tools import extract_test_embeddings
 from plugins.reid.bpbreid.torchreid.data.masks_transforms import CocoToSixBodyMasks
 from torchreid.data.datasets import configure_dataset_class
@@ -68,6 +69,7 @@ class BPBReId(ReIdentifier):
         )
         self.device = device
         self.cfg = CN(OmegaConf.to_container(cfg, resolve=True))
+
         # set parts information (number of parts K and each part name),
         # depending on the original loaded masks size or the transformation applied:
         self.cfg = build_config(config_file=self.cfg)
@@ -80,6 +82,7 @@ class BPBReId(ReIdentifier):
         self.feature_extractor = None
         self.model = None
         self.transform = CocoToSixBodyMasks()
+        self.normalize_features = cfg.test.normalize_feature
 
     @torch.no_grad()
     def preprocess(
@@ -136,6 +139,10 @@ class BPBReId(ReIdentifier):
         embeddings, visibility_scores, body_masks, _ = extract_test_embeddings(
             reid_result, self.test_embeddings
         )
+
+        if self.normalize_features:
+            embeddings = F.normalize(embeddings, p=2, dim=-1)
+
         embeddings = embeddings.cpu().detach().numpy()
         visibility_scores = visibility_scores.cpu().detach().numpy()
         body_masks = body_masks.cpu().detach().numpy()
