@@ -1,0 +1,8 @@
+dataset_path: ${data_dir}  # FIXME needed for detector and reid instantiate(), even if not used when using external video
+nvid: -1                                    # -1 -> process all the videos
+nframes: -1                                 # -1 -> process all the frames by video
+
+vids_dict:                                  # video names to use for each train/val/test set
+  train: []
+  val: []  # leave empty to use all videos
+  test: []

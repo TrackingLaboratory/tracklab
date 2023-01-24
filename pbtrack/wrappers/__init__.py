@@ -1,5 +1,6 @@
 # Datasets
 from .datasets.posetrack.posetrack21 import PoseTrack21
+from .datasets.external_video import ExternalVideo
 
 # Detect
 from .detect.openpifpaf_api import OpenPifPaf

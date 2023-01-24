@@ -75,9 +75,12 @@ class VisualisationEngine:
             predictions = tracker_state.predictions[
                 tracker_state.predictions.image_id == image_metadata.id
             ]
-            ground_truths = tracker_state.gt.detections[
-                tracker_state.gt.detections.image_id == image_metadata.id
-            ]
+            if tracker_state.gt.detections is not None:
+                ground_truths = tracker_state.gt.detections[
+                    tracker_state.gt.detections.image_id == image_metadata.id
+                ]
+            else:
+                ground_truths = None
             # process the detections
             self._process_frame(image_metadata, predictions, ground_truths, video_id)
         # save the final video
@@ -93,8 +96,9 @@ class VisualisationEngine:
         for _, prediction in predictions.iterrows():
             self._draw_detection(patch, prediction, is_prediction=True)
         # draw ground truths
-        for _, ground_truth in ground_truths.iterrows():
-            self._draw_detection(patch, ground_truth, is_prediction=False)
+        if ground_truths is not None:
+            for _, ground_truth in ground_truths.iterrows():
+                self._draw_detection(patch, ground_truth, is_prediction=False)
         # postprocess image
         patch = self._final_patch(patch)
         # save files
@@ -214,7 +218,7 @@ class VisualisationEngine:
                 color_keypoint = self.cfg.keypoint.color_untracked
                 color_skeleton = self.cfg.skeleton.color_untracked
             else:
-                color_id = cmap[detection.track_id % len(cmap)]
+                color_id = cmap[int(detection.track_id) % len(cmap)]
                 color_bbox = (
                     self.cfg.bbox.color_tracked
                     if self.cfg.bbox.color_tracked

@@ -37,11 +37,17 @@ class TrackingDataset(ABC):
         self.val_set = val_set
         self.test_set = test_set
 
-        if nvid > 0 or nframes > 0 or (vids_dict is not None and len(vids_dict) > 0):
+        if self.train_set is not None:
             self.train_set = self._subsample(self.train_set, nvid, nframes, vids_dict)
+        if self.train_set is not None:
             self.val_set = self._subsample(self.val_set, nvid, nframes, vids_dict)
+        if self.test_set is not None:
+            self.test_set = self._subsample(self.test_set, nvid, nframes, vids_dict)
 
     def _subsample(self, tracking_set, nvid, nframes, vids_dict):
+        if nvid < 1 and nframes < 1 and (vids_dict is None or len(vids_dict[tracking_set.split]) < 1):
+            return tracking_set
+
         # filter videos:
         vids_names = (
             set(vids_dict[tracking_set.split])
@@ -73,9 +79,12 @@ class TrackingDataset(ABC):
             tiny_image_metadatas = tiny_image_metadatas.groupby("video_id").head(nframes)
 
         # filter detections:
-        tiny_detections = tracking_set.detections[
-            tracking_set.detections.image_id.isin(tiny_image_metadatas.index)
-        ]
+        if tracking_set.detections is not None:
+            tiny_detections = tracking_set.detections[
+                tracking_set.detections.image_id.isin(tiny_image_metadatas.index)
+            ]
+        else:
+            tiny_detections = None
 
         return TrackingSet(
             tracking_set.split,
