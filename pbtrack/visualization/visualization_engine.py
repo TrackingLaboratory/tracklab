@@ -117,12 +117,13 @@ class VisualisationEngine:
             self._update_video(patch, video_id)
 
     def _draw_ignore_region(self, patch, image_metadata):
-        for (x, y) in zip(
-            image_metadata["ignore_regions_x"], image_metadata["ignore_regions_y"]
-        ):
-            points = np.array([x, y]).astype(int).T
-            points = points.reshape((-1, 1, 2))
-            cv2.polylines(patch, [points], True, [255, 0, 0], 2, lineType=cv2.LINE_AA)
+        if 'ignore_regions_x' in image_metadata and 'ignore_regions_y' in image_metadata:
+            for (x, y) in zip(
+                image_metadata["ignore_regions_x"], image_metadata["ignore_regions_y"]
+            ):
+                points = np.array([x, y]).astype(int).T
+                points = points.reshape((-1, 1, 2))
+                cv2.polylines(patch, [points], True, [255, 0, 0], 2, lineType=cv2.LINE_AA)
 
     def _draw_detection(self, patch, detection, is_prediction):
         # colors
