@@ -39,7 +39,7 @@ class TrackingDataset(ABC):
 
         if self.train_set is not None:
             self.train_set = self._subsample(self.train_set, nvid, nframes, vids_dict)
-        if self.train_set is not None:
+        if self.val_set is not None:
             self.val_set = self._subsample(self.val_set, nvid, nframes, vids_dict)
         if self.test_set is not None:
             self.test_set = self._subsample(self.test_set, nvid, nframes, vids_dict)
