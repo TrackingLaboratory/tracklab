@@ -1,10 +1,10 @@
 [submodule "plugins/eval/PoseTrack21"]
 	path = plugins/eval/PoseTrack21
-	url = https://github.com/bstandaert/PoseTrack21.git
+	url = https://github.com/PbTrack/PoseTrack21.git
 	branch = pbtrack
 [submodule "plugins/detect/openpifpaf"]
 	path = plugins/detect/openpifpaf
-	url = https://github.com/bstandaert/openpifpaf.git
+	url = https://github.com/PbTrack/openpifpaf.git
 	branch = pbtrack
 [submodule "plugins/reid/bpbreid"]
 	path = plugins/reid/bpbreid
