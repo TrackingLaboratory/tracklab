@@ -26,7 +26,7 @@ import pbtrack
 root_dir = Path(pbtrack.__file__).parents[1]
 sys.path.append(str((root_dir / "plugins/reid/bpbreid").resolve()))  # FIXME : ugly
 from torchreid.data import ImageDataset
-from torchreid.utils.imagetools import gkern, build_gaussian_heatmaps
+from torchreid.utils.imagetools import gkern, build_gaussian_heatmaps, build_gaussian_body_part_heatmaps
 
 
 class ReidDataset(ImageDataset):
@@ -45,8 +45,9 @@ class ReidDataset(ImageDataset):
 
     masks_dirs = {
         # dir_name: (masks_stack_size, contains_background_mask)
-        "gaussian": (17, False, ".npy", ["p{}".format(p) for p in range(1, 17)]),
-        'pifpaf': (36, False, '.npy', ["p{}".format(p) for p in range(1, 36)]),
+        "gaussian_joints": (10, False, ".npy", ["p{}".format(p) for p in range(1, 17)]),
+        "gaussian_keypoints": (17, False, ".npy", ["p{}".format(p) for p in range(1, 17)]),
+        'pose_on_img': (35, False, '.npy', ["p{}".format(p) for p in range(1, 35)]),
     }
 
     @staticmethod
