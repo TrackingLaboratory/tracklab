@@ -79,7 +79,8 @@ class OnlineTrackingEngine(pl.LightningModule):
         )
 
     def run(self):
-        for video_idx, video in self.video_metadatas.iterrows():
+        for i, (video_idx, video) in enumerate(self.video_metadatas.iterrows()):
+            log.info(f"Starting tracking on video ({i}/{len(self.video_metadatas)}) : {video.name}")
             self.video_step(video, video_idx)
 
     def video_step(self, video, video_id):
@@ -94,7 +95,6 @@ class OnlineTrackingEngine(pl.LightningModule):
 
         """
         start = timer()
-        log.info(f"Starting tracking on video: {video_id}")
         imgs_meta = self.img_metadatas
         self.detection_datapipe.update(imgs_meta[imgs_meta.video_id == video_id])
         self.model_track.reset()
