@@ -431,6 +431,21 @@ class ReidDataset(ImageDataset):
                         masks_gt_crop = build_gaussian_heatmaps(
                             keypoints_xyc, mask_w, mask_h, gaussian=gaussian
                         )
+                    elif mode == "gaussian_joints":
+                        # compute human parsing heatmaps as shapes around on each visible keypoint
+                        img_crop = cv2.imread(det_metadata.reid_crop_path)
+                        img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
+                        l, t, w, h = det_metadata.bbox_ltwh
+                        keypoints_xyc = rescale_keypoints(
+                            kp_img_to_kp_bbox(
+                                det_metadata.keypoints_xyc, det_metadata.bbox_ltwh
+                            ),
+                            (w, h),
+                            (mask_w, mask_h),
+                        )
+                        masks_gt_crop = build_gaussian_body_part_heatmaps(
+                            keypoints_xyc, mask_w, mask_h
+                        )
                     elif mode == "pose_on_img_crops":
                         # compute human parsing heatmaps using output of pose model on cropped person image
                         img_crop = cv2.imread(det_metadata.reid_crop_path)
