@@ -1,6 +1,17 @@
 # PbTrack
 
-Work in progress
+Here's what makes PbTrack different from existing tracking frameworks:
+- Fully modular framework to quickly integrate any detection/reid/tracking method or develop your own
+- It allows supervised training of the ReID model on the tracking training set
+- It provides a fully configurable visualization tool with the possibility to display any dev/debug information
+- It supports online and offline tracking methods 
+- It supports multiple tracking related tasks: 
+  - multi-object (bbox) tracking
+  - multi-person pose tracking
+  - multi-person pose estimation
+  - person search
+  - multi-person cross-video tracking
+  - person re-identification
 
 ## Installation guide[^1]
 
