@@ -151,7 +151,7 @@ class ReidDataset(ImageDataset):
         print("Loading {} set...".format(split))
 
         # Precompute all paths
-        reid_path = Path(self.dataset_path, self.reid_dir)
+        reid_path = Path(self.dataset_path, self.reid_dir, masks_mode)
         reid_img_path = reid_path / self.reid_images_dir / split
         reid_mask_path = reid_path / self.reid_masks_dir / split
         reid_fig_path = reid_path / self.reid_fig_dir / split
