@@ -119,7 +119,7 @@ def _nn_part_based(y, x):
                                                           torch.from_numpy(x_features),
                                                           torch.from_numpy(y_visibility_scores).unsqueeze(0),
                                                           torch.from_numpy(x_visibility_scores))
-    distances = distances[0]
+    distances = distances[0] / 2    # When feature are normalized, the above function returns distances within [0, 2]
     return distances.mean(axis=0)
 
 
