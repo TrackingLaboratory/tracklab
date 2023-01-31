@@ -168,9 +168,9 @@ class Tracker:
             }
 
             targets = np.array([tracks[i].track_id for i in track_indices])
-            cost_matrix = self.metric.distance(features, targets)  # NO thresholding until here
+            cost_matrix_reid = self.metric.distance(features, targets)  # NO thresholding until here -> ONLY REID DISTANCE
             cost_matrix = linear_assignment.gate_cost_matrix(  # KF gating applied, too big values are set to INFTY
-                cost_matrix, tracks, dets, track_indices, detection_indices
+                cost_matrix_reid, tracks, dets, track_indices, detection_indices
             )
 
             return cost_matrix
