@@ -538,11 +538,11 @@ class ReidDataset(ImageDataset):
             df["img_path"] = df["reid_crop_path"]
             # remove bbox_head as it is not available for each sample
             # df to list of dict
-            data_list = df.sort_values(by=["pid"])
+            sorted_df = df.sort_values(by=["pid"])
             # use only necessary annotations: using them all caused a
             # 'RuntimeError: torch.cat(): input types can't be cast to the desired output type Long' in collate.py
             # -> still has to be fixed
-            data_list = data_list[["pid", "camid", "img_path", "masks_path"]]
+            data_list = sorted_df[["pid", "camid", "img_path", "masks_path", "visibility"]]
             data_list = data_list.to_dict("records")
             results.append(data_list)
         return results
