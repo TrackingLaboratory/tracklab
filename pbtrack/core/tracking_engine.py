@@ -45,6 +45,7 @@ class OnlineTrackingEngine(pl.LightningModule):
     ):
         super().__init__()
         self.trainer = pl.Trainer()
+        self.trainer_track = pl.Trainer(enable_progress_bar=False)  # FIXME dirty fix to remove annoying 1 step long progress bar on tracker
         self.vis_engine = vis_engine  # TODO : Convert to callback
         self.tracker_state = tracker_state
         self.model_detect = model_detect
@@ -182,7 +183,6 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
 
     def video_step(self, video, video_id):
         start = timer()
-        log.info(f"Starting tracking on video: {video_id}")
         self.trainer = pl.Trainer()
         self.model_track.reset()
         imgs_meta = self.img_metadatas[self.img_metadatas.video_id == video_id]
@@ -217,7 +217,7 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                 self.model_track, imgs_meta.loc[[image_id]], detections
             )
             start_track = timer()
-            detections_list = self.trainer.predict(
+            detections_list = self.trainer_track.predict(
                 model_track, dataloaders=self.track_dl
             )
             tracking_time += timer() - start_track
