@@ -61,7 +61,9 @@ class OpenPifPaf(Detector):
 
     @torch.no_grad()
     def preprocess(self, img_meta):
-        image = Image.fromarray(cv2_load_image(img_meta.file_path))  # TODO Image should be loaded in track_engine (could be loaded differently, from mp4 for instance)
+        image = Image.fromarray(
+            cv2_load_image(img_meta.file_path)
+        )  # TODO Image should be loaded in track_engine (could be loaded differently, from mp4 for instance)
         processed_image, anns, meta = self.pifpaf_preprocess(image, [], {})
         return processed_image, anns, meta
 
@@ -107,6 +109,7 @@ class OpenPifPaf(Detector):
                         keypoints_xyc=keypoints,
                         bbox_ltwh=bbox_ltwh,
                         bbox_c=np.mean(keypoints[:, 2], axis=0),
+                        video_id=metadata.video_id,
                     )
                 )
                 self.id += 1
