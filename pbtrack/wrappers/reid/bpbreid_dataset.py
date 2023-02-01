@@ -216,10 +216,6 @@ class ReidDataset(ImageDataset):
                 reid_anns_filepath, convert_dates=False, convert_axes=False
             )
             reid_anns.set_index("id", drop=False, inplace=True)
-            assert len(reid_anns) == len(gt_dets), (
-                "reid_anns_filepath and gt_dets must have the same length. Delete "
-                "'{}' and re-run the script.".format(reid_anns_filepath)
-            )
             tmp_df = gt_dets.merge(
                 reid_anns, left_index=True, right_index=True, validate="one_to_one",
             )
