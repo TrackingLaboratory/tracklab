@@ -48,9 +48,7 @@ def main(cfg):
             if tracking_dataset.val_set is not None
             else tracking_dataset.test_set
         )
-        tracker_state = TrackerState(
-            tracking_set, filename=cfg.get("state_path", "trackerstate.pklz")
-        )
+        tracker_state = TrackerState(tracking_set, **cfg.state)
 
         # Run tracking and visualization
         tracking_engine = instantiate(

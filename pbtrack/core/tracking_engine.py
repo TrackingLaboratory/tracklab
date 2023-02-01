@@ -190,16 +190,15 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
         log.info(f"Starting tracking on video: {video_id}")
         with self.tracker_state(video_id) as tracker_state:
             self.trainer = pl.Trainer()
-            self.trainer_track = pl.Trainer(enable_progress_bar=False)
             self.model_track.reset()
             imgs_meta = self.img_metadatas[self.img_metadatas.video_id == video_id]
-
-            reid_detections = tracker_state.load()
-            loaded = reid_detections is not None
+            detections = tracker_state.load()
+            loaded = detections is not None
             detect_time = 0
             reid_time = 0
+            tracking_time = 0
 
-            if not loaded:
+            if tracker_state.do_detection or not loaded:
                 self.detection_datapipe.update(imgs_meta)
                 model_detect = OfflineDetector(self.model_detect, imgs_meta)
                 start_detect = timer()
@@ -208,9 +207,10 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                 )
                 detect_time = timer() - start_detect
                 detections = pd.concat(detections_list)
-                if detections.empty:
-                    return detections
+            if detections.empty:
+                return detections
 
+            if tracker_state.do_reid or not loaded:
                 self.reid_datapipe.update(imgs_meta, detections)
                 model_reid = OfflineReider(self.model_reid, imgs_meta, detections)
                 start_reid = timer()
@@ -218,35 +218,36 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                     model_reid, dataloaders=self.reid_dl
                 )
                 reid_time = timer() - start_reid
-                reid_detections = pd.concat(detections_list)
+                detections = pd.concat(detections_list)
+            log.info(len(detections))
+            if tracker_state.do_tracking or not loaded:
+                track_detections = []
+                for image_id in imgs_meta.index:
+                    if len(detections) == 0:
+                        continue
+                    detections = detections[detections.image_id == image_id]
+                    if len(detections) == 0:
+                        continue
+                    log.info(f"tracking on {image_id}")
+                    self.track_datapipe.update(imgs_meta, detections)
+                    model_track = OfflineTracker(
+                        self.model_track, imgs_meta.loc[[image_id]], detections
+                    )
+                    start_track = timer()
+                    detections_list = self.trainer.predict(
+                        model_track, dataloaders=self.track_dl
+                    )
+                    tracking_time += timer() - start_track
+                    track_detections += detections_list
 
-            tracking_time = 0
-            track_detections = []
-            for image_id in imgs_meta.index:
-                if len(reid_detections) == 0:
-                    continue
-                detections = reid_detections[reid_detections.image_id == image_id]
-                if len(detections) == 0:
-                    continue
-                self.track_datapipe.update(imgs_meta, detections)
-                model_track = OfflineTracker(
-                    self.model_track, imgs_meta.loc[[image_id]], detections
-                )
-                start_track = timer()
-                detections_list = self.trainer_track.predict(
-                    model_track, dataloaders=self.track_dl
-                )
-                tracking_time += timer() - start_track
-                track_detections += detections_list
-
-            if len(track_detections) > 0:
-                detections = pd.concat(track_detections)
-            else:
-                detections = Detections()
+                if len(track_detections) > 0:
+                    detections = pd.concat(track_detections)
+                else:
+                    detections = Detections()
 
             tracker_state.update(detections)
-            if not loaded:
-                tracker_state.save(video_id)
+            print(detections)
+            tracker_state.save()
             start_vis = timer()
             self.vis_engine.run(tracker_state, video_id)
             vis_time = timer() - start_vis
