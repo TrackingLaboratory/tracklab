@@ -6,11 +6,11 @@ max_crop_size: [256, 128]
 masks_mode: "gaussian_keypoints"
 train:
   min_vis: 0.3
-  min_h: 50
-  min_w: 25
+  min_h: 10
+  min_w: 10
   min_samples_per_id: 4
-  max_samples_per_id: 7
-  max_total_ids: 50
+  max_samples_per_id: 20
+  max_total_ids: 1000
 test:
   min_vis: 0.
   min_h: 0
