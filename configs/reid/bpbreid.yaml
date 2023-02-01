@@ -55,8 +55,8 @@ cfg:
       hrnet_pretrained_path: "" # FIXME refactor model loading (use urls)
       masks:
         type: "disk"
-        dir: "gaussian"
-        preprocess: "cc6"
+        dir: "${reid.dataset.masks_mode}"
+        preprocess: "ccj6"
 
   loss:
     name: 'part_based'
