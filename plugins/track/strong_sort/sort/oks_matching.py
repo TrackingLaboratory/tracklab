@@ -53,9 +53,10 @@ def oks(keypoints, candidates):
         (keypoints[:, 0] - candidates[:, :, 0]) ** 2
         + (keypoints[:, 1] - candidates[:, :, 1]) ** 2
     )
-    temp1 = np.exp(-(distances**2) / (2 * scale**2 * kappa))
-    temp2 = temp1 * keypoints_bool.astype(float)
-    oks = np.sum(temp2, axis=1) / keypoints_bool.sum()
+    distances = np.exp(
+        -(distances**2) / (2 * scale**2 * kappa**2)
+    ) * keypoints_bool.astype(float)
+    oks = np.sum(distances, axis=1) / keypoints_bool.sum()
     return oks
 
 

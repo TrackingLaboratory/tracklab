@@ -81,7 +81,7 @@ class OnlineTrackingEngine(pl.LightningModule):
 
     def run(self):
         for i, (video_idx, video) in enumerate(self.video_metadatas.iterrows()):
-            log.info(f"Starting tracking on video ({i}/{len(self.video_metadatas)}) : {video.name}")
+            log.info(f"Starting tracking on video ({i+1}/{len(self.video_metadatas)}) : {video.name}")
             self.video_step(video, video_idx)
 
     def video_step(self, video, video_id):

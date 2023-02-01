@@ -63,7 +63,7 @@ class StrongSORT(OnlineTracker):
         if results.any():
             track_df = pd.DataFrame(
                 {
-                    "track_bbox_tlwh": list(results[:, 0:4]),
+                    "track_bbox_ltwh": list(results[:, 0:4]),
                     "track_bbox_conf": results[:, 6],
                     "track_id": results[:, 4].astype(int),
                 },
@@ -75,7 +75,7 @@ class StrongSORT(OnlineTracker):
                                                                      "detections were lost or added"
             detections = merged_detections
         else:  # FIXME
-            detections["track_bbox_tlwh"] = pd.NA
+            detections["track_bbox_ltwh"] = pd.NA
             detections["track_bbox_conf"] = pd.NA
             detections["track_id"] = pd.NA
         return detections
