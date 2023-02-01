@@ -8,7 +8,7 @@ from omegaconf.listconfig import ListConfig
 from pbtrack.core.detector import Detector
 from pbtrack.core.datastruct import Detection
 from pbtrack.utils.images import cv2_load_image
-from pbtrack.utils.coordinates import openpifpaf_kp_to_bbox
+from pbtrack.utils.coordinates import round_bbox_ccordinates
 
 from pathlib import Path
 import pbtrack
@@ -85,6 +85,8 @@ class OpenPifPaf(Detector):
                 keypoints[:, 2] = np.clip(keypoints[:, 2], 0, 1)
 
                 bbox_ltrb = self.keypoints_to_bbox(keypoints)
+                bbox_ltrb = round_bbox_ccordinates(bbox_ltrb)
+
                 bbox_ltrb[0] = np.clip(bbox_ltrb[0], 0, w - 1)
                 bbox_ltrb[1] = np.clip(bbox_ltrb[1], 0, h - 1)
                 bbox_ltrb[2] = np.clip(bbox_ltrb[2], 0, w - 1)
