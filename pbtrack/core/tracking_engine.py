@@ -240,6 +240,9 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                         model_track, dataloaders=self.track_dl
                     )
                     tracking_time += timer() - start_track
+                    detections_list = (
+                        [Detections()] if detections_list is None else detections_list
+                    )
                     track_detections += detections_list
 
                 if len(track_detections) > 0:
