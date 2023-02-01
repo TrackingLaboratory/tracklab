@@ -20,7 +20,9 @@ class StrongSORT(OnlineTracker):
             ema_alpha=self.cfg.ema_alpha,
             mc_lambda=self.cfg.mc_lambda,
             max_dist=self.cfg.max_dist,
+            motion_criterium=self.cfg.motion_criterium,
             max_iou_distance=self.cfg.max_iou_distance,
+            max_oks_distance=self.cfg.max_oks_distance,
             max_age=self.cfg.max_age,
             n_init=self.cfg.n_init,
             nn_budget=self.cfg.nn_budget,
@@ -44,14 +46,15 @@ class StrongSORT(OnlineTracker):
         visibility_score = detection.visibility_scores
         id = detection.id
         classes = np.array(0)
-        return id, bbox, reid_features, visibility_score, score, classes, image, metadata.frame
+        keypoints = detection.keypoints_xyc
+        return id, bbox, reid_features, visibility_score, score, classes, image, metadata.frame, keypoints
 
     @torch.no_grad()
     def process(self, batch, detections: Detections, metadatas: ImageMetadatas):
-        id, cmwhs, reid_features, visibility_scores, scores, classes, image, frame = batch
+        id, cmwhs, reid_features, visibility_scores, scores, classes, image, frame, keypoints = batch
         if cmwhs.numel() != 0:
             results = self.model.update(
-                id, cmwhs, reid_features, visibility_scores, scores, classes, image, frame
+                id, cmwhs, reid_features, visibility_scores, scores, classes, image, frame, keypoints
             )
             detections = self._update_detections(results, detections)
         return detections

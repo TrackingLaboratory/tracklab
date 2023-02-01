@@ -14,7 +14,9 @@ class StrongSORT(object):
         ema_alpha=0.9,
         mc_lambda=0.995,
         max_dist=0.2,
+        motion_criterium="iou",
         max_iou_distance=0.7,
+        max_oks_distance=0.7,
         max_age=30,
         n_init=3,
         nn_budget=100,
@@ -26,7 +28,9 @@ class StrongSORT(object):
         metric = NearestNeighborDistanceMetric("part_based", self.max_dist, nn_budget)
         self.tracker = Tracker(
             metric,
+            motion_criterium=motion_criterium,
             max_iou_distance=max_iou_distance,
+            max_oks_distance=max_oks_distance,
             max_age=max_age,
             n_init=n_init,
             ema_alpha=ema_alpha,
@@ -42,7 +46,8 @@ class StrongSORT(object):
         confidences,
         classes,
         ori_img,
-        frame
+        frame,
+        keypoints
     ):
         self.height, self.width = ori_img.shape[:2]
         # generate detections
@@ -60,6 +65,7 @@ class StrongSORT(object):
                         visibility_scores[i].cpu()
                     ),
                 },
+                keypoints=keypoints[i].cpu().numpy()
             )
             for i, conf in enumerate(confidences)
         ]

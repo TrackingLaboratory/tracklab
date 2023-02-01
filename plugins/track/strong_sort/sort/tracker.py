@@ -4,6 +4,7 @@ import numpy as np
 from . import kalman_filter
 from . import linear_assignment
 from . import iou_matching
+from . import oks_matching
 from .track import Track
 
 
@@ -39,7 +40,9 @@ class Tracker:
     def __init__(
         self,
         metric,
+        motion_criterium="iou",
         max_iou_distance=0.9,
+        max_oks_distance=0.7,
         max_age=30,
         n_init=3,
         _lambda=0,
@@ -47,7 +50,18 @@ class Tracker:
         mc_lambda=0.995,
     ):
         self.metric = metric
-        self.max_iou_distance = max_iou_distance
+        if motion_criterium == "iou":
+            self.motion_cost = iou_matching.iou_cost
+            self.motion_max_distance = max_iou_distance
+        elif motion_criterium == "oks":
+            self.motion_cost = oks_matching.oks_cost
+            self.motion_max_distance = max_oks_distance
+        else:
+            raise NotImplementedError(
+                "motion_criterium should be either 'iou' or 'oks', but got {}".format(
+                    motion_criterium
+                )
+            )
         self.max_age = max_age
         self.n_init = n_init
         self._lambda = _lambda
@@ -209,8 +223,8 @@ class Tracker:
             unmatched_tracks_b,
             unmatched_detections,
         ) = linear_assignment.min_cost_matching(
-            iou_matching.iou_cost,
-            self.max_iou_distance,
+            self.motion_cost,
+            self.motion_max_distance,
             self.tracks,
             detections,
             iou_track_candidates,

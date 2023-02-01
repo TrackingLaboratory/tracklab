@@ -18,7 +18,9 @@ class TrackState:
     Confirmed = 2
     Deleted = 3
 
-
+"""
+    TODO state space should be N keypoints x (x, y) + (x, y, a, h) for the bbox
+"""
 class Track:
     """
     A single target track with state space `(x, y, a, h)` and associated
@@ -109,6 +111,11 @@ class Track:
         """Get last detection
         """
         return self.last_detection
+
+    def last_detection_keypoints(self):
+        """Get last detection keypoints
+        """
+        return self.last_detection.keypoints
 
     def to_tlbr(self):
         """Get kf estimated current position in bounding box format `(min x, miny, max x,
