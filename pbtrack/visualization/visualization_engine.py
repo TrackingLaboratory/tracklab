@@ -60,6 +60,8 @@ class VisualisationEngine:
 
     def run(self, tracker_state, video_id):
         # check for process max video
+        if not self.cfg.save_videos and not self.cfg.save_images:
+            return
         if self.processed_video_counter >= self.cfg.process_n_videos != -1:
             return
 
