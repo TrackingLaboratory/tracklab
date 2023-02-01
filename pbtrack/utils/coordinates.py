@@ -126,6 +126,7 @@ def clip_bbox_ltwh_to_img_dim_old(bbox_ltwh, img_w, img_h):
     h = min(t + h, img_h - 1) - t
     return np.array([l, t, w, h])
 
+
 def clip_bbox_ltrb_to_img_dim(bbox_ltrb, img_w, img_h):
     """
     Clip bounding box to image dimensions.
@@ -142,3 +143,18 @@ def clip_bbox_ltrb_to_img_dim(bbox_ltrb, img_w, img_h):
     r = np.clip(r, 0, img_w - 1)
     b = np.clip(b, 0, img_h - 1)
     return np.array([l, t, r, b])
+
+
+def round_bbox_ccordinates(bbox):
+    """
+    Round bounding box coordinates.
+    Round to ceil value to avoid bbox with zero width or height.
+    Because of ceil rounding, resulting bbox may be outside of image.
+    Apply above 'clip_bbox_ltrb_to_img_dim' to clip bbox to image dimensions.
+    Args:
+        bbox (np.ndarray): bounding box, shape (4,), in tlwh or tlbr format
+    Returns:
+        bbox (np.ndarray): rounded bounding box, shape (4,)
+    """
+
+    return np.concatenate([np.floor(bbox[:2]), np.ceil(bbox[2:])]).astype(int)

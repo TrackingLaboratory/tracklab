@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
+from pbtrack.utils.coordinates import clip_bbox_ltrb_to_img_dim, round_bbox_ccordinates
 from pbtrack.utils.images import cv2_load_image, overlay_heatmap
 
 ground_truth_cmap = [
@@ -131,7 +132,9 @@ class VisualisationEngine:
             detection, is_prediction
         )
         # bbox
-        bbox_ltrb = np.round(detection.bbox_ltrb).astype(int)
+        bbox_ltrb = clip_bbox_ltrb_to_img_dim(
+            round_bbox_ccordinates(detection.bbox_ltrb), patch.shape[1], patch.shape[0]
+        )
         # bpbreid heatmap (draw before other elements, so that they are not covered by heatmap)
         if is_prediction and self.cfg.prediction.draw_bpbreid_heatmaps:
             img_crop = patch[bbox_ltrb[1] : bbox_ltrb[3], bbox_ltrb[0] : bbox_ltrb[2]]
