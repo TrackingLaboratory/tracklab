@@ -16,6 +16,7 @@ cfg:
     # debug
     print_keypoints_confidence: False
     draw_bpbreid_heatmaps: False
+    heatmaps_display_threshold: 0.05
 
   ground_truth:
     draw_bbox: False

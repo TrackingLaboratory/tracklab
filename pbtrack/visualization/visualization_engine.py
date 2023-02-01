@@ -139,7 +139,7 @@ class VisualisationEngine:
         if is_prediction and self.cfg.prediction.draw_bpbreid_heatmaps:
             img_crop = patch[bbox_ltrb[1] : bbox_ltrb[3], bbox_ltrb[0] : bbox_ltrb[2]]
             body_masks = detection.body_masks
-            img_crop_with_mask = overlay_heatmap(img_crop, body_masks[0], rgb=True)
+            img_crop_with_mask = overlay_heatmap(img_crop, body_masks[0], mask_threshold=self.cfg.prediction.heatmaps_display_threshold, rgb=True)
             patch[
                 bbox_ltrb[1] : bbox_ltrb[3], bbox_ltrb[0] : bbox_ltrb[2]
             ] = img_crop_with_mask
