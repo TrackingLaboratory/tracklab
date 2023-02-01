@@ -53,6 +53,8 @@ class PoseTrack21(EvaluatorBase):
             self.reid_pose_tracking_metrics = [HOTAReidKeypoints()]
 
     def run(self, tracker_state):
+        self.cfg.mot_dataset['SEQS'] = list(tracker_state.gt.video_metadatas.name)
+        self.cfg.posetrack_dataset['SEQS'] = list(tracker_state.gt.video_metadatas.name)
         if self.cfg.eval_mot:
             # populate dataset
             mot_tracker_path = os.path.join(self.cfg.mot_dataset.TRACKERS_FOLDER, "mot")

@@ -27,7 +27,6 @@ cfg:
     ASSURE_SINGLE_TRACKER: False
     TRACKERS_FOLDER: "eval" # automatically appended by "mot"
     GT_FOLDER: "${dataset.dataset_path}/posetrack_mot/mot/val"
-    SEQS: "${dataset.vids_dict.val}"
 
   posetrack_evaluator:
     USE_PARALLEL: False # TODO broken, to investigate
@@ -49,4 +48,3 @@ cfg:
     ASSURE_SINGLE_TRACKER: False
     TRACKERS_FOLDER: "eval/posetrack"
     GT_FOLDER: "${dataset.dataset_path}/posetrack_data/val"
-    SEQS: "${dataset.vids_dict.val}"
