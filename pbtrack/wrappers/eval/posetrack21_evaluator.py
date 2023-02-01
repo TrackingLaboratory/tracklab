@@ -29,8 +29,7 @@ class PoseTrack21(EvaluatorBase):
 
     def run(self, tracker_state):
         images = self._images(tracker_state.gt.image_metadatas)
-        self.cfg.mot_dataset['SEQS'] = list(tracker_state.gt.video_metadatas.name)
-        self.cfg.posetrack_dataset['SEQS'] = list(tracker_state.gt.video_metadatas.name)
+        self.cfg['SEQS'] = list(tracker_state.gt.video_metadatas.name)
         if self.cfg.eval_pose_estimation:
             annotations = self._annotations_pose_estimation_eval(
                 tracker_state.predictions, tracker_state.gt.image_metadatas
