@@ -50,9 +50,7 @@ class OnlineTrackingEngine(pl.LightningModule):
     ):
         super().__init__()
         self.trainer_model = pl.Trainer()
-        self.trainer_track = pl.Trainer(
-            enable_progress_bar=False
-        )  # FIXME dirty fix to remove annoying 1 step long progress bar on tracker
+        self.trainer_track = pl.Trainer(enable_progress_bar=False)
         self.vis_engine = vis_engine  # TODO : Convert to callback
         self.tracker_state = tracker_state
         self.model_detect = model_detect
@@ -191,8 +189,6 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
         start = timer()
         log.info(f"Starting tracking on video: {video_id}")
         with self.tracker_state(video_id) as tracker_state:
-            self.trainer = pl.Trainer()
-            self.trainer_track = pl.Trainer(enable_progress_bar=False)
             self.model_track.reset()
             imgs_meta = self.img_metadatas[self.img_metadatas.video_id == video_id]
             detections = tracker_state.load()
@@ -205,7 +201,7 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                 self.detection_datapipe.update(imgs_meta)
                 model_detect = OfflineDetector(self.model_detect, imgs_meta)
                 start_detect = timer()
-                detections_list = self.trainer.predict(
+                detections_list = self.trainer_model.predict(
                     model_detect, dataloaders=self.detection_dl
                 )
                 detect_time = timer() - start_detect
@@ -217,7 +213,7 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                 self.reid_datapipe.update(imgs_meta, detections)
                 model_reid = OfflineReider(self.model_reid, imgs_meta, detections)
                 start_reid = timer()
-                detections_list = self.trainer.predict(
+                detections_list = self.trainer_model.predict(
                     model_reid, dataloaders=self.reid_dl
                 )
                 reid_time = timer() - start_reid
