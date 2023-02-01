@@ -1,0 +1,4 @@
+load_file: "???"
+save_file: "trackerstate.pklz"
+compression: 0 # No compression, use 8 for compression
+load_step: reid # null/detection/reid/tracking, after the mentioned step

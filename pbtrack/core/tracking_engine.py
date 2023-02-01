@@ -5,6 +5,8 @@ import warnings
 
 from torch.utils.data import DataLoader
 from timeit import default_timer as timer
+from tqdm import tqdm
+
 from pbtrack.core import Detector, ReIdentifier, Tracker, EngineDatapipe
 from pbtrack.core.datastruct import Detections
 from pbtrack.core.datastruct.tracker_state import TrackerState
@@ -190,6 +192,7 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
         log.info(f"Starting tracking on video: {video_id}")
         with self.tracker_state(video_id) as tracker_state:
             self.trainer = pl.Trainer()
+            self.trainer_track = pl.Trainer(enable_progress_bar=False)
             self.model_track.reset()
             imgs_meta = self.img_metadatas[self.img_metadatas.video_id == video_id]
             detections = tracker_state.load()
@@ -219,22 +222,21 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                 )
                 reid_time = timer() - start_reid
                 detections = pd.concat(detections_list)
-            log.info(len(detections))
+
             if tracker_state.do_tracking or not loaded:
                 track_detections = []
-                for image_id in imgs_meta.index:
+                for image_id in tqdm(imgs_meta.index):
                     if len(detections) == 0:
                         continue
-                    detections = detections[detections.image_id == image_id]
+                    image_detections = detections[detections.image_id == image_id]
                     if len(detections) == 0:
                         continue
-                    log.info(f"tracking on {image_id}")
-                    self.track_datapipe.update(imgs_meta, detections)
+                    self.track_datapipe.update(imgs_meta, image_detections)
                     model_track = OfflineTracker(
-                        self.model_track, imgs_meta.loc[[image_id]], detections
+                        self.model_track, imgs_meta.loc[[image_id]], image_detections
                     )
                     start_track = timer()
-                    detections_list = self.trainer.predict(
+                    detections_list = self.trainer_track.predict(
                         model_track, dataloaders=self.track_dl
                     )
                     tracking_time += timer() - start_track
@@ -246,7 +248,6 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                     detections = Detections()
 
             tracker_state.update(detections)
-            print(detections)
             tracker_state.save()
             start_vis = timer()
             self.vis_engine.run(tracker_state, video_id)
