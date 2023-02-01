@@ -64,7 +64,7 @@ class StrongSORT(OnlineTracker):
     def _update_detections(self, results, detections):
         track_df = pd.DataFrame(
             {
-                "track_bbox_tlwh": list(results[:, 0:4]),
+                "track_bbox_ltwh": list(results[:, 0:4]),
                 "track_bbox_conf": results[:, 6],
                 "track_id": results[:, 4].astype(int),
             },
