@@ -164,7 +164,7 @@ class PoseTrack21(EvaluatorBase):
         df["bb_left"] = df["bbox_ltwh"].apply(lambda x: x[0])
         df["bb_top"] = df["bbox_ltwh"].apply(lambda x: x[1])
         df["bb_width"] = df["bbox_ltwh"].apply(lambda x: x[2])
-        df["bb_height"] = df["bbox_ltwh"].apply(lambda x: x[0])
+        df["bb_height"] = df["bbox_ltwh"].apply(lambda x: x[3])
         df["conf"] = df["keypoints_xyc"].apply(lambda x: np.mean(x[:, 2]))
         df = df.assign(x=-1, y=-1, z=-1)
         return df
