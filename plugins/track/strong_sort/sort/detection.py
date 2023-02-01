@@ -14,6 +14,8 @@ class Detection(object):
         Detector confidence score.
     feature : array_like
         A feature vector that describes the object contained in this image.
+    keypoints: array_like Nx3
+        Keypoint format `(x, y, conf)`
 
     Attributes
     ----------
@@ -26,11 +28,12 @@ class Detection(object):
 
     """
 
-    def __init__(self, id, tlwh, confidence, feature):
+    def __init__(self, id, tlwh, confidence, feature, keypoints):
         self.tlwh = np.asarray(tlwh, dtype=np.float)
         self.confidence = float(confidence)
         self.feature = feature
         self.id = id
+        self.keypoints = keypoints
 
     def to_tlbr(self):
         """Convert bounding box to format `(min x, min y, max x, max y)`, i.e.,
