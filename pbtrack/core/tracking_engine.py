@@ -1,19 +1,17 @@
 import pandas as pd
 import pytorch_lightning as pl
+import logging
+import warnings
 
 from torch.utils.data import DataLoader
 from timeit import default_timer as timer
-
 from pbtrack.core import Detector, ReIdentifier, Tracker, EngineDatapipe
 from pbtrack.core.datastruct import Detections
 from pbtrack.core.datastruct.tracker_state import TrackerState
 from pbtrack.utils.collate import default_collate
-
-import logging
+from pbtrack.utils.images import cv2_load_image
 
 log = logging.getLogger(__name__)
-
-import warnings
 warnings.filterwarnings("ignore", ".*does not have many workers.*")  # Disable UserWarning for DataLoaders with num_workers=0
 
 
@@ -133,8 +131,6 @@ class OnlineTrackingEngine(pl.LightningModule):
 
         # 1. Detection
         detections = Detections(self.model_detect.process(batch, image_metadatas))
-        if detections.empty:
-            return detections
 
         # 2. Reid
         reid_detections = []
@@ -145,7 +141,6 @@ class OnlineTrackingEngine(pl.LightningModule):
             reid_detections.append(
                 self.model_reid.process(reid_batch, batch_detections, batch_metadatas)
             )
-            # reid_detections.append(self.model_reid.postprocess(reid_output))
 
         if len(reid_detections) > 0:
             reid_detections = pd.concat(reid_detections)
@@ -155,18 +150,16 @@ class OnlineTrackingEngine(pl.LightningModule):
         # 3. Tracking
         track_detections = []
         for image_id, image_metadata in image_metadatas.iterrows():
-            if len(reid_detections) == 0:
-                continue
+            image = cv2_load_image(image_metadata.file_path)
+            self.model_track.prepare_next_frame(image)
             detections = reid_detections[reid_detections.image_id == image_id]
-            if len(detections) == 0:
-                continue
             self.track_datapipe.update(self.img_metadatas, detections)
             for idxs, track_batch in self.track_dl:
                 batch_detections = detections.loc[idxs]
                 batch_metadatas = self.img_metadatas.loc[batch_detections.image_id]
                 track_detections.append(
                     self.model_track.process(
-                        track_batch, batch_detections, batch_metadatas
+                        track_batch, image, batch_detections, batch_metadatas
                     )
                 )
 
@@ -205,22 +198,21 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
 
         tracking_time = 0
         track_detections = []
-        for image_id in imgs_meta.index:
-            if len(reid_detections) == 0:
-                continue
-            detections = reid_detections[reid_detections.image_id == image_id]
-            if len(detections) == 0:
-                continue
-            self.track_datapipe.update(imgs_meta, detections)
-            model_track = OfflineTracker(
-                self.model_track, imgs_meta.loc[[image_id]], detections
-            )
+        for i, image_id in enumerate(imgs_meta.index):
             start_track = timer()
-            detections_list = self.trainer_track.predict(
-                model_track, dataloaders=self.track_dl
-            )
+            image = cv2_load_image(imgs_meta.loc[image_id].file_path)
+            self.model_track.prepare_next_frame(image)
+            detections = reid_detections[reid_detections.image_id == image_id]
+            if len(detections) != 0:
+                self.track_datapipe.update(imgs_meta, detections)
+                model_track = OfflineTracker(
+                    self.model_track, imgs_meta.loc[[image_id]], detections, image
+                )
+                detections_list = self.trainer_track.predict(
+                    model_track, dataloaders=self.track_dl
+                )
+                track_detections += detections_list if detections_list else []
             tracking_time += timer() - start_track
-            track_detections += detections_list
 
         if len(track_detections) > 0:
             detections = pd.concat(track_detections)
@@ -268,14 +260,15 @@ class OfflineReider(pl.LightningModule):
 
 
 class OfflineTracker(pl.LightningModule):
-    def __init__(self, model_track, img_metadatas, detections):
+    def __init__(self, model_track, img_metadatas, detections, image):
         super().__init__()
         self.model_track = model_track
         self.img_metadatas = img_metadatas
         self.detections = detections
+        self.image = image
 
     def predict_step(self, batch, batch_idx: int):
         idxs, batch = batch
         batch_detections = self.detections.loc[idxs]
         batch_metadatas = self.img_metadatas.loc[batch_detections.image_id]
-        return self.model_track.process(batch, batch_detections, batch_metadatas)
+        return self.model_track.process(batch, self.image, batch_detections, batch_metadatas)

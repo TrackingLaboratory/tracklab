@@ -73,7 +73,6 @@ class StrongSORT(object):
         detections = self.filter_detections(detections)
 
         # update tracker
-        self.tracker.predict()
         self.tracker.update(detections, classes, confidences)
 
         # output bbox identities
@@ -91,8 +90,9 @@ class StrongSORT(object):
                 continue
 
             det = track.last_detection_to_tlwh()
+            # t, l, w, h = det.tlwh
+            t, l, w, h = track.to_tlwh()  # return KF predicted bbox to be stored next to actual bbox
 
-            t, l, w, h = det.tlwh
             track_id = track.track_id
             class_id = track.class_id
             conf = track.conf

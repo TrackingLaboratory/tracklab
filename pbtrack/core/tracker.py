@@ -38,6 +38,11 @@ class Tracker(ABC):
         """Reset the tracker state to start tracking in a new video"""
         pass
 
+    def prepare_next_frame(self, next_frame):
+        """Prepare tracker for the next frame, can be used to propagate state distribution with KF, doing camera motion
+        compensation, etc."""
+        pass
+
 
 # FIXME a bit useless no ?
 class OfflineTracker(Tracker):
