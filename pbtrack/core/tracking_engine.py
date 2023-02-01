@@ -44,7 +44,7 @@ class OnlineTrackingEngine(pl.LightningModule):
         num_workers: int,
     ):
         super().__init__()
-        self.trainer = pl.Trainer()
+        self.trainer_model = pl.Trainer()
         self.trainer_track = pl.Trainer(enable_progress_bar=False)  # FIXME dirty fix to remove annoying 1 step long progress bar on tracker
         self.vis_engine = vis_engine  # TODO : Convert to callback
         self.tracker_state = tracker_state
@@ -101,7 +101,7 @@ class OnlineTrackingEngine(pl.LightningModule):
         self.model_track.reset()
 
         start_process = timer()
-        detections_list = self.trainer.predict(self, dataloaders=self.detection_dl)
+        detections_list = self.trainer_model.predict(self, dataloaders=self.detection_dl)
         process_time = timer() - start_process
         detections = pd.concat(detections_list)
         self.tracker_state.update(detections)
@@ -183,13 +183,12 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
 
     def video_step(self, video, video_id):
         start = timer()
-        self.trainer = pl.Trainer()
         self.model_track.reset()
         imgs_meta = self.img_metadatas[self.img_metadatas.video_id == video_id]
         self.detection_datapipe.update(imgs_meta)
         model_detect = OfflineDetector(self.model_detect, imgs_meta)
         start_detect = timer()
-        detections_list = self.trainer.predict(
+        detections_list = self.trainer_model.predict(
             model_detect, dataloaders=self.detection_dl
         )
         detect_time = timer() - start_detect
@@ -200,7 +199,7 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
         self.reid_datapipe.update(imgs_meta, detections)
         model_reid = OfflineReider(self.model_reid, imgs_meta, detections)
         start_reid = timer()
-        detections_list = self.trainer.predict(model_reid, dataloaders=self.reid_dl)
+        detections_list = self.trainer_model.predict(model_reid, dataloaders=self.reid_dl)
         reid_time = timer() - start_reid
         reid_detections = pd.concat(detections_list)
 
