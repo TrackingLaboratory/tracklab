@@ -20,7 +20,7 @@ PbTrack uses the conventional tracking-by-detection paradigm. It is composed of 
 4. A detection forecaster (Kalman filter, ...)
 5. An appearance similarity metric (cosine similarity, ...)
 6. An spatio-temporal similarity metric (IOU, OKS, ...)
-3. An association algorithm (Hungarian algorithm, ...)
+7. An association algorithm (Hungarian algorithm, ...)
 
 ## Installation guide[^1]
 
