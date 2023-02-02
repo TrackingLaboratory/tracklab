@@ -4,7 +4,7 @@ defaults:
   - reid: bpbreid
   - track: strong_sort
   - engine: offline
-  - state: save
+  - state: dont_keep
   - visualization: visualization
   - dataset: posetrack21
   - eval: posetrack21
