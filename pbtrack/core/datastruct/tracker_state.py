@@ -1,4 +1,5 @@
 from contextlib import AbstractContextManager
+from os.path import abspath
 from pathlib import Path
 import pickle
 from typing import List, Optional
@@ -108,7 +109,7 @@ class TrackerState(AbstractContextManager):
         """
         if self.save_file is None:
             return
-        log.info(f"saving to {self.save_file}")
+        log.info(f"saving to {abspath(self.save_file)}")
         assert self.video_id is not None, "Save can only be called in a contextmanager"
         assert (
             self.predictions is not None
