@@ -43,8 +43,12 @@ def main(cfg):
 
     if cfg.test_tracking:
         log.info("Starting tracking operation.")
-        tracking_set = tracking_dataset.val_set if tracking_dataset.val_set is not None else tracking_dataset.test_set
-        tracker_state = TrackerState(tracking_set)
+        tracking_set = (
+            tracking_dataset.val_set
+            if tracking_dataset.val_set is not None
+            else tracking_dataset.test_set
+        )
+        tracker_state = TrackerState(tracking_set, **cfg.state)
 
         # Run tracking and visualization
         tracking_engine = instantiate(
@@ -65,8 +69,10 @@ def main(cfg):
             else:
                 print("Skipping evaluation because there's no ground truth detection.")
         else:
-            print("Skipping evaluation because only part of video was tracked (i.e. 'cfg.dataset.nframes' was not set "
-                  "to -1)")
+            print(
+                "Skipping evaluation because only part of video was tracked (i.e. 'cfg.dataset.nframes' was not set "
+                "to -1)"
+            )
 
 
 if __name__ == "__main__":
