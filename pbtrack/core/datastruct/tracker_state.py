@@ -97,6 +97,9 @@ class TrackerState(AbstractContextManager):
         if self.predictions is None:
             self.predictions = detections
         else:
+            self.predictions = self.predictions[
+                ~(self.predictions["video_id"] == self.video_id)
+            ]
             self.predictions = pd.concat([self.predictions, detections])
 
     def save(self):
