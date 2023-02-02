@@ -102,6 +102,7 @@ class OnlineTrackingEngine(pl.LightningModule):
             video_id: the video id. must be the same as video.name
 
         """
+        raise NotImplementedError("OnlineTrackingEngine is broken now, please use OfflineTrackingEngine")  # FIXME refactor all tracking engine without pytorch lightning
         start = timer()
         imgs_meta = self.img_metadatas
         self.detection_datapipe.update(imgs_meta[imgs_meta.video_id == video_id])
