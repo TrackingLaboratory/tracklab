@@ -6,6 +6,11 @@ from . import linear_assignment
 from . import iou_matching
 from . import oks_matching
 from .track import Track
+import logging
+
+from ..utils.ecc import ECC, get_matrix
+
+log = logging.getLogger(__name__)
 
 
 class Tracker:
@@ -86,8 +91,22 @@ class Tracker:
             track.mark_missed()
 
     def camera_update(self, previous_img, current_img):
+        # ECC call was previously done inside each track in track.py, which is not efficient.
+        # Moved it here to be computed once per new incoming frame.
+        warp_matrix, src_aligned = ECC(previous_img, current_img)
+        if warp_matrix is None and src_aligned is None:
+            return None
+
+        log.info("ECC WORKED, IT IS A MIRACLE SINCE IT WAS NOT WORKING BEFORE. TELL VLADIMIR")
+        [a,b] = warp_matrix
+        warp_matrix=np.array([a,b,[0,0,1]])
+        warp_matrix = warp_matrix.tolist()
+        matrix = get_matrix(warp_matrix)
+
         for track in self.tracks:
-            track.camera_update(previous_img, current_img)
+            track.camera_update(matrix)
+
+        return matrix
 
     def update(self, detections, classes, confidences):
         """Perform measurement update and track management.

@@ -31,6 +31,7 @@ class StrongSORT(OnlineTracker):
         )
         # For camera compensation
         self.prev_frame = None
+        self.failed_ecc_counter = 0
 
     def prepare_next_frame(self, next_frame: np.ndarray):
         # Propagate the state distribution to the current time step using a Kalman filter prediction step.
@@ -38,7 +39,10 @@ class StrongSORT(OnlineTracker):
 
         # Camera motion compensation
         if self.cfg.ecc:
-            self.model.tracker.camera_update(self.prev_frame, next_frame)
+            if self.prev_frame is not None:
+                matrix = self.model.tracker.camera_update(self.prev_frame, next_frame)
+                if matrix is None:
+                    self.failed_ecc_counter += 1
             self.prev_frame = next_frame
 
     @torch.no_grad()
