@@ -13,6 +13,15 @@ Here's what makes PbTrack different from existing tracking frameworks:
   - multi-person cross-video tracking
   - person re-identification
 
+PbTrack uses the conventional tracking-by-detection paradigm. It is composed of multiple modules:
+1. A detector (OpenPifPaf, YOLO, ...)
+2. A re-identification model (BPBReID, ...)
+3. A camera motion compensation algorithm (findTransformECC, ...)
+4. A detection forecaster (Kalman filter, ...)
+5. An appearance similarity metric (cosine similarity, ...)
+6. An spatio-temporal similarity metric (IOU, OKS, ...)
+3. An association algorithm (Hungarian algorithm, ...)
+
 ## Installation guide[^1]
 
 [^1]: Tested on `conda 22.11.1`, `Python 3.10.8`, `pip 22.3.1`, `g++ 11.3.0` and `gcc 11.3.0`
