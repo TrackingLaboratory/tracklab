@@ -161,6 +161,8 @@ class VisualisationEngine:
         keypoints_xy = keypoints[:, :2].astype(int)
         keypoints_c = keypoints[:, 2]
         for xy, c in zip(keypoints_xy, keypoints_c):
+            if c <= 0:
+                continue
             if (is_prediction and self.cfg.prediction.draw_keypoints) or (
                 not is_prediction and self.cfg.ground_truth.draw_keypoints
             ):

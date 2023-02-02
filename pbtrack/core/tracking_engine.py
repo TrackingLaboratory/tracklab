@@ -1,8 +1,6 @@
 import pandas as pd
 import pytorch_lightning as pl
 import logging
-import warnings
-
 from torch.utils.data import DataLoader
 from timeit import default_timer as timer
 from tqdm import tqdm
