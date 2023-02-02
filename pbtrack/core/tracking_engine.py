@@ -207,6 +207,7 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                 detect_time = timer() - start_detect
                 detections = pd.concat(detections_list)
             if detections.empty:
+                # video has not detections: nothing left to do ...
                 return detections
 
             if tracker_state.do_reid or not loaded:
@@ -222,24 +223,20 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
             if tracker_state.do_tracking or not loaded:
                 track_detections = []
                 for image_id in tqdm(imgs_meta.index):
-                    if len(detections) == 0:
-                        continue
-                    image_detections = detections[detections.image_id == image_id]
-                    if len(detections) == 0:
-                        continue
-                    self.track_datapipe.update(imgs_meta, image_detections)
-                    model_track = OfflineTracker(
-                        self.model_track, imgs_meta.loc[[image_id]], image_detections
-                    )
                     start_track = timer()
-                    detections_list = self.trainer_track.predict(
-                        model_track, dataloaders=self.track_dl
-                    )
+                    image = cv2_load_image(imgs_meta.loc[image_id].file_path)
+                    self.model_track.prepare_next_frame(image)
+                    image_detections = detections[detections.image_id == image_id]
+                    if len(detections) != 0:
+                        self.track_datapipe.update(imgs_meta, image_detections)
+                        model_track = OfflineTracker(
+                            self.model_track, imgs_meta.loc[[image_id]], image_detections, image
+                        )
+                        detections_list = self.trainer_track.predict(
+                            model_track, dataloaders=self.track_dl
+                        )
+                        track_detections += detections_list if detections_list else []
                     tracking_time += timer() - start_track
-                    detections_list = (
-                        [Detections()] if detections_list is None else detections_list
-                    )
-                    track_detections += detections_list
 
                 if len(track_detections) > 0:
                     detections = pd.concat(track_detections)
