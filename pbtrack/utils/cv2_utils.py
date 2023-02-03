@@ -13,6 +13,9 @@ def draw_text(img,
               alignH="l",  # l: left, c: center, r: right
               alignV="b",  # t: top, c: center, b: bottom
               ):
+
+    # TODO: add multiline support
+    # TODO: add scale: txt size depend on scale of bbox?
     x, y = pos
     text_size, _ = cv2.getTextSize(text, fontFace=fontFace, fontScale=fontScale, thickness=thickness)
     text_w, text_h = text_size

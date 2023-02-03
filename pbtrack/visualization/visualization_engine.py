@@ -236,12 +236,13 @@ class VisualisationEngine:
             draw_text(
                 patch,
                 f"{100*np.mean(keypoints_c):.1f} %",
-                (l-3, t-3),
+                (l+3, t-5),
                 fontFace=self.cfg.text.font,
                 fontScale=self.cfg.text.scale,
                 thickness=self.cfg.text.thickness,
                 color_txt=(0, 0, 255),
                 lineType=cv2.LINE_AA,
+                color_bg=(255, 255, 255),
             )
         # display_matched_with
         if is_prediction and self.cfg.prediction.display_matched_with:
@@ -249,7 +250,7 @@ class VisualisationEngine:
                 draw_text(
                     patch,
                     f"{detection.matched_with}",
-                    (l+3, t+3),
+                    (l+3, t+5),
                     fontFace=self.cfg.text.font,
                     fontScale=self.cfg.text.scale,
                     thickness=self.cfg.text.thickness,
@@ -352,10 +353,10 @@ class VisualisationEngine:
         cv2.putText(
             patch,
             f"{image_metadata.frame}/{image_metadata.nframe}",
-            (patch.shape[0]-1, 3),
-            fontFace=2,
+            (6, patch.shape[0]-6),
+            fontFace=1,
             fontScale=1.,
-            thickness=2,
-            color=(0, 255, 0),
+            thickness=1,
+            color=(255, 0, 0),
             lineType=cv2.LINE_AA,
         )

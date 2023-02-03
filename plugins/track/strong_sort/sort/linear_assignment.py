@@ -51,8 +51,9 @@ def min_cost_matching(
 
     cost_matrix = distance_metric(  # return cost matrix gated by KM (too big IOU set to INF)
         tracks, detections, track_indices, detection_indices)
-    cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5  # GATE by reid max_dist threshold, why not inf?
-    row_indices, col_indices = linear_sum_assignment(cost_matrix)
+    cost_matrix_thresh = cost_matrix.copy()
+    cost_matrix_thresh[cost_matrix_thresh > max_distance] = max_distance + 1e-5  # FIXME GATE by reid max_dist threshold, why not inf?
+    row_indices, col_indices = linear_sum_assignment(cost_matrix_thresh)
 
     matches, unmatched_tracks, unmatched_detections = [], [], []
     for col, detection_idx in enumerate(detection_indices):
@@ -64,7 +65,7 @@ def min_cost_matching(
     for row, col in zip(row_indices, col_indices):
         track_idx = track_indices[row]
         detection_idx = detection_indices[col]
-        if cost_matrix[row, col] > max_distance:
+        if cost_matrix_thresh[row, col] > max_distance:
             unmatched_tracks.append(track_idx)
             unmatched_detections.append(detection_idx)
         else:
