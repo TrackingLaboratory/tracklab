@@ -94,7 +94,7 @@ def oks_cost(tracks, detections, track_indices=None, detection_indices=None):
             cost_matrix[row, :] = linear_assignment.INFTY_COST
             continue
         # TODO modify here to use mean keypoints
-        keypoints = tracks[track_idx].last_detection_keypoints()
+        keypoints = tracks[track_idx].last_detection.keypoints
         candidates = np.asarray([detections[i].keypoints for i in detection_indices])
         cost_matrix[row, :] = 1.0 - oks(keypoints, candidates)
     return cost_matrix

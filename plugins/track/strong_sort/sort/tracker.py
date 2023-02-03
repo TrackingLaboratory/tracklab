@@ -76,6 +76,7 @@ class Tracker:
         self.kf = kalman_filter.KalmanFilter()
         self.tracks = []
         self._next_id = 1
+        self.predict_done = False
 
     def predict(self):
         """Propagate track state distributions one time step forward.
@@ -84,6 +85,7 @@ class Tracker:
         """
         for track in self.tracks:
             track.predict(self.kf)
+        self.predict_done = True
 
     def increment_ages(self):
         for track in self.tracks:
@@ -219,6 +221,7 @@ class Tracker:
             matches_a,
             unmatched_tracks_a,
             unmatched_detections,
+            reid_cost_matrix
         ) = linear_assignment.matching_cascade(
             gated_metric,
             self.metric.matching_threshold,
@@ -230,7 +233,7 @@ class Tracker:
 
         # print(f"Matches with confirmed tracks using appearance features = {len(matches_a)}")
 
-        # Associate remaining tracks together with unconfirmed tracks using IOU.
+        # Associate remaining tracks together with unconfirmed tracks using spatio-temporal (st) distance metric.
         iou_track_candidates = unconfirmed_tracks + [
             k for k in unmatched_tracks_a if self.tracks[k].time_since_update == 1
         ]
@@ -241,6 +244,7 @@ class Tracker:
             matches_b,
             unmatched_tracks_b,
             unmatched_detections,
+            st_cost_matrix
         ) = linear_assignment.min_cost_matching(
             self.motion_cost,
             self.motion_max_distance,
@@ -249,6 +253,16 @@ class Tracker:
             iou_track_candidates,
             unmatched_detections,
         )
+        for i, match in enumerate(matches_a):
+            det = detections[match[1]]
+            det.matched_with = "reid"
+            det.reid_cost = reid_cost_matrix[:, i]
+
+        for i, match in enumerate(matches_b):
+            det = detections[match[1]]
+            det.matched_with = "st"
+            det.st_cost = st_cost_matrix[:, i]
+
         # print(f"Remaining tracks together with unconfirmed tracks using IOU = {len(matches_b)}")
 
         matches = matches_a + matches_b

@@ -47,7 +47,7 @@ def min_cost_matching(
         detection_indices = np.arange(len(detections))
 
     if len(detection_indices) == 0 or len(track_indices) == 0:
-        return [], track_indices, detection_indices  # Nothing to match.
+        return [], track_indices, detection_indices, None  # Nothing to match.
 
     cost_matrix = distance_metric(  # return cost matrix gated by KM (too big IOU set to INF)
         tracks, detections, track_indices, detection_indices)
@@ -69,7 +69,7 @@ def min_cost_matching(
             unmatched_detections.append(detection_idx)
         else:
             matches.append((track_idx, detection_idx))
-    return matches, unmatched_tracks, unmatched_detections
+    return matches, unmatched_tracks, unmatched_detections, cost_matrix
 
 
 def matching_cascade(
@@ -119,13 +119,13 @@ def matching_cascade(
         k for k in track_indices
         # if tracks[k].time_since_update == 1 + level
     ]
-    matches_l, _, unmatched_detections = \
+    matches_l, _, unmatched_detections, cost_matrix = \
         min_cost_matching(
             distance_metric, max_distance, tracks, detections,
             track_indices_l, unmatched_detections)
     matches += matches_l
     unmatched_tracks = list(set(track_indices) - set(k for k, _ in matches))
-    return matches, unmatched_tracks, unmatched_detections
+    return matches, unmatched_tracks, unmatched_detections, cost_matrix
 
 
 def gate_cost_matrix(

@@ -1,5 +1,5 @@
 import numpy as np
-import torch
+import pandas as pd
 
 from .sort.nn_matching import NearestNeighborDistanceMetric
 from .sort.detection import Detection
@@ -40,7 +40,7 @@ class StrongSORT(object):
     def update(
         self,
         ids,
-        bbox_xywh,
+        bbox_ltwh,
         reid_features,
         visibility_scores,
         confidences,
@@ -51,11 +51,10 @@ class StrongSORT(object):
     ):
         self.height, self.width = ori_img.shape[:2]
         # generate detections
-        bbox_tlwh = self._xywh_to_tlwh(bbox_xywh)
         detections = [
             Detection(
-                ids[i],
-                bbox_tlwh[i],
+                ids[i].numpy(),
+                np.asarray(bbox_ltwh[i], dtype=np.float),
                 conf,
                 {
                     "reid_features": np.asarray(
@@ -73,10 +72,13 @@ class StrongSORT(object):
         detections = self.filter_detections(detections)
 
         # update tracker
+        assert self.tracker.predict_done, "predict() must be called before update()"
         self.tracker.update(detections, classes, confidences)
+        self.tracker.predict_done = False
 
         # output bbox identities
         outputs = []
+        ids = []
         for track in self.tracker.tracks:
             if not track.is_confirmed() or track.time_since_update > 0:
                 # Vlad: Before 'track.time_since_update > 0', it was 'track.time_since_update > 1', which means that a
@@ -89,18 +91,24 @@ class StrongSORT(object):
                 # track.time_since_update = 1? Why not put that value "1" as a parameter of the tracker?
                 continue
 
-            det = track.last_detection_to_tlwh()
-            # t, l, w, h = det.tlwh
-            t, l, w, h = track.to_tlwh()  # return KF predicted bbox to be stored next to actual bbox
-
-            track_id = track.track_id
-            class_id = track.class_id
-            conf = track.conf
-            outputs.append(np.array([t, l, w, h, track_id, class_id, conf, det.id]))
-        if len(outputs) > 0:
-            outputs = np.stack(outputs, axis=0)
-        else:
-            outputs = np.empty((0, 8))
+            det = track.last_detection
+            # l, t, w, h = det.tlwh
+            # KF predicted bbox to be stored next to actual bbox :
+            l, t, w, h = track.to_tlwh()  # FIXME called 'tlwh' in StrongSORT, but contains actually 'ltwh'
+            result_det = {
+                "track_id": track.track_id,
+                "track_bbox_ltwh": np.array([l, t, w, h]),
+                "track_bbox_conf": track.conf,
+                "matched_with": det.matched_with,
+                "reid_cost": det.reid_cost,
+                "st_cost": det.st_cost,
+            }
+            ids.append(det.id)
+            outputs.append(result_det)
+        outputs = pd.DataFrame(outputs,
+                               index=np.array(ids),
+                               columns=['track_id', 'track_bbox_ltwh', 'track_bbox_conf', 'matched_with', 'reid_cost', 'st_cost'])
+        # outputs = outputs.set_index('det_id')
         return outputs
 
     """
@@ -109,15 +117,15 @@ class StrongSORT(object):
     Thanks JieChen91@github.com for reporting this bug!
     """
 
-    @staticmethod
-    def _xywh_to_tlwh(bbox_xywh):
-        if isinstance(bbox_xywh, np.ndarray):
-            bbox_tlwh = bbox_xywh.copy()
-        elif isinstance(bbox_xywh, torch.Tensor):
-            bbox_tlwh = bbox_xywh.clone()
-        bbox_tlwh[:, 0] = bbox_xywh[:, 0] - bbox_xywh[:, 2] / 2.0
-        bbox_tlwh[:, 1] = bbox_xywh[:, 1] - bbox_xywh[:, 3] / 2.0
-        return bbox_tlwh
+    # @staticmethod
+    # def _xywh_to_tlwh(bbox_xywh):  # BAD NAME, should be ltwh right?
+    #     if isinstance(bbox_xywh, np.ndarray):
+    #         bbox_tlwh = bbox_xywh.copy()
+    #     elif isinstance(bbox_xywh, torch.Tensor):
+    #         bbox_tlwh = bbox_xywh.clone()
+    #     bbox_tlwh[:, 0] = bbox_xywh[:, 0] - bbox_xywh[:, 2] / 2.0
+    #     bbox_tlwh[:, 1] = bbox_xywh[:, 1] - bbox_xywh[:, 3] / 2.0
+    #     return bbox_tlwh
 
     def filter_detections(self, detections):
         detections = [det for det in detections if det.confidence > self.min_bbox_confidence]

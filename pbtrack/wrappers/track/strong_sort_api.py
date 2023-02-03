@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-import pandas as pd
 import plugins.track.strong_sort as strong_sort
 
 from pbtrack.core.tracker import OnlineTracker
@@ -47,35 +46,27 @@ class StrongSORT(OnlineTracker):
 
     @torch.no_grad()
     def preprocess(self, detection: Detection, metadata: ImageMetadata):
-        bbox = detection.bbox_cmwh
+        bbox_ltwh = detection.bbox_ltwh
         score = np.mean(detection.keypoints_xyc[:, 2])  # TODO put as Detection property
         reid_features = detection.embeddings  # .flatten()
         visibility_score = detection.visibility_scores
         id = detection.id
         classes = np.array(0)
         keypoints = detection.keypoints_xyc
-        return id, bbox, reid_features, visibility_score, score, classes, metadata.frame, keypoints
+        return id, bbox_ltwh, reid_features, visibility_score, score, classes, metadata.frame, keypoints
 
     @torch.no_grad()
     def process(self, batch, image, detections: Detections, metadatas: ImageMetadatas):
-        id, cmwhs, reid_features, visibility_scores, scores, classes, frame, keypoints = batch
+        id, bbox_ltwh, reid_features, visibility_scores, scores, classes, frame, keypoints = batch
         results = self.model.update(
-            id, cmwhs, reid_features, visibility_scores, scores, classes, image, frame, keypoints
+            id, bbox_ltwh, reid_features, visibility_scores, scores, classes, image, frame, keypoints
         )
         detections = self._update_detections(results, detections)
         return detections
 
     def _update_detections(self, results, detections):
-        track_df = pd.DataFrame(
-            {
-                "track_bbox_ltwh": list(results[:, 0:4]),
-                "track_bbox_conf": results[:, 6],
-                "track_id": results[:, 4].astype(int),
-            },
-            index=results[:, -1].astype(int),
-        )
-        assert track_df.index.isin(detections.index).all(), "StrongSORT returned detections with unknown indices"
-        merged_detections = detections.join(track_df, how='left')
+        assert results.index.isin(detections.index).all(), "StrongSORT returned detections with unknown indices"
+        merged_detections = detections.join(results, how='left')
         assert merged_detections.index.equals(detections.index), "Merge with StrongSORT results failed, some " \
                                                                  "detections were lost or added"
         detections = merged_detections

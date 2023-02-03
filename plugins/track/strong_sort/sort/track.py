@@ -106,16 +106,6 @@ class Track:
         ret[:2] -= ret[2:] / 2
         return ret
 
-    def last_detection_to_tlwh(self):
-        """Get last detection
-        """
-        return self.last_detection
-
-    def last_detection_keypoints(self):
-        """Get last detection keypoints
-        """
-        return self.last_detection.keypoints
-
     def to_tlbr(self):
         """Get kf estimated current position in bounding box format `(min x, miny, max x,
         max y)`.
