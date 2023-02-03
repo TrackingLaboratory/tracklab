@@ -9,6 +9,7 @@ from pbtrack.core.evaluator import Evaluator as EvaluatorBase
 
 import pbtrack
 from pathlib import Path
+from pbtrack.utils import wandb
 
 root_dir = Path(pbtrack.__file__).parents[1]
 
@@ -48,6 +49,7 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=self.cfg.SEQS,
             )
             res_combined, res_by_video = evaluator.eval()
+            wandb.log(res_combined, "pose")
             print("Pose estimation results: ")
             data = [np.round(v, decimals=2) for v in res_combined.values()]
             print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
@@ -69,8 +71,9 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=self.cfg.SEQS,
             )
             res_combined, res_by_video = evaluator.eval()
+            wandb.log(res_combined, "posetrack")
             print("Pose tracking results: ")
-            data = [np.round(100*v, decimals=2) for v in res_combined.values()]
+            data = [np.round(100 * v, decimals=2) for v in res_combined.values()]
             print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
 
         if self.cfg.eval_reid_pose_tracking:
@@ -90,8 +93,9 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=self.cfg.SEQS,
             )
             res_combined, res_by_video = evaluator.eval()
+            wandb.log(res_combined, "reid")
             print("Reid pose tracking results: ")
-            data = [np.round(100*v, decimals=2) for v in res_combined.values()]
+            data = [np.round(100 * v, decimals=2) for v in res_combined.values()]
             print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
 
         if self.cfg.eval_mot:
@@ -110,8 +114,9 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=self.cfg.SEQS,
             )
             res_combined, res_by_video = evaluator.eval()
+            wandb.log(res_combined, "mot")
             print("Posetrack MOT results: ")
-            data = [np.round(100*v, decimals=2) for v in res_combined.values()]
+            data = [np.round(100 * v, decimals=2) for v in res_combined.values()]
             print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
             # MOTA
             dataset = PTWrapper(
@@ -159,7 +164,7 @@ class PoseTrack21(EvaluatorBase):
         for video_name in videos_names:
             images_by_video = image_metadatas[
                 image_metadatas["video_name"] == video_name
-                ]
+            ]
             images[video_name] = images_by_video[
                 ["file_name", "id", "frame_id"]
             ].to_dict("records")
