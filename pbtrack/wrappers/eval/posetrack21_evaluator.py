@@ -3,11 +3,13 @@ import sys
 import json
 import numpy as np
 import pandas as pd
+from tabulate import tabulate
 
 from pbtrack.core.evaluator import Evaluator as EvaluatorBase
 
 import pbtrack
 from pathlib import Path
+from pbtrack.utils import wandb
 
 root_dir = Path(pbtrack.__file__).parents[1]
 
@@ -29,7 +31,7 @@ class PoseTrack21(EvaluatorBase):
 
     def run(self, tracker_state):
         images = self._images(tracker_state.gt.image_metadatas)
-        self.cfg['SEQS'] = list(tracker_state.gt.video_metadatas.name)
+        self.cfg["SEQS"] = list(tracker_state.gt.video_metadatas.name)
         if self.cfg.eval_pose_estimation:
             annotations = self._annotations_pose_estimation_eval(
                 tracker_state.predictions, tracker_state.gt.image_metadatas
@@ -46,10 +48,11 @@ class PoseTrack21(EvaluatorBase):
                 num_parallel_cores=self.cfg.num_parallel_cores,
                 SEQS=self.cfg.SEQS,
             )
-            results = evaluator.eval()
-            print(f"{15*'-'}")
+            res_combined, res_by_video = evaluator.eval()
+            wandb.log(res_combined, "pose", res_by_video)
             print("Pose estimation results: ")
-            print(results)
+            data = [np.round(v, decimals=2) for v in res_combined.values()]
+            print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
 
         if self.cfg.eval_pose_tracking:
             annotations = self._annotations_tracking_eval(
@@ -67,14 +70,11 @@ class PoseTrack21(EvaluatorBase):
                 num_parallel_cores=self.cfg.num_parallel_cores,
                 SEQS=self.cfg.SEQS,
             )
-            results = evaluator.eval()
-            print(f"{50*'-'}")
-            # print("Pose tracking results: ")
-            # print(results)
-            # get average results over evaluation thresholds
-            avg_results = evaluator.get_avg_results(results)
-            print("Average pose tracking results:")
-            print(avg_results)
+            res_combined, res_by_video = evaluator.eval()
+            wandb.log(res_combined, "posetrack", res_by_video)
+            print("Pose tracking results: ")
+            data = [np.round(100 * v, decimals=2) for v in res_combined.values()]
+            print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
 
         if self.cfg.eval_reid_pose_tracking:
             annotations = self._annotations_reid_pose_tracking_eval(
@@ -92,14 +92,11 @@ class PoseTrack21(EvaluatorBase):
                 num_parallel_cores=self.cfg.num_parallel_cores,
                 SEQS=self.cfg.SEQS,
             )
-            results = evaluator.eval()
-            print(f"{50*'-'}")
+            res_combined, res_by_video = evaluator.eval()
+            wandb.log(res_combined, "reid", res_by_video)
             print("Reid pose tracking results: ")
-            print(results)
-            # get average results over evaluation thresholds
-            avg_results = evaluator.get_avg_results(results)
-            print("Average reid pose tracking  results:")
-            print(avg_results)
+            data = [np.round(100 * v, decimals=2) for v in res_combined.values()]
+            print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
 
         if self.cfg.eval_mot:
             # HOTA
@@ -116,10 +113,11 @@ class PoseTrack21(EvaluatorBase):
                 num_parallel_cores=self.cfg.num_parallel_cores,
                 SEQS=self.cfg.SEQS,
             )
-            results = evaluator.eval()
-            print(f"{50*'-'}")
-            print("Posetrack mot results (HOTA): ")
-            print(results)
+            res_combined, res_by_video = evaluator.eval()
+            wandb.log(res_combined, "mot", res_by_video)
+            print("Posetrack MOT results: ")
+            data = [np.round(100 * v, decimals=2) for v in res_combined.values()]
+            print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
             # MOTA
             dataset = PTWrapper(
                 self.cfg.mot_gt_folder,
