@@ -43,3 +43,4 @@ dataset_path: ${data_dir}/PoseTrack21
 #  "004622_mpii_test",  # a lot of trampoline jumpers with similar appearance
 #  "008827_mpii_test",  # rugby players, small people
 #  "024575_mpii_test",  # dancers with similar appearance and occlusions
+#  "009473_mpii_test",  # Two dancers with very similar appearance, heavily occluding each other + lot of ignore regions.
