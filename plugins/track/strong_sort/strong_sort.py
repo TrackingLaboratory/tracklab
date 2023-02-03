@@ -100,15 +100,13 @@ class StrongSORT(object):
                 "track_bbox_ltwh": np.array([l, t, w, h]),
                 "track_bbox_conf": track.conf,
                 "matched_with": det.matched_with,
-                "reid_cost": det.reid_cost,
-                "st_cost": det.st_cost,
+                "costs": det.costs,
             }
             ids.append(det.id)
             outputs.append(result_det)
         outputs = pd.DataFrame(outputs,
                                index=np.array(ids),
-                               columns=['track_id', 'track_bbox_ltwh', 'track_bbox_conf', 'matched_with', 'reid_cost', 'st_cost'])
-        # outputs = outputs.set_index('det_id')
+                               columns=['track_id', 'track_bbox_ltwh', 'track_bbox_conf', 'matched_with', 'costs'])
         return outputs
 
     """

@@ -220,7 +220,7 @@ class Tracker:
         (
             matches_a,
             unmatched_tracks_a,
-            unmatched_detections,
+            unmatched_detections_a,
             reid_cost_matrix
         ) = linear_assignment.matching_cascade(
             gated_metric,
@@ -243,7 +243,7 @@ class Tracker:
         (
             matches_b,
             unmatched_tracks_b,
-            unmatched_detections,
+            unmatched_detections_b,
             st_cost_matrix
         ) = linear_assignment.min_cost_matching(
             self.motion_cost,
@@ -251,23 +251,56 @@ class Tracker:
             self.tracks,
             detections,
             iou_track_candidates,
-            unmatched_detections,
+            unmatched_detections_a,
         )
-        for i, match in enumerate(matches_a):
-            det = detections[match[1]]
-            det.matched_with = "reid"
-            det.reid_cost = reid_cost_matrix[:, i]
 
-        for i, match in enumerate(matches_b):
-            det = detections[match[1]]
-            det.matched_with = "st"
-            det.st_cost = st_cost_matrix[:, i]
+
+        # for i, (t_idx, d_idx) in enumerate(matches_a):
+        #     det = detections[d_idx]
+        #     det.reid_cost = {}
+        #     matched_dist = -1
+        #     for lcl_idx, glb_idx in enumerate(confirmed_tracks):
+        #         det.reid_cost[self.tracks[glb_idx].track_id] = reid_cost_matrix[lcl_idx, i]
+        #         if glb_idx == t_idx:
+        #             matched_dist = reid_cost_matrix[lcl_idx, i]
+        #     det.matched_with = f"R|{np.around(matched_dist, 3)}"  # R for ReID
+        #
+        # for i, (t_idx, d_idx) in enumerate(matches_b):
+        #     det = detections[d_idx]
+        #     det.st_cost = {}
+        #     matched_dist = -1
+        #     for lcl_idx, glb_idx in enumerate(iou_track_candidates):
+        #         det.st_cost[self.tracks[glb_idx].track_id] = st_cost_matrix[lcl_idx, i]
+        #         if glb_idx == t_idx:
+        #             matched_dist = st_cost_matrix[lcl_idx, i]
+        #     det.matched_with = f"S|{np.around(matched_dist, 3)}"  # S for Spatio-Temporal
+
+        self.add_matching_information(detections, self.tracks, "R", confirmed_tracks, list(range(len(detections))), matches_a, reid_cost_matrix)
+        self.add_matching_information(detections, self.tracks, "S", iou_track_candidates, unmatched_detections_a, matches_b, st_cost_matrix)
 
         # print(f"Remaining tracks together with unconfirmed tracks using IOU = {len(matches_b)}")
 
         matches = matches_a + matches_b
         unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
-        return matches, unmatched_tracks, unmatched_detections
+        return matches, unmatched_tracks, unmatched_detections_b
+
+    def add_matching_information(self, detections, tracks, name, track_candidates, detections_candidates, matches, cost_matrix):
+        if cost_matrix is None:
+            return
+        track_glb_idx_to_lcl_idx = {idx:i for i, idx in enumerate(track_candidates)}
+        matches_b_dict = {d: t for t, d in matches}
+        for i, d_idx in enumerate(detections_candidates):
+            det = detections[d_idx]
+            costs = cost_matrix[:, i]
+            det.costs[name] = {}
+            for t, cost in enumerate(costs):
+                t_idx = track_candidates[t]
+                det.costs[name][tracks[t_idx].track_id] = cost
+            if d_idx in matches_b_dict:
+                matched_dist = cost_matrix[track_glb_idx_to_lcl_idx[matches_b_dict[d_idx]], i]
+                det.matched_with = f"{name}|{np.around(matched_dist, 3)}"  # S for Spatio-Temporal
+            else:
+                det.matched_with = None
 
     def _initiate_track(self, detection, class_id, conf):
         self.tracks.append(

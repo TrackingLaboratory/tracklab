@@ -35,8 +35,7 @@ class Detection(object):
         self.id = id
         self.keypoints = keypoints
         self.matched_with = None
-        self.reid_cost = None
-        self.st_cost = None
+        self.costs = {}
 
     def to_tlbr(self):
         """Convert bounding box to format `(min x, min y, max x, max y)`, i.e.,
