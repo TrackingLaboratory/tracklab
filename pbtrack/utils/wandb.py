@@ -1,6 +1,7 @@
 from typing import Mapping, Sequence
 import wandb
 from omegaconf import OmegaConf
+import pandas as pd
 
 keep_dict = {
     "dataset": ["dataset_path", "nframes", "nvid", "vids_dict"],
@@ -41,11 +42,15 @@ def init(cfg):
     wandb.init(project=cfg["experiment_name"], entity="pbtrack", config=new_cfg)
 
 
-def log(res_dict, name):
+def log(res_dict, name, video_dict=None):
     wandb.log(
         {f"{name}/{k}": v for k, v in res_dict.items()},
         step=0,
     )
+    if video_dict is not None:
+        video_df = pd.DataFrame.from_dict(video_dict, orient="index")
+        video_df.insert(0, "video", video_df.index)
+        wandb.log({f"{name}/videos": video_df}, step=0)
 
 
 def apply_recursively(d, f=lambda v: v, filter=lambda k, v: True, always_filter=False):

@@ -49,7 +49,7 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=self.cfg.SEQS,
             )
             res_combined, res_by_video = evaluator.eval()
-            wandb.log(res_combined, "pose")
+            wandb.log(res_combined, "pose", res_by_video)
             print("Pose estimation results: ")
             data = [np.round(v, decimals=2) for v in res_combined.values()]
             print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
@@ -71,7 +71,7 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=self.cfg.SEQS,
             )
             res_combined, res_by_video = evaluator.eval()
-            wandb.log(res_combined, "posetrack")
+            wandb.log(res_combined, "posetrack", res_by_video)
             print("Pose tracking results: ")
             data = [np.round(100 * v, decimals=2) for v in res_combined.values()]
             print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
@@ -93,7 +93,7 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=self.cfg.SEQS,
             )
             res_combined, res_by_video = evaluator.eval()
-            wandb.log(res_combined, "reid")
+            wandb.log(res_combined, "reid", res_by_video)
             print("Reid pose tracking results: ")
             data = [np.round(100 * v, decimals=2) for v in res_combined.values()]
             print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
@@ -114,7 +114,7 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=self.cfg.SEQS,
             )
             res_combined, res_by_video = evaluator.eval()
-            wandb.log(res_combined, "mot")
+            wandb.log(res_combined, "mot", res_by_video)
             print("Posetrack MOT results: ")
             data = [np.round(100 * v, decimals=2) for v in res_combined.values()]
             print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
