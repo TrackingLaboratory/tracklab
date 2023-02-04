@@ -192,6 +192,27 @@ class Tracker:
         return cost_matrix
 
     def _match(self, detections):
+        """
+        Associate previous track with current detections in two steps.
+        Both steps perform a linear assignment (Hungarian algorithm) based on a cost matrix between tracks and detections.
+        # REID STEP WITH KF GATING
+        1. To compute the first cost matrix, we compare the appearance/reid features of the CONFIRMED tracks
+        (i.e. tracks older than 'n_init') w.r.t. all the detections.
+        Reid features for the tracks are computed by a moving average of the reid features of their underlying detections.
+        The reid cost matrix is first computed and then 'gated' by the KF gating distance.
+        The first cost matrix is 0.995 of the ReID distance + 0.005 of the KF gating distance. Entries of the cost
+        matrix where the KF gating distance is above the threshold are set to INFTY_COST and ignored by the linear assignment.
+        Finally, after the linear assignment is performed, tracks and detections that were matched but whose cost in
+        the cost matrix was above the threshold 'max_dist' are canceled and considered as not matched.
+        # SPATIO-TEMPORAL STEP WITH IOU
+        2. To compute the second cost matrix, we compared all remaining (unmatched) detections with all remaining tracks,
+        including UNCONFIRMED tracks (that were ignored in previous step), but excluding tracks that were not updated in the previous step.
+        Tracks that were not updated in the previous step can therefore only be matched using the appearance features.
+        To compare these unmatched tracks and detections and compute the second cost matrix, the IOU/OKS distance is used.
+        The IOU is computed between the detection's bounding box and the kalman filter predicted bounding box of the track.
+        Finally, after the linear assignment is performed, tracks and detections that were matched but whose cost in
+        the cost matrix was above the threshold 'max_iou_distance' are canceled and considered as not matched.
+        """
         def gated_metric(tracks, dets, track_indices, detection_indices):
             features = {
                 "reid_features": np.array(
@@ -225,7 +246,7 @@ class Tracker:
         ) = linear_assignment.matching_cascade(
             gated_metric,
             self.metric.matching_threshold,
-            self.max_age,
+            self.max_age,  # 'cascade' matching is not really implemented here, so 'max_age' is not used
             self.tracks,
             detections,
             confirmed_tracks,
