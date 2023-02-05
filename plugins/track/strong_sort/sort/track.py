@@ -13,13 +13,12 @@ class TrackState:
 
     """
 
-    Tentative = 1
-    Confirmed = 2
-    Deleted = 3
+    Tentative = 't'
+    Confirmed = 'c'
+    Deleted = 'd'
 
-"""
-    TODO state space should be N keypoints x (x, y) + (x, y, a, h) for the bbox
-"""
+
+# TODO state space should be N keypoints x (x, y) + (x, y, a, h) for the bbox
 class Track:
     """
     A single target track with state space `(x, y, a, h)` and associated

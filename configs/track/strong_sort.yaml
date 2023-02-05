@@ -12,3 +12,4 @@ cfg:
   n_init: 3 # Number of frames that a track remains in initialization phase
   nn_budget: 100 # Maximum size of the appearance descriptors gallery
   min_bbox_confidence: 0.5  # bbox below this confidence threshold are not considered for matching
+  only_position_for_kf_gating: False   # if True, only the position (x, y) is used by the Kalman filter for gating

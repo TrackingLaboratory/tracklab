@@ -53,6 +53,7 @@ class Tracker:
         _lambda=0,
         ema_alpha=0.9,
         mc_lambda=0.995,
+        only_position_for_kf_gating=False,
     ):
         self.metric = metric
         if motion_criterium == "iou":
@@ -77,6 +78,7 @@ class Tracker:
         self.tracks = []
         self._next_id = 1
         self.predict_done = False
+        self.only_position = only_position_for_kf_gating
 
     def predict(self):
         """Propagate track state distributions one time step forward.
@@ -213,6 +215,10 @@ class Tracker:
         Finally, after the linear assignment is performed, tracks and detections that were matched but whose cost in
         the cost matrix was above the threshold 'max_iou_distance' are canceled and considered as not matched.
         """
+
+
+        self.compute_all_costs_matrix(detections)
+
         def gated_metric(tracks, dets, track_indices, detection_indices):
             features = {
                 "reid_features": np.array(
@@ -226,7 +232,7 @@ class Tracker:
             targets = np.array([tracks[i].track_id for i in track_indices])
             cost_matrix_reid = self.metric.distance(features, targets)  # NO thresholding until here -> ONLY REID DISTANCE
             cost_matrix = linear_assignment.gate_cost_matrix(  # KF gating applied, too big values are set to INFTY
-                cost_matrix_reid, tracks, dets, track_indices, detection_indices
+                cost_matrix_reid, tracks, dets, track_indices, detection_indices, only_position=self.only_position
             )
 
             return cost_matrix
@@ -242,7 +248,7 @@ class Tracker:
             matches_a,
             unmatched_tracks_a,
             unmatched_detections_a,
-            reid_cost_matrix
+            gated_reid_cost_matrix
         ) = linear_assignment.matching_cascade(
             gated_metric,
             self.metric.matching_threshold,
@@ -296,7 +302,7 @@ class Tracker:
         #             matched_dist = st_cost_matrix[lcl_idx, i]
         #     det.matched_with = f"S|{np.around(matched_dist, 3)}"  # S for Spatio-Temporal
 
-        self.add_matching_information(detections, self.tracks, "R", confirmed_tracks, list(range(len(detections))), matches_a, reid_cost_matrix)
+        self.add_matching_information(detections, self.tracks, "R", confirmed_tracks, list(range(len(detections))), matches_a, gated_reid_cost_matrix)
         self.add_matching_information(detections, self.tracks, "S", iou_track_candidates, unmatched_detections_a, matches_b, st_cost_matrix)
 
         # print(f"Remaining tracks together with unconfirmed tracks using IOU = {len(matches_b)}")
@@ -305,6 +311,50 @@ class Tracker:
         unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
         return matches, unmatched_tracks, unmatched_detections_b
 
+    def compute_all_costs_matrix(self, detections):
+        """Compute reid/spatio-temporal/kf_gating distance from each detection to each track and update each
+        detection with the resulting information. This is used for visualization purposes. No gated/thresholding is
+        applied here to display the original information"""
+        # reid cost matrix
+        features = {
+            "reid_features": np.array(
+                [detection.feature["reid_features"] for detection in detections]
+            ),
+            "visibility_scores": np.array(
+                [detection.feature["visibility_scores"] for detection in detections]
+            ),
+        }
+        targets = np.array([track.track_id for track in self.tracks])
+        cost_matrix_reid = self.metric.distance(features, targets)
+
+        # spatio-temporal cost matrix (iou/oks)
+        cost_matrix_st = self.motion_cost(  # return cost matrix gated by KM (too big IOU set to INF)
+            self.tracks, detections, list(range(len(self.tracks))), list(range(len(detections))))
+
+        # kf gating cost matrix
+        only_position = self.only_position
+        gating_dim = 2 if only_position else 4
+        gating_threshold = kalman_filter.chi2inv95[gating_dim]
+        track_indices = list(range(len(self.tracks)))
+        detection_indices = list(range(len(detections)))
+        measurements = np.asarray(
+            [detections[i].to_xyah() for i in detection_indices])
+        cost_matrix_kf_gating = np.zeros((len(self.tracks), len(detections)))
+        for row, track_idx in enumerate(track_indices):
+            track = self.tracks[track_idx]
+            gating_distance = track.kf.gating_distance(track.mean, track.covariance, measurements, only_position)
+            cost_matrix_kf_gating[row] = gating_distance
+
+        # update each detection with costs to each track
+        for i, det in enumerate(detections):
+            det.costs = {}
+            det.costs["R"] = {track.track_id: cost_matrix_reid[j, i] for j, track in enumerate(self.tracks)}
+            det.costs["Rt"] = self.metric.matching_threshold
+            det.costs["S"] = {track.track_id: cost_matrix_st[j, i] for j, track in enumerate(self.tracks)}
+            det.costs["St"] = self.motion_max_distance
+            det.costs["K"] = {track.track_id: cost_matrix_kf_gating[j, i] for j, track in enumerate(self.tracks)}
+            det.costs["Kt"] = gating_threshold
+
     def add_matching_information(self, detections, tracks, name, track_candidates, detections_candidates, matches, cost_matrix):
         if cost_matrix is None:
             return
@@ -312,11 +362,11 @@ class Tracker:
         matches_b_dict = {d: t for t, d in matches}
         for i, d_idx in enumerate(detections_candidates):
             det = detections[d_idx]
-            costs = cost_matrix[:, i]
-            det.costs[name] = {}
-            for t, cost in enumerate(costs):
-                t_idx = track_candidates[t]
-                det.costs[name][tracks[t_idx].track_id] = cost
+            # costs = cost_matrix[:, i]
+            # det.costs[name] = {}
+            # for t, cost in enumerate(costs):
+            #     t_idx = track_candidates[t]
+                # det.costs[name][tracks[t_idx].track_id] = cost
             if d_idx in matches_b_dict:
                 matched_dist = cost_matrix[track_glb_idx_to_lcl_idx[matches_b_dict[d_idx]], i]
                 det.matched_with = (name, matched_dist)  # name = "S" for Spatio-Temporal or "R" for ReID

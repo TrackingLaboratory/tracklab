@@ -205,7 +205,7 @@ class PoseTrack21(EvaluatorBase):
         predictions.dropna(
             subset=[
                 "keypoints_xyc",
-                "track_bbox_ltwh",
+                "track_bbox_kf_ltwh",
                 "image_id",
                 "track_id",
             ],
@@ -213,7 +213,7 @@ class PoseTrack21(EvaluatorBase):
             inplace=True,
         )
         predictions.rename(
-            columns={"keypoints_xyc": "keypoints", "track_bbox_ltwh": "bbox"},
+            columns={"keypoints_xyc": "keypoints", "track_bbox_kf_ltwh": "bbox"},
             inplace=True,
         )
         predictions["scores"] = predictions["keypoints"].apply(lambda x: x[:, 2])
@@ -235,7 +235,7 @@ class PoseTrack21(EvaluatorBase):
         predictions.dropna(
             subset=[
                 "keypoints_xyc",
-                "track_bbox_ltwh",
+                "track_bbox_kf_ltwh",
                 "image_id",
                 "track_id",
                 "person_id",
@@ -244,7 +244,7 @@ class PoseTrack21(EvaluatorBase):
             inplace=True,
         )
         predictions.rename(
-            columns={"keypoints_xyc": "keypoints", "track_bbox_ltwh": "bbox"},
+            columns={"keypoints_xyc": "keypoints", "track_bbox_kf_ltwh": "bbox"},
             inplace=True,
         )
         predictions["scores"] = predictions["keypoints"].apply(lambda x: x[:, 2])
@@ -289,7 +289,7 @@ class PoseTrack21(EvaluatorBase):
                 "video_name",
                 "frame",
                 "track_id",
-                "track_bbox_ltwh",
+                "track_bbox_kf_ltwh",
                 "keypoints_xyc",
             ],
             how="any",
@@ -297,10 +297,10 @@ class PoseTrack21(EvaluatorBase):
         )
         print("Dropped {} rows with NA values".format(len_before_drop - len(df)))
         df["track_id"] = df["track_id"].astype(int)
-        df["bb_left"] = df["track_bbox_ltwh"].apply(lambda x: x[0])
-        df["bb_top"] = df["track_bbox_ltwh"].apply(lambda x: x[1])
-        df["bb_width"] = df["track_bbox_ltwh"].apply(lambda x: x[2])
-        df["bb_height"] = df["track_bbox_ltwh"].apply(lambda x: x[3])
+        df["bb_left"] = df["track_bbox_kf_ltwh"].apply(lambda x: x[0])
+        df["bb_top"] = df["track_bbox_kf_ltwh"].apply(lambda x: x[1])
+        df["bb_width"] = df["track_bbox_kf_ltwh"].apply(lambda x: x[2])
+        df["bb_height"] = df["track_bbox_kf_ltwh"].apply(lambda x: x[3])
         df = df.assign(x=-1, y=-1, z=-1)
         return df
 

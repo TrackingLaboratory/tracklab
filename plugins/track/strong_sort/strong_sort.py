@@ -21,6 +21,7 @@ class StrongSORT(object):
         n_init=3,
         nn_budget=100,
         min_bbox_confidence=0.2,
+        only_position_for_kf_gating=False,
     ):
 
         self.max_dist = max_dist
@@ -35,6 +36,7 @@ class StrongSORT(object):
             n_init=n_init,
             ema_alpha=ema_alpha,
             mc_lambda=mc_lambda,
+            only_position_for_kf_gating=only_position_for_kf_gating,
         )
 
     def update(

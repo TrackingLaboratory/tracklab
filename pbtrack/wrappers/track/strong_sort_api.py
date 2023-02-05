@@ -27,6 +27,7 @@ class StrongSORT(OnlineTracker):
             n_init=self.cfg.n_init,
             nn_budget=self.cfg.nn_budget,
             min_bbox_confidence=self.cfg.min_bbox_confidence,
+            only_position_for_kf_gating=self.cfg.only_position_for_kf_gating,
         )
         # For camera compensation
         self.prev_frame = None
