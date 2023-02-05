@@ -3,7 +3,7 @@ _target_: pbtrack.wrappers.StrongSORT
 cfg:
   ecc: True # activate camera motion compensation
   ema_alpha: 0.9 # updates  appearance  state in  an exponential moving average manner # FIXME is it still used?
-  mc_lambda: 0.995 # matching with both appearance (1 - MC_LAMBDA) and motion cost # FIXME is it still used?
+  mc_lambda: 0.995 # matching with both appearance (1 - MC_LAMBDA) and KF gated cost
   max_dist: 0.5 # The reid matching threshold. Samples with larger distance are considered an invalid match
   motion_criterium: "oks" # "iou" or "oks"
   max_iou_distance: 0.7 # Gating threshold. Associations with cost larger than this value are disregarded.
