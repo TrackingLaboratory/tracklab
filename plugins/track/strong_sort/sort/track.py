@@ -90,6 +90,7 @@ class Track:
         self.mean, self.covariance = self.kf.initiate(detection.to_xyah())
         self.last_detection = detection
         self.update_state()  # update state to confirmed if n_init = 1
+        self.last_kf_pred_tlwh = None
 
     def to_tlwh(self):
         """Get current position in bounding box format `(top left x, top left y,
@@ -128,7 +129,6 @@ class Track:
         cx, cy = x1_ + w / 2, y1_ + h / 2
         self.mean[:4] = [cx, cy, w / h, h]
 
-
     def increment_age(self):
         self.age += 1
         self.time_since_update += 1
@@ -158,6 +158,7 @@ class Track:
         self.conf = conf
         self.class_id = class_id.int()
         self.last_detection = detection
+        self.last_kf_pred_tlwh = self.to_tlwh()
         self.mean, self.covariance = self.kf.update(self.mean, self.covariance, detection.to_xyah(), detection.confidence)
 
         detection_features = detection.feature['reid_features']

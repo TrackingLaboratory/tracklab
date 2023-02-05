@@ -92,21 +92,23 @@ class StrongSORT(object):
                 continue
 
             det = track.last_detection
-            # l, t, w, h = det.tlwh
             # KF predicted bbox to be stored next to actual bbox :
-            l, t, w, h = track.to_tlwh()  # FIXME called 'tlwh' in StrongSORT, but contains actually 'ltwh'
-            result_det = {
+            result_det = {  # if keys are added/updated here, don't forget to update the columns in the pd.DataFrame below
                 "track_id": track.track_id,
-                "track_bbox_ltwh": np.array([l, t, w, h]),
-                "track_bbox_conf": track.conf,
+                "track_bbox_kf_ltwh": track.to_tlwh(),
+                "track_bbox_pred_kf_ltwh": track.last_kf_pred_tlwh,
                 "matched_with": det.matched_with,
                 "costs": det.costs,
+                "hits": track.hits,
+                "age": track.age,
+                "time_since_update": track.time_since_update,
+                "state": track.state,
             }
             ids.append(det.id)
             outputs.append(result_det)
         outputs = pd.DataFrame(outputs,
                                index=np.array(ids),
-                               columns=['track_id', 'track_bbox_ltwh', 'track_bbox_conf', 'matched_with', 'costs'])
+                               columns=["track_id", "track_bbox_kf_ltwh", "track_bbox_pred_kf_ltwh", "matched_with", "costs", "hits", "age", "time_since_update", "state"])
         return outputs
 
     """

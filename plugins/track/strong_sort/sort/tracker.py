@@ -319,7 +319,7 @@ class Tracker:
                 det.costs[name][tracks[t_idx].track_id] = cost
             if d_idx in matches_b_dict:
                 matched_dist = cost_matrix[track_glb_idx_to_lcl_idx[matches_b_dict[d_idx]], i]
-                det.matched_with = f"{name}|{np.around(matched_dist, 3)}"  # S for Spatio-Temporal
+                det.matched_with = (name, matched_dist)  # name = "S" for Spatio-Temporal or "R" for ReID
             else:
                 det.matched_with = None
 

@@ -14,7 +14,7 @@ from pbtrack.core.reidentifier import ReIdentifier
 from pbtrack.utils.coordinates import (
     clip_bbox_ltrb_to_img_dim,
     kp_img_to_kp_bbox,
-    rescale_keypoints, round_bbox_ccordinates,
+    rescale_keypoints, round_bbox_coordinates,
 )
 from plugins.reid.bpbreid.scripts.main import build_config, build_torchreid_model_engine
 from plugins.reid.bpbreid.tools.feature_extractor import FeatureExtractor
@@ -93,7 +93,7 @@ class BPBReId(ReIdentifier):
         image = cv2_load_image(metadata.file_path)
         ltrb = detection.bbox_ltrb
         l, t, r, b = clip_bbox_ltrb_to_img_dim(
-            round_bbox_ccordinates(ltrb), image.shape[1], image.shape[0]
+            round_bbox_coordinates(ltrb), image.shape[1], image.shape[0]
         )
         # TODO add a check to see if the bbox is not empty. t == b or l == r -> return error
         crop = image[t:b, l:r]

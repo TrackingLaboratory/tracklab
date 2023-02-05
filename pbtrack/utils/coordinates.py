@@ -145,7 +145,7 @@ def clip_bbox_ltrb_to_img_dim(bbox_ltrb, img_w, img_h):
     return np.array([l, t, r, b])
 
 
-def round_bbox_ccordinates(bbox):
+def round_bbox_coordinates(bbox):
     """
     Round bounding box coordinates.
     Round to ceil value to avoid bbox with zero width or height.
@@ -158,3 +158,11 @@ def round_bbox_ccordinates(bbox):
     """
 
     return np.concatenate([np.floor(bbox[:2]), np.ceil(bbox[2:])]).astype(int)
+
+
+def bbox_ltwh2ltrb(ltwh):
+    return np.concatenate((ltwh[:2], ltwh[:2] + ltwh[2:]))
+
+
+def bbox_ltwh2cmwh(ltwh):
+    return np.concatenate((ltwh[:2] + ltwh[2:] / 2, ltwh[2:]))
