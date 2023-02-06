@@ -1,5 +1,5 @@
 import cv2
-
+import numpy as np
 
 def ECC(src, dst, warp_mode=cv2.MOTION_EUCLIDEAN, eps=1e-5,
         max_iter=100, scale=0.1, align=False):

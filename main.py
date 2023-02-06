@@ -2,6 +2,7 @@ import hydra
 from hydra.utils import instantiate
 
 from pbtrack.core.datastruct.tracker_state import TrackerState
+from pbtrack.utils import wandb
 
 import torch
 import torch.multiprocessing
@@ -19,6 +20,8 @@ log = logging.getLogger(__name__)
 def main(cfg):
     device = "cuda" if torch.cuda.is_available() else "cpu"  # TODO support Mac chips
     log.info(f"Using device: {device}. Starting instantiation of all the instances.")
+
+    wandb.init(cfg)
 
     # Initiate all the instances
     tracking_dataset = instantiate(cfg.dataset)
@@ -60,7 +63,6 @@ def main(cfg):
             vis_engine=vis_engine,
         )
         tracking_engine.run()
-
         # Evaluation
         if cfg.dataset.nframes == -1:
             if tracker_state.gt.detections is not None:
@@ -73,6 +75,9 @@ def main(cfg):
                 "Skipping evaluation because only part of video was tracked (i.e. 'cfg.dataset.nframes' was not set "
                 "to -1)"
             )
+
+        if tracker_state.save_file is not None:
+            log.info(f"Saved state at : {tracker_state.save_file.resolve()}")
 
 
 if __name__ == "__main__":

@@ -226,7 +226,7 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                     image = cv2_load_image(imgs_meta.loc[image_id].file_path)
                     self.model_track.prepare_next_frame(image)
                     image_detections = detections[detections.image_id == image_id]
-                    if len(detections) != 0:
+                    if len(image_detections) != 0:
                         self.track_datapipe.update(imgs_meta, image_detections)
                         model_track = OfflineTracker(
                             self.model_track, imgs_meta.loc[[image_id]], image_detections, image

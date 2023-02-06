@@ -71,7 +71,7 @@ def iou_cost(tracks, detections, track_indices=None,
 
     cost_matrix = np.zeros((len(track_indices), len(detection_indices)))
     for row, track_idx in enumerate(track_indices):
-        if tracks[track_idx].time_since_update > 1:
+        if tracks[track_idx].time_since_update > 1:  # should not happen because already filtered before
             cost_matrix[row, :] = linear_assignment.INFTY_COST
             continue
 

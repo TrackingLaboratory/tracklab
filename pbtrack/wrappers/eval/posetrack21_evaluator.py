@@ -9,6 +9,7 @@ from pbtrack.core.evaluator import Evaluator as EvaluatorBase
 
 import pbtrack
 from pathlib import Path
+from pbtrack.utils import wandb
 
 root_dir = Path(pbtrack.__file__).parents[1]
 
@@ -48,6 +49,7 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=self.cfg.SEQS,
             )
             res_combined, res_by_video = evaluator.eval()
+            wandb.log(res_combined, "pose", res_by_video)
             print("Pose estimation results: ")
             self._print_results(res_combined, res_by_video, scale_factor=1.0)
 
@@ -70,6 +72,7 @@ class PoseTrack21(EvaluatorBase):
             res_combined, res_by_video = evaluator.eval()
             print("Pose tracking results:")
             self._print_results(res_combined, res_by_video, scale_factor=100)
+            wandb.log(res_combined, "posetrack", res_by_video)
 
         if self.cfg.eval_reid_pose_tracking:
             annotations = self._annotations_reid_pose_tracking_eval(
@@ -90,6 +93,7 @@ class PoseTrack21(EvaluatorBase):
             res_combined, res_by_video = evaluator.eval()
             print("Reid pose tracking results:")
             self._print_results(res_combined, res_by_video, scale_factor=100)
+            wandb.log(res_combined, "reid", res_by_video)
 
         if self.cfg.eval_mot:
             # HOTA
@@ -109,6 +113,7 @@ class PoseTrack21(EvaluatorBase):
             res_combined, res_by_video = evaluator.eval()
             print("Posetrack MOT results (HOTA):")
             self._print_results(res_combined, res_by_video, scale_factor=100)
+            wandb.log(res_combined, "mot", res_by_video)
             # MOTA
             dataset = PTWrapper(
                 self.cfg.mot_gt_folder,
@@ -156,7 +161,7 @@ class PoseTrack21(EvaluatorBase):
         for video_name in videos_names:
             images_by_video = image_metadatas[
                 image_metadatas["video_name"] == video_name
-                ]
+            ]
             images[video_name] = images_by_video[
                 ["file_name", "id", "frame_id"]
             ].to_dict("records")
@@ -199,7 +204,7 @@ class PoseTrack21(EvaluatorBase):
         predictions.dropna(
             subset=[
                 "keypoints_xyc",
-                "track_bbox_ltwh",
+                "track_bbox_kf_ltwh",
                 "image_id",
                 "track_id",
             ],
@@ -207,7 +212,7 @@ class PoseTrack21(EvaluatorBase):
             inplace=True,
         )
         predictions.rename(
-            columns={"keypoints_xyc": "keypoints", "track_bbox_ltwh": "bbox"},
+            columns={"keypoints_xyc": "keypoints", "track_bbox_kf_ltwh": "bbox"},
             inplace=True,
         )
         predictions["scores"] = predictions["keypoints"].apply(lambda x: x[:, 2])
@@ -230,7 +235,7 @@ class PoseTrack21(EvaluatorBase):
         predictions.dropna(
             subset=[
                 "keypoints_xyc",
-                "track_bbox_ltwh",
+                "track_bbox_kf_ltwh",
                 "image_id",
                 "track_id",
                 "person_id",
@@ -239,7 +244,7 @@ class PoseTrack21(EvaluatorBase):
             inplace=True,
         )
         predictions.rename(
-            columns={"keypoints_xyc": "keypoints", "track_bbox_ltwh": "bbox"},
+            columns={"keypoints_xyc": "keypoints", "track_bbox_kf_ltwh": "bbox"},
             inplace=True,
         )
         predictions["scores"] = predictions["keypoints"].apply(lambda x: x[:, 2])
@@ -286,7 +291,7 @@ class PoseTrack21(EvaluatorBase):
                 "video_name",
                 "frame",
                 "track_id",
-                "track_bbox_ltwh",
+                "track_bbox_kf_ltwh",
                 "keypoints_xyc",
             ],
             how="any",
@@ -294,10 +299,10 @@ class PoseTrack21(EvaluatorBase):
         )
         print("Dropped {} rows with NA values".format(len_before_drop - len(df)))
         df["track_id"] = df["track_id"].astype(int)
-        df["bb_left"] = df["track_bbox_ltwh"].apply(lambda x: x[0])
-        df["bb_top"] = df["track_bbox_ltwh"].apply(lambda x: x[1])
-        df["bb_width"] = df["track_bbox_ltwh"].apply(lambda x: x[2])
-        df["bb_height"] = df["track_bbox_ltwh"].apply(lambda x: x[3])
+        df["bb_left"] = df["track_bbox_kf_ltwh"].apply(lambda x: x[0])
+        df["bb_top"] = df["track_bbox_kf_ltwh"].apply(lambda x: x[1])
+        df["bb_width"] = df["track_bbox_kf_ltwh"].apply(lambda x: x[2])
+        df["bb_height"] = df["track_bbox_kf_ltwh"].apply(lambda x: x[3])
         df = df.assign(x=-1, y=-1, z=-1)
         return df
 

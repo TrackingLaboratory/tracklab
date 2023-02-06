@@ -1,7 +1,6 @@
-import numpy as np
 import pandas as pd
 
-from pbtrack.utils.coordinates import kp_img_to_kp_bbox
+from pbtrack.utils.coordinates import kp_img_to_kp_bbox, bbox_ltwh2ltrb, bbox_ltwh2cmwh
 
 
 class Detections(pd.DataFrame):
@@ -25,14 +24,14 @@ class Detections(pd.DataFrame):
     def bbox_ltrb(self):
         """Converts from (left, top, width, heights) to (left, top, right, bottom)"""
         return self.bbox_ltwh.apply(
-            lambda ltwh: np.concatenate((ltwh[:2], ltwh[:2] + ltwh[2:]))  # type: ignore
+            lambda ltwh: bbox_ltwh2ltrb(ltwh)  # type: ignore
         )
 
     @property
     def bbox_cmwh(self):
         """Converts from (left, top, width, heights) to (horizontal center, vertical middle, width, height)"""
         return self.bbox_ltwh.apply(
-            lambda ltwh: np.concatenate((ltwh[:2] + ltwh[2:] / 2, ltwh[2:]))  # type: ignore
+            lambda ltwh: bbox_ltwh2cmwh(ltwh)  # type: ignore
         )
 
     @property

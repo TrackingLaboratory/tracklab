@@ -47,12 +47,13 @@ def min_cost_matching(
         detection_indices = np.arange(len(detections))
 
     if len(detection_indices) == 0 or len(track_indices) == 0:
-        return [], track_indices, detection_indices  # Nothing to match.
+        return [], track_indices, detection_indices, None  # Nothing to match.
 
     cost_matrix = distance_metric(  # return cost matrix gated by KM (too big IOU set to INF)
         tracks, detections, track_indices, detection_indices)
-    cost_matrix[cost_matrix > max_distance] = max_distance + 1e-5  # GATE by reid max_dist threshold, why not inf?
-    row_indices, col_indices = linear_sum_assignment(cost_matrix)
+    cost_matrix_thresh = cost_matrix.copy()
+    cost_matrix_thresh[cost_matrix_thresh > max_distance] = max_distance + 1e-5  # FIXME GATE by reid max_dist threshold, why not inf?
+    row_indices, col_indices = linear_sum_assignment(cost_matrix_thresh)
 
     matches, unmatched_tracks, unmatched_detections = [], [], []
     for col, detection_idx in enumerate(detection_indices):
@@ -64,12 +65,12 @@ def min_cost_matching(
     for row, col in zip(row_indices, col_indices):
         track_idx = track_indices[row]
         detection_idx = detection_indices[col]
-        if cost_matrix[row, col] > max_distance:
+        if cost_matrix_thresh[row, col] > max_distance:
             unmatched_tracks.append(track_idx)
             unmatched_detections.append(detection_idx)
         else:
             matches.append((track_idx, detection_idx))
-    return matches, unmatched_tracks, unmatched_detections
+    return matches, unmatched_tracks, unmatched_detections, cost_matrix
 
 
 def matching_cascade(
@@ -119,18 +120,18 @@ def matching_cascade(
         k for k in track_indices
         # if tracks[k].time_since_update == 1 + level
     ]
-    matches_l, _, unmatched_detections = \
+    matches_l, _, unmatched_detections, cost_matrix = \
         min_cost_matching(
             distance_metric, max_distance, tracks, detections,
             track_indices_l, unmatched_detections)
     matches += matches_l
     unmatched_tracks = list(set(track_indices) - set(k for k, _ in matches))
-    return matches, unmatched_tracks, unmatched_detections
+    return matches, unmatched_tracks, unmatched_detections, cost_matrix
 
 
 def gate_cost_matrix(
         cost_matrix, tracks, detections, track_indices, detection_indices,
-        gated_cost=INFTY_COST, only_position=False):
+        gated_cost=INFTY_COST, only_position=False, mc_lambda=0.995):
     """Invalidate infeasible entries in cost matrix based on the state
     distributions obtained by Kalman filtering.
     Parameters
@@ -170,5 +171,5 @@ def gate_cost_matrix(
         track = tracks[track_idx]
         gating_distance = track.kf.gating_distance(track.mean, track.covariance, measurements, only_position)
         cost_matrix[row, gating_distance > gating_threshold] = gated_cost  # This removes physically impossible association
-        cost_matrix[row] = 0.995 * cost_matrix[row] + (1 - 0.995) * gating_distance  # TODO put 0.995 as hyperparam
+        cost_matrix[row] = mc_lambda * cost_matrix[row] + (1 - mc_lambda) * gating_distance
     return cost_matrix

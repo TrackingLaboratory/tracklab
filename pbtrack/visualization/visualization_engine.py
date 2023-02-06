@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from pbtrack.utils.coordinates import clip_bbox_ltrb_to_img_dim, round_bbox_ccordinates
+from pbtrack.utils.coordinates import clip_bbox_ltrb_to_img_dim, round_bbox_coordinates, bbox_ltwh2ltrb
+from pbtrack.utils.cv2_utils import draw_text
 from pbtrack.utils.images import cv2_load_image, overlay_heatmap
 
 ground_truth_cmap = [
@@ -94,6 +95,9 @@ class VisualisationEngine:
     def _process_frame(self, image_metadata, predictions, ground_truths, video_id):
         # load image
         patch = cv2_load_image(image_metadata.file_path)
+        # if self.cfg.resize is not None:
+        #     raise NotImplementedError("Resize is not fully yet, bbox/keypoints need to be resized to...")
+        #     patch = cv2.resize(patch, self.cfg.resize, interpolation=cv2.INTER_CUBIC)
         # draw ignore regions
         if self.cfg.ground_truth.draw_ignore_region:
             self._draw_ignore_region(patch, image_metadata)
@@ -104,6 +108,8 @@ class VisualisationEngine:
         if ground_truths is not None:
             for _, ground_truth in ground_truths.iterrows():
                 self._draw_detection(patch, ground_truth, is_prediction=False)
+        # draw image metadata
+        self._draw_image_metadata(patch, image_metadata)
         # postprocess image
         patch = self._final_patch(patch)
         # save files
@@ -133,10 +139,11 @@ class VisualisationEngine:
         color_bbox, color_text, color_keypoint, color_skeleton = self._colors(
             detection, is_prediction
         )
-        # bbox
         bbox_ltrb = clip_bbox_ltrb_to_img_dim(
-            round_bbox_ccordinates(detection.bbox_ltrb), patch.shape[1], patch.shape[0]
+            round_bbox_coordinates(detection.bbox_ltrb), patch.shape[1], patch.shape[0]
         )
+        l, t, r, b = bbox_ltrb
+        w, h = r - l, b - t
         # bpbreid heatmap (draw before other elements, so that they are not covered by heatmap)
         if is_prediction and self.cfg.prediction.draw_bpbreid_heatmaps:
             img_crop = patch[bbox_ltrb[1] : bbox_ltrb[3], bbox_ltrb[0] : bbox_ltrb[2]]
@@ -145,6 +152,7 @@ class VisualisationEngine:
             patch[
                 bbox_ltrb[1] : bbox_ltrb[3], bbox_ltrb[0] : bbox_ltrb[2]
             ] = img_crop_with_mask
+        # bbox
         if (is_prediction and self.cfg.prediction.draw_bbox) or (
             not is_prediction and self.cfg.ground_truth.draw_bbox
         ):
@@ -155,6 +163,32 @@ class VisualisationEngine:
                 color=color_bbox,
                 thickness=self.cfg.bbox.thickness,
                 lineType=cv2.LINE_AA,
+            )
+        # kf bbox
+        if is_prediction and self.cfg.prediction.draw_kf_bbox and detection.track_bbox_pred_kf_ltwh is not None:
+            # FIXME kf bbox from tracklets that were not matched are not displayed
+            bbox_kf_ltrb = clip_bbox_ltrb_to_img_dim(
+                round_bbox_coordinates(bbox_ltwh2ltrb(detection.track_bbox_pred_kf_ltwh)), patch.shape[1], patch.shape[0]
+            )
+            cv2.rectangle(
+                patch,
+                (bbox_kf_ltrb[0], bbox_kf_ltrb[1]),
+                (bbox_kf_ltrb[2], bbox_kf_ltrb[3]),
+                color=self.cfg.bbox.color_kf,
+                thickness=self.cfg.bbox.thickness,
+                lineType=cv2.LINE_AA,
+            )
+            draw_text(
+                patch,
+                f"{int(detection.track_id)}",
+                (bbox_kf_ltrb[0] + 3, bbox_kf_ltrb[1] + 3),
+                fontFace=self.cfg.text.font,
+                fontScale=self.cfg.text.scale,
+                thickness=self.cfg.text.thickness,
+                color_txt=(50, 50, 50),
+                lineType=cv2.LINE_AA,
+                color_bg=(255, 255, 255),
+                alignV="t",
             )
         # keypoints
         keypoints = detection.keypoints_xyc
@@ -217,8 +251,8 @@ class VisualisationEngine:
                 "nan"
                 if pd.isna(detection.track_id)
                 else f"{int(detection.track_id)}",  # FIXME why detection.track_id is float ?
-                (bbox_ltrb[0] + 2, bbox_ltrb[1] - 5),
-                fontFace=self.cfg.text.font,
+                (int(l + w/2), t - 5),
+                fontFace=self.cfg.text.font+1,
                 fontScale=self.cfg.text.scale,
                 thickness=self.cfg.text.thickness,
                 color=color_text,
@@ -228,15 +262,104 @@ class VisualisationEngine:
         if (is_prediction and self.cfg.prediction.print_bbox_confidence) or (
             not is_prediction and self.cfg.ground_truth.print_bbox_confidence
         ):
-            cv2.putText(
+            draw_text(
                 patch,
                 f"{100*np.mean(keypoints_c):.1f} %",
-                (bbox_ltrb[0] + 2, bbox_ltrb[3] - 5),
+                (l+3, t-5),
                 fontFace=self.cfg.text.font,
                 fontScale=self.cfg.text.scale,
                 thickness=self.cfg.text.thickness,
-                color=color_text,
+                color_txt=(0, 0, 255),
                 lineType=cv2.LINE_AA,
+                color_bg=(255, 255, 255),
+            )
+        # track state + hits + age
+        if is_prediction and self.cfg.prediction.print_bbox_confidence:
+            draw_text(
+                patch,
+                f"st={detection.state} | #d={detection.hits} | age={detection.age}",
+                (r-3, t+5),
+                fontFace=self.cfg.text.font,
+                fontScale=self.cfg.text.scale,
+                thickness=self.cfg.text.thickness,
+                color_txt=(0, 0, 255),
+                lineType=cv2.LINE_AA,
+                color_bg=(255, 255, 255),
+                alignV='t',
+                alignH='r',
+            )
+        # display_matched_with
+        if is_prediction and self.cfg.prediction.display_matched_with:
+            if detection.matched_with is not None:
+                draw_text(
+                    patch,
+                    f"{detection.matched_with[0]}|{detection.matched_with[1]:.2f}",
+                    (l+3, t+5),
+                    fontFace=self.cfg.text.font,
+                    fontScale=self.cfg.text.scale,
+                    thickness=self.cfg.text.thickness,
+                    color_txt=(255, 0, 0),
+                    color_bg=(255, 255, 255),
+                    lineType=cv2.LINE_AA,
+                    alignV='t'
+                )
+        # display_n_closer_tracklets_costs
+        if is_prediction and self.cfg.prediction.display_n_closer_tracklets_costs > 0:
+            if detection.matched_with is not None:
+                nt = self.cfg.prediction.display_n_closer_tracklets_costs
+                if "R" in detection.costs:
+                    sorted_reid_costs = sorted(list(detection.costs["R"].items()), key=lambda x: x[1])
+                    processed_reid_costs = {t[0]: np.around(t[1], 2) for t in sorted_reid_costs[:nt]}
+                    draw_text(
+                        patch,
+                        f"R({detection.costs['Rt']:.2f}): {processed_reid_costs}",
+                        (l + 5, b - 5),
+                        fontFace=self.cfg.text.font,
+                        fontScale=self.cfg.text.scale,
+                        thickness=self.cfg.text.thickness,
+                        lineType=cv2.LINE_AA,
+                        color_txt=(255, 0, 0),
+                        color_bg=(255, 255, 255),
+                    )
+                if "S" in detection.costs:
+                    sorted_st_costs = sorted(list(detection.costs["S"].items()), key=lambda x: x[1])
+                    processed_st_costs = {t[0]: np.around(t[1], 2) for t in sorted_st_costs[:nt]}
+                    draw_text(
+                        patch,
+                        f"S({detection.costs['St']:.2f}): {processed_st_costs}",
+                        (l + 5, b - 20),
+                        fontFace=self.cfg.text.font,
+                        fontScale=self.cfg.text.scale,
+                        thickness=self.cfg.text.thickness,
+                        lineType=cv2.LINE_AA,
+                        color_txt=(0, 255, 0),
+                        color_bg=(255, 255, 255),
+                    )
+                if "K" in detection.costs:
+                    sorted_gated_kf_costs = sorted(list(detection.costs["K"].items()), key=lambda x: x[1])
+                    processed_gated_kf_costs = {t[0]: np.around(t[1], 2) for t in sorted_gated_kf_costs[:nt]}
+                    draw_text(
+                        patch,
+                        f"K({detection.costs['Kt']:.2f}): {processed_gated_kf_costs}",
+                        (l + 5, b - 35),
+                        fontFace=self.cfg.text.font,
+                        fontScale=self.cfg.text.scale,
+                        thickness=self.cfg.text.thickness,
+                        lineType=cv2.LINE_AA,
+                        color_txt=(0, 0, 255),
+                        color_bg=(255, 255, 255),
+                    )
+        if is_prediction and self.cfg.prediction.display_reid_visibility_scores:
+            draw_text(
+                patch,
+                f"S: {np.around(detection.visibility_scores.astype(float), 1)}",
+                (l + 5, b - 50),
+                fontFace=self.cfg.text.font,
+                fontScale=self.cfg.text.scale,
+                thickness=self.cfg.text.thickness,
+                lineType=cv2.LINE_AA,
+                color_txt=(0, 0, 0),
+                color_bg=(255, 255, 255),
             )
 
     def _colors(self, detection, is_prediction):
@@ -281,3 +404,15 @@ class VisualisationEngine:
 
     def _final_patch(self, patch):
         return cv2.cvtColor(patch, cv2.COLOR_RGB2BGR).astype(np.uint8)
+
+    def _draw_image_metadata(self, patch, image_metadata):
+        cv2.putText(
+            patch,
+            f"{image_metadata.frame}/{image_metadata.nframe}",
+            (6, patch.shape[0]-6),
+            fontFace=1,
+            fontScale=1.,
+            thickness=1,
+            color=(255, 0, 0),
+            lineType=cv2.LINE_AA,
+        )

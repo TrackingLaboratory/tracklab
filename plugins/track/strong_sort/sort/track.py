@@ -13,13 +13,12 @@ class TrackState:
 
     """
 
-    Tentative = 1
-    Confirmed = 2
-    Deleted = 3
+    Tentative = 't'
+    Confirmed = 'c'
+    Deleted = 'd'
 
-"""
-    TODO state space should be N keypoints x (x, y) + (x, y, a, h) for the bbox
-"""
+
+# TODO state space should be N keypoints x (x, y) + (x, y, a, h) for the bbox
 class Track:
     """
     A single target track with state space `(x, y, a, h)` and associated
@@ -90,6 +89,7 @@ class Track:
         self.mean, self.covariance = self.kf.initiate(detection.to_xyah())
         self.last_detection = detection
         self.update_state()  # update state to confirmed if n_init = 1
+        self.last_kf_pred_tlwh = None
 
     def to_tlwh(self):
         """Get current position in bounding box format `(top left x, top left y,
@@ -105,16 +105,6 @@ class Track:
         ret[2] *= ret[3]
         ret[:2] -= ret[2:] / 2
         return ret
-
-    def last_detection_to_tlwh(self):
-        """Get last detection
-        """
-        return self.last_detection
-
-    def last_detection_keypoints(self):
-        """Get last detection keypoints
-        """
-        return self.last_detection.keypoints
 
     def to_tlbr(self):
         """Get kf estimated current position in bounding box format `(min x, miny, max x,
@@ -137,7 +127,6 @@ class Track:
         w, h = x2_ - x1_, y2_ - y1_
         cx, cy = x1_ + w / 2, y1_ + h / 2
         self.mean[:4] = [cx, cy, w / h, h]
-
 
     def increment_age(self):
         self.age += 1
@@ -168,6 +157,7 @@ class Track:
         self.conf = conf
         self.class_id = class_id.int()
         self.last_detection = detection
+        self.last_kf_pred_tlwh = self.to_tlwh()
         self.mean, self.covariance = self.kf.update(self.mean, self.covariance, detection.to_xyah(), detection.confidence)
 
         detection_features = detection.feature['reid_features']

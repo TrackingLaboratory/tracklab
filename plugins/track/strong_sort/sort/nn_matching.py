@@ -160,20 +160,21 @@ class NearestNeighborDistanceMetric(object):
 
     def partial_fit(self, features, targets, active_targets):
         """Update the distance metric with new data.
+        active_targets = confirmed tracks
         Parameters
         ----------
         features : ndarray
             An NxM matrix of N features of dimensionality M.
         targets : ndarray
-            An integer array of associated target identities.
+            An integer array of len N with associated target identities, i.e. track ids
         active_targets : List[int]
-            A list of targets that are currently present in the scene.
+            A list of targets that are currently present in the scene, i.e. confirmed tracks.
         """
         for feature, target in zip(features, targets):
-            self.samples.setdefault(target, []).append(feature)
+            self.samples.setdefault(target, []).append(feature)  # in our case, only one feature per track
             if self.budget is not None:
-                self.samples[target] = self.samples[target][-self.budget:]
-        self.samples = {k: self.samples[k] for k in active_targets}
+                self.samples[target] = self.samples[target][-self.budget:]  # for each track, keep only the last 'budget' reid features
+        self.samples = {k: self.samples[k] for k in active_targets}  # keep only confirmed tracks
 
     def distance(self, features, targets):
         """Compute distance between features and targets.

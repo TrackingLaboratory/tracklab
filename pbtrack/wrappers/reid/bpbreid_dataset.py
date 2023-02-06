@@ -373,7 +373,7 @@ class ReidDataset(ImageDataset):
         """
         fig_h, fig_w = fig_size
         mask_h, mask_w = masks_size
-        g_scale = 6
+        g_scale = 10
         g_radius = int(mask_w / g_scale)
         gaussian = gkern(g_radius * 2 + 1)
         gt_dets_for_reid = gt_dets[
