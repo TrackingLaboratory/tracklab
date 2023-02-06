@@ -8,6 +8,7 @@ pb-track/
 notebooks/
 weights/
 slurm/
+states/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
