@@ -31,7 +31,7 @@ class PoseTrack21(EvaluatorBase):
 
     def run(self, tracker_state):
         images = self._images(tracker_state.gt.image_metadatas)
-        self.cfg["SEQS"] = list(tracker_state.gt.video_metadatas.name)
+        seqs = list(tracker_state.gt.video_metadatas.name)
         if self.cfg.eval_pose_estimation:
             annotations = self._annotations_pose_estimation_eval(
                 tracker_state.predictions, tracker_state.gt.image_metadatas
@@ -46,7 +46,7 @@ class PoseTrack21(EvaluatorBase):
                 eval_type="pose_estim",
                 use_parallel=self.cfg.use_parallel,
                 num_parallel_cores=self.cfg.num_parallel_cores,
-                SEQS=self.cfg.SEQS,
+                SEQS=seqs,
             )
             res_combined, res_by_video = evaluator.eval()
             wandb.log(res_combined, "pose", res_by_video)
@@ -67,7 +67,7 @@ class PoseTrack21(EvaluatorBase):
                 eval_type="pose_tracking",
                 use_parallel=self.cfg.use_parallel,
                 num_parallel_cores=self.cfg.num_parallel_cores,
-                SEQS=self.cfg.SEQS,
+                SEQS=seqs,
             )
             res_combined, res_by_video = evaluator.eval()
             print("Pose tracking results:")
@@ -88,7 +88,7 @@ class PoseTrack21(EvaluatorBase):
                 eval_type="reid_tracking",
                 use_parallel=self.cfg.use_parallel,
                 num_parallel_cores=self.cfg.num_parallel_cores,
-                SEQS=self.cfg.SEQS,
+                SEQS=seqs,
             )
             res_combined, res_by_video = evaluator.eval()
             print("Reid pose tracking results:")
@@ -108,7 +108,7 @@ class PoseTrack21(EvaluatorBase):
                 eval_type="posetrack_mot",
                 use_parallel=self.cfg.use_parallel,
                 num_parallel_cores=self.cfg.num_parallel_cores,
-                SEQS=self.cfg.SEQS,
+                SEQS=seqs,
             )
             res_combined, res_by_video = evaluator.eval()
             print("Posetrack MOT results (HOTA):")
@@ -118,7 +118,7 @@ class PoseTrack21(EvaluatorBase):
             dataset = PTWrapper(
                 self.cfg.mot_gt_folder,
                 self.cfg.mot.dataset_path,
-                self.cfg.SEQS,
+                seqs,
                 vis_threshold=self.cfg.mot.vis_threshold,
             )
             mot_accums = []
@@ -170,7 +170,7 @@ class PoseTrack21(EvaluatorBase):
     # FIXME fuse different annotations functions
     @staticmethod
     def _annotations_pose_estimation_eval(predictions, image_metadatas):
-        predictions = predictions.copy()  # FIXME is it required ?
+        predictions = predictions.copy()
         predictions.dropna(
             subset=[
                 "keypoints_xyc",
@@ -198,9 +198,10 @@ class PoseTrack21(EvaluatorBase):
             ].to_dict("records")
         return annotations
 
+    # FIXME fuse different annotations functions
     @staticmethod
     def _annotations_tracking_eval(predictions, image_metadatas):
-        predictions = predictions.copy()  # FIXME is it required ?
+        predictions = predictions.copy()
         predictions.dropna(
             subset=[
                 "keypoints_xyc",
@@ -229,9 +230,10 @@ class PoseTrack21(EvaluatorBase):
             ].to_dict("records")
         return annotations
 
+    # FIXME fuse different annotations functions
     @staticmethod
     def _annotations_reid_pose_tracking_eval(predictions, image_metadatas):
-        predictions = predictions.copy()  # FIXME is it required ?
+        predictions = predictions.copy()
         predictions.dropna(
             subset=[
                 "keypoints_xyc",
@@ -335,17 +337,17 @@ class PoseTrack21(EvaluatorBase):
                 index=False,
             )
 
-    @staticmethod
-    def _print_results(res_combined, res_by_video, scale_factor=1.0):
+    def _print_results(self, res_combined, res_by_video, scale_factor=1.0):
         data = [np.round(v*scale_factor, decimals=2) for v in res_combined.values()]
         print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
-        print("By videos:")
-        data = []
-        for video_name, res in res_by_video.items():
-            video_data = [video_name] + [np.round(v*scale_factor, decimals=2) for v in res.values()]
-            data.append(video_data)
-        headers = ["video"] + list(res_combined.keys())
-        print(tabulate(data, headers=headers, tablefmt="pretty"))
+        if self.cfg.print_by_video:
+            print("By videos:")
+            data = []
+            for video_name, res in res_by_video.items():
+                video_data = [video_name] + [np.round(v*scale_factor, decimals=2) for v in res.values()]
+                data.append(video_data)
+            headers = ["video"] + list(res_combined.keys())
+            print(tabulate(data, headers=headers, tablefmt="pretty"))
 
 
 class PoseTrack21Encoder(json.JSONEncoder):
