@@ -49,8 +49,7 @@ class PoseTrack21(EvaluatorBase):
             )
             res_combined, res_by_video = evaluator.eval()
             print("Pose estimation results: ")
-            data = [np.round(v, decimals=2) for v in res_combined.values()]
-            print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
+            self._print_results(res_combined, res_by_video, scale_factor=1.0)
 
         if self.cfg.eval_pose_tracking:
             annotations = self._annotations_tracking_eval(
@@ -69,9 +68,8 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=self.cfg.SEQS,
             )
             res_combined, res_by_video = evaluator.eval()
-            print("Pose tracking results: ")
-            data = [np.round(100*v, decimals=2) for v in res_combined.values()]
-            print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
+            print("Pose tracking results:")
+            self._print_results(res_combined, res_by_video, scale_factor=100)
 
         if self.cfg.eval_reid_pose_tracking:
             annotations = self._annotations_reid_pose_tracking_eval(
@@ -90,9 +88,8 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=self.cfg.SEQS,
             )
             res_combined, res_by_video = evaluator.eval()
-            print("Reid pose tracking results: ")
-            data = [np.round(100*v, decimals=2) for v in res_combined.values()]
-            print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
+            print("Reid pose tracking results:")
+            self._print_results(res_combined, res_by_video, scale_factor=100)
 
         if self.cfg.eval_mot:
             # HOTA
@@ -110,9 +107,8 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=self.cfg.SEQS,
             )
             res_combined, res_by_video = evaluator.eval()
-            print("Posetrack MOT results: ")
-            data = [np.round(100*v, decimals=2) for v in res_combined.values()]
-            print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
+            print("Posetrack MOT results (HOTA):")
+            self._print_results(res_combined, res_by_video, scale_factor=100)
             # MOTA
             dataset = PTWrapper(
                 self.cfg.mot_gt_folder,
@@ -132,7 +128,7 @@ class PoseTrack21(EvaluatorBase):
                     )
                 )
             if mot_accums:
-                print("Posetrack mot results (MOTA): ")
+                print("Posetrack mot results (MOTA):")
                 str_summary = evaluate_mot_accums(
                     mot_accums,
                     [str(s) for s in dataset if not s.no_gt],
@@ -140,7 +136,8 @@ class PoseTrack21(EvaluatorBase):
                 )
 
     # PoseTrack helper functions
-    def _images(self, image_metadatas):
+    @staticmethod
+    def _images(image_metadatas):
         image_metadatas.dropna(
             subset=[
                 "video_name",
@@ -166,7 +163,8 @@ class PoseTrack21(EvaluatorBase):
         return images
 
     # FIXME fuse different annotations functions
-    def _annotations_pose_estimation_eval(self, predictions, image_metadatas):
+    @staticmethod
+    def _annotations_pose_estimation_eval(predictions, image_metadatas):
         predictions = predictions.copy()  # FIXME is it required ?
         predictions.dropna(
             subset=[
@@ -195,7 +193,8 @@ class PoseTrack21(EvaluatorBase):
             ].to_dict("records")
         return annotations
 
-    def _annotations_tracking_eval(self, predictions, image_metadatas):
+    @staticmethod
+    def _annotations_tracking_eval(predictions, image_metadatas):
         predictions = predictions.copy()  # FIXME is it required ?
         predictions.dropna(
             subset=[
@@ -225,7 +224,8 @@ class PoseTrack21(EvaluatorBase):
             ].to_dict("records")
         return annotations
 
-    def _annotations_reid_pose_tracking_eval(self, predictions, image_metadatas):
+    @staticmethod
+    def _annotations_reid_pose_tracking_eval(predictions, image_metadatas):
         predictions = predictions.copy()  # FIXME is it required ?
         predictions.dropna(
             subset=[
@@ -256,7 +256,8 @@ class PoseTrack21(EvaluatorBase):
             ].to_dict("records")
         return annotations
 
-    def _save_json(self, images, annotations, path):
+    @staticmethod
+    def _save_json(images, annotations, path):
         os.makedirs(path, exist_ok=True)
         for video_name in images.keys():
             file_path = os.path.join(path, f"{video_name}.json")
@@ -271,7 +272,8 @@ class PoseTrack21(EvaluatorBase):
                 )
 
     # MOT helper functions
-    def _mot_encoding(self, predictions, image_metadatas):
+    @staticmethod
+    def _mot_encoding(predictions, image_metadatas):
         df = pd.merge(
             image_metadatas.reset_index(drop=True),
             predictions.reset_index(drop=True),
@@ -299,7 +301,8 @@ class PoseTrack21(EvaluatorBase):
         df = df.assign(x=-1, y=-1, z=-1)
         return df
 
-    def _save_mot(self, mot_df, save_path):
+    @staticmethod
+    def _save_mot(mot_df, save_path):
         save_path = os.path.join(save_path, "results")
         os.makedirs(save_path, exist_ok=True)
         # <frame>, <id>, <bb_left>, <bb_top>, <bb_width>, <bb_height>, <conf>, <x>, <y>, <z>
@@ -326,6 +329,18 @@ class PoseTrack21(EvaluatorBase):
                 header=False,
                 index=False,
             )
+
+    @staticmethod
+    def _print_results(res_combined, res_by_video, scale_factor=1.0):
+        data = [np.round(v*scale_factor, decimals=2) for v in res_combined.values()]
+        print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
+        print("By videos:")
+        data = []
+        for video_name, res in res_by_video.items():
+            video_data = [video_name] + [np.round(v*scale_factor, decimals=2) for v in res.values()]
+            data.append(video_data)
+        headers = ["video"] + list(res_combined.keys())
+        print(tabulate(data, headers=headers, tablefmt="pretty"))
 
 
 class PoseTrack21Encoder(json.JSONEncoder):
