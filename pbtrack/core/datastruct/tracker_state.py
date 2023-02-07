@@ -12,6 +12,8 @@ from .tracking_dataset import TrackingSet
 from .detections import Detections
 import logging
 
+from ...utils.coordinates import kp_to_bbox_w_threshold, bbox_ltrb2ltwh
+
 log = logging.getLogger(__name__)
 
 
@@ -43,6 +45,7 @@ class TrackerState(AbstractContextManager):
         save_file=None,
         compression=zipfile.ZIP_STORED,
         load_step="reid",
+        bbox_format=None,
     ):
         self.gt = tracking_set
         self.predictions = None
@@ -58,6 +61,7 @@ class TrackerState(AbstractContextManager):
         self.do_detection = load_step == None
         self.do_reid = load_step == "detection" or self.do_detection
         self.do_tracking = load_step == "reid" or self.do_reid
+        self.bbox_format = bbox_format
 
         self.json_file = json_file
         if self.json_file is not None:
@@ -76,14 +80,21 @@ class TrackerState(AbstractContextManager):
                 detections.extend(data_dict["annotations"])
         predictions = pd.DataFrame(detections)
         predictions.rename(columns={"bbox": "bbox_ltwh"}, inplace=True)
-        predictions['track_bbox_kf_ltwh'] = predictions['bbox_ltwh']  # FIXME config to decide if track_bbox_kf_ltwh or bbox_ltwh should be used
-        predictions.dropna(subset=['bbox_ltwh'], inplace=True)
-        predictions['id'] = predictions.index
         predictions.bbox_ltwh = predictions.bbox_ltwh.apply(lambda x: np.array(x))
+        predictions['id'] = predictions.index
         predictions.rename(columns={"keypoints": "keypoints_xyc"}, inplace=True)
         predictions.keypoints_xyc = predictions.keypoints_xyc.apply(
             lambda x: np.reshape(np.array(x), (-1, 3))
         )
+        if self.bbox_format == "ltrb":
+            # TODO tracklets coming from Tracktor++ are in ltbr format
+            predictions.loc[predictions['bbox_ltwh'].notna(), 'bbox_ltwh'] = predictions[
+                predictions['bbox_ltwh'].notna()].bbox_ltwh.apply(
+                lambda x: bbox_ltrb2ltwh(x)
+            )
+        predictions.loc[predictions['bbox_ltwh'].isna(), 'bbox_ltwh'] = predictions[predictions['bbox_ltwh'].isna()].keypoints_xyc.apply(lambda x: kp_to_bbox_w_threshold(x, vis_threshold=0))
+        predictions['track_bbox_kf_ltwh'] = predictions['bbox_ltwh']  # FIXME config to decide if track_bbox_kf_ltwh or bbox_ltwh should be used
+        # predictions.drop(["track_id"], axis=1, inplace=True)  # TODO NEED TO DROP track_id if we want to perform tracking
         predictions['bbox_c'] = predictions.keypoints_xyc.apply(lambda x: x[:, 2].mean())
         predictions = predictions.merge(
             self.gt.image_metadatas[["video_id"]], how="left", left_on="image_id", right_index=True
