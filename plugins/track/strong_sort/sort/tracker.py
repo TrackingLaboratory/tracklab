@@ -154,6 +154,7 @@ class Tracker:
         )
 
     def _full_cost_metric(self, tracks, dets, track_indices, detection_indices):
+        # FIXME /!\ NOT USED
         """
         This implements the full lambda-based cost-metric. However, in doing so, it disregards
         the possibility to gate the position only which is provided by
