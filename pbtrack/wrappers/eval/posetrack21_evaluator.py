@@ -25,6 +25,12 @@ from datasets.pt_warper import PTWrapper
 from evaluate_mot import get_mot_accum, evaluate_mot_accums
 
 
+def format_metric(metric_name, metric_value, scale_factor):
+    if "TP" in metric_name or "FN" in metric_name or "FP" in metric_name or "TN" in metric_name:
+        return int(metric_value)
+    else:
+        return np.around(metric_value * scale_factor, 2)
+
 class PoseTrack21(EvaluatorBase):
     def __init__(self, cfg):
         self.cfg = cfg
@@ -112,7 +118,7 @@ class PoseTrack21(EvaluatorBase):
             )
             res_combined, res_by_video = evaluator.eval()
             print("Posetrack MOT results (HOTA):")
-            self._print_results(res_combined, res_by_video, scale_factor=100)
+            self._print_results(res_combined, res_by_video, 100)
             wandb.log(res_combined, "mot", res_by_video)
             # MOTA
             dataset = PTWrapper(
@@ -184,9 +190,12 @@ class PoseTrack21(EvaluatorBase):
             columns={"keypoints_xyc": "keypoints", "bbox_ltwh": "bbox"},
             inplace=True,
         )
-        predictions["scores"] = predictions["keypoints"].apply(lambda x: x[:, 2])
-        predictions["track_id"] = predictions["id"]
-        predictions["person_id"] = predictions["id"]
+        if 'scores' not in predictions.columns:
+            # 'scores' can already be present if loaded from a json file with external predictions
+            # for PoseTrack21 author baselines, not using their provided score induces a big drop in performance
+            predictions["scores"] = predictions["keypoints"].apply(lambda x: x[:, 2])
+        predictions["track_id"] = predictions["track_id"]
+        predictions["person_id"] = predictions["track_id"]
 
         annotations = {}
         videos_names = image_metadatas["video_name"].unique()
@@ -339,16 +348,17 @@ class PoseTrack21(EvaluatorBase):
                 index=False,
             )
 
-    def _print_results(self, res_combined, res_by_video, scale_factor=1.0):
-        data = [np.round(v*scale_factor, decimals=2) for v in res_combined.values()]
-        print(tabulate([data], headers=res_combined.keys(), tablefmt="pretty"))
+    def _print_results(self, res_combined, res_by_video, scale_factor):
+        headers = res_combined.keys()
+        data = [format_metric(name, res_combined[name], scale_factor) for name in headers]
+        print(tabulate([data], headers=headers, tablefmt="pretty"))
         if self.cfg.print_by_video:
             print("By videos:")
             data = []
             for video_name, res in res_by_video.items():
-                video_data = [video_name] + [np.round(v*scale_factor, decimals=2) for v in res.values()]
+                video_data = [video_name] + [format_metric(name, res[name], scale_factor) for name in headers]
                 data.append(video_data)
-            headers = ["video"] + list(res_combined.keys())
+            headers = ["video"] + list(headers)
             print(tabulate(data, headers=headers, tablefmt="pretty"))
 
 
