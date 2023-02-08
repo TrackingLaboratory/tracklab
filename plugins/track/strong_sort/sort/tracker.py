@@ -282,27 +282,6 @@ class Tracker:
             unmatched_detections_a,
         )
 
-
-        # for i, (t_idx, d_idx) in enumerate(matches_a):
-        #     det = detections[d_idx]
-        #     det.reid_cost = {}
-        #     matched_dist = -1
-        #     for lcl_idx, glb_idx in enumerate(confirmed_tracks):
-        #         det.reid_cost[self.tracks[glb_idx].track_id] = reid_cost_matrix[lcl_idx, i]
-        #         if glb_idx == t_idx:
-        #             matched_dist = reid_cost_matrix[lcl_idx, i]
-        #     det.matched_with = f"R|{np.around(matched_dist, 3)}"  # R for ReID
-        #
-        # for i, (t_idx, d_idx) in enumerate(matches_b):
-        #     det = detections[d_idx]
-        #     det.st_cost = {}
-        #     matched_dist = -1
-        #     for lcl_idx, glb_idx in enumerate(iou_track_candidates):
-        #         det.st_cost[self.tracks[glb_idx].track_id] = st_cost_matrix[lcl_idx, i]
-        #         if glb_idx == t_idx:
-        #             matched_dist = st_cost_matrix[lcl_idx, i]
-        #     det.matched_with = f"S|{np.around(matched_dist, 3)}"  # S for Spatio-Temporal
-
         self.add_matching_information(detections, self.tracks, "R", confirmed_tracks, list(range(len(detections))), matches_a, gated_reid_cost_matrix)
         self.add_matching_information(detections, self.tracks, "S", iou_track_candidates, unmatched_detections_a, matches_b, st_cost_matrix)
 
