@@ -135,6 +135,7 @@ class VisualisationEngine:
                 cv2.polylines(patch, [points], True, [255, 0, 0], 2, lineType=cv2.LINE_AA)
 
     def _draw_detection(self, patch, detection, is_prediction):
+        is_matched = pd.notna(detection.track_id)
         # colors
         color_bbox, color_text, color_keypoint, color_skeleton = self._colors(
             detection, is_prediction
@@ -165,7 +166,7 @@ class VisualisationEngine:
                 lineType=cv2.LINE_AA,
             )
         # kf bbox
-        if is_prediction and self.cfg.prediction.draw_kf_bbox and hasattr(detection, 'track_bbox_pred_kf_ltwh') and detection.track_bbox_pred_kf_ltwh is not None:
+        if is_prediction and self.cfg.prediction.draw_kf_bbox and hasattr(detection, 'track_bbox_pred_kf_ltwh') and not pd.isna(detection.track_bbox_pred_kf_ltwh):
             # FIXME kf bbox from tracklets that were not matched are not displayed
             bbox_kf_ltrb = clip_bbox_ltrb_to_img_dim(
                 round_bbox_coordinates(bbox_ltwh2ltrb(detection.track_bbox_pred_kf_ltwh)), patch.shape[1], patch.shape[0]
@@ -274,7 +275,7 @@ class VisualisationEngine:
                 color_bg=(255, 255, 255),
             )
         # track state + hits + age
-        if is_prediction and self.cfg.prediction.print_bbox_confidence and hasattr(detection, 'state') and hasattr(detection, 'hits') and hasattr(detection, 'age'):
+        if is_prediction and self.cfg.prediction.print_bbox_confidence and is_matched:
             draw_text(
                 patch,
                 f"st={detection.state} | #d={detection.hits} | age={detection.age}",
@@ -290,7 +291,7 @@ class VisualisationEngine:
             )
         # display_matched_with
         if is_prediction and self.cfg.prediction.display_matched_with:
-            if hasattr(detection, 'matched_with') and detection.matched_with is not None:
+            if hasattr(detection, 'matched_with') and is_matched:
                 draw_text(
                     patch,
                     f"{detection.matched_with[0]}|{detection.matched_with[1]:.2f}",
@@ -305,7 +306,7 @@ class VisualisationEngine:
                 )
         # display_n_closer_tracklets_costs
         if is_prediction and self.cfg.prediction.display_n_closer_tracklets_costs > 0:
-            if hasattr(detection, 'matched_with') and detection.matched_with is not None:
+            if hasattr(detection, 'matched_with') and is_matched:
                 nt = self.cfg.prediction.display_n_closer_tracklets_costs
                 if "R" in detection.costs:
                     sorted_reid_costs = sorted(list(detection.costs["R"].items()), key=lambda x: x[1])

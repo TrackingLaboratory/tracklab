@@ -93,6 +93,7 @@ class StrongSORT(object):
                 # track.time_since_update = 1? Why not put that value "1" as a parameter of the tracker?
                 continue
 
+            # TODO should update all detections, and set default values for non match (e.g. -1)
             det = track.last_detection
             # KF predicted bbox to be stored next to actual bbox :
             result_det = {  # if keys are added/updated here, don't forget to update the columns in the pd.DataFrame below
