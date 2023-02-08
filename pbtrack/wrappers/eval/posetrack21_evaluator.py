@@ -38,7 +38,7 @@ class PoseTrack21(EvaluatorBase):
     def run(self, tracker_state):
         images = self._images(tracker_state.gt.image_metadatas)
         seqs = list(tracker_state.gt.video_metadatas.name)
-        if self.cfg.eval_pose_estimation:
+        if self.cfg.eval_pose_estimation:  # TODO not fair to evaluate this on different predictions than tracking
             annotations = self._annotations_pose_estimation_eval(
                 tracker_state.predictions, tracker_state.gt.image_metadatas
             )
@@ -194,8 +194,8 @@ class PoseTrack21(EvaluatorBase):
             # 'scores' can already be present if loaded from a json file with external predictions
             # for PoseTrack21 author baselines, not using their provided score induces a big drop in performance
             predictions["scores"] = predictions["keypoints"].apply(lambda x: x[:, 2])
-        predictions["track_id"] = predictions["track_id"]
-        predictions["person_id"] = predictions["track_id"]
+        predictions["track_id"] = predictions["id"]
+        predictions["person_id"] = predictions["id"]
 
         annotations = {}
         videos_names = image_metadatas["video_name"].unique()
