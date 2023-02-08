@@ -27,7 +27,7 @@ cfg:
   eval_reid_pose_tracking: False # Not working
   eval_mot: True
 
-  print_by_video: True
+  print_by_video: False
 
   posetrack_trackers_folder: "eval/posetrack"
   posetrack_gt_folder: ${dataset.dataset_path}/posetrack_data/val
