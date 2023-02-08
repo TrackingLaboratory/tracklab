@@ -42,22 +42,54 @@ def oks(keypoints, candidates):
         The object keypoint similarity in [0, 1] between the `keypoints` and each
         candidate. A higher score means a beter similarity between the keypoints.
     """
-    # TODO should be replaced by a mean keypoints and not last detected one
-    # we won't be able to compute confidences so we will have to check if (x, y) != 0
-    keypoints_bool = keypoints[:, 2] > 0.0
-    tl, br = np.amax(keypoints[keypoints_bool], axis=0), np.amin(
-        keypoints[keypoints_bool], axis=0
+    visible = keypoints[:, 2] > 0.0
+
+    tl, br = np.amin(keypoints[visible], axis=0), np.amax(keypoints[visible], axis=0)
+    total_tl, total_br = np.amin(keypoints, axis=0), np.amax(keypoints, axis=0)
+
+    area = (br[0] - tl[0]) * (br[1] - tl[1])  # using visible keypoints
+    total_area = (total_br[0] - total_tl[0]) * (
+        total_br[1] - total_tl[1]
+    )  # using all keypoints
+
+    # Compute the rotation of the skeleton (prevent from aligned keypoints -> area = 0)
+    c, s = np.cos(np.deg2rad(45)), np.sin(np.deg2rad(45))
+    rotate = np.array(((c, -s), (s, c)))
+    keypoints_45 = np.copy(keypoints)
+    keypoints_45[:, :2] = np.einsum("ij,kj->ki", rotate, keypoints_45[:, :2])
+
+    tl_45, br_45 = np.amin(keypoints_45[visible], axis=0), np.amax(
+        keypoints_45[visible], axis=0
+    )  # using visible rotated keypoints
+    total_tl_45, total_br_45 = np.amin(keypoints_45, axis=0), np.amax(
+        keypoints_45, axis=0
+    )  # using all rotated keypoints
+
+    area_45 = (br_45[0] - tl_45[0]) * (br_45[1] - tl_45[1])  # w * h
+    total_area_45 = (total_br_45[0] - total_tl_45[0]) * (
+        total_br_45[1] - total_tl_45[1]
+    )  # w * h
+
+    factor = np.sqrt(
+        min(
+            total_area / area if area > 0.1 else np.inf,
+            total_area_45 / area_45 if area_45 > 0.1 else np.inf,
+        )
     )
-    scale = np.sqrt((br[0] - tl[0]) ** 2 + (br[1] - tl[1]) ** 2)
+
+    factor_clipped = min(5.0, factor)
+    scale = np.sqrt(area) * factor_clipped
+    if scale < 0.1:
+        scale = np.nan
+
     distances = np.sqrt(
         (keypoints[:, 0] - candidates[:, :, 0]) ** 2
         + (keypoints[:, 1] - candidates[:, :, 1]) ** 2
     )
-    distances = np.exp(
+    oks_by_keypoint = np.exp(
         -(distances**2) / (2 * scale**2 * kappa**2)
-    ) * keypoints_bool.astype(float)
-    oks = np.sum(distances, axis=1) / keypoints_bool.sum()
-    return oks
+    ) * visible.astype(float)
+    return np.sum(oks_by_keypoint, axis=1) / visible.sum()
 
 
 def oks_cost(tracks, detections, track_indices=None, detection_indices=None):
@@ -93,8 +125,8 @@ def oks_cost(tracks, detections, track_indices=None, detection_indices=None):
         if tracks[track_idx].time_since_update > 1:
             cost_matrix[row, :] = linear_assignment.INFTY_COST
             continue
-        # TODO modify here to use mean keypoints
         keypoints = tracks[track_idx].last_detection.keypoints
         candidates = np.asarray([detections[i].keypoints for i in detection_indices])
+        print(oks(keypoints, candidates))
         cost_matrix[row, :] = 1.0 - oks(keypoints, candidates)
     return cost_matrix
