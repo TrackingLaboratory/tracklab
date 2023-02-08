@@ -218,7 +218,7 @@ class Tracker:
         """
 
 
-        # self.compute_all_costs_matrix(detections)
+        self.compute_all_costs_matrix(detections)
 
         def gated_metric(tracks, dets, track_indices, detection_indices):
             features = {
