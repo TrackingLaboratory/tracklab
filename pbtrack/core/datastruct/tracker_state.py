@@ -93,16 +93,15 @@ class TrackerState(AbstractContextManager):
                 lambda x: bbox_ltrb2ltwh(x)
             )
         predictions.loc[predictions['bbox_ltwh'].isna(), 'bbox_ltwh'] = predictions[predictions['bbox_ltwh'].isna()].keypoints_xyc.apply(lambda x: kp_to_bbox_w_threshold(x, vis_threshold=0))
-        predictions['track_bbox_kf_ltwh'] = predictions['bbox_ltwh']  # FIXME config to decide if track_bbox_kf_ltwh or bbox_ltwh should be used
-        # predictions.drop(["track_id"], axis=1, inplace=True)  # TODO NEED TO DROP track_id if we want to perform tracking
         predictions['bbox_c'] = predictions.keypoints_xyc.apply(lambda x: x[:, 2].mean())
         predictions = predictions.merge(
             self.gt.image_metadatas[["video_id"]], how="left", left_on="image_id", right_index=True
         )
         self.json_predictions = Detections(predictions)
-        self.do_detection = False
-        self.do_reid = False
-        self.do_tracking = False
+        if self.do_tracking:
+            self.json_predictions.drop(["track_id"], axis=1, inplace=True)  # TODO NEED TO DROP track_id if we want to perform tracking
+        else:
+            self.json_predictions['track_bbox_kf_ltwh'] = self.json_predictions['bbox_ltwh']  # FIXME config to decide if track_bbox_kf_ltwh or bbox_ltwh should be used
 
     def __call__(self, video_id):
         self.video_id = video_id
