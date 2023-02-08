@@ -99,7 +99,7 @@ class PoseTrack21(EvaluatorBase):
             res_combined, res_by_video = evaluator.eval()
             print("Reid pose tracking results:")
             self._print_results(res_combined, res_by_video, scale_factor=100)
-            wandb.log(res_combined, "reid", res_by_video)
+            wandb.log(res_combined, "reid_pose", res_by_video)
 
         if self.cfg.eval_mot:
             # HOTA
@@ -140,11 +140,13 @@ class PoseTrack21(EvaluatorBase):
                 )
             if mot_accums:
                 print("Posetrack mot results (MOTA):")
-                str_summary = evaluate_mot_accums(
+                str_summary, summary = evaluate_mot_accums(
                     mot_accums,
                     [str(s) for s in dataset if not s.no_gt],
                     generate_overall=True,
                 )
+                results_mot_bbox = summary.to_dict(orient='index')
+                wandb.log(results_mot_bbox['OVERALL'], "mot", results_mot_bbox)
 
     # PoseTrack helper functions
     @staticmethod
