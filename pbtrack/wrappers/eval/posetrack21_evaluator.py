@@ -211,13 +211,15 @@ class PoseTrack21(EvaluatorBase):
     @staticmethod
     def _annotations_tracking_eval(predictions, image_metadatas):
         predictions = predictions.copy()
-        predictions.dropna(
-            subset=[
+        col_to_drop = [
                 "keypoints_xyc",
                 "track_bbox_kf_ltwh",
                 "image_id",
                 "track_id",
-            ],
+            ]
+        col_to_drop = [col for col in col_to_drop if col in predictions.columns]
+        predictions.dropna(
+            subset=col_to_drop,
             how="any",
             inplace=True,
         )

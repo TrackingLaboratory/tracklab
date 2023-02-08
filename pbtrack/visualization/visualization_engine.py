@@ -275,7 +275,7 @@ class VisualisationEngine:
                 color_bg=(255, 255, 255),
             )
         # track state + hits + age
-        if is_prediction and self.cfg.prediction.print_bbox_confidence and is_matched:
+        if is_prediction and self.cfg.prediction.print_bbox_confidence and is_matched and hasattr(detection, 'state') and hasattr(detection, 'hits') and hasattr(detection, 'age'):
             draw_text(
                 patch,
                 f"st={detection.state} | #d={detection.hits} | age={detection.age}",
@@ -291,7 +291,7 @@ class VisualisationEngine:
             )
         # display_matched_with
         if is_prediction and self.cfg.prediction.display_matched_with:
-            if hasattr(detection, 'matched_with') and is_matched:
+            if hasattr(detection, 'matched_with') and detection.matched_with is not None and is_matched:
                 draw_text(
                     patch,
                     f"{detection.matched_with[0]}|{detection.matched_with[1]:.2f}",
@@ -350,7 +350,7 @@ class VisualisationEngine:
                         color_txt=(0, 0, 255),
                         color_bg=(255, 255, 255),
                     )
-        if is_prediction and self.cfg.prediction.display_reid_visibility_scores:
+        if is_prediction and self.cfg.prediction.display_reid_visibility_scores and hasattr(detection, 'visibility_scores'):
             draw_text(
                 patch,
                 f"S: {np.around(detection.visibility_scores.astype(float), 1)}",

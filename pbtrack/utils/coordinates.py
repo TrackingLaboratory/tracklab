@@ -14,6 +14,7 @@ def kp_to_bbox(kp_xy):
     h = br[1] - lt[1]
     return np.array([lt[0], lt[1], w, h])
 
+
 def openpifpaf_kp_to_bbox(kp_xy):
     """Extract bounding box from keypoints for openpifpaf framework.
     Args:
@@ -30,7 +31,7 @@ def openpifpaf_kp_to_bbox(kp_xy):
     return np.array([lt[0], lt[1], w, h])
 
 
-def kp_to_bbox_w_threshold(kp_xyc, vis_threshold=0.1):
+def kp_to_bbox_w_threshold(kp_xyc, vis_threshold=0.):
     """Extract bounding box from keypoints with visibility threshold.
     Args:
         kp_xy (np.ndarray): keypoints in image coordinates, shape (K, 3) (x, y, c)
@@ -162,6 +163,10 @@ def round_bbox_coordinates(bbox):
 
 def bbox_ltwh2ltrb(ltwh):
     return np.concatenate((ltwh[:2], ltwh[:2] + ltwh[2:]))
+
+
+def bbox_ltrb2ltwh(ltrb):
+    return np.concatenate((ltrb[:2], ltrb[2:] - ltrb[:2]))
 
 
 def bbox_ltwh2cmwh(ltwh):
