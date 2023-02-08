@@ -75,7 +75,8 @@ class StrongSORT(object):
 
         # update tracker
         assert self.tracker.predict_done, "predict() must be called before update()"
-        self.tracker.update(detections, classes, confidences)
+        if len(detections) > 0:
+            self.tracker.update(detections, classes, confidences)
         self.tracker.predict_done = False
 
         # output bbox identities
