@@ -99,7 +99,7 @@ class TrackerState(AbstractContextManager):
         predictions = predictions.merge(
             self.gt.image_metadatas[["video_id"]], how="left", left_on="image_id", right_index=True
         )
-        self.predictions = Detections(predictions)
+        self.json_predictions = Detections(predictions)
         self.do_detection = False
         self.do_reid = False
         self.do_tracking = False
@@ -150,7 +150,7 @@ class TrackerState(AbstractContextManager):
             self.predictions = self.predictions[
                 ~(self.predictions["video_id"] == self.video_id)
             ]
-            self.predictions = pd.concat([self.predictions, detections])
+            self.predictions = pd.concat([self.predictions, detections])  # TODO UPDATE should update existing rows or append if new rows
 
     def save(self):
         """
@@ -179,7 +179,7 @@ class TrackerState(AbstractContextManager):
                 and False otherwise.
         """
         if self.json_file is not None:
-            return self.predictions[self.predictions.video_id == self.video_id]
+            return self.json_predictions[self.json_predictions.video_id == self.video_id]
         if self.load_file is None:
             return None
 
