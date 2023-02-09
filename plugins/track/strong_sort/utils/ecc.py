@@ -34,7 +34,7 @@ def ECC(src, dst, warp_mode=cv2.MOTION_EUCLIDEAN, eps=1e-5,
     """
 
     # skip if current and previous frame are not initialized (1st inference)
-    if (src.any() or dst.any() is None):
+    if (src.any() is None or dst.any() is None):
         return None, None
     # skip if current and previous fames are not the same size
     elif (src.shape != dst.shape):
