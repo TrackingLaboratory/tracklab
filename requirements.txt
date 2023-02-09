@@ -1,4 +1,5 @@
 -e './plugins/detect/openpifpaf[dev,train,test]'
+-e './plugins/eval/poseval'
 -r './plugins/reid/bpbreid/requirements.txt'
 -r './plugins/eval/PoseTrack21/eval/posetrack21/requirements.txt'
 hydra-core

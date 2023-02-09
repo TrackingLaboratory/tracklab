@@ -24,6 +24,12 @@ sys.path.append(
 from datasets.pt_warper import PTWrapper
 from evaluate_mot import get_mot_accum, evaluate_mot_accums
 
+sys.path.append(
+    str((root_dir / "plugins/eval/poseval").resolve())
+)  # FIXME : ugly
+from poseval.eval_helpers import load_data_dir, printTable, Joint
+from poseval.evaluateAP import evaluateAP
+from poseval.evaluateTracking import evaluateTracking
 
 def format_metric(metric_name, metric_value, scale_factor):
     if "TP" in metric_name or "FN" in metric_name or "FP" in metric_name or "TN" in metric_name:
@@ -37,6 +43,7 @@ class PoseTrack21(EvaluatorBase):
 
     def run(self, tracker_state):
         images = self._images(tracker_state.gt.image_metadatas)
+        category = self._category(tracker_state.gt.video_metadatas)
         seqs = list(tracker_state.gt.video_metadatas.name)
         if self.cfg.eval_pose_estimation:  # TODO not fair to evaluate this on different predictions than tracking
             annotations = self._annotations_pose_estimation_eval(
@@ -45,7 +52,7 @@ class PoseTrack21(EvaluatorBase):
             trackers_folder = os.path.join(
                 self.cfg.posetrack_trackers_folder, "pose_estimation"
             )
-            self._save_json(images, annotations, trackers_folder)
+            self._save_json(images, annotations, category, trackers_folder)
             evaluator = posetrack21.api.get_api(
                 trackers_folder=trackers_folder,
                 gt_folder=self.cfg.posetrack_gt_folder,
@@ -59,6 +66,18 @@ class PoseTrack21(EvaluatorBase):
             print("Pose estimation results: ")
             self._print_results(res_combined, res_by_video, scale_factor=1.0)
 
+            # poseval
+            argv = ['', self.cfg.posetrack_gt_folder, trackers_folder]
+            gtFramesAll, prFramesAll = load_data_dir(argv)
+            print("Evaluation of per-frame multi-person pose estimation (poseval)")
+            apAll, preAll, recAll = evaluateAP(gtFramesAll, prFramesAll, "", False, False)
+            print("Average Precision (AP) metric:")
+            printTable(apAll)
+            print("Precision metric:")
+            printTable(preAll)
+            print("Recall metric:")
+            printTable(recAll)
+
         if self.cfg.eval_pose_tracking:
             annotations = self._annotations_tracking_eval(
                 tracker_state.predictions, tracker_state.gt.image_metadatas
@@ -66,7 +85,7 @@ class PoseTrack21(EvaluatorBase):
             trackers_folder = os.path.join(
                 self.cfg.posetrack_trackers_folder, "pose_tracking"
             )
-            self._save_json(images, annotations, trackers_folder)
+            self._save_json(images, annotations, category, trackers_folder)
             evaluator = posetrack21.api.get_api(
                 trackers_folder=trackers_folder,
                 gt_folder=self.cfg.posetrack_gt_folder,
@@ -80,6 +99,23 @@ class PoseTrack21(EvaluatorBase):
             self._print_results(res_combined, res_by_video, scale_factor=100)
             wandb.log(res_combined, "posetrack", res_by_video)
 
+            # poseval
+            argv = ['', self.cfg.posetrack_gt_folder, trackers_folder]
+            gtFramesAll, prFramesAll = load_data_dir(argv)
+            print("Evaluation of video-based  multi-person pose tracking (poseval)")
+            metricsAll = evaluateTracking(gtFramesAll, prFramesAll, "", False, False)
+
+            metrics = np.zeros([Joint().count + 4, 1])
+            for i in range(Joint().count + 1):
+                metrics[i, 0] = metricsAll['mota'][0, i]
+            metrics[Joint().count + 1, 0] = metricsAll['motp'][0, Joint().count]
+            metrics[Joint().count + 2, 0] = metricsAll['pre'][0, Joint().count]
+            metrics[Joint().count + 3, 0] = metricsAll['rec'][0, Joint().count]
+
+            # print AP
+            print("Multiple Object Tracking (MOT) metrics:")
+            printTable(metrics, motHeader=True)
+
         if self.cfg.eval_reid_pose_tracking:
             annotations = self._annotations_reid_pose_tracking_eval(
                 tracker_state.predictions, tracker_state.gt.image_metadatas
@@ -87,7 +123,7 @@ class PoseTrack21(EvaluatorBase):
             trackers_folder = os.path.join(
                 self.cfg.posetrack_trackers_folder, "reid_pose_tracking"
             )
-            self._save_json(images, annotations, trackers_folder)
+            self._save_json(images, annotations, category, trackers_folder)
             evaluator = posetrack21.api.get_api(
                 trackers_folder=trackers_folder,
                 gt_folder=self.cfg.posetrack_gt_folder,
@@ -174,6 +210,10 @@ class PoseTrack21(EvaluatorBase):
                 ["file_name", "id", "frame_id"]
             ].to_dict("records")
         return images
+
+    @staticmethod
+    def _category(video_metadatas):
+        return video_metadatas.categories[0]
 
     # FIXME fuse different annotations functions
     @staticmethod
@@ -277,7 +317,7 @@ class PoseTrack21(EvaluatorBase):
         return annotations
 
     @staticmethod
-    def _save_json(images, annotations, path):
+    def _save_json(images, annotations, category, path):
         os.makedirs(path, exist_ok=True)
         for video_name in images.keys():
             file_path = os.path.join(path, f"{video_name}.json")
@@ -286,6 +326,7 @@ class PoseTrack21(EvaluatorBase):
                     {
                         "images": images[video_name],
                         "annotations": annotations[video_name],
+                        "categories": category,
                     },
                     f,
                     cls=PoseTrack21Encoder,
