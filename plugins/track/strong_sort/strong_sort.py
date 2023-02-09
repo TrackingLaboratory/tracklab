@@ -22,6 +22,7 @@ class StrongSORT(object):
         nn_budget=100,
         min_bbox_confidence=0.2,
         only_position_for_kf_gating=False,
+        max_kalman_prediction_without_update=7,
     ):
 
         self.max_dist = max_dist
@@ -37,6 +38,7 @@ class StrongSORT(object):
             ema_alpha=ema_alpha,
             mc_lambda=mc_lambda,
             only_position_for_kf_gating=only_position_for_kf_gating,
+            max_kalman_prediction_without_update = max_kalman_prediction_without_update,
         )
 
     def update(
@@ -99,8 +101,8 @@ class StrongSORT(object):
             # KF predicted bbox to be stored next to actual bbox :
             result_det = {  # if keys are added/updated here, don't forget to update the columns in the pd.DataFrame below
                 "track_id": track.track_id,
-                "track_bbox_kf_ltwh": track.to_tlwh(),
-                "track_bbox_pred_kf_ltwh": track.last_kf_pred_tlwh,
+                "track_bbox_kf_ltwh": track.to_ltwh(),
+                "track_bbox_pred_kf_ltwh": track.last_kf_pred_ltwh,
                 "matched_with": det.matched_with,
                 "costs": det.costs,
                 "hits": track.hits,
@@ -114,22 +116,6 @@ class StrongSORT(object):
                                index=np.array(ids),
                                columns=["track_id", "track_bbox_kf_ltwh", "track_bbox_pred_kf_ltwh", "matched_with", "costs", "hits", "age", "time_since_update", "state"])
         return outputs
-
-    """
-    TODO:
-        Convert bbox from xc_yc_w_h to xtl_ytl_w_h
-    Thanks JieChen91@github.com for reporting this bug!
-    """
-
-    # @staticmethod
-    # def _xywh_to_tlwh(bbox_xywh):  # BAD NAME, should be ltwh right?
-    #     if isinstance(bbox_xywh, np.ndarray):
-    #         bbox_tlwh = bbox_xywh.copy()
-    #     elif isinstance(bbox_xywh, torch.Tensor):
-    #         bbox_tlwh = bbox_xywh.clone()
-    #     bbox_tlwh[:, 0] = bbox_xywh[:, 0] - bbox_xywh[:, 2] / 2.0
-    #     bbox_tlwh[:, 1] = bbox_xywh[:, 1] - bbox_xywh[:, 3] / 2.0
-    #     return bbox_tlwh
 
     def filter_detections(self, detections):
         detections = [det for det in detections if det.confidence > self.min_bbox_confidence]

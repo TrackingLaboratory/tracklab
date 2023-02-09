@@ -54,6 +54,7 @@ class Tracker:
         ema_alpha=0.9,
         mc_lambda=0.995,
         only_position_for_kf_gating=False,
+        max_kalman_prediction_without_update=7,
     ):
         self.metric = metric
         if motion_criterium == "iou":
@@ -78,6 +79,7 @@ class Tracker:
         self._next_id = 1
         self.predict_done = False
         self.only_position = only_position_for_kf_gating
+        self.max_kalman_prediction_without_update = max_kalman_prediction_without_update
 
     def predict(self):
         """Propagate track state distributions one time step forward.
@@ -100,7 +102,6 @@ class Tracker:
         if warp_matrix is None and src_aligned is None:
             return None
 
-        log.info("ECC WORKED, IT IS A MIRACLE SINCE IT WAS NOT WORKING BEFORE. TELL VLADIMIR")
         [a,b] = warp_matrix
         warp_matrix=np.array([a,b,[0,0,1]])
         warp_matrix = warp_matrix.tolist()
@@ -167,7 +168,7 @@ class Tracker:
         """
         # Compute First the Position-based Cost Matrix
         pos_cost = np.empty([len(track_indices), len(detection_indices)])
-        msrs = np.asarray([dets[i].to_xyah() for i in detection_indices])
+        msrs = np.asarray([dets[i].to_tlbr() for i in detection_indices])
         for row, track_idx in enumerate(track_indices):
             track = tracks[track_idx]
             pos_cost[row, :] = (
@@ -318,7 +319,7 @@ class Tracker:
         track_indices = list(range(len(self.tracks)))
         detection_indices = list(range(len(detections)))
         measurements = np.asarray(
-            [detections[i].to_xyah() for i in detection_indices])
+            [detections[i].to_ltwh() for i in detection_indices])
         cost_matrix_kf_gating = np.zeros((len(self.tracks), len(detections)))
         for row, track_idx in enumerate(track_indices):
             track = self.tracks[track_idx]
@@ -363,6 +364,7 @@ class Tracker:
                 self.n_init,
                 self.max_age,
                 self.ema_alpha,
+                self.max_kalman_prediction_without_update,
                 detection.feature,
             )
         )

@@ -29,19 +29,21 @@ class Detection(object):
     """
 
     def __init__(self, id, bbox_ltwh, confidence, feature, keypoints):
-        self.tlwh = bbox_ltwh  # FIXME bbox_ltwh is called tlwh everywhere in StrongSORT code, but it should be ltwh
+        self.ltwh = bbox_ltwh
         self.confidence = float(confidence)
         self.feature = feature
         self.id = id
         self.keypoints = keypoints
         self.matched_with = None
         self.costs = {}
+    def to_ltwh(self):
+        return self.ltwh.copy()
 
     def to_tlbr(self):
         """Convert bounding box to format `(min x, min y, max x, max y)`, i.e.,
         `(top left, bottom right)`.
         """
-        ret = self.tlwh.copy()
+        ret = self.to_ltwh()
         ret[2:] += ret[:2]
         return ret
 
@@ -49,7 +51,7 @@ class Detection(object):
         """Convert bounding box to format `(center x, center y, aspect ratio,
         height)`, where the aspect ratio is `width / height`.
         """
-        ret = self.tlwh.copy()
+        ret = self.to_ltwh()
         ret[:2] += ret[2:] / 2
         ret[2] /= ret[3]
         return ret

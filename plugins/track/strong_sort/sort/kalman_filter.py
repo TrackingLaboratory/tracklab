@@ -17,16 +17,22 @@ chi2inv95 = {
     8: 15.507,
     9: 16.919}
 
+x_criteria = 2
+y_criteria = 3
 
 class KalmanFilter(object):
     """
     A simple Kalman filter for tracking bounding boxes in image space.
+
     The 8-dimensional state space
-        x, y, a, h, vx, vy, va, vh
+
+        x, y, w, h, vx, vy, vw, vh
+
     contains the bounding box center position (x, y), aspect ratio a, height h,
     and their respective velocities.
+
     Object motion follows a constant velocity model. The bounding box location
-    (x, y, a, h) is taken as direct observation of the state space (linear
+    (x, y, w, h) is taken as direct observation of the state space (linear
     observation model).
     """
 
@@ -48,11 +54,13 @@ class KalmanFilter(object):
 
     def initiate(self, measurement):
         """Create track from unassociated measurement.
+
         Parameters
         ----------
         measurement : ndarray
-            Bounding box coordinates (x, y, a, h) with center position (x, y),
-            aspect ratio a, and height h.
+            Bounding box coordinates (x, y, w, h) with center position (x, y),
+            width w, and height h.
+
         Returns
         -------
         (ndarray, ndarray)
@@ -65,19 +73,20 @@ class KalmanFilter(object):
         mean = np.r_[mean_pos, mean_vel]
 
         std = [
-            2 * self._std_weight_position * measurement[3],
-            2 * self._std_weight_position * measurement[3],
-            1e-2,
-            2 * self._std_weight_position * measurement[3],
-            10 * self._std_weight_velocity * measurement[3],
-            10 * self._std_weight_velocity * measurement[3],
-            1e-5,
-            10 * self._std_weight_velocity * measurement[3]]
+            2 * self._std_weight_position * measurement[x_criteria],
+            2 * self._std_weight_position * measurement[y_criteria],
+            2 * self._std_weight_position * measurement[x_criteria],
+            2 * self._std_weight_position * measurement[y_criteria],
+            10 * self._std_weight_velocity * measurement[x_criteria],
+            10 * self._std_weight_velocity * measurement[y_criteria],
+            10 * self._std_weight_velocity * measurement[x_criteria],
+            10 * self._std_weight_velocity * measurement[y_criteria]]
         covariance = np.diag(np.square(std))
         return mean, covariance
 
     def predict(self, mean, covariance):
         """Run Kalman filter prediction step.
+
         Parameters
         ----------
         mean : ndarray
@@ -86,6 +95,7 @@ class KalmanFilter(object):
         covariance : ndarray
             The 8x8 dimensional covariance matrix of the object state at the
             previous time step.
+
         Returns
         -------
         (ndarray, ndarray)
@@ -93,18 +103,18 @@ class KalmanFilter(object):
             state. Unobserved velocities are initialized to 0 mean.
         """
         std_pos = [
-            self._std_weight_position * mean[3],
-            self._std_weight_position * mean[3],
-            1e-2,
-            self._std_weight_position * mean[3]]
+            self._std_weight_position * mean[x_criteria],
+            self._std_weight_position * mean[y_criteria],
+            self._std_weight_position * mean[x_criteria],
+            self._std_weight_position * mean[y_criteria]]
         std_vel = [
-            self._std_weight_velocity * mean[3],
-            self._std_weight_velocity * mean[3],
-            1e-5,
-            self._std_weight_velocity * mean[3]]
+            self._std_weight_velocity * mean[x_criteria],
+            self._std_weight_velocity * mean[y_criteria],
+            self._std_weight_velocity * mean[x_criteria],
+            self._std_weight_velocity * mean[y_criteria]]
         motion_cov = np.diag(np.square(np.r_[std_pos, std_vel]))
 
-        mean = np.dot(self._motion_mat, mean)
+        mean = np.dot(mean, self._motion_mat.T)
         covariance = np.linalg.multi_dot((
             self._motion_mat, covariance, self._motion_mat.T)) + motion_cov
 
@@ -112,13 +122,16 @@ class KalmanFilter(object):
 
     def project(self, mean, covariance, confidence=.0):
         """Project state distribution to measurement space.
+
         Parameters
         ----------
         mean : ndarray
             The state's mean vector (8 dimensional array).
         covariance : ndarray
             The state's covariance matrix (8x8 dimensional).
-        confidence: (dyh) 检测框置信度
+        confidence: float
+            frame confidence
+
         Returns
         -------
         (ndarray, ndarray)
@@ -126,13 +139,13 @@ class KalmanFilter(object):
             estimate.
         """
         std = [
-            self._std_weight_position * mean[3],
-            self._std_weight_position * mean[3],
-            1e-1,
-            self._std_weight_position * mean[3]]
+            self._std_weight_position * mean[x_criteria],
+            self._std_weight_position * mean[y_criteria],
+            self._std_weight_position * mean[x_criteria],
+            self._std_weight_position * mean[y_criteria]]
 
-
-        std = [(1 - confidence) * x for x in std]
+        # FIXME do we keep it ?
+        # std = [(1 - confidence) * x for x in std]
 
         innovation_cov = np.diag(np.square(std))
 
@@ -143,6 +156,7 @@ class KalmanFilter(object):
 
     def update(self, mean, covariance, measurement, confidence=.0):
         """Run Kalman filter correction step.
+
         Parameters
         ----------
         mean : ndarray
@@ -150,10 +164,12 @@ class KalmanFilter(object):
         covariance : ndarray
             The state's covariance matrix (8x8 dimensional).
         measurement : ndarray
-            The 4 dimensional measurement vector (x, y, a, h), where (x, y)
-            is the center position, a the aspect ratio, and h the height of the
+            The 4 dimensional measurement vector (x, y, w, h), where (x, y)
+            is the center position, w the width, and h the height of the
             bounding box.
-        confidence: (dyh)检测框置信度
+        confidence: float
+            frame confidence
+
         Returns
         -------
         (ndarray, ndarray)
@@ -187,8 +203,8 @@ class KalmanFilter(object):
             Covariance of the state distribution (8x8 dimensional).
         measurements : ndarray
             An Nx4 dimensional matrix of N measurements, each in
-            format (x, y, a, h) where (x, y) is the bounding box center
-            position, a the aspect ratio, and h the height.
+            format (x, y, w, h) where (x, y) is the bounding box center
+            position, w the width, and h the height.
         only_position : Optional[bool]
             If True, distance computation is done with respect to the bounding
             box center position only.

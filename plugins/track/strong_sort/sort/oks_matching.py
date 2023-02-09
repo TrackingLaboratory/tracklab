@@ -127,6 +127,5 @@ def oks_cost(tracks, detections, track_indices=None, detection_indices=None):
             continue
         keypoints = tracks[track_idx].last_detection.keypoints
         candidates = np.asarray([detections[i].keypoints for i in detection_indices])
-        print(oks(keypoints, candidates))
         cost_matrix[row, :] = 1.0 - oks(keypoints, candidates)
     return cost_matrix
