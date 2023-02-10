@@ -27,7 +27,7 @@ from evaluate_mot import get_mot_accum, evaluate_mot_accums
 sys.path.append(
     str((root_dir / "plugins/eval/poseval").resolve())
 )  # FIXME : ugly
-from poseval.eval_helpers import load_data_dir, printTable, Joint
+from poseval.eval_helpers import load_data_dir, printTable, Joint, metrics2dict
 from poseval.evaluateAP import evaluateAP
 from poseval.evaluateTracking import evaluateTracking
 
@@ -66,7 +66,8 @@ class PoseTrack21(EvaluatorBase):
             print("Pose estimation results: ")
             self._print_results(res_combined, res_by_video, scale_factor=1.0)
 
-            # poseval
+            """
+            # poseval evaluation mAP but it is the same as posetrack21 evaluation
             argv = ['', self.cfg.posetrack_gt_folder, trackers_folder]
             gtFramesAll, prFramesAll = load_data_dir(argv)
             print("Evaluation of per-frame multi-person pose estimation (poseval)")
@@ -77,6 +78,7 @@ class PoseTrack21(EvaluatorBase):
             printTable(preAll)
             print("Recall metric:")
             printTable(recAll)
+            """
 
         if self.cfg.eval_pose_tracking:
             annotations = self._annotations_tracking_eval(
@@ -95,14 +97,14 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=seqs,
             )
             res_combined, res_by_video = evaluator.eval()
-            print("Pose tracking results:")
+            print("Pose tracking results (HOTA):")
             self._print_results(res_combined, res_by_video, scale_factor=100)
-            wandb.log(res_combined, "posetrack", res_by_video)
+            wandb.log(res_combined, "posetrack (hota)", res_by_video)
 
             # poseval
             argv = ['', self.cfg.posetrack_gt_folder, trackers_folder]
             gtFramesAll, prFramesAll = load_data_dir(argv)
-            print("Evaluation of video-based  multi-person pose tracking (poseval)")
+            print("Pose tracking results (MOTA):")
             metricsAll = evaluateTracking(gtFramesAll, prFramesAll, "", False, False)
 
             metrics = np.zeros([Joint().count + 4, 1])
@@ -112,9 +114,9 @@ class PoseTrack21(EvaluatorBase):
             metrics[Joint().count + 2, 0] = metricsAll['pre'][0, Joint().count]
             metrics[Joint().count + 3, 0] = metricsAll['rec'][0, Joint().count]
 
-            # print AP
-            print("Multiple Object Tracking (MOT) metrics:")
-            printTable(metrics, motHeader=True)
+            res_combined = metrics2dict(metrics)
+            self._print_results(res_combined, scale_factor=1.0)
+            wandb.log(res_combined, "posetrack (mota)")
 
         if self.cfg.eval_reid_pose_tracking:
             annotations = self._annotations_reid_pose_tracking_eval(
@@ -391,11 +393,11 @@ class PoseTrack21(EvaluatorBase):
                 index=False,
             )
 
-    def _print_results(self, res_combined, res_by_video, scale_factor):
+    def _print_results(self, res_combined, res_by_video=None, scale_factor=1.0):
         headers = res_combined.keys()
         data = [format_metric(name, res_combined[name], scale_factor) for name in headers]
         print(tabulate([data], headers=headers, tablefmt="pretty"))
-        if self.cfg.print_by_video:
+        if self.cfg.print_by_video and res_by_video:
             print("By videos:")
             data = []
             for video_name, res in res_by_video.items():
