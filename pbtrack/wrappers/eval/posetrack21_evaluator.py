@@ -97,14 +97,14 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=seqs,
             )
             res_combined, res_by_video = evaluator.eval()
-            print("Pose tracking results (HOTA):")
+            print("Keypoints tracking results (HOTA):")
             self._print_results(res_combined, res_by_video, scale_factor=100)
-            wandb.log(res_combined, "posetrack (hota)", res_by_video)
+            wandb.log(res_combined, "HOTA kp", res_by_video)
 
             # poseval
             argv = ['', self.cfg.posetrack_gt_folder, trackers_folder]
-            gtFramesAll, prFramesAll = load_data_dir(argv)
-            print("Pose tracking results (MOTA):")
+            gtFramesAll, prFramesAll = load_data_dir(argv, seqs)
+            print("Keypoints tracking results (MOTA):")
             metricsAll = evaluateTracking(gtFramesAll, prFramesAll, "", False, False)
 
             metrics = np.zeros([Joint().count + 4, 1])
@@ -116,7 +116,7 @@ class PoseTrack21(EvaluatorBase):
 
             res_combined = metrics2dict(metrics)
             self._print_results(res_combined, scale_factor=1.0)
-            wandb.log(res_combined, "posetrack (mota)")
+            wandb.log(res_combined, "MOTA kp")
 
         if self.cfg.eval_reid_pose_tracking:
             annotations = self._annotations_reid_pose_tracking_eval(
@@ -137,7 +137,7 @@ class PoseTrack21(EvaluatorBase):
             res_combined, res_by_video = evaluator.eval()
             print("Reid pose tracking results:")
             self._print_results(res_combined, res_by_video, scale_factor=100)
-            wandb.log(res_combined, "reid_pose", res_by_video)
+            wandb.log(res_combined, "ReID pose", res_by_video)
 
         if self.cfg.eval_mot:
             # HOTA
@@ -155,9 +155,9 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=seqs,
             )
             res_combined, res_by_video = evaluator.eval()
-            print("Posetrack MOT results (HOTA):")
+            print("Tracking bbox results (HOTA):")
             self._print_results(res_combined, res_by_video, 100)
-            wandb.log(res_combined, "mot", res_by_video)
+            wandb.log(res_combined, "HOTA bb", res_by_video)
             # MOTA
             dataset = PTWrapper(
                 self.cfg.mot_gt_folder,
@@ -177,14 +177,14 @@ class PoseTrack21(EvaluatorBase):
                     )
                 )
             if mot_accums:
-                print("Posetrack mot results (MOTA):")
+                print("Tracking bbox results (MOTA):")
                 str_summary, summary = evaluate_mot_accums(
                     mot_accums,
                     [str(s) for s in dataset if not s.no_gt],
                     generate_overall=True,
                 )
                 results_mot_bbox = summary.to_dict(orient='index')
-                wandb.log(results_mot_bbox['OVERALL'], "mot", results_mot_bbox)
+                wandb.log(results_mot_bbox['OVERALL'], "MOTA bb", results_mot_bbox)
 
     # PoseTrack helper functions
     @staticmethod
