@@ -75,8 +75,8 @@ def iou_cost(tracks, detections, track_indices=None,
             cost_matrix[row, :] = linear_assignment.INFTY_COST
             continue
 
-        bbox = tracks[track_idx].to_tlwh()
+        bbox = tracks[track_idx].to_ltwh()
         candidates = np.asarray(
-            [detections[i].tlwh for i in detection_indices])
+            [detections[i].ltwh for i in detection_indices])
         cost_matrix[row, :] = 1. - iou(bbox, candidates)
     return cost_matrix

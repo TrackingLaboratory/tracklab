@@ -6,7 +6,7 @@ def kp_to_bbox(kp_xy):
     Args:
         kp_xy (np.ndarray): keypoints in image coordinates, shape (K, 2)
     Returns:
-        bbox (np.ndarray): bounding box tlwh (COCO format), shape (4,)
+        bbox (np.ndarray): bounding box ltwh (COCO format), shape (4,)
     """
     lt = np.amin(kp_xy, axis=0)
     br = np.amax(kp_xy, axis=0)
@@ -20,7 +20,7 @@ def openpifpaf_kp_to_bbox(kp_xy):
     Args:
         kp_xy (np.ndarray): keypoints in image coordinates, shape (K, 2)
     Returns:
-        bbox (np.ndarray): bounding box tlwh (COCO format), shape (4,)
+        bbox (np.ndarray): bounding box ltwh (COCO format), shape (4,)
     """
     # remove keypoints that have not been found
     kp_xy = kp_xy[kp_xy[:, 2] > 0]
@@ -36,7 +36,7 @@ def kp_to_bbox_w_threshold(kp_xyc, vis_threshold=0.):
     Args:
         kp_xy (np.ndarray): keypoints in image coordinates, shape (K, 3) (x, y, c)
     Returns:
-        bbox (np.ndarray): bounding box tlwh (COCO format), shape (4,)
+        bbox (np.ndarray): bounding box ltwh (COCO format), shape (4,)
     """
     kp_xy = kp_xyc[kp_xyc[:, 2] > vis_threshold]
     return kp_to_bbox(kp_xy)
