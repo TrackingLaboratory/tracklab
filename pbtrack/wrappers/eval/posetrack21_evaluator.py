@@ -136,7 +136,7 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=seqs,
             )
             res_combined, res_by_video = evaluator.eval()
-            print("Reid pose tracking results:")
+            print("Keypoints cross-video tracking results:")
             self._print_results(res_combined, res_by_video, scale_factor=100)
             wandb.log(res_combined, "ReID pose", res_by_video)
 
