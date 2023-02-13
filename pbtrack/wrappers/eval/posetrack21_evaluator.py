@@ -31,11 +31,13 @@ from poseval.eval_helpers import load_data_dir, printTable, Joint, metrics2dict
 from poseval.evaluateAP import evaluateAP
 from poseval.evaluateTracking import evaluateTracking
 
+
 def format_metric(metric_name, metric_value, scale_factor):
     if "TP" in metric_name or "FN" in metric_name or "FP" in metric_name or "TN" in metric_name:
         return int(metric_value)
     else:
         return np.around(metric_value * scale_factor, 2)
+
 
 class PoseTrack21(EvaluatorBase):
     def __init__(self, cfg):
@@ -46,9 +48,10 @@ class PoseTrack21(EvaluatorBase):
         category = self._category(tracker_state.gt.video_metadatas)
         seqs = list(tracker_state.gt.video_metadatas.name)
         bbox_column = self.cfg.bbox_column_for_eval
+        eval_pose_on_all = self.cfg.eval_pose_on_all
         if self.cfg.eval_pose_estimation:  # TODO not fair to evaluate this on different predictions than tracking
             annotations = self._annotations_pose_estimation_eval(
-                tracker_state.predictions, tracker_state.gt.image_metadatas, bbox_column, self.eval_pose_on_all
+                tracker_state.predictions, tracker_state.gt.image_metadatas, bbox_column, eval_pose_on_all
             )
             trackers_folder = os.path.join(
                 self.cfg.posetrack_trackers_folder, "pose_estimation"
