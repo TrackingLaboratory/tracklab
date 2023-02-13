@@ -45,9 +45,10 @@ class PoseTrack21(EvaluatorBase):
         images = self._images(tracker_state.gt.image_metadatas)
         category = self._category(tracker_state.gt.video_metadatas)
         seqs = list(tracker_state.gt.video_metadatas.name)
+        bbox_column = self.cfg.bbox_column_for_eval
         if self.cfg.eval_pose_estimation:  # TODO not fair to evaluate this on different predictions than tracking
             annotations = self._annotations_pose_estimation_eval(
-                tracker_state.predictions, tracker_state.gt.image_metadatas
+                tracker_state.predictions, tracker_state.gt.image_metadatas, bbox_column, self.eval_pose_on_all
             )
             trackers_folder = os.path.join(
                 self.cfg.posetrack_trackers_folder, "pose_estimation"
@@ -82,7 +83,7 @@ class PoseTrack21(EvaluatorBase):
 
         if self.cfg.eval_pose_tracking:
             annotations = self._annotations_tracking_eval(
-                tracker_state.predictions, tracker_state.gt.image_metadatas
+                tracker_state.predictions, tracker_state.gt.image_metadatas, bbox_column
             )
             trackers_folder = os.path.join(
                 self.cfg.posetrack_trackers_folder, "pose_tracking"
@@ -120,7 +121,7 @@ class PoseTrack21(EvaluatorBase):
 
         if self.cfg.eval_reid_pose_tracking:
             annotations = self._annotations_reid_pose_tracking_eval(
-                tracker_state.predictions, tracker_state.gt.image_metadatas
+                tracker_state.predictions, tracker_state.gt.image_metadatas, bbox_column
             )
             trackers_folder = os.path.join(
                 self.cfg.posetrack_trackers_folder, "reid_pose_tracking"
@@ -143,7 +144,7 @@ class PoseTrack21(EvaluatorBase):
             # HOTA
             trackers_folder = self.cfg.mot_trackers_folder
             mot_df = self._mot_encoding(
-                tracker_state.predictions, tracker_state.gt.image_metadatas
+                tracker_state.predictions, tracker_state.gt.image_metadatas, bbox_column
             )
             self._save_mot(mot_df, trackers_folder)
             evaluator = posetrack21.api.get_api(
@@ -219,19 +220,24 @@ class PoseTrack21(EvaluatorBase):
 
     # FIXME fuse different annotations functions
     @staticmethod
-    def _annotations_pose_estimation_eval(predictions, image_metadatas):
+    def _annotations_pose_estimation_eval(predictions, image_metadatas, bbox_column, eval_pose_on_all):
         predictions = predictions.copy()
+        na_col_to_drop = [
+            "keypoints_xyc",
+            bbox_column,
+            "image_id",
+        ]
+        if not eval_pose_on_all:
+            # If set to false, will evaluate pose estimation only on tracked detections (i.e. detections with a
+            # defined 'track_id')
+            na_col_to_drop.append("track_id")
         predictions.dropna(
-            subset=[
-                "keypoints_xyc",
-                "bbox_ltwh",
-                "image_id",
-            ],
+            subset=na_col_to_drop,
             how="any",
             inplace=True,
         )
         predictions.rename(
-            columns={"keypoints_xyc": "keypoints", "bbox_ltwh": "bbox"},
+            columns={"keypoints_xyc": "keypoints", bbox_column: "bbox"},
             inplace=True,
         )
         if 'scores' not in predictions.columns:
@@ -253,11 +259,11 @@ class PoseTrack21(EvaluatorBase):
 
     # FIXME fuse different annotations functions
     @staticmethod
-    def _annotations_tracking_eval(predictions, image_metadatas):
+    def _annotations_tracking_eval(predictions, image_metadatas, bbox_column):
         predictions = predictions.copy()
         col_to_drop = [
                 "keypoints_xyc",
-                "track_bbox_kf_ltwh",
+                bbox_column,
                 "image_id",
                 "track_id",
             ]
@@ -268,7 +274,7 @@ class PoseTrack21(EvaluatorBase):
             inplace=True,
         )
         predictions.rename(
-            columns={"keypoints_xyc": "keypoints", "track_bbox_kf_ltwh": "bbox"},
+            columns={"keypoints_xyc": "keypoints", bbox_column: "bbox"},
             inplace=True,
         )
         predictions["scores"] = predictions["keypoints"].apply(lambda x: x[:, 2])
@@ -287,12 +293,12 @@ class PoseTrack21(EvaluatorBase):
 
     # FIXME fuse different annotations functions
     @staticmethod
-    def _annotations_reid_pose_tracking_eval(predictions, image_metadatas):
+    def _annotations_reid_pose_tracking_eval(predictions, image_metadatas, bbox_column):
         predictions = predictions.copy()
         predictions.dropna(
             subset=[
                 "keypoints_xyc",
-                "track_bbox_kf_ltwh",
+                bbox_column,
                 "image_id",
                 "track_id",
                 "person_id",
@@ -301,7 +307,7 @@ class PoseTrack21(EvaluatorBase):
             inplace=True,
         )
         predictions.rename(
-            columns={"keypoints_xyc": "keypoints", "track_bbox_kf_ltwh": "bbox"},
+            columns={"keypoints_xyc": "keypoints", bbox_column: "bbox"},
             inplace=True,
         )
         predictions["scores"] = predictions["keypoints"].apply(lambda x: x[:, 2])
@@ -336,7 +342,7 @@ class PoseTrack21(EvaluatorBase):
 
     # MOT helper functions
     @staticmethod
-    def _mot_encoding(predictions, image_metadatas):
+    def _mot_encoding(predictions, image_metadatas, bbox_column):
         df = pd.merge(
             image_metadatas.reset_index(drop=True),
             predictions.reset_index(drop=True),
@@ -349,7 +355,7 @@ class PoseTrack21(EvaluatorBase):
                 "video_name",
                 "frame",
                 "track_id",
-                "track_bbox_kf_ltwh",
+                bbox_column,
                 "keypoints_xyc",
             ],
             how="any",
@@ -357,10 +363,10 @@ class PoseTrack21(EvaluatorBase):
         )
         print("Dropped {} rows with NA values".format(len_before_drop - len(df)))
         df["track_id"] = df["track_id"].astype(int)
-        df["bb_left"] = df["track_bbox_kf_ltwh"].apply(lambda x: x[0])
-        df["bb_top"] = df["track_bbox_kf_ltwh"].apply(lambda x: x[1])
-        df["bb_width"] = df["track_bbox_kf_ltwh"].apply(lambda x: x[2])
-        df["bb_height"] = df["track_bbox_kf_ltwh"].apply(lambda x: x[3])
+        df["bb_left"] = df[bbox_column].apply(lambda x: x[0])
+        df["bb_top"] = df[bbox_column].apply(lambda x: x[1])
+        df["bb_width"] = df[bbox_column].apply(lambda x: x[2])
+        df["bb_height"] = df[bbox_column].apply(lambda x: x[3])
         df = df.assign(x=-1, y=-1, z=-1)
         return df
 
