@@ -1,7 +1,7 @@
 _target_: pbtrack.wrappers.StrongSORT
 
 cfg:
-  ecc: True # activate camera motion compensation
+  ecc: False # activate camera motion compensation  # FIXME doesn't work
   ema_alpha: 0.9 # updates  appearance  state in  an exponential moving average manner # FIXME is it still used?
   mc_lambda: 0.995 # matching with both appearance (1 - MC_LAMBDA) and KF gated cost
   max_dist: 0.5 # The reid matching threshold. Samples with larger distance are considered an invalid match
