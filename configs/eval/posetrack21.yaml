@@ -28,7 +28,7 @@ cfg:
   eval_mot: True
 
   bbox_column_for_eval: "bbox_ltwh"  # which bbox column to use for evaluation: {"bbox_ltwh", "track_bbox_kf_ltwh", ...}
-  eval_pose_on_all: True  # Evaluation pose estimation on all detections. If set to false, will evaluate pose estimation only on tracked detections (i.e. detections with a defined 'track_id')
+  eval_pose_on_all: False  # Evaluation pose estimation on all detections. If set to false, will evaluate pose estimation only on tracked detections (i.e. detections with a defined 'track_id')
   print_by_video: False
 
   posetrack_trackers_folder: "eval/posetrack"
