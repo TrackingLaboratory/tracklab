@@ -36,6 +36,7 @@ class Detection(object):
         self.keypoints = keypoints
         self.matched_with = None
         self.costs = {}
+
     def to_ltwh(self):
         return self.ltwh.copy()
 
