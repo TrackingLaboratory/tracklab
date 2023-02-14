@@ -7,17 +7,21 @@ from pbtrack.utils import wandb
 import torch
 import torch.multiprocessing
 
-torch.multiprocessing.set_sharing_strategy(
-    "file_system"
-)  # FIXME : why are we using too much file descriptors ?
-
 import logging
 
 log = logging.getLogger(__name__)
 
+def set_sharing_strategy():
+    torch.multiprocessing.set_sharing_strategy(
+        "file_system"
+    )  # FIXME : why are we using too much file descriptors ?
+
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def main(cfg):
+    # For Hydra and Slurm compatibility
+    set_sharing_strategy()  # Do not touch
+
     device = "cuda" if torch.cuda.is_available() else "cpu"  # TODO support Mac chips
     log.info(f"Using device: {device}. Starting instantiation of all the instances.")
 
@@ -78,6 +82,8 @@ def main(cfg):
 
         if tracker_state.save_file is not None:
             log.info(f"Saved state at : {tracker_state.save_file.resolve()}")
+
+    return 0
 
 
 if __name__ == "__main__":

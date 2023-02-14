@@ -101,7 +101,12 @@ class OpenPifPaf(Detector):
                         bbox_ltrb[3] - bbox_ltrb[1],
                     ]
                 )
-
+                if bbox_ltwh[2] < 1:
+                    log.warning("Bbox generated with a width of 0. Changed to 1.")
+                    bbox_ltwh[2] = 1
+                if bbox_ltwh[3] < 1:
+                    log.warning("Bbox generated with a height of 0. Changed to 1.")
+                    bbox_ltwh[2] = 1
                 detections.append(
                     Detection.create(
                         image_id=metadata.id,
