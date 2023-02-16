@@ -1,5 +1,4 @@
 load_file: null
 save_file: "trackerstate.pklz"
 compression: 0 # No compression, use 8 for compression
-load_step: reid # null/detection/reid/tracking, after the mentioned step
-json_file: "/home/vladimirsomers/datasets/tracking/PoseTrack21/author_predictions/baselines/outputs/tracking_baselines/corrtrack_w_reid_baseline/corrtrack_baseline/jt_thres_0.1_duplicate_ratio_0.6_oks_0.2_corr_threshold_0.3_win_len_2_min_keypoints_2_min_track_len_3_similarity_threshold_0.5_pp_joint_threshold_0.3_min_refinement_track_len_1_min_consecutive_len_1_inactive_patience_10/sequences"
+load_step: detection # null/detection/reid/tracking, after the mentioned step

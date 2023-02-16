@@ -10,13 +10,6 @@ from pbtrack.core.datastruct import Detection
 from pbtrack.utils.images import cv2_load_image
 from pbtrack.utils.coordinates import round_bbox_coordinates
 
-from pathlib import Path
-import pbtrack
-
-root_dir = Path(pbtrack.__file__).parents[1]
-sys.path.append(
-    str((root_dir / "plugins/detect/openpifpaf/src").resolve())
-)  # FIXME : ugly
 import openpifpaf
 
 import logging

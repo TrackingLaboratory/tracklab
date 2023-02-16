@@ -1,4 +1,4 @@
 load_file: null
 save_file: null
 compression: 0 # No compression, use 8 for compression
-load_step: tracking # null/detection/reid/tracking
+load_step: detection # null/detection/reid/tracking

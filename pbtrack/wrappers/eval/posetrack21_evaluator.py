@@ -1,32 +1,14 @@
 import os
-import sys
 import json
 import numpy as np
 import pandas as pd
 from tabulate import tabulate
 
 from pbtrack.core.evaluator import Evaluator as EvaluatorBase
-
-import pbtrack
-from pathlib import Path
 from pbtrack.utils import wandb
 
-root_dir = Path(pbtrack.__file__).parents[1]
-
-sys.path.append(
-    str((root_dir / "plugins/eval/PoseTrack21/eval/posetrack21").resolve())
-)  # FIXME : ugly
 import posetrack21
-
-sys.path.append(
-    str((root_dir / "plugins/eval/PoseTrack21/eval/mot").resolve())
-)  # FIXME : ugly
-from datasets.pt_warper import PTWrapper
-from evaluate_mot import get_mot_accum, evaluate_mot_accums
-
-sys.path.append(
-    str((root_dir / "plugins/eval/poseval").resolve())
-)  # FIXME : ugly
+import posetrack21_mot
 from poseval.eval_helpers import load_data_dir, printTable, Joint, metrics2dict
 from poseval.evaluateAP import evaluateAP
 from poseval.evaluateTracking import evaluateTracking
@@ -163,7 +145,7 @@ class PoseTrack21(EvaluatorBase):
             self._print_results(res_combined, res_by_video, 100)
             wandb.log(res_combined, "HOTA bb", res_by_video)
             # MOTA
-            dataset = PTWrapper(
+            dataset = posetrack21_mot.PTWrapper(
                 self.cfg.mot_gt_folder,
                 self.cfg.mot.dataset_path,
                 seqs,
@@ -173,7 +155,7 @@ class PoseTrack21(EvaluatorBase):
             for seq in dataset:
                 results = seq.load_results(os.path.join(trackers_folder, "results"))
                 mot_accums.append(
-                    get_mot_accum(
+                    posetrack21_mot.get_mot_accum(
                         results,
                         seq,
                         use_ignore_regions=self.cfg.mot.use_ignore_regions,
@@ -181,8 +163,8 @@ class PoseTrack21(EvaluatorBase):
                     )
                 )
             if mot_accums:
-                print("Tracking bbox results (MOTA):")
-                str_summary, summary = evaluate_mot_accums(
+                print("Posetrack mot results (MOTA):")
+                str_summary, summary = posetrack21_mot.evaluate_mot_accums(
                     mot_accums,
                     [str(s) for s in dataset if not s.no_gt],
                     generate_overall=True,

@@ -1,4 +1,4 @@
-load_file: "/auto/home/users/v/j/vjoosdtb/pb-track/outputs/test/2023-02-03/09-19-54/trackerstate.pklz"
+load_file: "PATHTO/trackerstate.pklz"
 save_file: "trackerstate.pklz"
 compression: 0 # No compression, use 8 for compression
 load_step: tracking # null/detection/reid/tracking, after the mentioned step

@@ -1,13 +1,13 @@
 defaults:
   - _self_
-  - detect: openpifpaf
-  - reid: bpbreid
-  - track: strong_sort
-  - engine: offline
-  - state: dont_keep
-  - visualization: visualization
   - dataset: posetrack21
+  - detect: openpifpaf
+  - engine: offline
+  - reid: bpbreid
   - eval: posetrack21
+  - state: dont_keep
+  - track: strong_sort
+  - visualization: visualization
 experiment_name: "???"
 data_dir: "???"
 
