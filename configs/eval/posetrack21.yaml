@@ -31,7 +31,7 @@ cfg:
   eval_pose_on_all: False  # Evaluation pose estimation on all detections. If set to false, will evaluate pose estimation only on tracked detections (i.e. detections with a defined 'track_id')
   print_by_video: False
 
-  posetrack_trackers_folder: "eval/posetrack"
+  posetrack_trackers_folder: "eval/posetrack21"
   posetrack_gt_folder: ${dataset.dataset_path}/posetrack_data/val
 
   mot_trackers_folder: "eval/mot"
