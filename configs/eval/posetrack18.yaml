@@ -9,4 +9,4 @@ cfg:
   print_by_video: False
 
   posetrack_trackers_folder: "eval/posetrack18"
-  posetrack_gt_folder: ${dataset.dataset_path}/val
+  posetrack_gt_folder: ${dataset.annotation_path}/val

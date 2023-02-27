@@ -152,8 +152,6 @@ class PoseTrack18(EvaluatorBase):
             inplace=True,
         )
         if "scores" not in predictions.columns:
-            # 'scores' can already be present if loaded from a json file with external predictions
-            # for PoseTrack21 author baselines, not using their provided score induces a big drop in performance
             predictions["scores"] = predictions["keypoints"].apply(lambda x: x[:, 2])
         predictions["track_id"] = predictions["id"]
         predictions["person_id"] = predictions["id"]
