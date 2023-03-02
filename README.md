@@ -44,7 +44,7 @@ git submodule update --init --recursive
 #### Create and activate a new environment
 
 ```bash
-conda create -y --name "pbtrack" python pip numpy
+conda create -n pbtrack python pytorch cudatoolkit torchvision pip -c pytorch -y
 conda activate pbtrack
 ```
 
@@ -53,6 +53,7 @@ Get into your repo and install the requirements with :
 
 ```bash
 pip install -r requirements.txt
+mim install mmcv-full
 ```
 
 #### Setup reid

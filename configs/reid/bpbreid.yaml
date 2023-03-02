@@ -1,7 +1,7 @@
 defaults:
   - dataset: default
 
-_target_: pbtrack.wrappers.reid.bpbreid_api.BPBReId
+_target_: pbtrack.wrappers.BPBReId
 job_id: "${oc.env:SLURM_JOBID,0}" # TODO
 save_path: reid
 cfg:

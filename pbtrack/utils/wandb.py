@@ -5,7 +5,7 @@ import pandas as pd
 
 keep_dict = {
     "dataset": ["dataset_path", "nframes", "nvid", "vids_dict"],
-    "detect": ["bbox", "predict", "train"],
+    "detect_multiple": ["bbox", "predict", "train"],
     "eval": ["mot"],
     "reid": ["data", "loss", "model", "sampler", "test", "train", "dataset"],
     "track": True,

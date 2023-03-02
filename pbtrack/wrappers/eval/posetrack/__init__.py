@@ -1,0 +1,2 @@
+from .posetrack18_evaluator import PoseTrack18 as PoseTrack18Evaluator
+from .posetrack21_evaluator import PoseTrack21 as PoseTrack21Evaluator

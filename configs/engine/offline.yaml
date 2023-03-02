@@ -1,9 +1,6 @@
 _target_: pbtrack.OfflineTrackingEngine
 
-model_detect: "???"
-model_reid: "???"
-model_track: "???"
-tracker_state: "???"
-detect_batchsize: 8
+detect_multi_batchsize: 8
+detect_single_batchsize: 32
 reid_batchsize: 32
 num_workers: 8

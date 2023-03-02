@@ -12,7 +12,7 @@ from .tracking_dataset import TrackingSet
 from .detections import Detections
 import logging
 
-from ...utils.coordinates import kp_to_bbox_w_threshold, bbox_ltrb2ltwh
+from pbtrack.utils.coordinates import kp_to_bbox_w_threshold, bbox_ltrb2ltwh
 
 log = logging.getLogger(__name__)
 
@@ -81,27 +81,39 @@ class TrackerState(AbstractContextManager):
         predictions = pd.DataFrame(detections)
         predictions.rename(columns={"bbox": "bbox_ltwh"}, inplace=True)
         predictions.bbox_ltwh = predictions.bbox_ltwh.apply(lambda x: np.array(x))
-        predictions['id'] = predictions.index
+        predictions["id"] = predictions.index
         predictions.rename(columns={"keypoints": "keypoints_xyc"}, inplace=True)
         predictions.keypoints_xyc = predictions.keypoints_xyc.apply(
             lambda x: np.reshape(np.array(x), (-1, 3))
         )
         if self.bbox_format == "ltrb":
             # TODO tracklets coming from Tracktor++ are in ltbr format
-            predictions.loc[predictions['bbox_ltwh'].notna(), 'bbox_ltwh'] = predictions[
-                predictions['bbox_ltwh'].notna()].bbox_ltwh.apply(
+            predictions.loc[
+                predictions["bbox_ltwh"].notna(), "bbox_ltwh"
+            ] = predictions[predictions["bbox_ltwh"].notna()].bbox_ltwh.apply(
                 lambda x: bbox_ltrb2ltwh(x)
             )
-        predictions.loc[predictions['bbox_ltwh'].isna(), 'bbox_ltwh'] = predictions[predictions['bbox_ltwh'].isna()].keypoints_xyc.apply(lambda x: kp_to_bbox_w_threshold(x, vis_threshold=0))
-        predictions['bbox_c'] = predictions.keypoints_xyc.apply(lambda x: x[:, 2].mean())
+        predictions.loc[predictions["bbox_ltwh"].isna(), "bbox_ltwh"] = predictions[
+            predictions["bbox_ltwh"].isna()
+        ].keypoints_xyc.apply(lambda x: kp_to_bbox_w_threshold(x, vis_threshold=0))
+        predictions["bbox_c"] = predictions.keypoints_xyc.apply(
+            lambda x: x[:, 2].mean()
+        )
         predictions = predictions.merge(
-            self.gt.image_metadatas[["video_id"]], how="left", left_on="image_id", right_index=True
+            self.gt.image_metadatas[["video_id"]],
+            how="left",
+            left_on="image_id",
+            right_index=True,
         )
         self.json_predictions = Detections(predictions)
         if self.do_tracking:
-            self.json_predictions.drop(["track_id"], axis=1, inplace=True)  # TODO NEED TO DROP track_id if we want to perform tracking
+            self.json_predictions.drop(
+                ["track_id"], axis=1, inplace=True
+            )  # TODO NEED TO DROP track_id if we want to perform tracking
         else:
-            self.json_predictions['track_bbox_kf_ltwh'] = self.json_predictions['bbox_ltwh']  # FIXME config to decide if track_bbox_kf_ltwh or bbox_ltwh should be used
+            self.json_predictions["track_bbox_kf_ltwh"] = self.json_predictions[
+                "bbox_ltwh"
+            ]  # FIXME config to decide if track_bbox_kf_ltwh or bbox_ltwh should be used
 
     def __call__(self, video_id):
         self.video_id = video_id
@@ -149,7 +161,9 @@ class TrackerState(AbstractContextManager):
             self.predictions = self.predictions[
                 ~(self.predictions["video_id"] == self.video_id)
             ]
-            self.predictions = pd.concat([self.predictions, detections])  # TODO UPDATE should update existing rows or append if new rows
+            self.predictions = pd.concat(
+                [self.predictions, detections]
+            )  # TODO UPDATE should update existing rows or append if new rows
 
     def save(self):
         """
@@ -178,7 +192,9 @@ class TrackerState(AbstractContextManager):
                 and False otherwise.
         """
         if self.json_file is not None:
-            return self.json_predictions[self.json_predictions.video_id == self.video_id]
+            return self.json_predictions[
+                self.json_predictions.video_id == self.video_id
+            ]
         if self.load_file is None:
             return None
 

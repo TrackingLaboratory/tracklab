@@ -6,8 +6,9 @@ from timeit import default_timer as timer
 from tqdm import tqdm
 
 from pbtrack.core import Detector, ReIdentifier, Tracker, EngineDatapipe
-from pbtrack.core.datastruct import Detections
 from pbtrack.core.datastruct.tracker_state import TrackerState
+from pbtrack.core.datastruct import Detections
+from pbtrack.visualization.visualization_engine import VisualisationEngine
 from pbtrack.utils.collate import default_collate
 from pbtrack.utils.images import cv2_load_image
 
@@ -23,26 +24,29 @@ warnings.filterwarnings(
 class OnlineTrackingEngine(pl.LightningModule):
     """Online tracking engine
 
-    Call with ::
-        engine = OnlineTrackingEngine(model_detect, model_reid, model_track)
-        trainer = pl.Trainer() # configure trainer
-        detections = trainer.predict(engine, pose_dataloader)
-        detections = pd.concat(detections)
-
     Args:
-        model_detect: Predicts pose detection
-        reidentifier: Predicts reid embeddings
-        model_track: Tracks using reid embeddings
+        detect_multi_model: Predicts pose detection
+        detect_single_model: Predicts single pose detection
+        reid_model: Predicts reid embeddings
+        track_model: Tracking algorithm
+        tracker_state: Running state of the tracking
+        vis_engine: Visualisation engine
+        detect_multi_batchsize: Batch size for multi detection
+        detect_single_batchsize: Batch size for single detection
+        reid_batchsize: Batch size for reid
+        num_workers: Number of workers for dataloaders
     """
 
     def __init__(
         self,
-        model_detect: Detector,
-        model_reid: ReIdentifier,
-        model_track: Tracker,
+        detect_multi_model: Detector,
+        detect_single_model: Detector,
+        reid_model: ReIdentifier,
+        track_model: Tracker,
         tracker_state: TrackerState,
-        vis_engine,
-        detect_batchsize: int,
+        vis_engine: VisualisationEngine,
+        detect_multi_batchsize: int,
+        detect_single_batchsize: int,
         reid_batchsize: int,
         num_workers: int,
     ):
@@ -51,22 +55,35 @@ class OnlineTrackingEngine(pl.LightningModule):
         self.trainer_track = pl.Trainer(enable_progress_bar=False)
         self.vis_engine = vis_engine  # TODO : Convert to callback
         self.tracker_state = tracker_state
-        self.model_detect = model_detect
-        self.model_reid = model_reid
-        self.model_track = model_track
         self.img_metadatas = tracker_state.gt.image_metadatas
         self.video_metadatas = tracker_state.gt.video_metadatas
-        self.detect_batchsize = detect_batchsize
+
+        self.detect_multi_model = detect_multi_model
+        self.detect_single_model = detect_single_model
+        self.reid_model = reid_model
+        self.track_model = track_model
+
+        self.detect_multi_batchsize = detect_multi_batchsize
+        self.detect_single_batchsize = detect_single_batchsize
         self.reid_batchsize = reid_batchsize
-        self.detection_datapipe = EngineDatapipe(self.model_detect)
-        self.detection_dl = DataLoader(
-            dataset=self.detection_datapipe,
-            batch_size=self.detect_batchsize,
-            collate_fn=type(self.model_detect).collate_fn,
+
+        self.multi_detect_datapipe = EngineDatapipe(self.detect_multi_model)
+        self.multi_detect_dl = DataLoader(
+            dataset=self.multi_detect_datapipe,
+            batch_size=self.detect_multi_batchsize,
+            collate_fn=type(self.detect_multi_model).collate_fn,
             num_workers=num_workers,
             persistent_workers=False,
         )
-        self.reid_datapipe = EngineDatapipe(self.model_reid)
+        self.single_detect_datapipe = EngineDatapipe(self.detect_single_model)
+        self.single_detect_dl = DataLoader(
+            dataset=self.single_detect_datapipe,
+            batch_size=self.detect_single_batchsize,
+            collate_fn=type(self.detect_single_model).collate_fn,
+            num_workers=num_workers,
+            persistent_workers=False,
+        )
+        self.reid_datapipe = EngineDatapipe(self.reid_model)
         self.reid_dl = DataLoader(
             dataset=self.reid_datapipe,
             batch_size=self.reid_batchsize,
@@ -74,7 +91,7 @@ class OnlineTrackingEngine(pl.LightningModule):
             collate_fn=default_collate,
             persistent_workers=False,
         )
-        self.track_datapipe = EngineDatapipe(self.model_track)
+        self.track_datapipe = EngineDatapipe(self.track_model)
         self.track_dl = DataLoader(
             dataset=self.track_datapipe,
             batch_size=2**16,
@@ -100,11 +117,15 @@ class OnlineTrackingEngine(pl.LightningModule):
             video_id: the video id. must be the same as video.name
 
         """
-        raise NotImplementedError("OnlineTrackingEngine is broken now, please use OfflineTrackingEngine")  # FIXME refactor all tracking engine without pytorch lightning
+        # FIXME TODO make it work again
+        # FIXME refactor all tracking engine without pytorch lightning
+        raise NotImplementedError(
+            "OnlineTrackingEngine is broken now, please use OfflineTrackingEngine"
+        )
         start = timer()
         imgs_meta = self.img_metadatas
         self.detection_datapipe.update(imgs_meta[imgs_meta.video_id == video_id])
-        self.model_track.reset()
+        self.track_model.reset()
 
         start_process = timer()
         detections_list = self.trainer_model.predict(
@@ -149,7 +170,7 @@ class OnlineTrackingEngine(pl.LightningModule):
             batch_detections = detections.loc[idxs]
             batch_metadatas = self.img_metadatas.loc[batch_detections.image_id]
             reid_detections.append(
-                self.model_reid.process(reid_batch, batch_detections, batch_metadatas)
+                self.reid_model.process(reid_batch, batch_detections, batch_metadatas)
             )
 
         if len(reid_detections) > 0:
@@ -161,14 +182,14 @@ class OnlineTrackingEngine(pl.LightningModule):
         track_detections = []
         for image_id, image_metadata in image_metadatas.iterrows():
             image = cv2_load_image(image_metadata.file_path)
-            self.model_track.prepare_next_frame(image)
+            self.track_model.prepare_next_frame(image)
             detections = reid_detections[reid_detections.image_id == image_id]
             self.track_datapipe.update(self.img_metadatas, detections)
             for idxs, track_batch in self.track_dl:
                 batch_detections = detections.loc[idxs]
                 batch_metadatas = self.img_metadatas.loc[batch_detections.image_id]
                 track_detections.append(
-                    self.model_track.process(
+                    self.track_model.process(
                         track_batch, image, batch_detections, batch_metadatas
                     )
                 )
@@ -188,7 +209,7 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
         start = timer()
         log.info(f"Starting tracking on video: {video_id}")
         with self.tracker_state(video_id) as tracker_state:
-            self.model_track.reset()
+            self.track_model.reset()
             imgs_meta = self.img_metadatas[self.img_metadatas.video_id == video_id]
             detections = tracker_state.load()
             loaded = detections is not None
@@ -196,43 +217,66 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
             reid_time = 0
             tracking_time = 0
 
-            if tracker_state.do_detection or not loaded:
-                self.detection_datapipe.update(imgs_meta)
-                model_detect = OfflineDetector(self.model_detect, imgs_meta)
-                start_detect = timer()
+            if (
+                tracker_state.do_detection or not loaded
+            ):  # FIXME adapt here for single and multiple detection
+                self.multi_detect_datapipe.update(imgs_meta)
+                multi_model_detect = OfflineDetector(self.detect_multi_model, imgs_meta)
+                start_multi_detect = timer()
                 detections_list = self.trainer_model.predict(
-                    model_detect, dataloaders=self.detection_dl
+                    multi_model_detect, dataloaders=self.multi_detect_dl
                 )
-                detect_time = timer() - start_detect
+                detect_multi_time = timer() - start_multi_detect
                 detections = pd.concat(detections_list)
             if detections.empty:
+                # FIXME not sure it is the right place to do this
+                # The tracker might want to update the state even if there is no detection
                 # video has not detections: nothing left to do ...
                 return detections
 
+            if (
+                tracker_state.do_detection or not loaded
+            ):  # FIXME do the tracker_state for single_detection
+                self.single_detect_datapipe.update(imgs_meta, detections)
+                single_model_detect = OfflineReider(
+                    self.detect_single_model, imgs_meta, detections
+                )  # FIXME change name of pl module
+                start_single_detect = timer()
+                detections_list = self.trainer_model.predict(
+                    single_model_detect, dataloaders=self.single_detect_dl
+                )
+                detect_single_time = timer() - start_single_detect
+                detections = pd.concat(detections_list)
+
             if tracker_state.do_reid or not loaded:
                 self.reid_datapipe.update(imgs_meta, detections)
-                model_reid = OfflineReider(self.model_reid, imgs_meta, detections)
+                reid_model = OfflineReider(self.reid_model, imgs_meta, detections)
                 start_reid = timer()
                 detections_list = self.trainer_model.predict(
-                    model_reid, dataloaders=self.reid_dl
+                    reid_model, dataloaders=self.reid_dl
                 )
                 reid_time = timer() - start_reid
                 detections = pd.concat(detections_list)
 
+            # Why isn't it done into a .predict() or .step() to keep
+            # the same way of doing things as before ?
             if tracker_state.do_tracking or not loaded:
                 track_detections = []
                 for image_id in tqdm(imgs_meta.index):
                     start_track = timer()
                     image = cv2_load_image(imgs_meta.loc[image_id].file_path)
-                    self.model_track.prepare_next_frame(image)
+                    self.track_model.prepare_next_frame(image)
                     image_detections = detections[detections.image_id == image_id]
                     if len(image_detections) != 0:
                         self.track_datapipe.update(imgs_meta, image_detections)
-                        model_track = OfflineTracker(
-                            self.model_track, imgs_meta.loc[[image_id]], image_detections, image
+                        track_model = OfflineTracker(
+                            self.track_model,
+                            imgs_meta.loc[[image_id]],
+                            image_detections,
+                            image,
                         )
                         detections_list = self.trainer_track.predict(
-                            model_track, dataloaders=self.track_dl
+                            track_model, dataloaders=self.track_dl
                         )
                         track_detections += detections_list if detections_list else []
                     tracking_time += timer() - start_track
@@ -248,8 +292,8 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
             self.vis_engine.run(tracker_state, video_id)
             vis_time = timer() - start_vis
             video_time = timer() - start
-            log.info(
-                f"Completed video in {video_time:0.2f}s. (Detect {detect_time:0.2f}s, reid "
+            log.info(  # FIXME make it more readable
+                f"Completed video in {video_time:0.2f}s. (Detect {detect_multi_time + detect_single_time:0.2f}s, reid "
                 + f"{reid_time:0.2f}s, track {tracking_time:0.2f}s, visualization {vis_time:0.2f}s "
                 + f"and rest {(video_time - detect_time - reid_time - tracking_time - vis_time):0.2f}s)"
             )
@@ -269,9 +313,9 @@ class OfflineDetector(pl.LightningModule):
 
 
 class OfflineReider(pl.LightningModule):
-    def __init__(self, model_reid, img_metadatas, detections):
+    def __init__(self, reid_model, img_metadatas, detections):
         super().__init__()
-        self.model_reid = model_reid
+        self.reid_model = reid_model
         self.img_metadatas = img_metadatas
         self.detections = detections
 
@@ -279,13 +323,13 @@ class OfflineReider(pl.LightningModule):
         idxs, batch = batch
         batch_detections = self.detections.loc[idxs]
         batch_metadatas = self.img_metadatas.loc[batch_detections.image_id]
-        return self.model_reid.process(batch, batch_detections, batch_metadatas)
+        return self.reid_model.process(batch, batch_detections, batch_metadatas)
 
 
 class OfflineTracker(pl.LightningModule):
-    def __init__(self, model_track, img_metadatas, detections, image):
+    def __init__(self, track_model, img_metadatas, detections, image):
         super().__init__()
-        self.model_track = model_track
+        self.track_model = track_model
         self.img_metadatas = img_metadatas
         self.detections = detections
         self.image = image
@@ -294,6 +338,6 @@ class OfflineTracker(pl.LightningModule):
         idxs, batch = batch
         batch_detections = self.detections.loc[idxs]
         batch_metadatas = self.img_metadatas.loc[batch_detections.image_id]
-        return self.model_track.process(
+        return self.track_model.process(
             batch, self.image, batch_detections, batch_metadatas
         )

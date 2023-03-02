@@ -1,4 +1,5 @@
-_target_: pbtrack.visualization.visualization_engine.VisualisationEngine
+_target_: pbtrack.VisualisationEngine
+
 cfg:
   save_images: False
   save_videos: False

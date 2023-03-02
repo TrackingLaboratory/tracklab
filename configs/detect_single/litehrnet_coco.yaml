@@ -1,0 +1,25 @@
+_target_: pbtrack.wrappers.MMPose
+
+cfg:
+  instance_min_confidence: 0.1  # threshold for np.mean(keypoint_confidences)
+  keypoint_min_confidence: 0.1  # threshold for keypoint_confidence
+
+  path_to_config: ${project_dir}/plugins/detect/mmpose/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/litehrnet_30_coco_384x288.py
+  path_to_checkpoint: ${project_dir}/weights/mmpose/litehrnet30_coco_384x288-a3aef5c4_20210626.pth
+  download_url: https://download.openmmlab.com/mmpose/top_down/litehrnet/litehrnet30_coco_384x288-a3aef5c4_20210626.pth
+
+# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/litehrnet_18_coco_256x192.py
+# https://download.openmmlab.com/mmpose/top_down/litehrnet/litehrnet18_coco_256x192-6bace359_20211230.pth
+# AP: 0.643
+
+# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/litehrnet_18_coco_384x288.py
+# https://download.openmmlab.com/mmpose/top_down/litehrnet/litehrnet18_coco_384x288-8d4dac48_20211230.pth
+# AP: 0.677
+
+# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/litehrnet_30_coco_256x192.py
+# https://download.openmmlab.com/mmpose/top_down/litehrnet/litehrnet30_coco_256x192-4176555b_20210626.pth
+# AP: 0.675
+
+# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/litehrnet_30_coco_384x288.py
+# https://download.openmmlab.com/mmpose/top_down/litehrnet/litehrnet30_coco_384x288-a3aef5c4_20210626.pth
+# AP: 0.7

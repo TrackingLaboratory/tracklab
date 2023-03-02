@@ -4,10 +4,13 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from pbtrack.core.datastruct.tracking_dataset import TrackingDataset, TrackingSet
-from pbtrack.core.datastruct.image_metadatas import ImageMetadatas
-from pbtrack.core.datastruct.video_metadatas import VideoMetadatas
-from pbtrack.core.datastruct import Detections
+from pbtrack import (
+    TrackingDataset,
+    TrackingSet,
+    ImageMetadatas,
+    VideoMetadatas,
+    Detections,
+)
 
 
 class PoseTrack21(TrackingDataset):

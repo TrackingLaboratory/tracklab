@@ -1,16 +1,14 @@
 import sys
 import torch
 import numpy as np
-
 from PIL import Image
 from omegaconf.listconfig import ListConfig
 
-from pbtrack.core.detector import Detector
-from pbtrack.core.datastruct import Detection
+import openpifpaf
+
+from pbtrack.core.detector import Detector, Detection
 from pbtrack.utils.images import cv2_load_image
 from pbtrack.utils.coordinates import round_bbox_coordinates
-
-import openpifpaf
 
 import logging
 

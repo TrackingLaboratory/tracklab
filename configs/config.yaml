@@ -1,13 +1,15 @@
 defaults:
   - _self_
   - dataset: posetrack21
-  - detect: openpifpaf
+  - detect_multiple: yolox
+  - detect_single: hrnet_posetrack18
   - engine: offline
-  - reid: bpbreid
   - eval: posetrack21
+  - reid: bpbreid
   - state: dont_keep
   - track: strong_sort
   - visualization: visualization
+
 experiment_name: "???"
 data_dir: "???"
 

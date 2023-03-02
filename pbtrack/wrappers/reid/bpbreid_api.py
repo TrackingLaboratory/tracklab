@@ -8,18 +8,17 @@ from yacs.config import CfgNode as CN
 
 from .bpbreid_dataset import ReidDataset
 
+from pbtrack import ImageMetadata, Detection, ReIdentifier
 from pbtrack.utils.images import cv2_load_image
-from pbtrack.core.datastruct import ImageMetadata, Detection
-from pbtrack.core.reidentifier import ReIdentifier
 from pbtrack.utils.coordinates import (
     clip_bbox_ltrb_to_img_dim,
     kp_img_to_kp_bbox,
     rescale_keypoints, round_bbox_coordinates,
 )
+from pbtrack.utils.collate import Unbatchable
 from plugins.reid.bpbreid.scripts.main import build_config, build_torchreid_model_engine
 from plugins.reid.bpbreid.tools.feature_extractor import FeatureExtractor
 from plugins.reid.bpbreid.torchreid.utils.imagetools import build_gaussian_heatmaps
-from pbtrack.utils.collate import Unbatchable
 
 import pbtrack
 from pathlib import Path

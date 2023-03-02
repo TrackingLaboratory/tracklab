@@ -29,24 +29,28 @@ def main(cfg):
 
     # Initiate all the instances
     tracking_dataset = instantiate(cfg.dataset)
-    model_detect = instantiate(cfg.detect, device=device)
-    model_reid = instantiate(
+    detect_multi_model = instantiate(cfg.detect_multiple, device=device)
+    detect_single_model = instantiate(cfg.detect_single, device=device)
+    reid_model = instantiate(
         cfg.reid,
         tracking_dataset=tracking_dataset,
         device=device,
-        model_detect=model_detect,
+        model_detect=None,  # FIXME
     )
-    model_track = instantiate(cfg.track, device=device)
+    track_model = instantiate(cfg.track, device=device)
     vis_engine = instantiate(cfg.visualization)
     evaluator = instantiate(cfg.eval)
 
+    # FIXME, je pense qu'il faut repenser l'entrainement dans ce script
+    # On peut pas entrainer 3 modèles dans un script quoi qu'il arrive
+    # Il faut que l'entrainement soit fait dans un script propre à la librairie
     if cfg.train_detect:
         log.info("Training detection model.")
-        model_detect.train()
+        detect_multi_model.train()
 
     if cfg.train_reid:
         log.info("Training reid model.")
-        model_reid.train()
+        reid_model.train()
 
     if cfg.test_tracking:
         log.info("Starting tracking operation.")
@@ -60,9 +64,10 @@ def main(cfg):
         # Run tracking and visualization
         tracking_engine = instantiate(
             cfg.engine,
-            model_detect=model_detect,
-            model_reid=model_reid,
-            model_track=model_track,
+            detect_multi_model=detect_multi_model,
+            detect_single_model=detect_single_model,
+            reid_model=reid_model,
+            track_model=track_model,
             tracker_state=tracker_state,
             vis_engine=vis_engine,
         )
