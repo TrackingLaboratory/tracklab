@@ -6,7 +6,7 @@ from omegaconf.listconfig import ListConfig
 
 import openpifpaf
 
-from pbtrack.core.detector import Detector, Detection
+from pbtrack import Detector, Detection
 from pbtrack.utils.images import cv2_load_image
 from pbtrack.utils.coordinates import round_bbox_coordinates
 
@@ -73,17 +73,18 @@ class OpenPifPaf(Detector):
                 keypoints = prediction.data
 
                 w, h = meta["width_height"]
-                keypoints[:, 0] = np.clip(keypoints[:, 0], 0, w - 1)
-                keypoints[:, 1] = np.clip(keypoints[:, 1], 0, h - 1)
+                # FIXME do we want this ?
+                keypoints[:, 0] = np.clip(keypoints[:, 0], 0, w)
+                keypoints[:, 1] = np.clip(keypoints[:, 1], 0, h)
                 keypoints[:, 2] = np.clip(keypoints[:, 2], 0, 1)
 
                 bbox_ltrb = self.keypoints_to_bbox(keypoints)
                 bbox_ltrb = round_bbox_coordinates(bbox_ltrb)
 
-                bbox_ltrb[0] = np.clip(bbox_ltrb[0], 0, w - 1)
-                bbox_ltrb[1] = np.clip(bbox_ltrb[1], 0, h - 1)
-                bbox_ltrb[2] = np.clip(bbox_ltrb[2], 0, w - 1)
-                bbox_ltrb[3] = np.clip(bbox_ltrb[3], 0, h - 1)
+                bbox_ltrb[0] = np.clip(bbox_ltrb[0], 0, w)
+                bbox_ltrb[1] = np.clip(bbox_ltrb[1], 0, h)
+                bbox_ltrb[2] = np.clip(bbox_ltrb[2], 0, w)
+                bbox_ltrb[3] = np.clip(bbox_ltrb[3], 0, h)
                 bbox_ltwh = np.array(
                     [
                         bbox_ltrb[0],

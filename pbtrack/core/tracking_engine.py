@@ -1,9 +1,10 @@
 import pandas as pd
-import pytorch_lightning as pl
-import logging
-from torch.utils.data import DataLoader
-from timeit import default_timer as timer
 from tqdm import tqdm
+from omegaconf import DictConfig
+from timeit import default_timer as timer
+
+import pytorch_lightning as pl
+from torch.utils.data import DataLoader
 
 from pbtrack.core import Detector, ReIdentifier, Tracker, EngineDatapipe
 from pbtrack.core.datastruct.tracker_state import TrackerState
@@ -11,6 +12,8 @@ from pbtrack.core.datastruct import Detections
 from pbtrack.visualization.visualization_engine import VisualisationEngine
 from pbtrack.utils.collate import default_collate
 from pbtrack.utils.images import cv2_load_image
+
+import logging
 
 log = logging.getLogger(__name__)
 
@@ -51,6 +54,8 @@ class OnlineTrackingEngine(pl.LightningModule):
         num_workers: int,
     ):
         super().__init__()
+        self.detect_is_top_down = type(detect_single_model) != DictConfig
+
         self.trainer_model = pl.Trainer()
         self.trainer_track = pl.Trainer(enable_progress_bar=False)
         self.vis_engine = vis_engine  # TODO : Convert to callback
@@ -75,14 +80,15 @@ class OnlineTrackingEngine(pl.LightningModule):
             num_workers=num_workers,
             persistent_workers=False,
         )
-        self.single_detect_datapipe = EngineDatapipe(self.detect_single_model)
-        self.single_detect_dl = DataLoader(
-            dataset=self.single_detect_datapipe,
-            batch_size=self.detect_single_batchsize,
-            collate_fn=type(self.detect_single_model).collate_fn,
-            num_workers=num_workers,
-            persistent_workers=False,
-        )
+        if self.detect_is_top_down:
+            self.single_detect_datapipe = EngineDatapipe(self.detect_single_model)
+            self.single_detect_dl = DataLoader(
+                dataset=self.single_detect_datapipe,
+                batch_size=self.detect_single_batchsize,
+                collate_fn=type(self.detect_single_model).collate_fn,
+                num_workers=num_workers,
+                persistent_workers=False,
+            )
         self.reid_datapipe = EngineDatapipe(self.reid_model)
         self.reid_dl = DataLoader(
             dataset=self.reid_datapipe,
@@ -213,7 +219,8 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
             imgs_meta = self.img_metadatas[self.img_metadatas.video_id == video_id]
             detections = tracker_state.load()
             loaded = detections is not None
-            detect_time = 0
+            detect_multi_time = 0
+            detect_single_time = 0
             reid_time = 0
             tracking_time = 0
 
@@ -234,7 +241,7 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                 # video has not detections: nothing left to do ...
                 return detections
 
-            if (
+            if self.detect_is_top_down and (
                 tracker_state.do_detection or not loaded
             ):  # FIXME do the tracker_state for single_detection
                 self.single_detect_datapipe.update(imgs_meta, detections)
@@ -295,7 +302,7 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
             log.info(  # FIXME make it more readable
                 f"Completed video in {video_time:0.2f}s. (Detect {detect_multi_time + detect_single_time:0.2f}s, reid "
                 + f"{reid_time:0.2f}s, track {tracking_time:0.2f}s, visualization {vis_time:0.2f}s "
-                + f"and rest {(video_time - detect_time - reid_time - tracking_time - vis_time):0.2f}s)"
+                + f"and rest {(video_time - detect_multi_time - detect_single_time - reid_time - tracking_time - vis_time):0.2f}s)"
             )
 
 

@@ -2,7 +2,6 @@ import os
 import torch
 import requests
 import numpy as np
-import pandas as pd
 from tqdm import tqdm
 
 import mmcv
@@ -32,7 +31,6 @@ class MMPose(Detector):
         self.cfg = cfg
         self.check_checkpoint(cfg.path_to_checkpoint, cfg.download_url)
         self.model = init_pose_model(cfg.path_to_config, cfg.path_to_checkpoint, device)
-        self.model.cfg.data.test.data_cfg.frame_weight_test = [1] * 8
         self.device = device
 
     @torch.no_grad()
