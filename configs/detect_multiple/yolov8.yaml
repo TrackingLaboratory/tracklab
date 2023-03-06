@@ -1,0 +1,8 @@
+_target_: pbtrack.wrappers.YOLOv8
+
+cfg:
+  # model available :
+  # #yolov8n.pt, yolov8s.pt, yolov8m.pt, yolov8l.pt, yolov8x.pt, yolov8x6.pt
+  model_name: yolov8x6.pt
+
+  bbox_min_confidence: 0.1  # threshold for bbox_confidence

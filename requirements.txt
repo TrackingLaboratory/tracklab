@@ -8,3 +8,4 @@
 hydra-core
 pytorch_lightning
 openmim
+ultralytics
