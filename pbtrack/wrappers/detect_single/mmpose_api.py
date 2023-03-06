@@ -1,14 +1,22 @@
+import copy
+from functools import partial
 import os
+import cv2
 import torch
 import requests
 import numpy as np
 from tqdm import tqdm
 
 import mmcv
-from mmpose.apis import init_pose_model, inference_top_down_pose_model
+from mmpose.apis import init_pose_model
+from mmcv.parallel import collate, scatter
+from mmpose.datasets.dataset_info import DatasetInfo
+from mmpose.datasets.pipelines import Compose, ToTensor
+
 
 from pbtrack import ImageMetadata, Detections, ImageMetadatas, Detector, Detection
 from pbtrack.utils.images import cv2_load_image
+
 
 import logging
 
@@ -24,36 +32,71 @@ def collate_fn(batch):
     return idxs, (crops, bboxes, shapes)
 
 
+def mmpose_collate(batch):
+    return collate(batch, len(batch))
+
 class MMPose(Detector):
-    collate_fn = collate_fn
+    collate_fn = mmpose_collate
 
     def __init__(self, cfg, device):
         self.cfg = cfg
         self.check_checkpoint(cfg.path_to_checkpoint, cfg.download_url)
         self.model = init_pose_model(cfg.path_to_config, cfg.path_to_checkpoint, device)
         self.device = device
+        
+        cfg = self.model.cfg
+        self.dataset_info = DatasetInfo(cfg.dataset_info)
+        self.test_pipeline = Compose(cfg.test_pipeline)
+        # _pipeline_gpu_speedup(self.test_pipeline, device)
+
+        self.flip_pairs = self.dataset_info.flip_pairs
+        self.collate_fn = partial(self.collate_fn, samples_per_gpu=32)
+
 
     @torch.no_grad()
     def preprocess(self, detection: Detection, metadata: ImageMetadata):
+        cfg = self.model.cfg
         image = cv2_load_image(metadata.file_path)
         ltwh = detection.bbox_ltwh
         ltrb = self.sanitize_bbox(ltwh, (image.shape[1], image.shape[0]))
         crop = image[ltrb[1] : ltrb[3], ltrb[0] : ltrb[2]]
-        return {
-            "crop": crop,
-            "bbox_offset": ltrb[:2],
-            "shape": (image.shape[1], image.shape[0]),
+        bbox = np.array([0, 0, crop.shape[1], crop.shape[0]])
+        data = {
+            "bbox": bbox,
+            "img": crop,
+            "bbox_score": 1.0,
+            "bbox_id": 0,
+            "dataset": self.dataset_info.dataset_name,
+            "joints_3d": np.zeros((cfg.data_cfg.num_joints, 3), dtype=np.float32),
+            "joints_3d_visible": np.zeros((cfg.data_cfg.num_joints, 3), dtype=np.float32),
+            "rotation": 0,
+            "ann_info": {
+                "image_size": np.array(cfg.data_cfg['image_size']),
+                "num_joints": cfg.data_cfg.num_joints,
+                "flip_pairs": self.flip_pairs,             
+            },
         }
+        data = self.test_pipeline(data)
+        data["img_metas"]._data["bbox_offset"] = ltrb[:2]
+        data["img_metas"]._data["shape"] = (image.shape[1], image.shape[0])
+        return data
 
     @torch.no_grad()
     def process(self, batch, detections: Detections, metadatas: ImageMetadatas):
-        crops, bbox_offsets, shapes = batch
+        batch = scatter(batch, [self.device])[0]
+        with torch.no_grad():
+            kp_results = self.model(
+                img=batch["img"],
+                img_metas=batch["img_metas"],
+                return_loss=False,
+                return_heatmap=False,
+            )["preds"]
         results = []
-        for crop, bbox_offset, shape in zip(crops, bbox_offsets, shapes):
-            result, _ = inference_top_down_pose_model(self.model, crop)
-            assert len(result) == 1
+        for result, img_metas in zip(kp_results, batch["img_metas"]):
+            bbox_offset = img_metas["bbox_offset"]
+            shape = img_metas["shape"]
             results.append(
-                self.sanitize_keypoints(result[0]["keypoints"], bbox_offset, shape)
+                self.sanitize_keypoints(result, bbox_offset, shape)
             )
         detections["keypoints_xyc"] = results
         return detections
@@ -98,3 +141,10 @@ class MMPose(Detector):
                 print("ERROR, something went wrong while downloading or writing.")
             else:
                 print("Checkpoint downloaded successfully")
+
+
+
+def _pipeline_gpu_speedup(pipeline, device):
+    for t in pipeline.transforms:
+        if isinstance(t, ToTensor):
+            t.device = device
