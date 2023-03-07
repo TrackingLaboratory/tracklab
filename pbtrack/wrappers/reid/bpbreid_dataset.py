@@ -552,6 +552,10 @@ class ReidDataset(ImageDataset):
         if self.eval_metric == 'mot_inter_video' or self.multi_video_queries_only:
             # keep only queries that are in more than one video
             queries_per_pid = queries_per_pid.droplevel(level=0).groupby("person_id")['video_id'].filter(lambda g: (g.nunique() > 1)).reset_index()
+            assert len(queries_per_pid) != 0, "There were no identity with more than one videos to be used as queries. " \
+                                              "Try setting 'multi_video_queries_only' to False or not using " \
+                                              "eval_metric='mot_inter_video' or adjust the settings to sample a " \
+                                              "bigger ReID dataset."
         gt_dets.loc[gt_dets.split != "none", "split"] = "gallery"
         gt_dets.loc[gt_dets.id.isin(queries_per_pid.id), "split"] = "query"
 
