@@ -45,3 +45,4 @@ dataset_path: ${data_dir}/PoseTrack21
 #  "024575_mpii_test",  # dancers with similar appearance and occlusions
 #  "009473_mpii_test",  # Two dancers with very similar appearance, heavily occluding each other + lot of ignore regions.
 #  "015301_mpii_test",  # Fanfare walking from left to right, well visible, many people but easy to track.
+#  "022691_mpii_test",  # Very interesting person occluded multiple times
