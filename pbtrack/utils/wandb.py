@@ -3,9 +3,27 @@ import wandb
 from omegaconf import OmegaConf
 import pandas as pd
 
+# FIXME not sure it is the right to do that. It is annoying to update this every time we add a new config
 keep_dict = {
     "dataset": ["dataset_path", "nframes", "nvid", "vids_dict"],
-    "detect_multiple": ["bbox", "predict", "train"],
+    "detect_multiple": [
+        "path_to_config",
+        "bbox_min_confidence",
+        "instance_min_confidence",
+        "keypoint_min_confidence",
+        "bbox",
+        "predict",
+        "train",
+    ],
+    "detect_single": [
+        "path_to_config",
+        "bbox_min_confidence",
+        "instance_min_confidence",
+        "keypoint_min_confidence",
+        "bbox",
+        "predict",
+        "train",
+    ],
     "eval": ["mot"],
     "reid": ["data", "loss", "model", "sampler", "test", "train", "dataset"],
     "track": True,
