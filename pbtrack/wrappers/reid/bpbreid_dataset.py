@@ -93,7 +93,7 @@ class ReidDataset(ImageDataset):
             persistent_workers=False,
         )
         self.eval_metric = self.reid_config.eval_metric
-        self.multi_video_queries_only = self.reid_config.self.multi_video_queries_only
+        self.multi_video_queries_only = self.reid_config.multi_video_queries_only
 
         assert (
             self.reid_config.train.max_samples_per_id
