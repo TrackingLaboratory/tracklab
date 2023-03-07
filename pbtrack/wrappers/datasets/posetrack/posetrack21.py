@@ -11,6 +11,11 @@ from pbtrack.core.datastruct import Detections
 
 
 class PoseTrack21(TrackingDataset):
+    """
+    Train set: 43603 images
+    Val set: 20161 images
+    Test set: ??? images
+    """
     annotations_dir = "posetrack_data"
 
     def __init__(self, dataset_path: str, *args, **kwargs):
