@@ -31,7 +31,8 @@ keep_dict = {
 
 
 def normalize_subdict(subdict):
-    subdict["target"] = subdict.pop("_target_")
+    if "_target_" in subdict:
+        subdict["target"] = subdict.pop("_target_")
     if "cfg" in subdict:
         for k, v in subdict["cfg"].items():
             subdict[k] = v

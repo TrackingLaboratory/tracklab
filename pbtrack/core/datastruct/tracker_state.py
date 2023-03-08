@@ -1,4 +1,5 @@
 import json
+import os
 from contextlib import AbstractContextManager
 from os.path import abspath
 from pathlib import Path
@@ -18,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 class TrackerState(AbstractContextManager):
-    SAVE_COLUMNS = dict(
+    LOAD_COLUMNS = dict(
         detection=[
             "image_id",
             "id",
@@ -26,7 +27,6 @@ class TrackerState(AbstractContextManager):
             "bbox_c",
             "keypoints_xyc",
             "category_id",
-            "person_id",
             "video_id",
         ],
         reid=[
@@ -34,7 +34,7 @@ class TrackerState(AbstractContextManager):
             "visibility_scores",
             "body_masks",
         ],
-        tracking=["track_bbox_tlwh", "track_bbox_conf", "track_id"],
+        tracking=["track_bbox_tlwh", "track_bbox_conf", "track_id", "person_id"],
     )
 
     def __init__(
@@ -44,7 +44,7 @@ class TrackerState(AbstractContextManager):
         json_file=None,  # TODO merge with above behavior
         save_file=None,
         compression=zipfile.ZIP_STORED,
-        load_step="reid",
+        load_step=None,
         bbox_format=None,
     ):
         self.gt = tracking_set
@@ -53,13 +53,19 @@ class TrackerState(AbstractContextManager):
         self.load_file = Path(load_file) if load_file else None
         self.save_file = Path(save_file) if save_file else None
         self.compression = compression
-        self.SAVE_COLUMNS["reid"] += self.SAVE_COLUMNS["detection"]
-        self.SAVE_COLUMNS["tracking"] += self.SAVE_COLUMNS["reid"]
-        self.save_columns = self.SAVE_COLUMNS[load_step]
+        self.LOAD_COLUMNS["reid"] += self.LOAD_COLUMNS["detection"]
+        self.LOAD_COLUMNS["tracking"] += self.LOAD_COLUMNS["reid"]
+        if load_step:
+            self.load_columns = (
+                self.LOAD_COLUMNS[load_step]
+                if load_step not in ["detect_multi", "detect_single"]
+                else self.LOAD_COLUMNS["detection"]
+            )
         self.zf = None
         self.video_id = None
-        self.do_detection = load_step == None
-        self.do_reid = load_step == "detection" or self.do_detection
+        self.do_detect_multi = load_step is None
+        self.do_detect_single = load_step == "detect_multi" or self.do_detect_multi
+        self.do_reid = load_step == "detect_single" or self.do_detect_single
         self.do_tracking = load_step == "reid" or self.do_reid
         self.bbox_format = bbox_format
 
@@ -172,6 +178,7 @@ class TrackerState(AbstractContextManager):
         if self.save_file is None:
             return
         log.info(f"saving to {abspath(self.save_file)}")
+        os.makedirs(os.path.dirname(self.save_file), exist_ok=True)
         assert self.video_id is not None, "Save can only be called in a contextmanager"
         assert (
             self.predictions is not None
@@ -204,7 +211,7 @@ class TrackerState(AbstractContextManager):
             with self.zf["load"].open(f"{self.video_id}.pkl", "r") as fp:
                 video_detections = pickle.load(fp)
                 self.update(video_detections)
-                return video_detections[self.save_columns]
+                return video_detections[self.load_columns]
         else:
             log.info(f"{self.video_id} not in pklz file")
             return None

@@ -1,6 +1,8 @@
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from omegaconf import DictConfig
+from tabulate import tabulate
 from timeit import default_timer as timer
 
 import pytorch_lightning as pl
@@ -72,18 +74,18 @@ class OnlineTrackingEngine(pl.LightningModule):
         self.detect_single_batchsize = detect_single_batchsize
         self.reid_batchsize = reid_batchsize
 
-        self.multi_detect_datapipe = EngineDatapipe(self.detect_multi_model)
-        self.multi_detect_dl = DataLoader(
-            dataset=self.multi_detect_datapipe,
+        self.detect_multi_datapipe = EngineDatapipe(self.detect_multi_model)
+        self.detect_multi_dl = DataLoader(
+            dataset=self.detect_multi_datapipe,
             batch_size=self.detect_multi_batchsize,
             collate_fn=type(self.detect_multi_model).collate_fn,
             num_workers=num_workers,
             persistent_workers=False,
         )
         if self.detect_is_top_down:
-            self.single_detect_datapipe = EngineDatapipe(self.detect_single_model)
-            self.single_detect_dl = DataLoader(
-                dataset=self.single_detect_datapipe,
+            self.detect_single_datapipe = EngineDatapipe(self.detect_single_model)
+            self.detect_single_dl = DataLoader(
+                dataset=self.detect_single_datapipe,
                 batch_size=self.detect_single_batchsize,
                 collate_fn=type(self.detect_single_model).collate_fn,
                 num_workers=num_workers,
@@ -123,8 +125,8 @@ class OnlineTrackingEngine(pl.LightningModule):
             video_id: the video id. must be the same as video.name
 
         """
-        # FIXME TODO make it work again
-        # FIXME refactor all tracking engine without pytorch lightning
+        # TODO make it work again
+        # TODO refactor all tracking engine without pytorch lightning
         raise NotImplementedError(
             "OnlineTrackingEngine is broken now, please use OfflineTrackingEngine"
         )
@@ -213,7 +215,6 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
 
     def video_step(self, video, video_id):
         start = timer()
-        log.info(f"Starting tracking on video: {video_id}")
         with self.tracker_state(video_id) as tracker_state:
             self.track_model.reset()
             imgs_meta = self.img_metadatas[self.img_metadatas.video_id == video_id]
@@ -222,16 +223,16 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
             detect_multi_time = 0
             detect_single_time = 0
             reid_time = 0
-            tracking_time = 0
+            track_time = 0
 
-            if (
-                tracker_state.do_detection or not loaded
-            ):  # FIXME adapt here for single and multiple detection
-                self.multi_detect_datapipe.update(imgs_meta)
-                multi_model_detect = OfflineDetector(self.detect_multi_model, imgs_meta)
+            if tracker_state.do_detect_multi or not loaded:
+                self.detect_multi_datapipe.update(imgs_meta)
+                detect_multi_model = OfflineMultiDetector(
+                    self.detect_multi_model, imgs_meta
+                )
                 start_multi_detect = timer()
                 detections_list = self.trainer_model.predict(
-                    multi_model_detect, dataloaders=self.multi_detect_dl
+                    detect_multi_model, dataloaders=self.detect_multi_dl
                 )
                 detect_multi_time = timer() - start_multi_detect
                 detections = pd.concat(detections_list)
@@ -242,15 +243,15 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                 return detections
 
             if self.detect_is_top_down and (
-                tracker_state.do_detection or not loaded
-            ):  # FIXME do the tracker_state for single_detection
-                self.single_detect_datapipe.update(imgs_meta, detections)
-                single_model_detect = OfflineReider(
+                tracker_state.do_detect_single or not loaded
+            ):
+                self.detect_single_datapipe.update(imgs_meta, detections)
+                detect_single_model = OfflineSingleDetector(
                     self.detect_single_model, imgs_meta, detections
-                )  # FIXME change name of pl module
+                )
                 start_single_detect = timer()
                 detections_list = self.trainer_model.predict(
-                    single_model_detect, dataloaders=self.single_detect_dl
+                    detect_single_model, dataloaders=self.detect_single_dl
                 )
                 detect_single_time = timer() - start_single_detect
                 detections = pd.concat(detections_list)
@@ -265,8 +266,7 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                 reid_time = timer() - start_reid
                 detections = pd.concat(detections_list)
 
-            # Why isn't it done into a .predict() or .step() to keep
-            # the same way of doing things as before ?
+            # FIXME: Why isn't it done into a .predict() or .step() to keep the same way of doing things as before ?
             if tracker_state.do_tracking or not loaded:
                 track_detections = []
                 for image_id in tqdm(imgs_meta.index):
@@ -286,7 +286,7 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                             track_model, dataloaders=self.track_dl
                         )
                         track_detections += detections_list if detections_list else []
-                    tracking_time += timer() - start_track
+                    track_time += timer() - start_track
 
                 if len(track_detections) > 0:
                     detections = pd.concat(track_detections)
@@ -299,24 +299,59 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
             self.vis_engine.run(tracker_state, video_id)
             vis_time = timer() - start_vis
             video_time = timer() - start
-            log.info(  # FIXME make it more readable
-                f"Completed video in {video_time:0.2f}s. (Detect {detect_multi_time + detect_single_time:0.2f}s, reid "
-                + f"{reid_time:0.2f}s, track {tracking_time:0.2f}s, visualization {vis_time:0.2f}s "
-                + f"and rest {(video_time - detect_multi_time - detect_single_time - reid_time - tracking_time - vis_time):0.2f}s)"
+            log.info(
+                "\n" +
+                tabulate(
+                    [
+                        [
+                            f"{video_time:.4f}",
+                            f"{detect_multi_time:.2f}",
+                            f"{detect_single_time:.2f}",
+                            f"{reid_time:.2f}",
+                            f"{track_time:.2f}",
+                            f"{vis_time:.2f}",
+                        ]
+                    ],
+                    headers=[
+                        "Total time (s)",
+                        "Detect multiple",
+                        "Detect single",
+                        "Reid",
+                        "Track",
+                        "Visualization",
+                    ],
+                    tablefmt="plain",
+                )
             )
 
 
-class OfflineDetector(pl.LightningModule):
-    def __init__(self, model_detect, img_metadatas):
+class OfflineMultiDetector(pl.LightningModule):
+    def __init__(self, detect_multi_model, img_metadatas):
         super().__init__()
-        self.model_detect = model_detect
+        self.detect_multi_model = detect_multi_model
         self.img_metadatas = img_metadatas
 
     def predict_step(self, batch, batch_idx: int):
         idxs, batch = batch
         image_metadatas = self.img_metadatas.loc[idxs]
-        detections = Detections(self.model_detect.process(batch, image_metadatas))
+        detections = Detections(self.detect_multi_model.process(batch, image_metadatas))
         return detections
+
+
+class OfflineSingleDetector(pl.LightningModule):
+    def __init__(self, detect_single_model, img_metadatas, detections):
+        super().__init__()
+        self.detect_single_model = detect_single_model
+        self.img_metadatas = img_metadatas
+        self.detections = detections
+
+    def predict_step(self, batch, batch_idx: int):
+        idxs, batch = batch
+        batch_detections = self.detections.loc[idxs]
+        batch_metadatas = self.img_metadatas.loc[batch_detections.image_id]
+        return self.detect_single_model.process(
+            batch, batch_detections, batch_metadatas
+        )
 
 
 class OfflineReider(pl.LightningModule):

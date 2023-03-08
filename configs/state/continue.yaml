@@ -1,4 +1,0 @@
-load_file: "PATHTO/trackerstate.pklz"
-save_file: "trackerstate.pklz"
-compression: 0 # No compression, use 8 for compression
-load_step: tracking # null/detection/reid/tracking, after the mentioned step
