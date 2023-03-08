@@ -1,0 +1,25 @@
+_target_: pbtrack.wrappers.MMPose
+
+cfg:
+  instance_min_confidence: 0.1  # threshold for np.mean(keypoint_confidences)
+  keypoint_min_confidence: 0.1  # threshold for keypoint_confidence
+
+  path_to_config: ${project_dir}/plugins/detect/mmpose/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_384x288_udp.py
+  path_to_checkpoint: ${project_dir}/weights/mmpose/hrnet_w48_coco_384x288_udp-0f89c63e_20210223.pth
+  download_url: https://download.openmmlab.com/mmpose/top_down/udp/hrnet_w48_coco_384x288_udp-0f89c63e_20210223.pth
+
+# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w32_coco_256x192_udp.py
+# https://download.openmmlab.com/mmpose/top_down/udp/hrnet_w32_coco_256x192_udp-aba0be42_20210220.pth
+# AP: 0.76
+
+# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w32_coco_384x288_udp.py
+# https://download.openmmlab.com/mmpose/top_down/udp/hrnet_w32_coco_384x288_udp-e97c1a0f_20210223.pth
+# AP: 0.769
+
+# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_udp.py
+# https://download.openmmlab.com/mmpose/top_down/udp/hrnet_w48_coco_256x192_udp-2554c524_20210223.pth
+# AP: 0.767
+
+# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_384x288_udp.py
+# https://download.openmmlab.com/mmpose/top_down/udp/hrnet_w48_coco_384x288_udp-0f89c63e_20210223.pth
+# AP: 0.772
