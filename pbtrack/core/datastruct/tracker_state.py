@@ -140,6 +140,7 @@ class TrackerState(AbstractContextManager):
         if self.save_file is None:
             save_zf = None
         else:
+            os.makedirs(os.path.dirname(self.save_file), exist_ok=True)
             save_zf = zipfile.ZipFile(
                 self.save_file,
                 mode="a",
@@ -178,7 +179,6 @@ class TrackerState(AbstractContextManager):
         if self.save_file is None:
             return
         log.info(f"saving to {abspath(self.save_file)}")
-        os.makedirs(os.path.dirname(self.save_file), exist_ok=True)
         assert self.video_id is not None, "Save can only be called in a contextmanager"
         assert (
             self.predictions is not None
