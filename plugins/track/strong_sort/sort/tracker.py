@@ -231,8 +231,11 @@ class Tracker:
         cost_matrix = (self.w_kfgd * pos_cost + self.w_reid * app_cost + st_cost * self.w_st) / (self.w_kfgd + self.w_reid + self.w_st)
         if self.w_kfgd > 0:  # FIXME support all combinations
             cost_matrix[np.logical_or(pos_gate, app_gate, st_gate)] = linear_assignment.INFTY_COST
-        else:
+        elif self.w_st > 0:
             cost_matrix[np.logical_or(app_gate, st_gate)] = linear_assignment.INFTY_COST
+        else:
+            cost_matrix[app_gate] = linear_assignment.INFTY_COST
+
         # Return Matrix
         return cost_matrix
 
