@@ -23,6 +23,11 @@ class StrongSORT(object):
         min_bbox_confidence=0.2,
         only_position_for_kf_gating=False,
         max_kalman_prediction_without_update=7,
+        matching_strategy="strong_sort_matching",
+        gating_thres_factor=1.5,
+        w_kfgd=1,
+        w_reid=1,
+        w_st=1,
     ):
 
         self.max_dist = max_dist
@@ -38,7 +43,12 @@ class StrongSORT(object):
             ema_alpha=ema_alpha,
             mc_lambda=mc_lambda,
             only_position_for_kf_gating=only_position_for_kf_gating,
-            max_kalman_prediction_without_update = max_kalman_prediction_without_update,
+            max_kalman_prediction_without_update=max_kalman_prediction_without_update,
+            matching_strategy=matching_strategy,
+            gating_thres_factor=gating_thres_factor,
+            w_kfgd=w_kfgd,
+            w_reid=w_reid,
+            w_st=w_st,
         )
 
     def update(

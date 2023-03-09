@@ -29,6 +29,11 @@ class StrongSORT(OnlineTracker):
             min_bbox_confidence=self.cfg.min_bbox_confidence,
             only_position_for_kf_gating=self.cfg.only_position_for_kf_gating,
             max_kalman_prediction_without_update=self.cfg.max_kalman_prediction_without_update,
+            matching_strategy=self.cfg.matching_strategy,
+            gating_thres_factor=self.cfg.gating_thres_factor,
+            w_kfgd=self.cfg.w_kfgd,
+            w_reid=self.cfg.w_reid,
+            w_st=self.cfg.w_st,
         )
         # For camera compensation
         self.prev_frame = None

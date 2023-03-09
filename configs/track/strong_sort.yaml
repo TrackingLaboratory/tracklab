@@ -14,3 +14,8 @@ cfg:
   min_bbox_confidence: 0.5  # bbox below this confidence threshold are not considered for matching
   only_position_for_kf_gating: False   # if True, only the position (x, y) is used by the Kalman filter for gating
   max_kalman_prediction_without_update: ${track.cfg.max_age}  # do not make any predictions if the Kalman filter has not been updated for more than this number of frames
+  matching_strategy: "strong_sort_matching"
+  gating_thres_factor: 1
+  w_kfgd: 1
+  w_reid: 1
+  w_st: 1
