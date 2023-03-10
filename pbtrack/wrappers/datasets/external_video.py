@@ -8,7 +8,9 @@ from pbtrack import (
     TrackingDataset,
     TrackingSet,
 )
+import logging
 
+log = logging.getLogger(__name__)
 
 def write_video_images_to_disk(video_path):
     video_name = video_path.stem
@@ -17,7 +19,7 @@ def write_video_images_to_disk(video_path):
     assert cap.isOpened(), "Error opening video stream or file"
 
     tmp_video_folder = Path("tmp", video_name)
-    print("Dumping video frames to {}".format(tmp_video_folder.resolve()))
+    log.info("Dumping video frames to {}".format(tmp_video_folder.resolve()))
     tmp_video_folder.mkdir(parents=True, exist_ok=True)
     frame_idx = 0
     while cap.isOpened():

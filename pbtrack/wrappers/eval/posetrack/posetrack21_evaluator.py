@@ -12,7 +12,6 @@ import posetrack21
 import posetrack21_mot
 from poseval.eval_helpers import (
     load_data_dir,
-    printTable,
     Joint,
     mapmetrics2dict,
     precmetrics2dict,
@@ -22,6 +21,11 @@ from poseval.eval_helpers import (
 from poseval.evaluateAP import evaluateAP
 from poseval.evaluateTracking import evaluateTracking
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
+
+
+import logging
+
+log = logging.getLogger(__name__)
 
 
 def format_metric(metric_name, metric_value, scale_factor):
@@ -46,7 +50,7 @@ class PoseTrack21(EvaluatorBase):
         seqs = list(tracker_state.gt.video_metadatas.name)
         bbox_column = self.cfg.bbox_column_for_eval
         eval_pose_on_all = self.cfg.eval_pose_on_all
-        print("Evaluation on PoseTrack21")
+        log.info("Evaluation on PoseTrack21")
         if self.cfg.eval_pose_estimation:
             annotations = self._annotations_pose_estimation_eval(
                 tracker_state.predictions,
@@ -59,21 +63,21 @@ class PoseTrack21(EvaluatorBase):
             )
             self._save_json(images, annotations, category, trackers_folder)
 
-            print("Bbox estimation")
+            log.info("Bbox estimation")
             bbox_map = self.compute_bbox_map(
                 tracker_state.predictions,
                 tracker_state.gt.detections,
                 tracker_state.gt.image_metadatas,
             )
-            print("Average Precision (AP) metric")
+            log.info("Average Precision (AP) metric")
             map(bbox_map.pop, ["map_per_class", "mar_100_per_class"])
             headers = bbox_map.keys()
             data = [np.round(100 * bbox_map[name].item(), 2) for name in headers]
-            print(tabulate([data], headers=headers, tablefmt="pretty"))
+            log.info(tabulate([data], headers=headers, tablefmt="pretty"))
             wandb.log(bbox_map, "PoseTrack21/Bbox mAP")
 
-            print("Pose estimation")
-            print("Average Precision (AP) metric")
+            log.info("Pose estimation")
+            log.info("Average Precision (AP) metric")
             argv = ["", self.cfg.posetrack_gt_folder, trackers_folder]
             gtFramesAll, prFramesAll = load_data_dir(argv, seqs)
             apAll, preAll, recAll = evaluateAP(
@@ -82,11 +86,11 @@ class PoseTrack21(EvaluatorBase):
             res_combined = mapmetrics2dict(apAll)
             self._print_results(res_combined, scale_factor=1.0)
             wandb.log(res_combined, "PoseTrack21/mAP kp")
-            print("Precision metric")
+            log.info("Precision metric")
             res_combined = precmetrics2dict(preAll)
             self._print_results(res_combined, scale_factor=1.0)
             wandb.log(res_combined, "PoseTrack21/Precision kp")
-            print("Recall metric")
+            log.info("Recall metric")
             res_combined = recallmetrics2dict(recAll)
             self._print_results(res_combined, scale_factor=1.0)
             wandb.log(res_combined, "PoseTrack21/Recall kp")
@@ -108,7 +112,7 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=seqs,
             )
             res_combined, res_by_video = evaluator.eval()
-            print("Keypoints tracking results (HOTA)")
+            log.info("Keypoints tracking results (HOTA)")
             self._print_results(res_combined, res_by_video, scale_factor=100)
             wandb.log(res_combined, "PoseTrack21/HOTA kp", res_by_video)
 
@@ -122,7 +126,7 @@ class PoseTrack21(EvaluatorBase):
             metrics[Joint().count + 2, 0] = metricsAll["pre"][0, Joint().count]
             metrics[Joint().count + 3, 0] = metricsAll["rec"][0, Joint().count]
 
-            print("Keypoints tracking results (MOTA)")
+            log.info("Keypoints tracking results (MOTA)")
             res_combined = motmetrics2dict(metrics)
             self._print_results(res_combined, scale_factor=1.0)
             wandb.log(res_combined, "PoseTrack21/MOTA kp")
@@ -144,7 +148,7 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=seqs,
             )
             res_combined, res_by_video = evaluator.eval()
-            print("Keypoints cross-video tracking results")
+            log.info("Keypoints cross-video tracking results")
             self._print_results(res_combined, res_by_video, scale_factor=100)
             wandb.log(res_combined, "PoseTrack21/ReID pose", res_by_video)
 
@@ -164,7 +168,7 @@ class PoseTrack21(EvaluatorBase):
                 SEQS=seqs,
             )
             res_combined, res_by_video = evaluator.eval()
-            print("Tracking bbox results (HOTA)")
+            log.info("Tracking bbox results (HOTA)")
             self._print_results(res_combined, res_by_video, 100)
             wandb.log(res_combined, "PoseTrack21/HOTA bb", res_by_video)
             # MOTA
@@ -186,7 +190,7 @@ class PoseTrack21(EvaluatorBase):
                     )
                 )
             if mot_accums:
-                print("Posetrack mot results (MOTA)")
+                log.info("Posetrack mot results (MOTA)")
                 str_summary, summary = posetrack21_mot.evaluate_mot_accums(
                     mot_accums,
                     [str(s) for s in dataset if not s.no_gt],
@@ -243,10 +247,14 @@ class PoseTrack21(EvaluatorBase):
             # If set to false, will evaluate pose estimation only on tracked detections (i.e. detections with a
             # defined 'track_id')
             na_col_to_drop.append("track_id")
+        len_before_drop = len(predictions)
         predictions.dropna(
             subset=na_col_to_drop,
             how="any",
             inplace=True,
+        )
+        log.warning(
+            "Dropped {} rows with NA values".format(len_before_drop - len(predictions))
         )
         predictions.rename(
             columns={"keypoints_xyc": "keypoints", bbox_column: "bbox"},
@@ -280,10 +288,14 @@ class PoseTrack21(EvaluatorBase):
             "track_id",
         ]
         col_to_drop = [col for col in col_to_drop if col in predictions.columns]
+        len_before_drop = len(predictions)
         predictions.dropna(
             subset=col_to_drop,
             how="any",
             inplace=True,
+        )
+        log.warning(
+            "Dropped {} rows with NA values".format(len_before_drop - len(predictions))
         )
         predictions.rename(
             columns={"keypoints_xyc": "keypoints", bbox_column: "bbox"},
@@ -307,6 +319,7 @@ class PoseTrack21(EvaluatorBase):
     @staticmethod
     def _annotations_reid_pose_tracking_eval(predictions, image_metadatas, bbox_column):
         predictions = predictions.copy()
+        len_before_drop = len(predictions)
         predictions.dropna(
             subset=[
                 "keypoints_xyc",
@@ -317,6 +330,9 @@ class PoseTrack21(EvaluatorBase):
             ],
             how="any",
             inplace=True,
+        )
+        log.warning(
+            "Dropped {} rows with NA values".format(len_before_drop - len(predictions))
         )
         predictions.rename(
             columns={"keypoints_xyc": "keypoints", bbox_column: "bbox"},
@@ -373,7 +389,7 @@ class PoseTrack21(EvaluatorBase):
             how="any",
             inplace=True,
         )
-        print("Dropped {} rows with NA values".format(len_before_drop - len(df)))
+        log.warning("Dropped {} rows with NA values".format(len_before_drop - len(df)))
         df["track_id"] = df["track_id"].astype(int)
         df["bb_left"] = df[bbox_column].apply(lambda x: x[0])
         df["bb_top"] = df[bbox_column].apply(lambda x: x[1])
@@ -416,9 +432,9 @@ class PoseTrack21(EvaluatorBase):
         data = [
             format_metric(name, res_combined[name], scale_factor) for name in headers
         ]
-        print(tabulate([data], headers=headers, tablefmt="pretty"))
+        log.info(tabulate([data], headers=headers, tablefmt="pretty"))
         if self.cfg.print_by_video and res_by_video:
-            print("By videos:")
+            log.info("By videos:")
             data = []
             for video_name, res in res_by_video.items():
                 video_data = [video_name] + [
@@ -426,7 +442,7 @@ class PoseTrack21(EvaluatorBase):
                 ]
                 data.append(video_data)
             headers = ["video"] + list(headers)
-            print(tabulate(data, headers=headers, tablefmt="pretty"))
+            log.info(tabulate(data, headers=headers, tablefmt="pretty"))
 
     @staticmethod
     def compute_bbox_map(predictions, ground_truths, metadatas):

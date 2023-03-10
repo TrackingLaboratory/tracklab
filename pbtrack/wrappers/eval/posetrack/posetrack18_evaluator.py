@@ -17,6 +17,10 @@ from poseval.eval_helpers import (
 from poseval.evaluateAP import evaluateAP
 from poseval.evaluateTracking import evaluateTracking
 
+import logging
+
+log = logging.getLogger(__name__)
+
 
 def format_metric(metric_name, metric_value, scale_factor):
     if (
@@ -40,7 +44,7 @@ class PoseTrack18(EvaluatorBase):
         seqs = list(tracker_state.gt.video_metadatas.name)
         bbox_column = self.cfg.bbox_column_for_eval
         eval_pose_on_all = self.cfg.eval_pose_on_all
-        print("Evaluation on PoseTrack18")
+        log.info("Evaluation on PoseTrack18")
         if self.cfg.eval_pose_estimation:
             annotations = self._annotations_pose_estimation_eval(
                 tracker_state.predictions,
@@ -58,16 +62,16 @@ class PoseTrack18(EvaluatorBase):
             apAll, preAll, recAll = evaluateAP(
                 gtFramesAll, prFramesAll, "", False, False
             )
-            print("Pose estimation")
-            print("Average Precision (AP) metric")
+            log.info("Pose estimation")
+            log.info("Average Precision (AP) metric")
             res_combined = mapmetrics2dict(apAll)
             self._print_results(res_combined, scale_factor=1.0)
             wandb.log(res_combined, "PoseTrack18/mAP kp")
-            print("Precision metric")
+            log.info("Precision metric")
             res_combined = precmetrics2dict(preAll)
             self._print_results(res_combined, scale_factor=1.0)
             wandb.log(res_combined, "PoseTrack18/Precision kp")
-            print("Recall metric")
+            log.info("Recall metric")
             res_combined = recallmetrics2dict(recAll)
             self._print_results(res_combined, scale_factor=1.0)
             wandb.log(res_combined, "PoseTrack18/Recall kp")
@@ -91,7 +95,7 @@ class PoseTrack18(EvaluatorBase):
             metrics[Joint().count + 2, 0] = metricsAll["pre"][0, Joint().count]
             metrics[Joint().count + 3, 0] = metricsAll["rec"][0, Joint().count]
 
-            print("Keypoints tracking results (MOTA)")
+            log.info("Keypoints tracking results (MOTA)")
             res_combined = motmetrics2dict(metrics)
             self._print_results(res_combined, scale_factor=1.0)
             wandb.log(res_combined, "PoseTrack18/MOTA kp")
@@ -221,9 +225,9 @@ class PoseTrack18(EvaluatorBase):
         data = [
             format_metric(name, res_combined[name], scale_factor) for name in headers
         ]
-        print(tabulate([data], headers=headers, tablefmt="pretty"))
+        log.info(tabulate([data], headers=headers, tablefmt="pretty"))
         if self.cfg.print_by_video and res_by_video:
-            print("By videos:")
+            log.info("By videos:")
             data = []
             for video_name, res in res_by_video.items():
                 video_data = [video_name] + [
@@ -231,7 +235,7 @@ class PoseTrack18(EvaluatorBase):
                 ]
                 data.append(video_data)
             headers = ["video"] + list(headers)
-            print(tabulate(data, headers=headers, tablefmt="pretty"))
+            log.info(tabulate(data, headers=headers, tablefmt="pretty"))
 
 
 class PoseTrack18Encoder(json.JSONEncoder):

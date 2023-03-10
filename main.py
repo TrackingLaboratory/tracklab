@@ -11,6 +11,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
+
 def set_sharing_strategy():
     torch.multiprocessing.set_sharing_strategy(
         "file_system"
@@ -78,9 +79,11 @@ def main(cfg):
                 log.info("Starting evaluation.")
                 evaluator.run(tracker_state)
             else:
-                print("Skipping evaluation because there's no ground truth detection.")
+                log.warning(
+                    "Skipping evaluation because there's no ground truth detection."
+                )
         else:
-            print(
+            log.warning(
                 "Skipping evaluation because only part of video was tracked (i.e. 'cfg.dataset.nframes' was not set "
                 "to -1)"
             )

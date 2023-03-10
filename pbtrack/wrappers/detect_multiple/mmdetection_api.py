@@ -79,8 +79,8 @@ class MMDetection(Detector):
     def check_checkpoint(path_to_checkpoint, download_url):
         os.makedirs(os.path.dirname(path_to_checkpoint), exist_ok=True)
         if not os.path.exists(path_to_checkpoint):
-            print("Checkpoint not found at {}".format(path_to_checkpoint))
-            print("Downloading checkpoint from {}".format(download_url))
+            log.info("Checkpoint not found at {}".format(path_to_checkpoint))
+            log.info("Downloading checkpoint from {}".format(download_url))
             response = requests.get(download_url, stream=True)
             total_size_in_bytes = int(response.headers.get("content-length", 0))
             block_size = 1024
@@ -91,6 +91,8 @@ class MMDetection(Detector):
                     file.write(data)
             progress_bar.close()
             if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
-                print("ERROR, something went wrong while downloading or writing.")
+                log.warning(
+                    f"Something went wrong while downloading or writing {download_url} to {path_to_checkpoint}"
+                )
             else:
-                print("Checkpoint downloaded successfully")
+                log.info("Checkpoint downloaded successfully")

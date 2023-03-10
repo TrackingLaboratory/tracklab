@@ -25,7 +25,14 @@ import pbtrack
 root_dir = Path(pbtrack.__file__).parents[1]
 sys.path.append(str((root_dir / "plugins/reid/bpbreid").resolve()))  # FIXME : ugly
 from torchreid.data import ImageDataset
-from torchreid.utils.imagetools import gkern, build_gaussian_heatmaps, build_gaussian_body_part_heatmaps
+from torchreid.utils.imagetools import (
+    gkern,
+    build_gaussian_heatmaps,
+    build_gaussian_body_part_heatmaps,
+)
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class ReidDataset(ImageDataset):
@@ -45,8 +52,13 @@ class ReidDataset(ImageDataset):
     masks_dirs = {
         # dir_name: (masks_stack_size, contains_background_mask)
         "gaussian_joints": (10, False, ".npy", ["p{}".format(p) for p in range(1, 17)]),
-        "gaussian_keypoints": (17, False, ".npy", ["p{}".format(p) for p in range(1, 17)]),
-        'pose_on_img': (35, False, '.npy', ["p{}".format(p) for p in range(1, 35)]),
+        "gaussian_keypoints": (
+            17,
+            False,
+            ".npy",
+            ["p{}".format(p) for p in range(1, 17)],
+        ),
+        "pose_on_img": (35, False, ".npy", ["p{}".format(p) for p in range(1, 35)]),
     }
 
     @staticmethod
@@ -109,11 +121,15 @@ class ReidDataset(ImageDataset):
 
         # Build ReID dataset from MOT dataset
         self.build_reid_set(
-            tracking_dataset.train_set, self.reid_config, is_test_set=False,
+            tracking_dataset.train_set,
+            self.reid_config,
+            is_test_set=False,
         )
 
         self.build_reid_set(
-            tracking_dataset.val_set, self.reid_config, is_test_set=True,
+            tracking_dataset.val_set,
+            self.reid_config,
+            is_test_set=True,
         )
 
         train_gt_dets = tracking_dataset.train_set.detections
@@ -147,7 +163,7 @@ class ReidDataset(ImageDataset):
         reid_set_cfg = reid_config.test if is_test_set else reid_config.train
         masks_mode = reid_config.masks_mode
 
-        print("Loading {} set...".format(split))
+        log.info("Loading {} set...".format(split))
 
         # Precompute all paths
         reid_path = Path(self.dataset_path, self.reid_dir, masks_mode)
@@ -216,7 +232,10 @@ class ReidDataset(ImageDataset):
             )
             reid_anns.set_index("id", drop=False, inplace=True)
             tmp_df = gt_dets.merge(
-                reid_anns, left_index=True, right_index=True, validate="one_to_one",
+                reid_anns,
+                left_index=True,
+                right_index=True,
+                validate="one_to_one",
             )
             gt_dets[columns] = tmp_df[columns]
         else:
@@ -235,7 +254,7 @@ class ReidDataset(ImageDataset):
             lambda x: x[2] > reid_cfg.min_w
         ) & dets_df_f1.bbox_ltwh.apply(lambda x: x[3] > reid_cfg.min_h)
         dets_df_f2 = dets_df_f1[keep]
-        print(
+        log.warning(
             "{} removed because too small samples (h<{} or w<{}) = {}".format(
                 self.__class__.__name__,
                 (reid_cfg.min_h),
@@ -253,7 +272,7 @@ class ReidDataset(ImageDataset):
             .reset_index(drop=True)
             .copy()
         )
-        print(
+        log.warning(
             "{} removed for uniform tracklet sampling = {}".format(
                 self.__class__.__name__, len(dets_df_f2) - len(dets_df_f3)
             )
@@ -263,7 +282,7 @@ class ReidDataset(ImageDataset):
         count_per_id = dets_df_f3.person_id.value_counts()
         ids_to_keep = count_per_id.index[count_per_id.ge((reid_cfg.min_samples_per_id))]
         dets_df_f4 = dets_df_f3[dets_df_f3.person_id.isin(ids_to_keep)]
-        print(
+        log.warning(
             "{} removed for not enough samples per id = {}".format(
                 self.__class__.__name__, len(dets_df_f3) - len(dets_df_f4)
             )
@@ -282,7 +301,9 @@ class ReidDataset(ImageDataset):
         dets_df_f5 = dets_df_f4[dets_df_f4.person_id.isin(ids_to_keep)]
 
         dets_df.loc[dets_df.id.isin(dets_df_f5.id), "split"] = "train"
-        print("{} filtered size = {}".format(self.__class__.__name__, len(dets_df_f5)))
+        log.info(
+            "{} filtered size = {}".format(self.__class__.__name__, len(dets_df_f5))
+        )
 
     def save_reid_img_crops(
         self,
@@ -303,7 +324,7 @@ class ReidDataset(ImageDataset):
             (gt_dets.split != "none") & gt_dets.reid_crop_path.isnull()
         ]
         if len(gt_dets_for_reid) == 0:
-            print(
+            log.info(
                 "All detections used for ReID already have their image crop saved on disk."
             )
             return
@@ -346,7 +367,7 @@ class ReidDataset(ImageDataset):
                     ]
                     pbar.update(1)
 
-        print(
+        log.info(
             'Saving reid crops annotations as json to "{}"'.format(reid_anns_filepath)
         )
         reid_anns_filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -379,7 +400,7 @@ class ReidDataset(ImageDataset):
             (gt_dets.split != "none") & gt_dets.masks_path.isnull()
         ]
         if len(gt_dets_for_reid) == 0:
-            print("All reid crops already have human parsing masks labels.")
+            log.info("All reid crops already have human parsing masks labels.")
             return
         grp_gt_dets = gt_dets_for_reid.groupby(["video_id", "image_id"])
         with tqdm(
@@ -402,7 +423,10 @@ class ReidDataset(ImageDataset):
                         fields_list.extend(fields)
 
                     masks_gt_or = torch.concat(
-                        (fields_list[0][0][:, 1], fields_list[0][1][:, 1],)
+                        (
+                            fields_list[0][0][:, 1],
+                            fields_list[0][1][:, 1],
+                        )
                     )
                     img = cv2.imread(img_metadata.file_path)
                     masks_gt = resize(
@@ -493,7 +517,7 @@ class ReidDataset(ImageDataset):
                     gt_dets.at[det_metadata.Index, "masks_path"] = str(abs_filepath)
                     pbar.update(1)
 
-        print(
+        log.info(
             'Saving reid human parsing annotations as json to "{}"'.format(
                 reid_anns_filepath
             )
@@ -553,7 +577,9 @@ class ReidDataset(ImageDataset):
             # use only necessary annotations: using them all caused a
             # 'RuntimeError: torch.cat(): input types can't be cast to the desired output type Long' in collate.py
             # -> still has to be fixed
-            data_list = sorted_df[["pid", "camid", "img_path", "masks_path", "visibility"]]
+            data_list = sorted_df[
+                ["pid", "camid", "img_path", "masks_path", "visibility"]
+            ]
             data_list = data_list.to_dict("records")
             results.append(data_list)
         return results
