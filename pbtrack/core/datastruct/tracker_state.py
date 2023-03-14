@@ -1,19 +1,19 @@
-import json
 import os
+import json
+import pickle
+import zipfile
+import numpy as np
+import pandas as pd
 from contextlib import AbstractContextManager
 from os.path import abspath
 from pathlib import Path
-import pickle
-import zipfile
 
-import numpy as np
-import pandas as pd
-
-from .tracking_dataset import TrackingSet
 from .detections import Detections
-import logging
-
+from .tracking_dataset import TrackingSet
 from pbtrack.utils.coordinates import kp_to_bbox_w_threshold, bbox_ltrb2ltwh
+
+
+import logging
 
 log = logging.getLogger(__name__)
 
@@ -43,10 +43,17 @@ class TrackerState(AbstractContextManager):
         load_file=None,
         json_file=None,  # TODO merge with above behavior
         save_file=None,
+        load_from_groundtruth=False,
         compression=zipfile.ZIP_STORED,
         load_step=None,
         bbox_format=None,
     ):
+        assert load_step in [
+            "detect_single",
+            "detect_multi",
+            "reid",
+            None,
+        ], "Load_step must be one of 'detect_single', 'detect_multi', 'reid', 'None'"
         self.gt = tracking_set
         self.predictions = None
         # self.filename = Path(filename)
@@ -72,6 +79,28 @@ class TrackerState(AbstractContextManager):
         self.json_file = json_file
         if self.json_file is not None:
             self.load_predictions_from_json(json_file)
+
+        self.load_from_groundtruth = load_from_groundtruth
+        if self.load_from_groundtruth:
+            self.load_groundtruth(load_step)
+
+    def load_groundtruth(self, load_step):
+        # FIXME only work for topdown -> handle bottomup
+        # We consider here that detect_multi detects the bbox
+        # and that detect_single detects the keypoints
+        assert (
+            load_step != "reid"
+        ), "Cannot load from groundtruth in reid step. Can only load bboxes or keypoints"
+        self.gt_detections = self.gt.detections.copy()
+        if load_step == "detect_multi":
+            self.gt_detections["keypoints_xyc"] = pd.NA
+            self.gt_detections["track_id"] = pd.NA
+            self.gt_detections.drop(columns=["track_id"], inplace=True)
+            self.gt_detections.rename(columns={"visibility": "bbox_c"}, inplace=True)
+        elif load_step == "detect_single":
+            self.gt_detections["track_id"] = pd.NA
+            self.gt_detections.drop(columns=["track_id"], inplace=True)
+            self.gt_detections.rename(columns={"visibility": "bbox_c"}, inplace=True)
 
     def load_predictions_from_json(self, json_file):
         anns_path = Path(json_file)
@@ -202,6 +231,8 @@ class TrackerState(AbstractContextManager):
             return self.json_predictions[
                 self.json_predictions.video_id == self.video_id
             ]
+        if self.load_from_groundtruth:
+            return self.gt_detections[self.gt_detections.video_id == self.video_id]
         if self.load_file is None:
             return None
 
