@@ -1,5 +1,6 @@
 from abc import ABC
 from pathlib import Path
+
 from .detections import Detections
 from .image_metadatas import ImageMetadatas
 from .video_metadatas import VideoMetadatas

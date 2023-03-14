@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from omegaconf import DictConfig
@@ -8,10 +7,13 @@ from timeit import default_timer as timer
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
-from pbtrack.core import Detector, ReIdentifier, Tracker, EngineDatapipe
-from pbtrack.core.datastruct.tracker_state import TrackerState
-from pbtrack.core.datastruct import Detections
-from pbtrack.visualization.visualization_engine import VisualisationEngine
+from .datapipe import EngineDatapipe
+from .detector import Detector
+from .reidentifier import ReIdentifier
+from .tracker import Tracker
+from .visualization_engine import VisualizationEngine
+from .datastruct.tracker_state import TrackerState
+from .datastruct.detections import Detections
 from pbtrack.utils.collate import default_collate
 from pbtrack.utils.images import cv2_load_image
 
@@ -49,7 +51,7 @@ class OnlineTrackingEngine(pl.LightningModule):
         reid_model: ReIdentifier,
         track_model: Tracker,
         tracker_state: TrackerState,
-        vis_engine: VisualisationEngine,
+        vis_engine: VisualizationEngine,
         detect_multi_batchsize: int,
         detect_single_batchsize: int,
         reid_batchsize: int,
@@ -300,11 +302,11 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
             vis_time = timer() - start_vis
             video_time = timer() - start
             log.info(
-                "\n" +
-                tabulate(
+                f"Processing time (s) of video '{video_id}'\n"
+                + tabulate(
                     [
                         [
-                            f"{video_time:.4f}",
+                            f"{video_time:.2f}",
                             f"{detect_multi_time:.2f}",
                             f"{detect_single_time:.2f}",
                             f"{reid_time:.2f}",
@@ -313,7 +315,7 @@ class OfflineTrackingEngine(OnlineTrackingEngine):
                         ]
                     ],
                     headers=[
-                        "Total time (s)",
+                        "Total",
                         "Detect multiple",
                         "Detect single",
                         "Reid",

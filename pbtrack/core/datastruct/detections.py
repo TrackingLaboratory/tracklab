@@ -23,16 +23,12 @@ class Detections(pd.DataFrame):
     @property
     def bbox_ltrb(self):
         """Converts from (left, top, width, heights) to (left, top, right, bottom)"""
-        return self.bbox_ltwh.apply(
-            lambda ltwh: bbox_ltwh2ltrb(ltwh)  # type: ignore
-        )
+        return self.bbox_ltwh.apply(lambda ltwh: bbox_ltwh2ltrb(ltwh))  # type: ignore
 
     @property
     def bbox_cmwh(self):
         """Converts from (left, top, width, heights) to (horizontal center, vertical middle, width, height)"""
-        return self.bbox_ltwh.apply(
-            lambda ltwh: bbox_ltwh2cmwh(ltwh)  # type: ignore
-        )
+        return self.bbox_ltwh.apply(lambda ltwh: bbox_ltwh2cmwh(ltwh))  # type: ignore
 
     @property
     def keypoints_bbox_xyc(self):

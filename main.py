@@ -1,11 +1,9 @@
+import torch
 import hydra
 from hydra.utils import instantiate
 
-from pbtrack.core.datastruct.tracker_state import TrackerState
+from pbtrack import TrackerState
 from pbtrack.utils import wandb
-
-import torch
-import torch.multiprocessing
 
 import logging
 
