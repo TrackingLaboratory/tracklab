@@ -1,5 +1,6 @@
 import os
 import json
+import torch
 import numpy as np
 from tabulate import tabulate
 
@@ -16,6 +17,7 @@ from poseval.eval_helpers import (
 )
 from poseval.evaluateAP import evaluateAP
 from poseval.evaluateTracking import evaluateTracking
+from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
 import logging
 
@@ -34,6 +36,7 @@ def format_metric(metric_name, metric_value, scale_factor):
         return np.around(metric_value * scale_factor, 2)
 
 
+# FIXME fuse with PoseTrack21
 class PoseTrack18(EvaluatorBase):
     def __init__(self, cfg):
         self.cfg = cfg
@@ -57,13 +60,26 @@ class PoseTrack18(EvaluatorBase):
             )
             self._save_json(images, annotations, category, trackers_folder)
 
+            log.info("Bbox estimation")
+            bbox_map = self.compute_bbox_map(
+                tracker_state.predictions,
+                tracker_state.gt.detections,
+                tracker_state.gt.image_metadatas,
+            )
+            log.info("Average Precision (AP) metric")
+            map(bbox_map.pop, ["map_per_class", "mar_100_per_class"])
+            headers = bbox_map.keys()
+            data = [np.round(100 * bbox_map[name].item(), 2) for name in headers]
+            log.info("\n" + tabulate([data], headers=headers, tablefmt="plain"))
+            wandb.log(bbox_map, "PoseTrack18/Bbox mAP")
+
+            log.info("Pose estimation")
+            log.info("Average Precision (AP) metric")
             argv = ["", self.cfg.posetrack_gt_folder, trackers_folder]
             gtFramesAll, prFramesAll = load_data_dir(argv, seqs)
             apAll, preAll, recAll = evaluateAP(
                 gtFramesAll, prFramesAll, "", False, False
             )
-            log.info("Pose estimation")
-            log.info("Average Precision (AP) metric")
             res_combined = mapmetrics2dict(apAll)
             self._print_results(res_combined, scale_factor=1.0)
             wandb.log(res_combined, "PoseTrack18/mAP kp")
@@ -225,7 +241,7 @@ class PoseTrack18(EvaluatorBase):
         data = [
             format_metric(name, res_combined[name], scale_factor) for name in headers
         ]
-        log.info(tabulate([data], headers=headers, tablefmt="pretty"))
+        log.info("\n" + tabulate([data], headers=headers, tablefmt="plain"))
         if self.cfg.print_by_video and res_by_video:
             log.info("By videos:")
             data = []
@@ -235,7 +251,46 @@ class PoseTrack18(EvaluatorBase):
                 ]
                 data.append(video_data)
             headers = ["video"] + list(headers)
-            log.info(tabulate(data, headers=headers, tablefmt="pretty"))
+            log.info("\n" + tabulate(data, headers=headers, tablefmt="plain"))
+
+    @staticmethod
+    def compute_bbox_map(predictions, ground_truths, metadatas):
+        images_ids = metadatas.id.unique()
+        metric = MeanAveragePrecision(box_format="xywh", iou_type="bbox", num_classes=1)
+        preds = []
+        targets = []
+        for image_id in images_ids:
+            targets_by_image = ground_truths[ground_truths["image_id"] == image_id]
+            if not targets_by_image.empty:
+                targets.append(
+                    {
+                        "boxes": torch.tensor(
+                            np.vstack(targets_by_image.bbox_ltwh.values).astype(float)
+                        ),
+                        "labels": torch.tensor(targets_by_image.category_id.values),
+                    }
+                )
+                preds_by_image = predictions[predictions["image_id"] == image_id]
+                if not preds_by_image.empty:
+                    preds.append(
+                        {
+                            "boxes": torch.tensor(
+                                np.vstack(preds_by_image.bbox_ltwh.values).astype(float)
+                            ),
+                            "scores": torch.tensor(preds_by_image.bbox_c.values),
+                            "labels": torch.tensor(preds_by_image.category_id.values),
+                        }
+                    )
+                else:
+                    preds.append(
+                        {
+                            "boxes": torch.tensor([]),
+                            "scores": torch.tensor([]),
+                            "labels": torch.tensor([]),
+                        }
+                    )
+        metric.update(preds, targets)
+        return metric.compute()
 
 
 class PoseTrack18Encoder(json.JSONEncoder):

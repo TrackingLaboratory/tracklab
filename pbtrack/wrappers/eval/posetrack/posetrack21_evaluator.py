@@ -73,7 +73,7 @@ class PoseTrack21(EvaluatorBase):
             map(bbox_map.pop, ["map_per_class", "mar_100_per_class"])
             headers = bbox_map.keys()
             data = [np.round(100 * bbox_map[name].item(), 2) for name in headers]
-            log.info(tabulate([data], headers=headers, tablefmt="pretty"))
+            log.info("\n" + tabulate([data], headers=headers, tablefmt="plain"))
             wandb.log(bbox_map, "PoseTrack21/Bbox mAP")
 
             log.info("Pose estimation")
@@ -432,7 +432,7 @@ class PoseTrack21(EvaluatorBase):
         data = [
             format_metric(name, res_combined[name], scale_factor) for name in headers
         ]
-        log.info(tabulate([data], headers=headers, tablefmt="pretty"))
+        log.info("\n" + tabulate([data], headers=headers, tablefmt="plain"))
         if self.cfg.print_by_video and res_by_video:
             log.info("By videos:")
             data = []
@@ -442,7 +442,7 @@ class PoseTrack21(EvaluatorBase):
                 ]
                 data.append(video_data)
             headers = ["video"] + list(headers)
-            log.info(tabulate(data, headers=headers, tablefmt="pretty"))
+            log.info("\n" + tabulate(data, headers=headers, tablefmt="plain"))
 
     @staticmethod
     def compute_bbox_map(predictions, ground_truths, metadatas):
