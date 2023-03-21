@@ -23,7 +23,7 @@ class YOLOv8(Detector):
 
     def __init__(self, cfg, device):
         self.cfg = cfg
-        self.model = YOLO(cfg.model_name)
+        self.model = YOLO(cfg.path_to_checkpoint)
         self.model.to(device)
         self.device = device
         self.id = 0
