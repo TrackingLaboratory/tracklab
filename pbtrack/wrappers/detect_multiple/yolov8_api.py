@@ -46,13 +46,13 @@ class YOLOv8(Detector):
         ):
             for bbox in results.boxes:
                 # check for `person` class
-                if bbox.cls == 0 and bbox.conf >= self.cfg.bbox_min_confidence:
+                if bbox.cls == 0 and bbox.conf >= self.cfg.min_bbox_score:
                     detections.append(
                         Detection.create(
                             image_id=metadata.id,
                             id=self.id,
                             bbox_ltwh=self.sanitize_bbox(bbox.xyxy, shape),
-                            bbox_c=bbox.conf.item(),
+                            bbox_score=bbox.conf.item(),
                             video_id=metadata.video_id,
                             category_id=1,  # `person` class in posetrack
                         )

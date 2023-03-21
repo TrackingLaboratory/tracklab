@@ -1,21 +1,20 @@
-import copy
-from functools import partial
 import os
 import cv2
 import torch
 import requests
 import numpy as np
 from tqdm import tqdm
+from functools import partial
 
 import mmcv
 from mmpose.apis import init_pose_model
 from mmcv.parallel import collate, scatter
 from mmpose.datasets.dataset_info import DatasetInfo
-from mmpose.datasets.pipelines import Compose, ToTensor
+from mmpose.datasets.pipelines import Compose
+from mmpose.core.post_processing import oks_nms
 
 
 from pbtrack import ImageMetadata, Detections, ImageMetadatas, Detector, Detection
-from pbtrack.utils.images import cv2_load_image
 
 
 import logging
@@ -24,18 +23,11 @@ log = logging.getLogger(__name__)
 mmcv.collect_env()
 
 
-def collate_fn(batch):
-    idxs = [b for b, _ in batch]
-    crops = [b["crop"] for _, b in batch]
-    bboxes = [b["bbox_offset"] for _, b in batch]
-    shapes = [b["shape"] for _, b in batch]
-    return idxs, (crops, bboxes, shapes)
-
-
 def mmpose_collate(batch):
     return collate(batch, len(batch))
 
-class MMPose(Detector):
+
+class TopDownMMPose(Detector):
     collate_fn = mmpose_collate
 
     def __init__(self, cfg, device):
@@ -43,66 +35,90 @@ class MMPose(Detector):
         self.check_checkpoint(cfg.path_to_checkpoint, cfg.download_url)
         self.model = init_pose_model(cfg.path_to_config, cfg.path_to_checkpoint, device)
         self.device = device
-        
+
         cfg = self.model.cfg
         self.dataset_info = DatasetInfo(cfg.dataset_info)
         self.test_pipeline = Compose(cfg.test_pipeline)
-        # _pipeline_gpu_speedup(self.test_pipeline, device)
 
         self.flip_pairs = self.dataset_info.flip_pairs
         self.collate_fn = partial(self.collate_fn, samples_per_gpu=32)
 
-
     @torch.no_grad()
     def preprocess(self, detection: Detection, metadata: ImageMetadata):
         cfg = self.model.cfg
-        image = cv2_load_image(metadata.file_path)
-        ltwh = detection.bbox_ltwh
-        ltrb = self.sanitize_bbox(ltwh, (image.shape[1], image.shape[0]))
-        crop = image[ltrb[1] : ltrb[3], ltrb[0] : ltrb[2]]
-        bbox = np.array([0, 0, crop.shape[1], crop.shape[0]])
+        image = cv2.imread(metadata.file_path)  # BGR not RGB !
         data = {
-            "bbox": bbox,
-            "img": crop,
-            "bbox_score": 1.0,
+            "bbox": detection.bbox_ltwh,
+            "img": image,
+            "bbox_score": detection.bbox_score,
             "bbox_id": 0,
             "dataset": self.dataset_info.dataset_name,
             "joints_3d": np.zeros((cfg.data_cfg.num_joints, 3), dtype=np.float32),
-            "joints_3d_visible": np.zeros((cfg.data_cfg.num_joints, 3), dtype=np.float32),
+            "joints_3d_visible": np.zeros(
+                (cfg.data_cfg.num_joints, 3), dtype=np.float32
+            ),
             "rotation": 0,
             "ann_info": {
-                "image_size": np.array(cfg.data_cfg['image_size']),
+                "image_size": np.array(cfg.data_cfg["image_size"]),
                 "num_joints": cfg.data_cfg.num_joints,
-                "flip_pairs": self.flip_pairs,             
+                "flip_pairs": self.flip_pairs,
             },
         }
-        data = self.test_pipeline(data)
-        data["img_metas"]._data["bbox_offset"] = ltrb[:2]
-        data["img_metas"]._data["shape"] = (image.shape[1], image.shape[0])
-        return data
+        return self.test_pipeline(data)
 
     @torch.no_grad()
     def process(self, batch, detections: Detections, metadatas: ImageMetadatas):
         batch = scatter(batch, [self.device])[0]
-        with torch.no_grad():
-            kp_results = self.model(
+        keypoints_xycs = list(
+            self.model(
                 img=batch["img"],
                 img_metas=batch["img_metas"],
                 return_loss=False,
                 return_heatmap=False,
             )["preds"]
-        results = []
-        for result, img_metas in zip(kp_results, batch["img_metas"]):
-            bbox_offset = img_metas["bbox_offset"]
-            shape = img_metas["shape"]
-            results.append(
-                self.sanitize_keypoints(result, bbox_offset, shape)
+        )
+        keypoints_scores = []
+        for keypoints_xyc, img_metas in zip(keypoints_xycs, batch["img_metas"]):
+            visible_keypoints = keypoints_xyc[
+                keypoints_xyc[:, 2] > self.cfg.min_keypoints_confidence
+            ]
+            keypoints_scores.append(
+                np.mean(visible_keypoints[:, 2]) * img_metas["bbox_score"]
+                if visible_keypoints.size > 0
+                else 0.0
             )
-        detections["keypoints_xyc"] = results
+        detections["keypoints_xyc"] = keypoints_xycs
+        detections["keypoints_score"] = keypoints_scores
+        detections.drop(
+            detections[detections.keypoints_score < self.cfg.min_keypoints_score].index,
+            inplace=True,
+        )
+        return detections
+
+    def postprocess(self, detections: Detections, metadata: ImageMetadata = None):
+        # FIXME do we want it here ? or in the tracker ?
+        # we must be as lax as possible here and be severe in the tracker
+        img_kpts = []
+        for _, detection in detections.iterrows():
+            img_kpts.append(
+                {
+                    "keypoints": detection.keypoints_xyc,
+                    "score": detections.score,
+                    "area": detections.bbox_ltwh[2] * detections.bbox_ltwh[3],
+                }
+            )
+        keep = oks_nms(
+            img_kpts,
+            self.cfg.oks_threshold,
+            vis_thr=self.cfg.visibility_threshold,
+            sigmas=self.dataset_info.sigmas,
+        )
+        detections = detections.iloc[keep]  # FIXME won't work
         return detections
 
     @staticmethod
     def sanitize_bbox(bbox, image_shape):
+        # FIXME do we want this ?
         # convert ltwh bbox to ltrb,check if bbox coordinates are within
         # image dimensions and round them to int
         new_l = np.clip(np.round(bbox[0]), 0, image_shape[0])
@@ -111,12 +127,12 @@ class MMPose(Detector):
         new_b = np.clip(np.round(bbox[3] + new_t), 0, image_shape[1])
         return np.array([new_l, new_t, new_r, new_b], dtype=int)
 
-    def sanitize_keypoints(self, keypoints, bbox_offset, shape):
-        # apply the offset to the keypoints, clip them to the image dimensions
+    def sanitize_keypoints(self, keypoints, shape):
+        # FIXME do we want this ?
+        # Clip the keypoints to the image dimensions
         # and set the confidence to 0 if thresholds are not met
-        keypoints[:, :2] += bbox_offset
-        keypoints[:, 0] = np.clip(keypoints[:, 0], 0, shape[0])
-        keypoints[:, 1] = np.clip(keypoints[:, 1], 0, shape[1])
+        keypoints[:, 0] = np.clip(keypoints[:, 0], 0, shape[0] - 1)
+        keypoints[:, 1] = np.clip(keypoints[:, 1], 0, shape[1] - 1)
         if np.mean(keypoints[:, 2]) < self.cfg.instance_min_confidence:
             keypoints[:, 2] = 0.0
         keypoints[keypoints[:, 2] < self.cfg.keypoint_min_confidence, 2] = 0.0
@@ -131,7 +147,7 @@ class MMPose(Detector):
             response = requests.get(download_url, stream=True)
             total_size_in_bytes = int(response.headers.get("content-length", 0))
             block_size = 1024
-            progress_bar = tqdm(total=total_size_in_bytes, unit="iB", unit_scale=True)
+            progress_bar = tqdm(total=total_size_in_bytes, unit="B", unit_scale=True)
             with open(path_to_checkpoint, "wb") as file:
                 for data in response.iter_content(block_size):
                     progress_bar.update(len(data))
@@ -143,10 +159,3 @@ class MMPose(Detector):
                 )
             else:
                 log.info("Checkpoint downloaded successfully")
-
-
-
-def _pipeline_gpu_speedup(pipeline, device):
-    for t in pipeline.transforms:
-        if isinstance(t, ToTensor):
-            t.device = device

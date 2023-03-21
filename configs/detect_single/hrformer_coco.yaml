@@ -1,8 +1,8 @@
-_target_: pbtrack.wrappers.MMPose
+_target_: pbtrack.wrappers.TopDownMMPose
 
 cfg:
-  instance_min_confidence: 0.1  # threshold for np.mean(keypoint_confidences)
-  keypoint_min_confidence: 0.1  # threshold for keypoint_confidence
+  min_keypoints_score: 0.0  # keep only detections with a score higher
+  min_keypoints_confidence: 0.0  # consider only keypoints with a confidence higher
 
   path_to_config: ${project_dir}/plugins/detect/mmpose/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrformer_base_coco_384x288.py
   path_to_checkpoint: ${project_dir}/weights/mmpose/hrformer_base_coco_384x288-ecf0758d_20220316.pth

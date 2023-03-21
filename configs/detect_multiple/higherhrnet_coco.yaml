@@ -1,8 +1,8 @@
-_target_: pbtrack.wrappers.MMPoseMultiple
+_target_: pbtrack.wrappers.BottomUpMMPose
 
 cfg:
-  instance_min_confidence: 0.1
-  keypoint_min_confidence: 0.1
+  instance_min_confidence: 0.2
+  keypoint_min_confidence: 0.0
 
   bbox:
     top_extend_factor: 0.03
@@ -12,10 +12,6 @@ cfg:
   path_to_config: ${project_dir}/plugins/detect/mmpose/configs/body/2d_kpt_sview_rgb_img/associative_embedding/coco/higherhrnet_w48_coco_512x512.py
   path_to_checkpoint: ${project_dir}/weights/mmpose/higher_hrnet48_coco_512x512-60fedcbc_20200712.pth
   download_url: https://download.openmmlab.com/mmpose/bottom_up/higher_hrnet48_coco_512x512-60fedcbc_20200712.pth
-
-# configs/body/2d_kpt_sview_rgb_img/associative_embedding/coco/higherhrnet_w48_coco_512x512.py
-# https://download.openmmlab.com/mmpose/bottom_up/higher_hrnet48_coco_512x512-60fedcbc_20200712.pth
-# AP: 0.686
 
 # configs/body/2d_kpt_sview_rgb_img/associative_embedding/coco/higherhrnet_w32_coco_512x512.py
 # https://download.openmmlab.com/mmpose/bottom_up/higher_hrnet32_coco_512x512-8ae85183_20200713.pth

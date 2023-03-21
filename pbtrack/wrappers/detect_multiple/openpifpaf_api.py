@@ -104,9 +104,11 @@ class OpenPifPaf(Detector):
                         image_id=metadata.id,
                         id=self.id,
                         keypoints_xyc=keypoints,
+                        keypoints_score=np.mean(keypoints[:, 2], axis=0),
                         bbox_ltwh=bbox_ltwh,
-                        bbox_c=np.mean(keypoints[:, 2], axis=0),
+                        bbox_score=np.mean(keypoints[:, 2], axis=0),
                         video_id=metadata.video_id,
+                        category_id=1,  # `person` class in posetrack
                     )
                 )
                 self.id += 1

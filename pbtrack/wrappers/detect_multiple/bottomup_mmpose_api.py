@@ -1,4 +1,5 @@
 import os
+import cv2
 import torch
 import requests
 import numpy as np
@@ -8,7 +9,6 @@ import mmcv
 from mmpose.apis import init_pose_model, inference_bottom_up_pose_model
 
 from pbtrack import ImageMetadata, ImageMetadatas, Detector, Detection
-from pbtrack.utils.images import cv2_load_image
 
 import logging
 
@@ -23,7 +23,8 @@ def collate_fn(batch):
     return idxs, (images, shapes)
 
 
-class MMPose(Detector):
+# FIXME stop using their api and implement here
+class BottomUpMMPose(Detector):
     collate_fn = collate_fn
 
     def __init__(self, cfg, device):
@@ -35,7 +36,7 @@ class MMPose(Detector):
 
     @torch.no_grad()
     def preprocess(self, metadata: ImageMetadata):
-        image = cv2_load_image(metadata.file_path)
+        image = cv2.imread(metadata.file_path)  # BGR not RGB !
         return {
             "image": image,
             "shape": (image.shape[1], image.shape[0]),
@@ -55,9 +56,10 @@ class MMPose(Detector):
                         Detection.create(
                             image_id=metadata.id,
                             id=self.id,
-                            bbox_ltwh=bbox,
-                            bbox_c=pose["score"],
                             keypoints_xyc=keypoints,
+                            keypoints_score=pose["score"],
+                            bbox_ltwh=bbox,
+                            bbox_score=pose["score"],
                             video_id=metadata.video_id,
                             category_id=1,  # `person` class in posetrack
                         )
@@ -100,7 +102,7 @@ class MMPose(Detector):
             response = requests.get(download_url, stream=True)
             total_size_in_bytes = int(response.headers.get("content-length", 0))
             block_size = 1024
-            progress_bar = tqdm(total=total_size_in_bytes, unit="iB", unit_scale=True)
+            progress_bar = tqdm(total=total_size_in_bytes, unit="B", unit_scale=True)
             with open(path_to_checkpoint, "wb") as file:
                 for data in response.iter_content(block_size):
                     progress_bar.update(len(data))

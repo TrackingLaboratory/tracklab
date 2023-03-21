@@ -459,7 +459,7 @@ class VisualizationEngine:
     def _draw_image_metadata(self, patch, image_metadata):
         cv2.putText(
             patch,
-            f"{image_metadata.frame}/{image_metadata.nframe}",
+            f"{image_metadata.frame}/{image_metadata.nframes}",
             (6, patch.shape[0] - 6),
             fontFace=1,
             fontScale=1.0,

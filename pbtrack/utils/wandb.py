@@ -7,8 +7,9 @@ import pandas as pd
 keep_dict = {
     "dataset": ["dataset_path", "nframes", "nvid", "vids_dict"],
     "detect_multiple": [
+        "min_bbox_score",
         "path_to_config",
-        "bbox_min_confidence",
+        "path_to_checkpoint",
         "instance_min_confidence",
         "keypoint_min_confidence",
         "bbox",
@@ -16,10 +17,10 @@ keep_dict = {
         "train",
     ],
     "detect_single": [
+        "min_keypoints_score",
+        "min_keypoints_confidence",
         "path_to_config",
-        "bbox_min_confidence",
-        "instance_min_confidence",
-        "keypoint_min_confidence",
+        "path_to_checkpoint",
         "bbox",
         "predict",
         "train",

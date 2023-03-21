@@ -24,8 +24,9 @@ class TrackerState(AbstractContextManager):
             "image_id",
             "id",
             "bbox_ltwh",
-            "bbox_c",
+            "bbox_score",
             "keypoints_xyc",
+            "keypoints_score",
             "category_id",
             "video_id",
         ],
@@ -96,11 +97,11 @@ class TrackerState(AbstractContextManager):
             self.gt_detections["keypoints_xyc"] = pd.NA
             self.gt_detections["track_id"] = pd.NA
             self.gt_detections.drop(columns=["track_id"], inplace=True)
-            self.gt_detections.rename(columns={"visibility": "bbox_c"}, inplace=True)
+            self.gt_detections.rename(columns={"visibility": "bbox_score"}, inplace=True)
         elif load_step == "detect_single":
             self.gt_detections["track_id"] = pd.NA
             self.gt_detections.drop(columns=["track_id"], inplace=True)
-            self.gt_detections.rename(columns={"visibility": "bbox_c"}, inplace=True)
+            self.gt_detections.rename(columns={"visibility": "bbox_score"}, inplace=True)
 
     def load_predictions_from_json(self, json_file):
         anns_path = Path(json_file)

@@ -91,7 +91,7 @@ def fix_formatting(video_metadatas, image_metadatas, detections, dataset_path):
         lambda x: int(os.path.basename(x).split(".")[0]) + 1
     )
     image_metadatas.rename(
-        columns={"vid_id": "video_id", "file_name": "file_path", "nframes": "nframe"},
+        columns={"vid_id": "video_id", "file_name": "file_path", "nframes": "nframes"},
         inplace=True,
     )
     image_metadatas.set_index("id", drop=False, inplace=True)

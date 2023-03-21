@@ -43,8 +43,10 @@ class Detection(pd.Series):
         image_id,
         id,
         bbox_ltwh=pd.NA,
+        bbox_score=pd.NA,
         keypoints_xyc=pd.NA,
-        person_id=pd.NA,
+        keypoints_score=pd.NA,
+        track_id=pd.NA,
         category_id=pd.NA,
         **kwargs
     ):
@@ -53,8 +55,10 @@ class Detection(pd.Series):
                 image_id=image_id,
                 id=id,
                 bbox_ltwh=bbox_ltwh,
+                bbox_score=bbox_score,
                 keypoints_xyc=keypoints_xyc,
-                person_id=person_id,
+                keypoints_score=keypoints_score,
+                track_id=track_id,
                 category_id=category_id,
                 **kwargs
             ),

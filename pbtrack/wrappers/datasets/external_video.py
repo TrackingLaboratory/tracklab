@@ -58,7 +58,7 @@ class ExternalVideo(TrackingDataset):
         tmp_video_folder = write_video_images_to_disk(self.video_path)
         img_paths = glob.glob(str(tmp_video_folder / "*.jpg"))
         img_paths.sort()
-        nframe = len(img_paths)
+        nframes = len(img_paths)
         video_id = 0
         image_metadata = ImageMetadatas(
             [
@@ -66,7 +66,7 @@ class ExternalVideo(TrackingDataset):
                     "id": i,
                     "name": Path(img_path).stem,
                     "frame": i,
-                    "nframe": nframe,
+                    "nframes": nframes,
                     "video_id": video_id,
                     "file_path": img_path,
                 }

@@ -1,7 +1,7 @@
 _target_: pbtrack.wrappers.MMDetection
 
 cfg:
-  bbox_min_confidence: 0.1  # threshold for bbox_confidence
+  min_bbox_score: 0.2  # threshold on bbox confidence
 
   path_to_config: ${project_dir}/plugins/detect/mmdetection/configs/faster_rcnn/faster_rcnn_x101_64x4d_fpn_mstrain_3x_coco.py
   path_to_checkpoint: ${project_dir}/weights/mmdetection/faster_rcnn_x101_64x4d_fpn_mstrain_3x_coco_20210524_124528-26c63de6.pth

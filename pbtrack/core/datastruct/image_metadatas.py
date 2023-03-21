@@ -27,13 +27,13 @@ class ImageMetadatas(pd.DataFrame):
 
 class ImageMetadata(pd.Series):
     @classmethod
-    def create(cls, id, video_id, frame, nframe, file_path, **kwargs):
+    def create(cls, id, video_id, frame, nframes, file_path, **kwargs):
         return cls(
             dict(
                 id=id,
                 video_id=video_id,
                 frame=frame,
-                nframe=nframe,
+                nframes=nframes,
                 file_path=file_path,
                 **kwargs
             ),

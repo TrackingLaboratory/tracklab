@@ -1,4 +1,5 @@
 import os
+import cv2
 import torch
 import requests
 import numpy as np
@@ -8,7 +9,6 @@ import mmcv
 from mmdet.apis import init_detector, inference_detector
 
 from pbtrack import ImageMetadatas, ImageMetadata, Detector, Detection
-from pbtrack.utils.images import cv2_load_image
 
 import logging
 
@@ -23,6 +23,7 @@ def collate_fn(batch):
     return idxs, (images, shapes)
 
 
+# FIXME stop using their api and implement here
 class MMDetection(Detector):
     collate_fn = collate_fn
 
@@ -35,7 +36,7 @@ class MMDetection(Detector):
 
     @torch.no_grad()
     def preprocess(self, metadata: ImageMetadata):
-        image = cv2_load_image(metadata.file_path)
+        image = cv2.imread(metadata.file_path)  # BGR not RGB !
         return {
             "image": image,
             "shape": (image.shape[1], image.shape[0]),
@@ -51,13 +52,13 @@ class MMDetection(Detector):
             results, shapes, metadatas.iterrows()
         ):
             for prediction in predictions[0]:  # only check for 'person' class
-                if prediction[4] >= self.cfg.bbox_min_confidence:
+                if prediction[4] >= self.cfg.min_bbox_score:
                     detections.append(
                         Detection.create(
                             image_id=metadata.id,
                             id=self.id,
                             bbox_ltwh=self.sanitize_bbox(prediction[:4], shape),
-                            bbox_c=prediction[4],
+                            bbox_score=prediction[4],
                             video_id=metadata.video_id,
                             category_id=1,  # `person` class in posetrack
                         )
@@ -84,7 +85,7 @@ class MMDetection(Detector):
             response = requests.get(download_url, stream=True)
             total_size_in_bytes = int(response.headers.get("content-length", 0))
             block_size = 1024
-            progress_bar = tqdm(total=total_size_in_bytes, unit="iB", unit_scale=True)
+            progress_bar = tqdm(total=total_size_in_bytes, unit="B", unit_scale=True)
             with open(path_to_checkpoint, "wb") as file:
                 for data in response.iter_content(block_size):
                     progress_bar.update(len(data))

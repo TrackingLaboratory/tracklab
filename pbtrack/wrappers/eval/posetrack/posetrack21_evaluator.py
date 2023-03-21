@@ -408,6 +408,8 @@ class PoseTrack21Evaluator(EvaluatorBase):
                     },
                     f,
                     cls=PoseTrack21Evaluator.PoseTrackEncoder,
+                    sort_keys=True,
+                    indent=4,
                 )
 
     # MOT helper functions
@@ -461,7 +463,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                     "bb_top",
                     "bb_width",
                     "bb_height",
-                    "bbox_c",
+                    "bbox_score",
                     "x",
                     "y",
                     "z",
@@ -536,7 +538,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                             "boxes": torch.tensor(
                                 np.vstack(preds_by_image.bbox_ltwh.values).astype(float)
                             ),
-                            "scores": torch.tensor(preds_by_image.bbox_c.values),
+                            "scores": torch.tensor(preds_by_image.bbox_score.values),
                             "labels": torch.tensor(preds_by_image.category_id.values),
                         }
                     )
