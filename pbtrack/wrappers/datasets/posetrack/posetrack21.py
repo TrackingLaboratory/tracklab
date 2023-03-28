@@ -14,6 +14,11 @@ from pbtrack import (
 
 
 class PoseTrack21(TrackingDataset):
+    """
+    Train set: 43603 images
+    Val set: 20161 images
+    Test set: ??? images
+    """
     def __init__(self, dataset_path: str, annotation_path: str, *args, **kwargs):
         self.dataset_path = Path(dataset_path)
         assert self.dataset_path.exists(), "'{}' directory does not exist".format(

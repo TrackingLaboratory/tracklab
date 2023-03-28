@@ -38,7 +38,6 @@ log = logging.getLogger(__name__)
 class ReidDataset(ImageDataset):
     dataset_dir = "PoseTrack21"  # TODO
     annotations_dir = "posetrack_data"  # TODO
-    eval_metric = "mot_inter_video"
     img_ext = ".jpg"
     masks_ext = ".npy"
     reid_dir = "reid"
@@ -70,7 +69,17 @@ class ReidDataset(ImageDataset):
 
     def gallery_filter(self, q_pid, q_camid, q_ann, g_pids, g_camids, g_anns):
         """camid refers to video id: remove gallery samples from the different videos than query sample"""
-        return np.zeros_like(q_pid)
+        if self.eval_metric == 'mot_inter_intra_video':
+            return np.zeros_like(q_pid)
+        elif self.eval_metric == 'mot_inter_video':
+            remove = g_camids == q_camid
+            return remove
+        elif self.eval_metric == 'mot_intra_video':
+            remove = g_camids != q_camid
+            return remove
+        else:
+            raise ValueError
+
 
     def __init__(
         self,
@@ -94,6 +103,8 @@ class ReidDataset(ImageDataset):
             collate_fn=type(self.pose_model).collate_fn,
             persistent_workers=False,
         )
+        self.eval_metric = self.reid_config.eval_metric
+        self.multi_video_queries_only = self.reid_config.multi_video_queries_only
 
         assert (
             self.reid_config.train.max_samples_per_id
@@ -561,6 +572,13 @@ class ReidDataset(ImageDataset):
         queries_per_pid = gt_dets_for_reid.groupby("person_id").apply(
             random_tracklet_sampling
         )
+        if self.eval_metric == 'mot_inter_video' or self.multi_video_queries_only:
+            # keep only queries that are in more than one video
+            queries_per_pid = queries_per_pid.droplevel(level=0).groupby("person_id")['video_id'].filter(lambda g: (g.nunique() > 1)).reset_index()
+            assert len(queries_per_pid) != 0, "There were no identity with more than one videos to be used as queries. " \
+                                              "Try setting 'multi_video_queries_only' to False or not using " \
+                                              "eval_metric='mot_inter_video' or adjust the settings to sample a " \
+                                              "bigger ReID dataset."
         gt_dets.loc[gt_dets.split != "none", "split"] = "gallery"
         gt_dets.loc[gt_dets.id.isin(queries_per_pid.id), "split"] = "query"
 

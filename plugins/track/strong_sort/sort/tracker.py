@@ -40,8 +40,6 @@ class Tracker:
         The list of active tracks at the current time step.
     """
 
-    GATING_THRESHOLD = np.sqrt(kalman_filter.chi2inv95[4])
-
     def __init__(
         self,
         metric,
@@ -53,6 +51,11 @@ class Tracker:
         _lambda=0,
         ema_alpha=0.9,
         mc_lambda=0.995,
+        matching_strategy="strong_sort_matching",
+        gating_thres_factor=1.5,
+        w_kfgd=1,
+        w_reid=1,
+        w_st=1,
         only_position_for_kf_gating=False,
         max_kalman_prediction_without_update=7,
     ):
@@ -74,6 +77,11 @@ class Tracker:
         self._lambda = _lambda
         self.ema_alpha = ema_alpha
         self.mc_lambda = mc_lambda
+        self.gating_thres_factor = gating_thres_factor
+        self.w_kfgd = w_kfgd
+        self.w_reid = w_reid
+        self.w_st = w_st
+        self.matching_strategy = matching_strategy
 
         self.tracks = []
         self._next_id = 1
@@ -121,8 +129,12 @@ class Tracker:
             A list of detections at the current time step.
 
         """
-        # Run matching cascade.
-        matches, unmatched_tracks, unmatched_detections = self._match(detections)
+        if self.matching_strategy == "strong_sort_matching":
+            matches, unmatched_tracks, unmatched_detections = self.strong_sort_matching(detections)
+        elif self.matching_strategy == "bot_sort_matching":
+            matches, unmatched_tracks, unmatched_detections = self.bot_sort_matching(detections)
+        else:
+            raise NotImplementedError
 
         # Update track set.
         for track_idx, detection_idx in matches:
@@ -142,11 +154,12 @@ class Tracker:
         self.tracks = [t for t in self.tracks if not t.is_deleted()]
 
         # Update distance metric.
-        active_targets = [t.track_id for t in self.tracks if t.is_confirmed()]
+        # active_targets = [t.track_id for t in self.tracks if t.is_confirmed()]
+        active_targets = [t.track_id for t in self.tracks]
         features, targets = [], []
         for track in self.tracks:
-            if not track.is_confirmed():
-                continue
+            # if not track.is_confirmed():
+            #     continue
             features += track.features
             targets += [track.track_id for _ in track.features]
         self.metric.partial_fit(
@@ -154,7 +167,6 @@ class Tracker:
         )
 
     def _full_cost_metric(self, tracks, dets, track_indices, detection_indices):
-        # FIXME /!\ NOT USED
         """
         This implements the full lambda-based cost-metric. However, in doing so, it disregards
         the possibility to gate the position only which is provided by
@@ -166,9 +178,13 @@ class Tracker:
         Note also that the authors work with the squared distance. I also sqrt this, so that it
         is more intuitive in terms of values.
         """
+        gating_dim = 2 if self.only_position else 4
+        GATING_THRESHOLD = np.sqrt(kalman_filter.chi2inv95[gating_dim])
+        # TODO add rules to switch from oks to reid when too old tracklets, or implement cascade matching
+
         # Compute First the Position-based Cost Matrix
         pos_cost = np.empty([len(track_indices), len(detection_indices)])
-        msrs = np.asarray([dets[i].to_tlbr() for i in detection_indices])
+        msrs = np.asarray([dets[i].to_ltwh() for i in detection_indices])
         for row, track_idx in enumerate(track_indices):
             track = tracks[track_idx]
             pos_cost[row, :] = (
@@ -177,25 +193,53 @@ class Tracker:
                         track.mean,
                         track.covariance,
                         msrs,
-                        False,
+                        self.only_position,
                     )
                 )
-                / self.GATING_THRESHOLD
+                / (GATING_THRESHOLD * self.gating_thres_factor)
             )
-        pos_gate = pos_cost > 1.0
+        if self.w_kfgd > 0:
+            pos_gate = pos_cost > 1.0
+        else:
+            pos_gate = np.zeros_like(pos_cost)
+
         # Now Compute the Appearance-based Cost Matrix
-        app_cost = self.metric.distance(
-            np.array([dets[i].feature for i in detection_indices]),
-            np.array([tracks[i].track_id for i in track_indices]),
-        )
-        app_gate = app_cost > self.metric.matching_threshold
+        features = {
+            "reid_features": np.array(
+                [dets[i].feature["reid_features"] for i in detection_indices]
+            ),
+            "visibility_scores": np.array(
+                [dets[i].feature["visibility_scores"] for i in detection_indices]
+            ),
+        }
+        targets = np.array([tracks[i].track_id for i in track_indices])
+        app_cost = self.metric.distance(features, targets)  # NO thresholding until here -> ONLY REID DISTANCE
+        if self.w_reid > 0:
+            app_gate = app_cost > self.metric.matching_threshold
+        else:
+            app_gate = np.zeros_like(app_cost)
+
+        # Now compute spatio-temporal (IOU/OKS/...) based cost matrix
+        st_cost = self.motion_cost(  # return cost matrix gated by KM (too big IOU set to INF)
+            tracks, dets, track_indices, detection_indices)
+        if self.w_st > 0:
+            st_gate = st_cost > self.motion_max_distance
+        else:
+            st_gate = np.zeros_like(st_cost)
+
         # Now combine and threshold
-        cost_matrix = self._lambda * pos_cost + (1 - self._lambda) * app_cost
-        cost_matrix[np.logical_or(pos_gate, app_gate)] = linear_assignment.INFTY_COST
+        cost_matrix = (self.w_kfgd * pos_cost + self.w_reid * app_cost + st_cost * self.w_st) / (self.w_kfgd + self.w_reid + self.w_st)
+        if self.w_kfgd > 0:  # FIXME support all combinations
+            cost_matrix[np.logical_or(pos_gate, app_gate, st_gate)] = linear_assignment.INFTY_COST
+        elif self.w_st > 0:
+            cost_matrix[np.logical_or(app_gate, st_gate)] = linear_assignment.INFTY_COST
+        else:
+            cost_matrix[app_gate] = linear_assignment.INFTY_COST
+
         # Return Matrix
         return cost_matrix
 
-    def _match(self, detections):
+    def strong_sort_matching(self, detections):
         """
         Associate previous track with current detections in two steps.
         Both steps perform a linear assignment (Hungarian algorithm) based on a cost matrix between tracks and detections.
@@ -260,8 +304,6 @@ class Tracker:
             confirmed_tracks,
         )
 
-        # print(f"Matches with confirmed tracks using appearance features = {len(matches_a)}")
-
         # Associate remaining tracks together with unconfirmed tracks using spatio-temporal (st) distance metric.
         iou_track_candidates = unconfirmed_tracks + [
             k for k in unmatched_tracks_a if self.tracks[k].time_since_update == 1
@@ -286,11 +328,39 @@ class Tracker:
         self.add_matching_information(detections, self.tracks, "R", confirmed_tracks, list(range(len(detections))), matches_a, gated_reid_cost_matrix)
         self.add_matching_information(detections, self.tracks, "S", iou_track_candidates, unmatched_detections_a, matches_b, st_cost_matrix)
 
-        # print(f"Remaining tracks together with unconfirmed tracks using IOU = {len(matches_b)}")
-
         matches = matches_a + matches_b
         unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
         return matches, unmatched_tracks, unmatched_detections_b
+
+    def bot_sort_matching(self, detections):
+        """
+        Invoke hungarion matching once with a cost matrix computed as the weighted sum of reid distance, IOU/OKS distance
+        and kalman filter gating distance.
+        """
+
+        self.compute_all_costs_matrix(detections)
+
+        # Split track set into confirmed and unconfirmed tracks.
+        tracks = [i for i, t in enumerate(self.tracks)]
+
+        # Associate tracks using appearance features.
+        (
+            matches,
+            unmatched_tracks,
+            unmatched_detections,
+            gated_reid_cost_matrix
+        ) = linear_assignment.matching_cascade(  # TODO do real cascade and change threshold based on cascade step?
+            self._full_cost_metric,
+            self.metric.matching_threshold,
+            self.max_age,  # 'cascade' matching is not really implemented here, so 'max_age' is not used
+            self.tracks,
+            detections,
+            tracks,
+        )
+
+        self.add_matching_information(detections, self.tracks, "R", tracks, list(range(len(detections))), matches, gated_reid_cost_matrix)
+
+        return matches, unmatched_tracks, unmatched_detections
 
     def compute_all_costs_matrix(self, detections):
         """Compute reid/spatio-temporal/kf_gating distance from each detection to each track and update each
