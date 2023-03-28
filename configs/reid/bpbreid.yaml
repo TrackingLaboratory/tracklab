@@ -25,7 +25,7 @@ cfg:
     combineall: False
     transforms: ["rc", "re"]
     save_dir: ""
-    workers: 8
+    workers: ${num_cores}
 
   sampler:
     train_sampler: RandomIdentitySampler # sampler for source train loader

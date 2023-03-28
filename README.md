@@ -44,9 +44,12 @@ git submodule update --init --recursive
 #### Create and activate a new environment
 
 ```bash
-conda create -n pbtrack python pytorch cudatoolkit torchvision pip -c pytorch -y
+conda create -n pbtrack pip python=3.10 pytorch==1.13.0 torchvision==0.14.0 pytorch-cuda=11.7 -c pytorch -c nvidia -y
 conda activate pbtrack
 ```
+
+You might need to change your torch installation depending on your hardware. Please check on 
+[Pytorch website](https://pytorch.org/get-started/previous-versions/) to find the right version for you.
 
 #### Install the dependencies
 Get into your repo and install the requirements with :

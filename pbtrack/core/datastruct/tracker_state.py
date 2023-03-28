@@ -132,11 +132,11 @@ class TrackerState(AbstractContextManager):
         predictions.loc[predictions["bbox_ltwh"].isna(), "bbox_ltwh"] = predictions[
             predictions["bbox_ltwh"].isna()
         ].keypoints_xyc.apply(lambda x: kp_to_bbox_w_threshold(x, vis_threshold=0))
-        predictions["bbox_c"] = predictions.keypoints_xyc.apply(
+        predictions["bbox_score"] = predictions.keypoints_xyc.apply(
             lambda x: x[:, 2].mean()
         )
-        if predictions['bbox_c'].sum() == 0:
-            predictions['bbox_c'] = predictions.scores.apply(lambda x: x.mean())
+        if predictions['bbox_score'].sum() == 0:
+            predictions['bbox_score'] = predictions.scores.apply(lambda x: x.mean())
             # FIXME confidence score in predictions.keypoints_xyc is always 0
         predictions = predictions.merge(
             self.gt.image_metadatas[["video_id"]],

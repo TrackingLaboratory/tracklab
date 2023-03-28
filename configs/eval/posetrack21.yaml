@@ -38,7 +38,7 @@ cfg:
   mot_gt_folder: ${dataset.dataset_path}/posetrack_mot/mot/val
 
   use_parallel: True
-  num_parallel_cores: 8
+  num_parallel_cores: ${num_cores}
 
   mot:
     dataset_path: ${dataset.dataset_path}

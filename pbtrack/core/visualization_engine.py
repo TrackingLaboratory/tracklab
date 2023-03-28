@@ -288,7 +288,7 @@ class VisualizationEngine:
         ):
             draw_text(
                 patch,
-                f"{100*np.mean(keypoints_c):.1f} %",
+                f"{detection.keypoints_score:.1f} %",
                 (l + 3, t - 5),
                 fontFace=self.cfg.text.font,
                 fontScale=self.cfg.text.scale,

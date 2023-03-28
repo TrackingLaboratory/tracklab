@@ -1,3 +1,4 @@
+import torch
 import pandas as pd
 from tqdm import tqdm
 from omegaconf import DictConfig
@@ -335,6 +336,7 @@ class OfflineMultiDetector(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx: int):
         idxs, batch = batch
+        idxs = idxs.cpu() if isinstance(idxs, torch.Tensor) else idxs
         image_metadatas = self.img_metadatas.loc[idxs]
         detections = Detections(self.detect_multi_model.process(batch, image_metadatas))
         return detections
@@ -349,6 +351,7 @@ class OfflineSingleDetector(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx: int):
         idxs, batch = batch
+        idxs = idxs.cpu() if isinstance(idxs, torch.Tensor) else idxs
         batch_detections = self.detections.loc[idxs]
         batch_metadatas = self.img_metadatas.loc[batch_detections.image_id]
         return self.detect_single_model.process(
@@ -365,6 +368,7 @@ class OfflineReider(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx: int):
         idxs, batch = batch
+        idxs = idxs.cpu() if isinstance(idxs, torch.Tensor) else idxs
         batch_detections = self.detections.loc[idxs]
         batch_metadatas = self.img_metadatas.loc[batch_detections.image_id]
         return self.reid_model.process(batch, batch_detections, batch_metadatas)
@@ -380,6 +384,7 @@ class OfflineTracker(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx: int):
         idxs, batch = batch
+        idxs = idxs.cpu() if isinstance(idxs, torch.Tensor) else idxs
         batch_detections = self.detections.loc[idxs]
         batch_metadatas = self.img_metadatas.loc[batch_detections.image_id]
         return self.track_model.process(

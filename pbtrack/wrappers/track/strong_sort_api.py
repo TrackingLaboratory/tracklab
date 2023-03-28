@@ -54,7 +54,7 @@ class StrongSORT(OnlineTracker):
     @torch.no_grad()
     def preprocess(self, detection: Detection, metadata: ImageMetadata):
         bbox_ltwh = detection.bbox_ltwh
-        score = np.mean(detection.keypoints_xyc[:, 2])  # TODO put as Detection property
+        score = detection.keypoints_score
         reid_features = detection.embeddings  # .flatten()
         visibility_score = detection.visibility_scores
         id = detection.id
@@ -101,7 +101,15 @@ class StrongSORT(OnlineTracker):
         assert results.index.isin(
             detections.index
         ).all(), "StrongSORT returned detections with unknown indices"
-        merged_detections = detections.join(results, how="left")
+        merged_detections = detections.merge(
+            results,
+            how="left",
+            left_index=True,
+            right_index=True,
+            suffixes=("_drop", ""),
+        )
+        if "track_id_drop" in merged_detections.columns:
+            merged_detections.drop(["track_id_drop"], axis=1, inplace=True)
         assert merged_detections.index.equals(detections.index), (
             "Merge with StrongSORT results failed, some "
             "detections were lost or added"

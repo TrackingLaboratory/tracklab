@@ -117,10 +117,10 @@ class BPBReId(ReIdentifier):
     @torch.no_grad()
     def process(self, batch, detections, metadatas):
         im_crops = batch["img"]
-        im_crops = [im_crop.numpy() for im_crop in im_crops]
+        im_crops = [im_crop.cpu().detach().numpy() for im_crop in im_crops]
         if "masks" in batch:
             external_parts_masks = batch["masks"]
-            external_parts_masks = external_parts_masks.numpy()
+            external_parts_masks = external_parts_masks.cpu().detach().numpy()
         else:
             external_parts_masks = None
         if self.feature_extractor is None:

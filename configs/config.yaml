@@ -12,6 +12,7 @@ defaults:
 
 experiment_name: "???"
 data_dir: "???"
+num_cores: 4
 
 train_detect: false
 train_reid: false
