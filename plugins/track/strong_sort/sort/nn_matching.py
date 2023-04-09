@@ -4,7 +4,7 @@ import torch
 
 from bpbreid.torchreid.metrics import compute_distance_matrix
 from bpbreid.torchreid.metrics.distance import compute_distance_matrix_using_bp_features
-
+from torch.nn import functional as F
 
 def _pdist(a, b):
     """Compute pair-wise squared distance between points in `a` and `b`.
@@ -93,7 +93,7 @@ def _nn_cosine_distance(x, y):
     return distances.min(axis=0)
 
 
-def _nn_part_based(y, x):
+def _nn_part_based(y, x, normalize_features=True):
     """ Helper function for nearest neighbor distance metric (cosine).
 
     Parameters
@@ -110,16 +110,26 @@ def _nn_part_based(y, x):
         smallest cosine distance to a sample in `x`.
 
     """
-    x_features = x['reid_features']
-    x_visibility_scores = x['visibility_scores']
-    y_features = y[-1]['reid_features']
-    y_visibility_scores = y[-1]['visibility_scores']
-
-    distances = compute_distance_matrix_using_bp_features(torch.from_numpy(y_features).unsqueeze(0),
-                                                          torch.from_numpy(x_features),
-                                                          torch.from_numpy(y_visibility_scores).unsqueeze(0),
-                                                          torch.from_numpy(x_visibility_scores))
+    x_features = torch.from_numpy(x['reid_features'])
+    x_visibility_scores = torch.from_numpy(x['visibility_scores'])
+    y_features = torch.from_numpy(y[-1]['reid_features'])
+    y_visibility_scores = torch.from_numpy(y[-1]['visibility_scores'])
+    if normalize_features:
+        """Features are normalized here, which is not the most efficient since a given tracklet features will be normalized multiple times.
+        It is not done before because we want to do the exponential moving average (EMA) aggregation of tracklets features on the un-normalized features
+        and then normalize after. If normalization was done before EMA, the averaged features would not be normalized 
+        anymore and we would therefore pass un-normalized features to 'compute_distance_matrix_using_bp_features'."""
+        x_features = F.normalize(x_features, p=2, dim=-1)
+        y_features = F.normalize(y_features, p=2, dim=-1)
+    distances = compute_distance_matrix_using_bp_features(y_features.unsqueeze(0),
+                                                          x_features,
+                                                          y_visibility_scores.unsqueeze(0),
+                                                          x_visibility_scores,
+                                                          use_gpu=False,
+                                                          use_logger=False
+                                                          )
     distances = distances[0] / 2    # When feature are normalized, the above function returns distances within [0, 2]
+    # TODO handle invalid distances
     return distances.mean(axis=0)
 
 
