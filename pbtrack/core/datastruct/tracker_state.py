@@ -1,32 +1,33 @@
+import os
 import json
+import pickle
+import zipfile
+import numpy as np
+import pandas as pd
 from contextlib import AbstractContextManager
 from os.path import abspath
 from pathlib import Path
-import pickle
-import zipfile
 
-import numpy as np
-import pandas as pd
-
-from .tracking_dataset import TrackingSet
 from .detections import Detections
-import logging
+from .tracking_dataset import TrackingSet
+from pbtrack.utils.coordinates import kp_to_bbox_w_threshold, bbox_ltrb2ltwh
 
-from ...utils.coordinates import kp_to_bbox_w_threshold, bbox_ltrb2ltwh
+
+import logging
 
 log = logging.getLogger(__name__)
 
 
 class TrackerState(AbstractContextManager):
-    SAVE_COLUMNS = dict(
+    LOAD_COLUMNS = dict(
         detection=[
             "image_id",
             "id",
             "bbox_ltwh",
-            "bbox_c",
+            "bbox_score",
             "keypoints_xyc",
+            "keypoints_score",
             "category_id",
-            "person_id",
             "video_id",
         ],
         reid=[
@@ -34,7 +35,7 @@ class TrackerState(AbstractContextManager):
             "visibility_scores",
             "body_masks",
         ],
-        tracking=["track_bbox_tlwh", "track_bbox_conf", "track_id"],
+        tracking=["track_bbox_tlwh", "track_bbox_conf", "track_id", "person_id"],
     )
 
     def __init__(
@@ -43,29 +44,64 @@ class TrackerState(AbstractContextManager):
         load_file=None,
         json_file=None,  # TODO merge with above behavior
         save_file=None,
+        load_from_groundtruth=False,
         compression=zipfile.ZIP_STORED,
-        load_step="reid",
+        load_step=None,
         bbox_format=None,
     ):
+        assert load_step in [
+            "detect_single",
+            "detect_multi",
+            "reid",
+            None,
+        ], "Load_step must be one of 'detect_single', 'detect_multi', 'reid', 'None'"
         self.gt = tracking_set
         self.predictions = None
         # self.filename = Path(filename)
         self.load_file = Path(load_file) if load_file else None
         self.save_file = Path(save_file) if save_file else None
         self.compression = compression
-        self.SAVE_COLUMNS["reid"] += self.SAVE_COLUMNS["detection"]
-        self.SAVE_COLUMNS["tracking"] += self.SAVE_COLUMNS["reid"]
-        self.save_columns = self.SAVE_COLUMNS[load_step]
+        self.LOAD_COLUMNS["reid"] += self.LOAD_COLUMNS["detection"]
+        self.LOAD_COLUMNS["tracking"] += self.LOAD_COLUMNS["reid"]
+        if load_step:
+            self.load_columns = (
+                self.LOAD_COLUMNS[load_step]
+                if load_step not in ["detect_multi", "detect_single"]
+                else self.LOAD_COLUMNS["detection"]
+            )
         self.zf = None
         self.video_id = None
-        self.do_detection = load_step == None
-        self.do_reid = load_step == "detection" or self.do_detection
+        self.do_detect_multi = load_step is None
+        self.do_detect_single = load_step == "detect_multi" or self.do_detect_multi
+        self.do_reid = load_step == "detect_single" or self.do_detect_single
         self.do_tracking = load_step == "reid" or self.do_reid
         self.bbox_format = bbox_format
 
         self.json_file = json_file
         if self.json_file is not None:
             self.load_predictions_from_json(json_file)
+
+        self.load_from_groundtruth = load_from_groundtruth
+        if self.load_from_groundtruth:
+            self.load_groundtruth(load_step)
+
+    def load_groundtruth(self, load_step):
+        # FIXME only work for topdown -> handle bottomup
+        # We consider here that detect_multi detects the bbox
+        # and that detect_single detects the keypoints
+        assert (
+            load_step != "reid"
+        ), "Cannot load from groundtruth in reid step. Can only load bboxes or keypoints"
+        self.gt_detections = self.gt.detections.copy()
+        if load_step == "detect_multi":
+            self.gt_detections["keypoints_xyc"] = pd.NA
+            self.gt_detections["track_id"] = pd.NA
+            self.gt_detections.drop(columns=["track_id"], inplace=True)
+            self.gt_detections.rename(columns={"visibility": "bbox_score"}, inplace=True)
+        elif load_step == "detect_single":
+            self.gt_detections["track_id"] = pd.NA
+            self.gt_detections.drop(columns=["track_id"], inplace=True)
+            self.gt_detections.rename(columns={"visibility": "bbox_score"}, inplace=True)
 
     def load_predictions_from_json(self, json_file):
         anns_path = Path(json_file)
@@ -81,30 +117,42 @@ class TrackerState(AbstractContextManager):
         predictions = pd.DataFrame(detections)
         predictions.rename(columns={"bbox": "bbox_ltwh"}, inplace=True)
         predictions.bbox_ltwh = predictions.bbox_ltwh.apply(lambda x: np.array(x))
-        predictions['id'] = predictions.index
+        predictions["id"] = predictions.index
         predictions.rename(columns={"keypoints": "keypoints_xyc"}, inplace=True)
         predictions.keypoints_xyc = predictions.keypoints_xyc.apply(
             lambda x: np.reshape(np.array(x), (-1, 3))
         )
         if self.bbox_format == "ltrb":
             # TODO tracklets coming from Tracktor++ are in ltbr format
-            predictions.loc[predictions['bbox_ltwh'].notna(), 'bbox_ltwh'] = predictions[
-                predictions['bbox_ltwh'].notna()].bbox_ltwh.apply(
+            predictions.loc[
+                predictions["bbox_ltwh"].notna(), "bbox_ltwh"
+            ] = predictions[predictions["bbox_ltwh"].notna()].bbox_ltwh.apply(
                 lambda x: bbox_ltrb2ltwh(x)
             )
-        predictions.loc[predictions['bbox_ltwh'].isna(), 'bbox_ltwh'] = predictions[predictions['bbox_ltwh'].isna()].keypoints_xyc.apply(lambda x: kp_to_bbox_w_threshold(x, vis_threshold=0))
-        predictions['bbox_c'] = predictions.keypoints_xyc.apply(lambda x: x[:, 2].mean())
-        if predictions['bbox_c'].sum() == 0:
-            predictions['bbox_c'] = predictions.scores.apply(lambda x: x.mean())
+        predictions.loc[predictions["bbox_ltwh"].isna(), "bbox_ltwh"] = predictions[
+            predictions["bbox_ltwh"].isna()
+        ].keypoints_xyc.apply(lambda x: kp_to_bbox_w_threshold(x, vis_threshold=0))
+        predictions["bbox_score"] = predictions.keypoints_xyc.apply(
+            lambda x: x[:, 2].mean()
+        )
+        if predictions['bbox_score'].sum() == 0:
+            predictions['bbox_score'] = predictions.scores.apply(lambda x: x.mean())
             # FIXME confidence score in predictions.keypoints_xyc is always 0
         predictions = predictions.merge(
-            self.gt.image_metadatas[["video_id"]], how="left", left_on="image_id", right_index=True
+            self.gt.image_metadatas[["video_id"]],
+            how="left",
+            left_on="image_id",
+            right_index=True,
         )
         self.json_predictions = Detections(predictions)
         if self.do_tracking:
-            self.json_predictions.drop(["track_id"], axis=1, inplace=True)  # TODO NEED TO DROP track_id if we want to perform tracking
+            self.json_predictions.drop(
+                ["track_id"], axis=1, inplace=True
+            )  # TODO NEED TO DROP track_id if we want to perform tracking
         else:
-            self.json_predictions['track_bbox_kf_ltwh'] = self.json_predictions['bbox_ltwh']  # FIXME config to decide if track_bbox_kf_ltwh or bbox_ltwh should be used
+            self.json_predictions["track_bbox_kf_ltwh"] = self.json_predictions[
+                "bbox_ltwh"
+            ]  # FIXME config to decide if track_bbox_kf_ltwh or bbox_ltwh should be used
 
     def __call__(self, video_id):
         self.video_id = video_id
@@ -125,6 +173,7 @@ class TrackerState(AbstractContextManager):
         if self.save_file is None:
             save_zf = None
         else:
+            os.makedirs(os.path.dirname(self.save_file), exist_ok=True)
             save_zf = zipfile.ZipFile(
                 self.save_file,
                 mode="a",
@@ -152,7 +201,9 @@ class TrackerState(AbstractContextManager):
             self.predictions = self.predictions[
                 ~(self.predictions["video_id"] == self.video_id)
             ]
-            self.predictions = pd.concat([self.predictions, detections])  # TODO UPDATE should update existing rows or append if new rows
+            self.predictions = pd.concat(
+                [self.predictions, detections]
+            )  # TODO UPDATE should update existing rows or append if new rows
 
     def save(self):
         """
@@ -181,7 +232,11 @@ class TrackerState(AbstractContextManager):
                 and False otherwise.
         """
         if self.json_file is not None:
-            return self.json_predictions[self.json_predictions.video_id == self.video_id]
+            return self.json_predictions[
+                self.json_predictions.video_id == self.video_id
+            ]
+        if self.load_from_groundtruth:
+            return self.gt_detections[self.gt_detections.video_id == self.video_id]
         if self.load_file is None:
             return None
 
@@ -191,7 +246,7 @@ class TrackerState(AbstractContextManager):
             with self.zf["load"].open(f"{self.video_id}.pkl", "r") as fp:
                 video_detections = pickle.load(fp)
                 self.update(video_detections)
-                return video_detections[self.save_columns]
+                return video_detections[self.load_columns]
         else:
             log.info(f"{self.video_id} not in pklz file")
             return None

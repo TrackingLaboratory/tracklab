@@ -1,4 +1,4 @@
-from pbtrack.core.tracker import OfflineTracker
+from pbtrack import OfflineTracker
 
 
 class DeepSORTTracker(OfflineTracker):

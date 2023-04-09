@@ -44,15 +44,19 @@ git submodule update --init --recursive
 #### Create and activate a new environment
 
 ```bash
-conda create -y --name "pbtrack" python pip numpy
+conda create -n pbtrack pip python=3.10 pytorch==1.13.0 torchvision==0.14.0 pytorch-cuda=11.7 -c pytorch -c nvidia -y
 conda activate pbtrack
 ```
+
+You might need to change your torch installation depending on your hardware. Please check on 
+[Pytorch website](https://pytorch.org/get-started/previous-versions/) to find the right version for you.
 
 #### Install the dependencies
 Get into your repo and install the requirements with :
 
 ```bash
 pip install -r requirements.txt
+mim install mmcv-full
 ```
 
 #### Setup reid
@@ -65,6 +69,7 @@ python setup.py develop
 ### External dependencies
 
 - Get the **PoseTrack21** dataset [here](https://github.com/anDoer/PoseTrack21/tree/35bd7033ec4e1a352ae39b9522df5a683f83781b#how-to-get-the-dataset).
+- Or get out custom **TinyPoseTrack21** dataset with only two videos [here](https://drive.google.com/file/d/15aX67GAKpf8faaBE4SOJAs_KGghzfWl4/view?usp=sharing).
 - Get the pretrained weights of **BPBReID** [here](https://github.com/VlSomers/bpbreid#download-the-pre-trained-models).
 
 

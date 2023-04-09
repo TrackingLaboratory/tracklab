@@ -14,3 +14,11 @@
 	path = plugins/eval/poseval
 	url = https://github.com/PbTrack/poseval.git
 	branch = pbtrack
+[submodule "plugins/detect/mmpose"]
+	path = plugins/detect/mmpose
+	url = https://github.com/PbTrack/mmpose.git
+	branch = pbtrack
+[submodule "plugins/detect/mmdetection"]
+	path = plugins/detect/mmdetection
+	url = https://github.com/PbTrack/mmdetection.git
+	branch = pbtrack

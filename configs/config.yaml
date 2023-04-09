@@ -1,15 +1,18 @@
 defaults:
   - _self_
-  - detect: openpifpaf
-  - reid: bpbreid
-  - track: strong_sort
-  - engine: offline
-  - state: dont_keep
-  - visualization: visualization
   - dataset: posetrack21
+  - detect_multiple: yolox
+  - detect_single: hrnet_posetrack18
+  - engine: offline
   - eval: posetrack21
+  - reid: bpbreid
+  - state: no_save
+  - track: strong_sort
+  - visualization: save_videos
+
 experiment_name: "???"
 data_dir: "???"
+num_cores: 4
 
 train_detect: True
 train_reid: False

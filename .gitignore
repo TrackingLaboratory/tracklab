@@ -1,4 +1,4 @@
-/configs_user/
+configs_user/
 runs/
 data/
 outputs/
@@ -9,6 +9,7 @@ notebooks/
 weights/
 slurm/
 states/
+*..yaml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

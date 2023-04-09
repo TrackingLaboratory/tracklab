@@ -2,9 +2,15 @@ import glob
 import cv2
 
 from pathlib import Path
-from pbtrack.core import Detections, ImageMetadatas, VideoMetadatas
-from pbtrack.core.datastruct.tracking_dataset import TrackingDataset, TrackingSet
+from pbtrack import (
+    ImageMetadatas,
+    VideoMetadatas,
+    TrackingDataset,
+    TrackingSet,
+)
+import logging
 
+log = logging.getLogger(__name__)
 
 def write_video_images_to_disk(video_path):
     video_name = video_path.stem
@@ -13,13 +19,15 @@ def write_video_images_to_disk(video_path):
     assert cap.isOpened(), "Error opening video stream or file"
 
     tmp_video_folder = Path("tmp", video_name)
-    print('Dumping video frames to {}'.format(tmp_video_folder.resolve()))
+    log.info("Dumping video frames to {}".format(tmp_video_folder.resolve()))
     tmp_video_folder.mkdir(parents=True, exist_ok=True)
     frame_idx = 0
     while cap.isOpened():
         ret, frame = cap.read()
         if ret:
-            image_path = tmp_video_folder / "{}_{:06d}.jpg".format(video_name, frame_idx)
+            image_path = tmp_video_folder / "{}_{:06d}.jpg".format(
+                video_name, frame_idx
+            )
             cv2.imwrite(str(image_path), frame)
             frame_idx += 1
         else:
@@ -38,32 +46,35 @@ class ExternalVideo(TrackingDataset):
         mp4. Each video in video_metadata should specify its type: folder of images or mp4 video or youtube link, etc,
         and tracking engine should adapt its batch loop accordingly.
     """
+
     annotations_dir = "posetrack_data"
 
     def __init__(self, video_path: str, dataset_path, *args, **kwargs):
         self.video_path = Path(video_path)
         video_name = self.video_path.stem
-        assert (
-            self.video_path.exists()
-        ), "Video does not exist ('{}')".format(self.video_path)
+        assert self.video_path.exists(), "Video does not exist ('{}')".format(
+            self.video_path
+        )
         tmp_video_folder = write_video_images_to_disk(self.video_path)
         img_paths = glob.glob(str(tmp_video_folder / "*.jpg"))
         img_paths.sort()
-        nframe = len(img_paths)
+        nframes = len(img_paths)
         video_id = 0
-        image_metadata = ImageMetadatas([
-            {
-                'id': i,
-                'name': Path(img_path).stem,
-                'frame': i,
-                'nframe': nframe,
-                'video_id': video_id,
-                'file_path': img_path,
-            }
-            for i, img_path in enumerate(img_paths)
-        ])
+        image_metadata = ImageMetadatas(
+            [
+                {
+                    "id": i,
+                    "name": Path(img_path).stem,
+                    "frame": i,
+                    "nframes": nframes,
+                    "video_id": video_id,
+                    "file_path": img_path,
+                }
+                for i, img_path in enumerate(img_paths)
+            ]
+        )
 
-        video_metadata = VideoMetadatas([{'id': video_id, 'name': video_name}])
+        video_metadata = VideoMetadatas([{"id": video_id, "name": video_name}])
 
         test_set = TrackingSet(
             "test",

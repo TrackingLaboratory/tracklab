@@ -1,7 +1,7 @@
 defaults:
   - dataset: default
 
-_target_: pbtrack.wrappers.reid.bpbreid_api.BPBReId
+_target_: pbtrack.wrappers.BPBReId
 job_id: "${oc.env:SLURM_JOBID,0}" # TODO
 save_path: reid
 use_keypoints_visiblity_scores_for_reid: False
@@ -26,7 +26,7 @@ cfg:
     combineall: False
     transforms: ["rc", "re"]
     save_dir: ""
-    workers: 8
+    workers: ${num_cores}
 
   sampler:
     train_sampler: RandomIdentitySampler # sampler for source train loader

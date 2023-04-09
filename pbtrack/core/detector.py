@@ -3,8 +3,8 @@ from abc import abstractmethod, ABC
 
 from torch.utils.data.dataloader import default_collate
 
-from pbtrack.core.datastruct import Detection
-from pbtrack.core.datastruct.image_metadatas import ImageMetadata, ImageMetadatas
+from .datastruct.detections import Detection
+from .datastruct.image_metadatas import ImageMetadata, ImageMetadatas
 
 
 class Detector(ABC):

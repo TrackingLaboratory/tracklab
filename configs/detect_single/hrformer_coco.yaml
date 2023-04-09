@@ -1,0 +1,25 @@
+_target_: pbtrack.wrappers.TopDownMMPose
+
+cfg:
+  min_keypoints_score: 0.0  # keep only detections with a score higher
+  min_keypoints_confidence: 0.0  # consider only keypoints with a confidence higher
+
+  path_to_config: ${project_dir}/plugins/detect/mmpose/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrformer_base_coco_384x288.py
+  path_to_checkpoint: ${project_dir}/weights/mmpose/hrformer_base_coco_384x288-ecf0758d_20220316.pth
+  download_url: https://download.openmmlab.com/mmpose/top_down/hrformer/hrformer_base_coco_384x288-ecf0758d_20220316.pth
+
+# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrformer_small_coco_256x192.py
+# https://download.openmmlab.com/mmpose/top_down/hrformer/hrformer_small_coco_256x192-5310d898_20220316.pth
+# AP: 0.738
+
+# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrformer_small_coco_384x288.py
+# https://download.openmmlab.com/mmpose/top_down/hrformer/hrformer_small_coco_384x288-98d237ed_20220316.pth
+# AP: 0.757
+
+# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrformer_base_coco_256x192.py
+# https://download.openmmlab.com/mmpose/top_down/hrformer/hrformer_base_coco_256x192-6f5f1169_20220316.pth
+# AP: 0.753
+
+# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrformer_base_coco_384x288.py
+# https://download.openmmlab.com/mmpose/top_down/hrformer/hrformer_base_coco_384x288-ecf0758d_20220316.pth
+# AP: 0.774

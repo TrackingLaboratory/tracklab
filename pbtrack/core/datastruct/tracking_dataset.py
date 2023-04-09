@@ -1,5 +1,6 @@
 from abc import ABC
 from pathlib import Path
+
 from .detections import Detections
 from .image_metadatas import ImageMetadatas
 from .video_metadatas import VideoMetadatas
@@ -45,7 +46,11 @@ class TrackingDataset(ABC):
             self.test_set = self._subsample(self.test_set, nvid, nframes, vids_dict)
 
     def _subsample(self, tracking_set, nvid, nframes, vids_dict):
-        if nvid < 1 and nframes < 1 and (vids_dict is None or len(vids_dict[tracking_set.split]) < 1):
+        if (
+            nvid < 1
+            and nframes < 1
+            and (vids_dict is None or len(vids_dict[tracking_set.split]) < 1)
+        ):
             return tracking_set
 
         # filter videos:
@@ -76,7 +81,9 @@ class TrackingDataset(ABC):
 
         # keep only images from first nframes
         if nframes > 0:
-            tiny_image_metadatas = tiny_image_metadatas.groupby("video_id").head(nframes)
+            tiny_image_metadatas = tiny_image_metadatas.groupby("video_id").head(
+                nframes
+            )
 
         # filter detections:
         if tracking_set.detections is not None:

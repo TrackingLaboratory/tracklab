@@ -1,0 +1,8 @@
+# If save_file is not null, will save the tracking state
+save_file: null
+compression: 0  # No compression, use 8 for compression
+
+# the pipeline starts after the mentioned step with the state of the mentioned file
+# [null, detect_multi, detect_single, reid]
+load_step: detect_single
+load_file: "???"

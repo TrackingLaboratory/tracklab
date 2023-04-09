@@ -1,23 +1,14 @@
 import sys
 import torch
 import numpy as np
-
 from PIL import Image
 from omegaconf.listconfig import ListConfig
 
-from pbtrack.core.detector import Detector
-from pbtrack.core.datastruct import Detection
+import openpifpaf
+
+from pbtrack import Detector, Detection
 from pbtrack.utils.images import cv2_load_image
 from pbtrack.utils.coordinates import round_bbox_coordinates
-
-from pathlib import Path
-import pbtrack
-
-root_dir = Path(pbtrack.__file__).parents[1]
-sys.path.append(
-    str((root_dir / "plugins/detect/openpifpaf/src").resolve())
-)  # FIXME : ugly
-import openpifpaf
 
 import logging
 
@@ -82,17 +73,18 @@ class OpenPifPaf(Detector):
                 keypoints = prediction.data
 
                 w, h = meta["width_height"]
-                keypoints[:, 0] = np.clip(keypoints[:, 0], 0, w - 1)
-                keypoints[:, 1] = np.clip(keypoints[:, 1], 0, h - 1)
+                # FIXME do we want this ?
+                keypoints[:, 0] = np.clip(keypoints[:, 0], 0, w)
+                keypoints[:, 1] = np.clip(keypoints[:, 1], 0, h)
                 keypoints[:, 2] = np.clip(keypoints[:, 2], 0, 1)
 
                 bbox_ltrb = self.keypoints_to_bbox(keypoints)
                 bbox_ltrb = round_bbox_coordinates(bbox_ltrb)
 
-                bbox_ltrb[0] = np.clip(bbox_ltrb[0], 0, w - 1)
-                bbox_ltrb[1] = np.clip(bbox_ltrb[1], 0, h - 1)
-                bbox_ltrb[2] = np.clip(bbox_ltrb[2], 0, w - 1)
-                bbox_ltrb[3] = np.clip(bbox_ltrb[3], 0, h - 1)
+                bbox_ltrb[0] = np.clip(bbox_ltrb[0], 0, w)
+                bbox_ltrb[1] = np.clip(bbox_ltrb[1], 0, h)
+                bbox_ltrb[2] = np.clip(bbox_ltrb[2], 0, w)
+                bbox_ltrb[3] = np.clip(bbox_ltrb[3], 0, h)
                 bbox_ltwh = np.array(
                     [
                         bbox_ltrb[0],
@@ -101,15 +93,22 @@ class OpenPifPaf(Detector):
                         bbox_ltrb[3] - bbox_ltrb[1],
                     ]
                 )
-
+                if bbox_ltwh[2] < 1:
+                    log.warning("Bbox generated with a width of 0. Changed to 1.")
+                    bbox_ltwh[2] = 1
+                if bbox_ltwh[3] < 1:
+                    log.warning("Bbox generated with a height of 0. Changed to 1.")
+                    bbox_ltwh[2] = 1
                 detections.append(
                     Detection.create(
                         image_id=metadata.id,
                         id=self.id,
                         keypoints_xyc=keypoints,
+                        keypoints_score=np.mean(keypoints[:, 2], axis=0),
                         bbox_ltwh=bbox_ltwh,
-                        bbox_c=np.mean(keypoints[:, 2], axis=0),
+                        bbox_score=np.mean(keypoints[:, 2], axis=0),
                         video_id=metadata.video_id,
+                        category_id=1,  # `person` class in posetrack
                     )
                 )
                 self.id += 1

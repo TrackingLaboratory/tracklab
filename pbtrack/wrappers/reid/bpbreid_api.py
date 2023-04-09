@@ -8,9 +8,8 @@ from yacs.config import CfgNode as CN
 
 from .bpbreid_dataset import ReidDataset
 
+from pbtrack import ImageMetadata, Detection, ReIdentifier
 from pbtrack.utils.images import cv2_load_image
-from pbtrack.core.datastruct import ImageMetadata, Detection
-from pbtrack.core.reidentifier import ReIdentifier
 from pbtrack.utils.coordinates import (
     clip_bbox_ltrb_to_img_dim,
     kp_img_to_kp_bbox,
@@ -131,10 +130,10 @@ class BPBReId(ReIdentifier):
     @torch.no_grad()
     def process(self, batch, detections, metadatas):
         im_crops = batch["img"]
-        im_crops = [im_crop.numpy() for im_crop in im_crops]
+        im_crops = [im_crop.cpu().detach().numpy() for im_crop in im_crops]
         if "masks" in batch:
             external_parts_masks = batch["masks"]
-            external_parts_masks = external_parts_masks.numpy()
+            external_parts_masks = external_parts_masks.cpu().detach().numpy()
         else:
             external_parts_masks = None
         if self.feature_extractor is None:

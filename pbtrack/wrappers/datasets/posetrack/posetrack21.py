@@ -4,10 +4,13 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from pbtrack.core.datastruct.tracking_dataset import TrackingDataset, TrackingSet
-from pbtrack.core.datastruct.image_metadatas import ImageMetadatas
-from pbtrack.core.datastruct.video_metadatas import VideoMetadatas
-from pbtrack.core.datastruct import Detections
+from pbtrack import (
+    TrackingDataset,
+    TrackingSet,
+    ImageMetadatas,
+    VideoMetadatas,
+    Detections,
+)
 
 
 class PoseTrack21(TrackingDataset):
@@ -16,20 +19,18 @@ class PoseTrack21(TrackingDataset):
     Val set: 20161 images
     Test set: ??? images
     """
-    annotations_dir = "posetrack_data"
-
-    def __init__(self, dataset_path: str, *args, **kwargs):
+    def __init__(self, dataset_path: str, annotation_path: str, *args, **kwargs):
         self.dataset_path = Path(dataset_path)
-        assert self.dataset_path.exists(), "Dataset path does not exist in '{}'".format(
+        assert self.dataset_path.exists(), "'{}' directory does not exist".format(
             self.dataset_path
         )
-        self.anns_path = self.dataset_path / self.annotations_dir
-        assert (
-            self.anns_path.exists()
-        ), "Annotations path does not exist in '{}'".format(self.anns_path)
+        self.annotation_path = Path(annotation_path)
+        assert self.annotation_path.exists(), "'{}' directory does not exist".format(
+            self.annotation_path
+        )
 
-        train_set = load_tracking_set(self.anns_path, self.dataset_path, "train")
-        val_set = load_tracking_set(self.anns_path, self.dataset_path, "val")
+        train_set = load_tracking_set(self.annotation_path, self.dataset_path, "train")
+        val_set = load_tracking_set(self.annotation_path, self.dataset_path, "val")
         test_set = None  # TODO no json, load images
 
         super().__init__(dataset_path, train_set, val_set, test_set, *args, **kwargs)
@@ -95,7 +96,7 @@ def fix_formatting(video_metadatas, image_metadatas, detections, dataset_path):
         lambda x: int(os.path.basename(x).split(".")[0]) + 1
     )
     image_metadatas.rename(
-        columns={"vid_id": "video_id", "file_name": "file_path", "nframes": "nframe"},
+        columns={"vid_id": "video_id", "file_name": "file_path", "nframes": "nframes"},
         inplace=True,
     )
     image_metadatas.set_index("id", drop=False, inplace=True)

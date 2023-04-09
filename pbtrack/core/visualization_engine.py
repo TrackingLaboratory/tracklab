@@ -3,9 +3,13 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from pbtrack.utils.coordinates import clip_bbox_ltrb_to_img_dim, round_bbox_coordinates, bbox_ltwh2ltrb
 from pbtrack.utils.cv2_utils import draw_text
 from pbtrack.utils.images import cv2_load_image, overlay_heatmap
+from pbtrack.utils.coordinates import (
+    clip_bbox_ltrb_to_img_dim,
+    round_bbox_coordinates,
+    bbox_ltwh2ltrb,
+)
 
 ground_truth_cmap = [
     [251, 248, 204],
@@ -53,7 +57,7 @@ posetrack_human_skeleton = [
 ]
 
 
-class VisualisationEngine:
+class VisualizationEngine:
     def __init__(self, cfg):
         self.cfg = cfg
         self.save_dir = Path("visualization")
@@ -126,13 +130,18 @@ class VisualisationEngine:
             self._update_video(patch, video_id)
 
     def _draw_ignore_region(self, patch, image_metadata):
-        if 'ignore_regions_x' in image_metadata and 'ignore_regions_y' in image_metadata:
-            for (x, y) in zip(
+        if (
+            "ignore_regions_x" in image_metadata
+            and "ignore_regions_y" in image_metadata
+        ):
+            for x, y in zip(
                 image_metadata["ignore_regions_x"], image_metadata["ignore_regions_y"]
             ):
                 points = np.array([x, y]).astype(int).T
                 points = points.reshape((-1, 1, 2))
-                cv2.polylines(patch, [points], True, [255, 0, 0], 2, lineType=cv2.LINE_AA)
+                cv2.polylines(
+                    patch, [points], True, [255, 0, 0], 2, lineType=cv2.LINE_AA
+                )
 
     def _draw_detection(self, patch, detection, is_prediction):
         is_matched = pd.notna(detection.track_id)
@@ -149,7 +158,12 @@ class VisualisationEngine:
         if is_prediction and self.cfg.prediction.draw_bpbreid_heatmaps:
             img_crop = patch[bbox_ltrb[1] : bbox_ltrb[3], bbox_ltrb[0] : bbox_ltrb[2]]
             body_masks = detection.body_masks
-            img_crop_with_mask = overlay_heatmap(img_crop, body_masks[0], mask_threshold=self.cfg.prediction.heatmaps_display_threshold, rgb=True)
+            img_crop_with_mask = overlay_heatmap(
+                img_crop,
+                body_masks[0],
+                mask_threshold=self.cfg.prediction.heatmaps_display_threshold,
+                rgb=True,
+            )
             patch[
                 bbox_ltrb[1] : bbox_ltrb[3], bbox_ltrb[0] : bbox_ltrb[2]
             ] = img_crop_with_mask
@@ -166,10 +180,19 @@ class VisualisationEngine:
                 lineType=cv2.LINE_AA,
             )
         # kf bbox
-        if is_prediction and self.cfg.prediction.draw_kf_bbox and hasattr(detection, 'track_bbox_pred_kf_ltwh') and not pd.isna(detection.track_bbox_pred_kf_ltwh):
+        if (
+            is_prediction
+            and self.cfg.prediction.draw_kf_bbox
+            and hasattr(detection, "track_bbox_pred_kf_ltwh")
+            and not pd.isna(detection.track_bbox_pred_kf_ltwh)
+        ):
             # FIXME kf bbox from tracklets that were not matched are not displayed
             bbox_kf_ltrb = clip_bbox_ltrb_to_img_dim(
-                round_bbox_coordinates(bbox_ltwh2ltrb(detection.track_bbox_pred_kf_ltwh)), patch.shape[1], patch.shape[0]
+                round_bbox_coordinates(
+                    bbox_ltwh2ltrb(detection.track_bbox_pred_kf_ltwh)
+                ),
+                patch.shape[1],
+                patch.shape[0],
             )
             cv2.rectangle(
                 patch,
@@ -252,8 +275,8 @@ class VisualisationEngine:
                 "nan"
                 if pd.isna(detection.track_id)
                 else f"{int(detection.track_id)}",  # FIXME why detection.track_id is float ?
-                (int(l + w/2), t - 5),
-                fontFace=self.cfg.text.font+1,
+                (int(l + w / 2), t - 5),
+                fontFace=self.cfg.text.font + 1,
                 fontScale=self.cfg.text.scale,
                 thickness=self.cfg.text.thickness,
                 color=color_text,
@@ -265,8 +288,8 @@ class VisualisationEngine:
         ):
             draw_text(
                 patch,
-                f"{100*np.mean(keypoints_c):.1f} %",
-                (l+3, t-5),
+                f"{detection.keypoints_score:.1f} %",
+                (l + 3, t - 5),
                 fontFace=self.cfg.text.font,
                 fontScale=self.cfg.text.scale,
                 thickness=self.cfg.text.thickness,
@@ -275,42 +298,57 @@ class VisualisationEngine:
                 color_bg=(255, 255, 255),
             )
         # track state + hits + age
-        if is_prediction and self.cfg.prediction.print_bbox_confidence and is_matched and hasattr(detection, 'state') and hasattr(detection, 'hits') and hasattr(detection, 'age'):
+        if (
+            is_prediction
+            and self.cfg.prediction.print_bbox_confidence
+            and is_matched
+            and hasattr(detection, "state")
+            and hasattr(detection, "hits")
+            and hasattr(detection, "age")
+        ):
             draw_text(
                 patch,
                 f"st={detection.state} | #d={detection.hits} | age={detection.age}",
-                (r-3, t+5),
+                (r - 3, t + 5),
                 fontFace=self.cfg.text.font,
                 fontScale=self.cfg.text.scale,
                 thickness=self.cfg.text.thickness,
                 color_txt=(0, 0, 255),
                 lineType=cv2.LINE_AA,
                 color_bg=(255, 255, 255),
-                alignV='t',
-                alignH='r',
+                alignV="t",
+                alignH="r",
             )
         # display_matched_with
         if is_prediction and self.cfg.prediction.display_matched_with:
-            if hasattr(detection, 'matched_with') and detection.matched_with is not None and is_matched:
+            if (
+                hasattr(detection, "matched_with")
+                and detection.matched_with is not None
+                and is_matched
+            ):
                 draw_text(
                     patch,
                     f"{detection.matched_with[0]}|{detection.matched_with[1]:.2f}",
-                    (l+3, t+5),
+                    (l + 3, t + 5),
                     fontFace=self.cfg.text.font,
                     fontScale=self.cfg.text.scale,
                     thickness=self.cfg.text.thickness,
                     color_txt=(255, 0, 0),
                     color_bg=(255, 255, 255),
                     lineType=cv2.LINE_AA,
-                    alignV='t'
+                    alignV="t",
                 )
         # display_n_closer_tracklets_costs
         if is_prediction and self.cfg.prediction.display_n_closer_tracklets_costs > 0:
-            if hasattr(detection, 'matched_with') and is_matched:
+            if hasattr(detection, "matched_with") and is_matched:
                 nt = self.cfg.prediction.display_n_closer_tracklets_costs
                 if "R" in detection.costs:
-                    sorted_reid_costs = sorted(list(detection.costs["R"].items()), key=lambda x: x[1])
-                    processed_reid_costs = {t[0]: np.around(t[1], 2) for t in sorted_reid_costs[:nt]}
+                    sorted_reid_costs = sorted(
+                        list(detection.costs["R"].items()), key=lambda x: x[1]
+                    )
+                    processed_reid_costs = {
+                        t[0]: np.around(t[1], 2) for t in sorted_reid_costs[:nt]
+                    }
                     draw_text(
                         patch,
                         f"R({detection.costs['Rt']:.2f}): {processed_reid_costs}",
@@ -323,8 +361,12 @@ class VisualisationEngine:
                         color_bg=(255, 255, 255),
                     )
                 if "S" in detection.costs:
-                    sorted_st_costs = sorted(list(detection.costs["S"].items()), key=lambda x: x[1])
-                    processed_st_costs = {t[0]: np.around(t[1], 2) for t in sorted_st_costs[:nt]}
+                    sorted_st_costs = sorted(
+                        list(detection.costs["S"].items()), key=lambda x: x[1]
+                    )
+                    processed_st_costs = {
+                        t[0]: np.around(t[1], 2) for t in sorted_st_costs[:nt]
+                    }
                     draw_text(
                         patch,
                         f"S({detection.costs['St']:.2f}): {processed_st_costs}",
@@ -337,8 +379,12 @@ class VisualisationEngine:
                         color_bg=(255, 255, 255),
                     )
                 if "K" in detection.costs:
-                    sorted_gated_kf_costs = sorted(list(detection.costs["K"].items()), key=lambda x: x[1])
-                    processed_gated_kf_costs = {t[0]: np.around(t[1], 2) for t in sorted_gated_kf_costs[:nt]}
+                    sorted_gated_kf_costs = sorted(
+                        list(detection.costs["K"].items()), key=lambda x: x[1]
+                    )
+                    processed_gated_kf_costs = {
+                        t[0]: np.around(t[1], 2) for t in sorted_gated_kf_costs[:nt]
+                    }
                     draw_text(
                         patch,
                         f"K({detection.costs['Kt']:.2f}): {processed_gated_kf_costs}",
@@ -350,7 +396,11 @@ class VisualisationEngine:
                         color_txt=(0, 0, 255),
                         color_bg=(255, 255, 255),
                     )
-        if is_prediction and self.cfg.prediction.display_reid_visibility_scores and hasattr(detection, 'visibility_scores'):
+        if (
+            is_prediction
+            and self.cfg.prediction.display_reid_visibility_scores
+            and hasattr(detection, "visibility_scores")
+        ):
             draw_text(
                 patch,
                 f"S: {np.around(detection.visibility_scores.astype(float), 1)}",
@@ -409,10 +459,10 @@ class VisualisationEngine:
     def _draw_image_metadata(self, patch, image_metadata):
         cv2.putText(
             patch,
-            f"{image_metadata.frame}/{image_metadata.nframe}",
-            (6, patch.shape[0]-6),
+            f"{image_metadata.frame}/{image_metadata.nframes}",
+            (6, patch.shape[0] - 6),
             fontFace=1,
-            fontScale=1.,
+            fontScale=1.0,
             thickness=1,
             color=(255, 0, 0),
             lineType=cv2.LINE_AA,

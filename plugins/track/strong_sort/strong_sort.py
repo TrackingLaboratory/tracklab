@@ -29,7 +29,6 @@ class StrongSORT(object):
         w_reid=1,
         w_st=1,
     ):
-
         self.max_dist = max_dist
         self.min_bbox_confidence = min_bbox_confidence
         metric = NearestNeighborDistanceMetric("part_based", self.max_dist, nn_budget)
@@ -61,24 +60,24 @@ class StrongSORT(object):
         classes,
         ori_img,
         frame,
-        keypoints
+        keypoints,
     ):
         self.height, self.width = ori_img.shape[:2]
         # generate detections
         detections = [
             Detection(
-                ids[i].numpy(),
-                np.asarray(bbox_ltwh[i], dtype=np.float),
-                conf,
+                ids[i].cpu().detach().numpy(),
+                np.asarray(bbox_ltwh[i].cpu().detach().numpy(), dtype=np.float),
+                conf.cpu().detach().numpy(),
                 {
                     "reid_features": np.asarray(
-                        reid_features[i].cpu(), dtype=np.float32
+                        reid_features[i].cpu().detach().numpy(), dtype=np.float32
                     ),
                     "visibility_scores": np.asarray(
-                        visibility_scores[i].cpu()
+                        visibility_scores[i].cpu().detach().numpy()
                     ),
                 },
-                keypoints=keypoints[i].cpu().numpy()
+                keypoints=keypoints[i].cpu().detach().numpy(),
             )
             for i, conf in enumerate(confidences)
         ]
@@ -122,11 +121,28 @@ class StrongSORT(object):
             }
             ids.append(det.id)
             outputs.append(result_det)
-        outputs = pd.DataFrame(outputs,
-                               index=np.array(ids),
-                               columns=["track_id", "track_bbox_kf_ltwh", "track_bbox_pred_kf_ltwh", "matched_with", "costs", "hits", "age", "time_since_update", "state"])
+        # FIXME I do not like to use a pandas dataframe here since it brings some hacky code to handle
+        # it in the API. I would rather use a list of dicts ? For me it should be general here and then we do the
+        # plumbery in the API
+        outputs = pd.DataFrame(
+            outputs,
+            index=np.array(ids),
+            columns=[
+                "track_id",
+                "track_bbox_kf_ltwh",
+                "track_bbox_pred_kf_ltwh",
+                "matched_with",
+                "costs",
+                "hits",
+                "age",
+                "time_since_update",
+                "state",
+            ],
+        )
         return outputs
 
     def filter_detections(self, detections):
-        detections = [det for det in detections if det.confidence > self.min_bbox_confidence]
+        detections = [
+            det for det in detections if det.confidence > self.min_bbox_confidence
+        ]
         return detections

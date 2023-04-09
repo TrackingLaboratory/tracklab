@@ -3,16 +3,36 @@ import wandb
 from omegaconf import OmegaConf
 import pandas as pd
 
+# FIXME not sure it is the right to do that. It is annoying to update this every time we add a new config
 keep_dict = {
     "dataset": ["dataset_path", "nframes", "nvid", "vids_dict"],
-    "detect": ["bbox", "predict", "train"],
+    "detect_multiple": [
+        "min_bbox_score",
+        "path_to_config",
+        "path_to_checkpoint",
+        "instance_min_confidence",
+        "keypoint_min_confidence",
+        "bbox",
+        "predict",
+        "train",
+    ],
+    "detect_single": [
+        "min_keypoints_score",
+        "min_keypoints_confidence",
+        "path_to_config",
+        "path_to_checkpoint",
+        "bbox",
+        "predict",
+        "train",
+    ],
     "eval": ["mot"],
     "reid": ["data", "loss", "model", "sampler", "test", "train", "dataset"],
     "track": True,
 }
 
 def normalize_subdict(subdict):
-    subdict["target"] = subdict.pop("_target_")
+    if "_target_" in subdict:
+        subdict["target"] = subdict.pop("_target_")
     if "cfg" in subdict:
         for k, v in subdict["cfg"].items():
             subdict[k] = v

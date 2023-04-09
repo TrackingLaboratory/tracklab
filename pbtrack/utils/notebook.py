@@ -11,7 +11,7 @@ from hydra import initialize_config_dir as init_hydra, compose
 from hydra.utils import instantiate
 from hydra.core.utils import configure_log
 
-from pbtrack.core import TrackerState
+from pbtrack import TrackerState
 
 TrackEngine = namedtuple(
     "TrackEngine", ["cfg", "engine", "state", "evaluator", "dataset"]
@@ -76,13 +76,13 @@ def load_from_overrides(overrides=[]) -> TrackEngine:
 
     tracking_dataset = instantiate(cfg.dataset)
     model_detect = instantiate(cfg.detect, device=device)
-    model_reid = instantiate(
+    reid_model = instantiate(
         cfg.reid,
         tracking_dataset=tracking_dataset,
         device=device,
         model_detect=model_detect,
     )
-    model_track = instantiate(cfg.track, device=device)
+    track_model = instantiate(cfg.track, device=device)
     evaluator = instantiate(cfg.eval)
     vis_engine = instantiate(cfg.visualization)
 
@@ -91,8 +91,8 @@ def load_from_overrides(overrides=[]) -> TrackEngine:
     tracking_engine = instantiate(
         cfg.engine,
         model_detect=model_detect,
-        model_reid=model_reid,
-        model_track=model_track,
+        reid_model=reid_model,
+        track_model=track_model,
         tracker_state=val_state,
         vis_engine=vis_engine,
     )
