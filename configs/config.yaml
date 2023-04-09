@@ -11,16 +11,17 @@ defaults:
 experiment_name: "???"
 data_dir: "???"
 
-train_detect: false
-train_reid: false
-test_tracking: true
+train_detect: True
+train_reid: False
+test_tracking: True
+wandb_enabled: True
 
 # configure Hydra to use the current working directory
 # and set up the output directory according to experiment_name
 project_dir: "${hydra:runtime.cwd}"
 hydra:
   job:
-    chdir: true
+    chdir: True
   run:
     dir: "outputs/${experiment_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}"
   sweep:
