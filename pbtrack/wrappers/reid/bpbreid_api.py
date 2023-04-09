@@ -18,7 +18,8 @@ from pbtrack.utils.coordinates import (
 )
 from plugins.reid.bpbreid.scripts.main import build_config, build_torchreid_model_engine
 from plugins.reid.bpbreid.tools.feature_extractor import FeatureExtractor
-from plugins.reid.bpbreid.torchreid.utils.imagetools import build_gaussian_heatmaps
+from plugins.reid.bpbreid.torchreid.utils.imagetools import build_gaussian_heatmaps, build_gaussian_body_part_heatmaps, \
+    keypoints_to_body_part_visibility_scores
 from pbtrack.utils.collate import Unbatchable
 
 import pbtrack
@@ -31,7 +32,7 @@ sys.path.append(str((root_dir / "plugins/reid").resolve()))  # FIXME : ugly
 import torchreid
 from torch.nn import functional as F
 from plugins.reid.bpbreid.torchreid.utils.tools import extract_test_embeddings
-from plugins.reid.bpbreid.torchreid.data.masks_transforms import CocoToSixBodyMasks
+from plugins.reid.bpbreid.torchreid.data.masks_transforms import CocoToSixBodyMasks, masks_preprocess_transforms
 from torchreid.data.datasets import configure_dataset_class
 
 # need that line to not break import of torchreid ('from torchreid... import ...') inside the bpbreid.torchreid module
@@ -53,13 +54,15 @@ class BPBReId(ReIdentifier):
     """
 
     def __init__(
-        self, cfg, tracking_dataset, dataset, device, save_path, model_detect, job_id
+        self, cfg, tracking_dataset, dataset, device, save_path, model_detect, job_id, use_keypoints_visiblity_scores_for_reid
     ):
-        tracking_dataset.name = dataset.name
-        tracking_dataset.nickname = dataset.nickname
+        self.dataset_cfg = dataset
+        self.use_keypoints_visiblity_scores_for_reid = use_keypoints_visiblity_scores_for_reid
+        tracking_dataset.name = self.dataset_cfg.name
+        tracking_dataset.nickname = self.dataset_cfg.nickname
         additional_args = {
             "tracking_dataset": tracking_dataset,
-            "reid_config": dataset,
+            "reid_config": self.dataset_cfg,
             "pose_model": model_detect,
         }
         torchreid.data.register_image_dataset(
@@ -81,8 +84,7 @@ class BPBReId(ReIdentifier):
         self.training_enabled = not self.cfg.test.evaluate
         self.feature_extractor = None
         self.model = None
-        self.transform = CocoToSixBodyMasks()
-        self.normalize_features = cfg.test.normalize_feature
+        self.coco_transform = masks_preprocess_transforms[self.cfg.model.bpbreid.masks.preprocess]()
 
     @torch.no_grad()
     def preprocess(
@@ -97,22 +99,33 @@ class BPBReId(ReIdentifier):
         )
         # TODO add a check to see if the bbox is not empty. t == b or l == r -> return error
         crop = image[t:b, l:r]
-        keypoints = detection.keypoints_xyc
-        bbox_ltwh = np.array([l, t, r - l, b - t])
-        kp_xyc_bbox = kp_img_to_kp_bbox(keypoints, bbox_ltwh)
-        kp_xyc_mask = rescale_keypoints(
-            kp_xyc_bbox, (bbox_ltwh[2], bbox_ltwh[3]), (mask_w, mask_h)
-        )
         crop = Unbatchable([crop])
         batch = {
             "img": crop,
         }
         if not self.cfg.model.bpbreid.learnable_attention_enabled:
-            pixels_parts_probabilities = build_gaussian_heatmaps(
-                kp_xyc_mask, mask_w, mask_h
+            keypoints = detection.keypoints_xyc
+            bbox_ltwh = np.array([l, t, r - l, b - t])
+            kp_xyc_bbox = kp_img_to_kp_bbox(keypoints, bbox_ltwh)
+            kp_xyc_mask = rescale_keypoints(
+                kp_xyc_bbox, (bbox_ltwh[2], bbox_ltwh[3]), (mask_w, mask_h)
             )
+            if self.dataset_cfg.masks_mode == "gaussian_keypoints":
+                pixels_parts_probabilities = build_gaussian_heatmaps(
+                    kp_xyc_mask, mask_w, mask_h
+                )
+            elif self.dataset_cfg.masks_mode == "gaussian_joints":
+                pixels_parts_probabilities = build_gaussian_body_part_heatmaps(
+                    kp_xyc_mask, mask_w, mask_h
+                )
+            else:
+                raise NotImplementedError
             batch["masks"] = pixels_parts_probabilities
-        # pixels_parts_probabilities = pixels_parts_probabilities[np.newaxis, ...]
+
+        if self.use_keypoints_visiblity_scores_for_reid:
+            visibility_score = keypoints_to_body_part_visibility_scores(detection.keypoints_xyc)
+            visibility_score = self.coco_transform.coco_joints_to_body_part_visibility_scores(visibility_score)
+            batch["visibility_scores"] = visibility_score
         return batch
 
     @torch.no_grad()
@@ -140,12 +153,16 @@ class BPBReId(ReIdentifier):
             reid_result, self.test_embeddings
         )
 
-        if self.normalize_features:
-            embeddings = F.normalize(embeddings, p=2, dim=-1)
-
         embeddings = embeddings.cpu().detach().numpy()
         visibility_scores = visibility_scores.cpu().detach().numpy()
         body_masks = body_masks.cpu().detach().numpy()
+
+        if self.use_keypoints_visiblity_scores_for_reid:
+            kp_visibility_scores = batch["visibility_scores"].numpy()
+            if visibility_scores.shape[1] > kp_visibility_scores.shape[1]:
+                kp_visibility_scores = np.concatenate([np.ones((visibility_scores.shape[0], 1)), kp_visibility_scores], axis=1)
+            visibility_scores = np.float32(kp_visibility_scores)
+
         reid_df = pd.DataFrame(
             {
                 "embeddings": list(embeddings),
