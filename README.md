@@ -59,6 +59,12 @@ pip install -r requirements.txt
 mim install mmcv-full
 ```
 
+Note: if you re-install dependencies after pulling the last changes, and a new git submodule has been added, do not forget to recursively update all the submodule before running above commands:
+
+```bash
+git submodule update --init --recursive
+```
+
 #### Setup reid
 
 ```bash
