@@ -30,7 +30,6 @@ keep_dict = {
     "track": True,
 }
 
-
 def normalize_subdict(subdict):
     if "_target_" in subdict:
         subdict["target"] = subdict.pop("_target_")
@@ -42,36 +41,42 @@ def normalize_subdict(subdict):
 
 
 def init(cfg):
-    cfg = OmegaConf.to_container(cfg, resolve=True)
-    new_cfg = {}
-    for key, values in keep_dict.items():
-        subdict = cfg[key]
-        subdict = normalize_subdict(subdict)
-        if values is True:
-            new_cfg[key] = subdict
-        else:
-            new_subdict = {}
-            for value in values + ["target"]:
-                if value in subdict:
-                    new_subdict[value] = subdict[value]
-                    if value == "target":
-                        new_subdict[value] = new_subdict[value].split(".")[-1]
+    global wandb_enabled
+    wandb_enabled = cfg.wandb_enabled
+    if wandb_enabled:
+        cfg = OmegaConf.to_container(cfg, resolve=True)
+        new_cfg = {}
+        for key, values in keep_dict.items():
+            subdict = cfg[key]
+            subdict = normalize_subdict(subdict)
+            if values is True:
+                new_cfg[key] = subdict
+            else:
+                new_subdict = {}
+                for value in values + ["target"]:
+                    if value in subdict:
+                        new_subdict[value] = subdict[value]
+                        if value == "target":
+                            new_subdict[value] = new_subdict[value].split(".")[-1]
 
-            new_cfg[key] = new_subdict
+                new_cfg[key] = new_subdict
 
-    wandb.init(project=cfg["experiment_name"], entity="pbtrack", config=new_cfg)
+        wandb.init(project=cfg["experiment_name"], entity="pbtrack", config=new_cfg)
 
 
 def log(res_dict, name, video_dict=None):
-    wandb.log(
-        {f"{name}/{k}": v for k, v in res_dict.items()},
-        step=0,
-    )
-    if video_dict is not None:
-        video_df = pd.DataFrame.from_dict(video_dict, orient="index")
-        video_df.insert(0, "video", video_df.index)
-        wandb.log({f"{name}/videos": video_df}, step=0)
-
+    try:
+        wandb.log(
+            {f"{name}/{k}": v for k, v in res_dict.items()},
+            step=0,
+        )
+        if video_dict is not None:
+            video_df = pd.DataFrame.from_dict(video_dict, orient="index")
+            video_df.insert(0, "video", video_df.index)
+            wandb.log({f"{name}/videos": video_df}, step=0)
+    except wandb.Error:
+        print("Wandb error, skipping logging")
+        pass
 
 def apply_recursively(d, f=lambda v: v, filter=lambda k, v: True, always_filter=False):
     """

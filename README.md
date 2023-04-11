@@ -59,6 +59,12 @@ pip install -r requirements.txt
 mim install mmcv-full
 ```
 
+Note: if you re-install dependencies after pulling the last changes, and a new git submodule has been added, do not forget to recursively update all the submodule before running above commands:
+
+```bash
+git submodule update --init --recursive
+```
+
 #### Setup reid
 
 ```bash
@@ -69,6 +75,7 @@ python setup.py develop
 ### External dependencies
 
 - Get the **PoseTrack21** dataset [here](https://github.com/anDoer/PoseTrack21/tree/35bd7033ec4e1a352ae39b9522df5a683f83781b#how-to-get-the-dataset).
+- Or get out custom **TinyPoseTrack21** dataset with only two videos [here](https://drive.google.com/file/d/15aX67GAKpf8faaBE4SOJAs_KGghzfWl4/view?usp=sharing).
 - Get the pretrained weights of **BPBReID** [here](https://github.com/VlSomers/bpbreid#download-the-pre-trained-models).
 
 
