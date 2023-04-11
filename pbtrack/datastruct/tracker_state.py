@@ -194,6 +194,10 @@ class TrackerState(AbstractContextManager):
             self.zf = dict(load=load_zf, save=save_zf)
         return super().__enter__()
 
+    def on_video_loop_end(self, engine, video, video_idx, detections):
+        self.update(detections)
+        self.save()
+
     def update(self, detections):
         if self.predictions is None:
             self.predictions = detections

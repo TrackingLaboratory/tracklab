@@ -12,7 +12,8 @@ from skimage.transform import resize
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from pbtrack import EngineDatapipe, TrackingDataset
+from pbtrack import EngineDatapipe
+from pbtrack.datastruct import TrackingDataset
 from pbtrack.utils.coordinates import (
     rescale_keypoints,
     clip_bbox_ltwh_to_img_dim,
@@ -481,9 +482,7 @@ class ReidDataset(ImageDataset):
                         # compute human parsing heatmaps using output of pose model on cropped person image
                         img_crop = cv2.imread(det_metadata.reid_crop_path)
                         img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
-                        _, masks_gt_crop = self.pose_model.run(
-                            torch.from_numpy(img_crop).permute((2, 0, 1)).unsqueeze(0)
-                        )
+                        _, masks_gt_crop = self.pose_model.track_dataset()
                         masks_gt_crop = (
                             masks_gt_crop.squeeze().permute((1, 2, 0)).numpy()
                         )

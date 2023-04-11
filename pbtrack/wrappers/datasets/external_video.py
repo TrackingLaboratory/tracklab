@@ -2,7 +2,7 @@ import glob
 import cv2
 
 from pathlib import Path
-from pbtrack import (
+from pbtrack.datastruct import (
     ImageMetadatas,
     VideoMetadatas,
     TrackingDataset,

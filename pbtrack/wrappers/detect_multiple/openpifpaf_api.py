@@ -6,7 +6,8 @@ from omegaconf.listconfig import ListConfig
 
 import openpifpaf
 
-from pbtrack import Detector, Detection
+from pbtrack import Detector
+from pbtrack.datastruct import Detection
 from pbtrack.utils.images import cv2_load_image
 from pbtrack.utils.coordinates import round_bbox_coordinates
 
@@ -31,9 +32,8 @@ def collate_images_anns_meta(batch):
 class OpenPifPaf(Detector):
     collate_fn = collate_images_anns_meta
 
-    def __init__(self, cfg, device):
-        self.cfg = cfg
-        self.device = device
+    def __init__(self, cfg, device, batch_size):
+        super().__init__(cfg, device, batch_size)
         self.id = 0
 
         if cfg.predict.checkpoint:
@@ -59,8 +59,8 @@ class OpenPifPaf(Detector):
         return processed_image, anns, meta
 
     @torch.no_grad()
-    def process(self, preprocessed_batch, metadatas, return_fields=False):
-        processed_image_batch, _, metas = preprocessed_batch
+    def process(self, batch, metadatas, return_fields=False):
+        processed_image_batch, _, metas = batch
         pred_batch, fields_batch = self.processor.batch(
             self.model, processed_image_batch, device=self.device
         )

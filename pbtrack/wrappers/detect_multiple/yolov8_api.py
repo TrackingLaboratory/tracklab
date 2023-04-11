@@ -3,7 +3,8 @@ import numpy as np
 
 from ultralytics import YOLO
 
-from pbtrack import ImageMetadata, ImageMetadatas, Detector, Detection
+from pbtrack.datastruct import ImageMetadata, ImageMetadatas, Detection
+from pbtrack import Detector
 from pbtrack.utils.images import cv2_load_image
 
 import logging
@@ -21,11 +22,10 @@ def collate_fn(batch):
 class YOLOv8(Detector):
     collate_fn = collate_fn
 
-    def __init__(self, cfg, device):
-        self.cfg = cfg
+    def __init__(self, cfg, device, batch_size):
+        super().__init__(cfg, device, batch_size)
         self.model = YOLO(cfg.path_to_checkpoint)
         self.model.to(device)
-        self.device = device
         self.id = 0
 
     @torch.no_grad()
@@ -37,8 +37,8 @@ class YOLOv8(Detector):
         }
 
     @torch.no_grad()
-    def process(self, preprocessed_batch: dict, metadatas: ImageMetadatas):
-        images, shapes = preprocessed_batch
+    def process(self, batch: dict, metadatas: ImageMetadatas):
+        images, shapes = batch
         results_by_image = self.model(images)
         detections = []
         for results, shape, (_, metadata) in zip(

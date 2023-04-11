@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from pbtrack import (
+from pbtrack.datastruct import (
     TrackingDataset,
     TrackingSet,
     ImageMetadatas,

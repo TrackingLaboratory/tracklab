@@ -2,7 +2,8 @@ import torch
 import numpy as np
 import plugins.track.strong_sort as strong_sort
 
-from pbtrack import OnlineTracker, Detections, ImageMetadatas, Detection, ImageMetadata
+from pbtrack import OnlineTracker
+from pbtrack.datastruct import Detections, ImageMetadatas, Detection, ImageMetadata
 
 import logging
 
@@ -10,7 +11,8 @@ log = logging.getLogger(__name__)
 
 
 class StrongSORT(OnlineTracker):
-    def __init__(self, cfg, device):
+    def __init__(self, cfg, device, batch_size):
+        super().__init__(cfg, device, batch_size)
         self.cfg = cfg
         self.reset()
 

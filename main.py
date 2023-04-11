@@ -1,8 +1,7 @@
 import torch
 import hydra
 from hydra.utils import instantiate
-
-from pbtrack import TrackerState
+from pbtrack.datastruct import TrackerState
 from pbtrack.utils import wandb
 
 import logging
@@ -59,7 +58,6 @@ def main(cfg):
             else tracking_dataset.test_set
         )
         tracker_state = TrackerState(tracking_set, **cfg.state)
-
         # Run tracking and visualization
         tracking_engine = instantiate(
             cfg.engine,
@@ -68,9 +66,8 @@ def main(cfg):
             reid_model=reid_model,
             track_model=track_model,
             tracker_state=tracker_state,
-            vis_engine=vis_engine,
         )
-        tracking_engine.run()
+        tracking_engine.track_dataset()
         # Evaluation
         if cfg.dataset.nframes == -1:
             if tracker_state.gt.detections is not None:

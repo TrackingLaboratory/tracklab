@@ -1,8 +1,14 @@
 from typing import List
 from abc import abstractmethod, ABC
 
-from .datastruct.image_metadatas import ImageMetadata
-from .datastruct.detections import Detection, Detections
+import pandas as pd
+from torch.utils.data import DataLoader
+
+import pbtrack
+from pbtrack.datastruct.image_metadatas import ImageMetadata
+from pbtrack.datastruct.detections import Detection, Detections
+from pbtrack.engine import TrackingEngine
+from pbtrack.utils.images import cv2_load_image
 
 
 class Tracker(ABC):
@@ -11,6 +17,28 @@ class Tracker(ABC):
     (optional), preprocess and process. A description of the expected
     behavior is provided below.
     """
+
+    def __init__(self, cfg, device, batch_size):
+        self.cfg = cfg
+        self.device = device
+        self.batch_size = batch_size
+        self._datapipe = None
+
+    def process_video(self, detections, imgs_meta, engine: TrackingEngine) -> Detections:
+        track_detections = []
+        for image_id in imgs_meta.index:
+            image = cv2_load_image(imgs_meta.loc[image_id].file_path)
+            self.prepare_next_frame(image)
+            image_detections = detections[detections.image_id == image_id]
+
+            if len(image_detections) != 0:
+                self.datapipe.update(imgs_meta, image_detections)
+                for batch in self.dataloader():
+                    track_detections.append(engine.track_step(batch, detections, image))
+        if len(track_detections) > 0:
+            return pd.concat(track_detections)
+        else:
+            return Detections()
 
     @abstractmethod
     def preprocess(self, detection: Detection, metadata: ImageMetadata) -> object:
@@ -42,6 +70,21 @@ class Tracker(ABC):
         """Prepare tracker for the next frame, can be used to propagate state distribution with KF, doing camera motion
         compensation, etc."""
         pass
+
+    @property
+    def datapipe(self):
+        if self._datapipe is None:
+            self._datapipe = pbtrack.EngineDatapipe(self)
+        return self._datapipe
+
+    def dataloader(self, **kwargs):
+        datapipe = self.datapipe
+        return DataLoader(
+            dataset=datapipe,
+            batch_size=2**16,
+            num_workers=0,
+            persistent_workers=False,
+        )
 
 
 # FIXME a bit useless no ?

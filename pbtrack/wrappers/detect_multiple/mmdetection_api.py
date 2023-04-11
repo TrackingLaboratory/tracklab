@@ -8,7 +8,8 @@ from tqdm import tqdm
 import mmcv
 from mmdet.apis import init_detector, inference_detector
 
-from pbtrack import ImageMetadatas, ImageMetadata, Detector, Detection
+from pbtrack.datastruct import ImageMetadatas, ImageMetadata, Detection
+from pbtrack import Detector
 
 import logging
 
@@ -27,11 +28,10 @@ def collate_fn(batch):
 class MMDetection(Detector):
     collate_fn = collate_fn
 
-    def __init__(self, cfg, device):
-        self.cfg = cfg
+    def __init__(self, cfg, device, batch_size):
+        super().__init__(cfg, device, batch_size)
         self.check_checkpoint(cfg.path_to_checkpoint, cfg.download_url)
         self.model = init_detector(cfg.path_to_config, cfg.path_to_checkpoint, device)
-        self.device = device
         self.id = 0
 
     @torch.no_grad()
@@ -43,8 +43,8 @@ class MMDetection(Detector):
         }
 
     @torch.no_grad()
-    def process(self, preprocessed_batch: dict, metadatas: ImageMetadatas):
-        images, shapes = preprocessed_batch
+    def process(self, batch: dict, metadatas: ImageMetadatas):
+        images, shapes = batch
         results = inference_detector(self.model, images)
 
         detections = []

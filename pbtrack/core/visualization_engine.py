@@ -1,8 +1,12 @@
+from multiprocessing import Process
+
 import cv2
 import numpy as np
 import pandas as pd
 from pathlib import Path
 
+from pbtrack.engine import TrackingEngine
+from pbtrack.callbacks import Callback
 from pbtrack.utils.cv2_utils import draw_text
 from pbtrack.utils.images import cv2_load_image, overlay_heatmap
 from pbtrack.utils.coordinates import (
@@ -57,11 +61,19 @@ posetrack_human_skeleton = [
 ]
 
 
-class VisualizationEngine:
+class VisualizationEngine(Callback):
     def __init__(self, cfg):
         self.cfg = cfg
         self.save_dir = Path("visualization")
         self.processed_video_counter = 0
+        self.process = None
+
+    def on_video_loop_end(self, engine: TrackingEngine, video, video_idx, detections):
+        # if self.process:
+        #     self.process.join()
+        # self.process = Process(target=self.run, args=(engine.tracker_state, video_idx))
+        # self.process.start()
+        self.run(engine.tracker_state, video_idx)
 
     def run(self, tracker_state, video_id):
         # check for process max video

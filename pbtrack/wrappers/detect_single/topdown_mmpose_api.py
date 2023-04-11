@@ -14,8 +14,8 @@ from mmpose.datasets.pipelines import Compose
 from mmpose.core.post_processing import oks_nms
 
 
-from pbtrack import ImageMetadata, Detections, ImageMetadatas, Detector, Detection
-
+from pbtrack.datastruct import ImageMetadata, Detections, ImageMetadatas, Detection
+from pbtrack import SingleDetector
 
 import logging
 
@@ -27,14 +27,13 @@ def mmpose_collate(batch):
     return collate(batch, len(batch))
 
 
-class TopDownMMPose(Detector):
+class TopDownMMPose(SingleDetector):
     collate_fn = mmpose_collate
 
-    def __init__(self, cfg, device):
-        self.cfg = cfg
+    def __init__(self, cfg, device, batch_size):
+        super().__init__(cfg, device, batch_size)
         self.check_checkpoint(cfg.path_to_checkpoint, cfg.download_url)
         self.model = init_pose_model(cfg.path_to_config, cfg.path_to_checkpoint, device)
-        self.device = device
 
         cfg = self.model.cfg
         self.dataset_info = DatasetInfo(cfg.dataset_info)

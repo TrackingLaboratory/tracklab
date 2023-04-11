@@ -7,5 +7,6 @@
 -r './plugins/reid/bpbreid/requirements.txt'
 hydra-core
 pytorch_lightning
+lightning
 openmim
 ultralytics

@@ -8,7 +8,8 @@ from tqdm import tqdm
 import mmcv
 from mmpose.apis import init_pose_model, inference_bottom_up_pose_model
 
-from pbtrack import ImageMetadata, ImageMetadatas, Detector, Detection
+from pbtrack.datastruct import ImageMetadata, ImageMetadatas, Detection
+from pbtrack import Detector
 
 import logging
 
@@ -27,11 +28,10 @@ def collate_fn(batch):
 class BottomUpMMPose(Detector):
     collate_fn = collate_fn
 
-    def __init__(self, cfg, device):
-        self.cfg = cfg
+    def __init__(self, cfg, device, batch_size):
+        super().__init__(cfg, device, batch_size)
         self.check_checkpoint(cfg.path_to_checkpoint, cfg.download_url)
         self.model = init_pose_model(cfg.path_to_config, cfg.path_to_checkpoint, device)
-        self.device = device
         self.id = 0
 
     @torch.no_grad()
@@ -43,8 +43,8 @@ class BottomUpMMPose(Detector):
         }
 
     @torch.no_grad()
-    def process(self, preprocessed_batch: dict, metadatas: ImageMetadatas):
-        images, shapes = preprocessed_batch
+    def process(self, batch: dict, metadatas: ImageMetadatas):
+        images, shapes = batch
         detections = []
         for image, shape, (_, metadata) in zip(images, shapes, metadatas.iterrows()):
             pose_results, _ = inference_bottom_up_pose_model(self.model, image)

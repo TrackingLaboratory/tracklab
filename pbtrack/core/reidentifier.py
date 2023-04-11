@@ -1,8 +1,12 @@
 from typing import List
 from abc import abstractmethod, ABC
 
-from .datastruct.image_metadatas import ImageMetadata
-from .datastruct.detections import Detection, Detections
+from torch.utils.data import DataLoader
+
+import pbtrack
+from pbtrack.datastruct.image_metadatas import ImageMetadata
+from pbtrack.datastruct.detections import Detection, Detections
+from ..utils.collate import default_collate
 
 
 class ReIdentifier(ABC):
@@ -13,7 +17,7 @@ class ReIdentifier(ABC):
     """
 
     @abstractmethod
-    def __init__(self, cfg, device):
+    def __init__(self, cfg, device, batch_size):
         """Init function
         Args:
             cfg (NameSpace): configuration file from Hydra for the reidentifier
@@ -21,6 +25,8 @@ class ReIdentifier(ABC):
         """
         self.cfg = cfg
         self.device = device
+        self.batch_size = batch_size
+        self._datapipe = None
 
     @abstractmethod
     def preprocess(self, detection: Detection, metadata: ImageMetadata) -> object:
@@ -34,10 +40,10 @@ class ReIdentifier(ABC):
         pass
 
     @abstractmethod
-    def process(self, preprocessed_batch, detections: Detections) -> List[Detection]:
+    def process(self, batch, detections: Detections) -> List[Detection]:
         """Your processing function to run the reidentifier
         Args:
-            preprocessed_batch (object): output of preprocess() by batch
+            batch (object): output of preprocess() by batch
             detections (Detections): the detections to update
         Returns:
             detections (List[Detection]): updated detections for the batch
@@ -47,3 +53,19 @@ class ReIdentifier(ABC):
     def train(self):
         """Training function for your reidentifier"""
         pass
+
+    @property
+    def datapipe(self):
+        if self._datapipe is None:
+            self._datapipe = pbtrack.EngineDatapipe(self)
+        return self._datapipe
+
+    def dataloader(self, engine: "pbtrack.TrackingEngine"):
+        datapipe = self.datapipe
+        return DataLoader(
+            dataset=datapipe,
+            batch_size=self.batch_size,
+            collate_fn=default_collate,
+            num_workers=engine.num_workers,
+            persistent_workers=False,
+        )

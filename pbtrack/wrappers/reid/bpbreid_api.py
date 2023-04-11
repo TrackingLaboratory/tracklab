@@ -8,7 +8,8 @@ from yacs.config import CfgNode as CN
 
 from .bpbreid_dataset import ReidDataset
 
-from pbtrack import ImageMetadata, Detection, ReIdentifier
+from pbtrack.datastruct import ImageMetadata, Detection
+from pbtrack import ReIdentifier
 from pbtrack.utils.images import cv2_load_image
 from pbtrack.utils.coordinates import (
     clip_bbox_ltrb_to_img_dim,
@@ -52,8 +53,10 @@ class BPBReId(ReIdentifier):
     """
 
     def __init__(
-        self, cfg, tracking_dataset, dataset, device, save_path, model_detect, job_id
+        self, cfg, tracking_dataset, dataset, device, save_path, model_detect, job_id,
+            batch_size
     ):
+        super().__init__(cfg, device, batch_size)
         tracking_dataset.name = dataset.name
         tracking_dataset.nickname = dataset.nickname
         additional_args = {
@@ -66,7 +69,6 @@ class BPBReId(ReIdentifier):
             configure_dataset_class(ReidDataset, **additional_args),
             tracking_dataset.nickname,
         )
-        self.device = device
         self.cfg = CN(OmegaConf.to_container(cfg, resolve=True))
 
         # set parts information (number of parts K and each part name),
@@ -160,4 +162,4 @@ class BPBReId(ReIdentifier):
 
     def train(self):
         self.engine, self.model = build_torchreid_model_engine(self.cfg)
-        self.engine.run(**engine_run_kwargs(self.cfg))
+        self.engine.run()

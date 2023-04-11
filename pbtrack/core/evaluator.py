@@ -1,6 +1,6 @@
 from abc import abstractmethod, ABC
 
-from .datastruct.tracker_state import TrackerState
+from pbtrack.datastruct.tracker_state import TrackerState
 
 
 class Evaluator(ABC):

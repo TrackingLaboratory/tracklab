@@ -1,0 +1,9 @@
+# @package _global_
+detect_multiple:
+  batch_size: 8
+detect_single:
+  batch_size: 32
+reid:
+  batch_size: 32
+track:
+  batch_size: null
