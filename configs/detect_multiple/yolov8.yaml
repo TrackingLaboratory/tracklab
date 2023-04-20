@@ -7,4 +7,4 @@ cfg:
   # those models will be downloaded automatically if not found in the path
   path_to_checkpoint: yolov8x6.pt
 
-  min_bbox_score: 0.2  # threshold on bbox confidence
+  min_confidence: 0.4

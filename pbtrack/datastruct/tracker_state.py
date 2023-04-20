@@ -8,7 +8,7 @@ from contextlib import AbstractContextManager
 from os.path import abspath
 from pathlib import Path
 
-from .detections import Detections
+
 from .tracking_dataset import TrackingSet
 from pbtrack.utils.coordinates import kp_to_bbox_w_threshold, bbox_ltrb2ltwh
 
@@ -24,7 +24,7 @@ class TrackerState(AbstractContextManager):
             "image_id",
             "id",
             "bbox_ltwh",
-            "bbox_score",
+            "bbox_conf",
             "keypoints_xyc",
             "keypoints_score",
             "category_id",
@@ -97,11 +97,11 @@ class TrackerState(AbstractContextManager):
             self.gt_detections["keypoints_xyc"] = pd.NA
             self.gt_detections["track_id"] = pd.NA
             self.gt_detections.drop(columns=["track_id"], inplace=True)
-            self.gt_detections.rename(columns={"visibility": "bbox_score"}, inplace=True)
+            self.gt_detections.rename(columns={"visibility": "bbox_conf"}, inplace=True)
         elif load_step == "detect_single":
             self.gt_detections["track_id"] = pd.NA
             self.gt_detections.drop(columns=["track_id"], inplace=True)
-            self.gt_detections.rename(columns={"visibility": "bbox_score"}, inplace=True)
+            self.gt_detections.rename(columns={"visibility": "bbox_conf"}, inplace=True)
 
     def load_predictions_from_json(self, json_file):
         anns_path = Path(json_file)
@@ -132,11 +132,11 @@ class TrackerState(AbstractContextManager):
         predictions.loc[predictions["bbox_ltwh"].isna(), "bbox_ltwh"] = predictions[
             predictions["bbox_ltwh"].isna()
         ].keypoints_xyc.apply(lambda x: kp_to_bbox_w_threshold(x, vis_threshold=0))
-        predictions["bbox_score"] = predictions.keypoints_xyc.apply(
+        predictions["bbox_conf"] = predictions.keypoints_xyc.apply(
             lambda x: x[:, 2].mean()
         )
-        if predictions['bbox_score'].sum() == 0:
-            predictions['bbox_score'] = predictions.scores.apply(lambda x: x.mean())
+        if predictions['bbox_conf'].sum() == 0:
+            predictions['bbox_conf'] = predictions.scores.apply(lambda x: x.mean())
             # FIXME confidence score in predictions.keypoints_xyc is always 0
         predictions = predictions.merge(
             self.gt.image_metadatas[["video_id"]],

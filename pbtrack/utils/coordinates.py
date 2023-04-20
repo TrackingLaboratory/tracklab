@@ -31,7 +31,7 @@ def openpifpaf_kp_to_bbox(kp_xy):
     return np.array([lt[0], lt[1], w, h])
 
 
-def kp_to_bbox_w_threshold(kp_xyc, vis_threshold=0.):
+def kp_to_bbox_w_threshold(kp_xyc, vis_threshold=0.0):
     """Extract bounding box from keypoints with visibility threshold.
     Args:
         kp_xy (np.ndarray): keypoints in image coordinates, shape (K, 3) (x, y, c)
@@ -171,3 +171,129 @@ def bbox_ltrb2ltwh(ltrb):
 
 def bbox_ltwh2cmwh(ltwh):
     return np.concatenate((ltwh[:2] + ltwh[2:] / 2, ltwh[2:]))
+
+
+def generate_bbox_from_keypoints(keypoints, extension_factor, image_shape):
+    """
+    Generates a bounding box from keypoints by computing the bounding box of the keypoints and extending it by a factor.
+
+    Args:
+        keypoints (np.ndarray): A numpy array of shape (K, 3) representing the keypoints in the format (x, y, c).
+        extension_factor (tuple): A tuple of float [top, bottom, right&left] representing the factor by which
+        the bounding box should be extended based on the keypoints.
+        image_shape (tuple): A tuple of two integers representing the image dimensions `(width, height)`.
+
+    Returns:
+        np.ndarray: A numpy array of shape (4,) representing the bounding box in the format (left, top, w, h).
+    """
+    keypoints = sanitize_keypoints(keypoints, image_shape)
+    lt, rb = np.min(keypoints[:, :2], axis=0), np.max(keypoints[:, :2], axis=0)
+    w, h = rb - lt
+    lt -= np.array([extension_factor[2]*w, extension_factor[0]*h])
+    rb += np.array([extension_factor[2]*w, extension_factor[1]*h])
+    bbox = np.concatenate([lt, rb - lt])
+    bbox = sanitize_bbox_ltwh(bbox, image_shape)
+    return bbox
+
+
+def sanitize_keypoints(keypoints, image_shape):
+    """
+    Sanitizes keypoints by clipping them to the image dimensions and ensuring that their confidence values are valid.
+
+    Args:
+        keypoints (np.ndarray): A numpy array of shape (K, 3) representing the keypoints in the format (x, y, c).
+        image_shape (tuple): A tuple of two integers representing the image dimensions `(width, height)`.
+
+    Returns:
+        np.ndarray: A numpy array of shape (K, 3) representing the sanitized keypoints in the format (x, y, c).
+    """
+    keypoints[:, 0] = np.clip(keypoints[:, 0], 0, image_shape[0] - 1)
+    keypoints[:, 1] = np.clip(keypoints[:, 1], 0, image_shape[1] - 1)
+    return keypoints
+
+
+def sanitize_bbox_ltwh(bbox, image_shape):
+    """
+    Sanitizes a bounding box by clipping it to the image dimensions and ensuring that its dimensions are valid.
+
+    Args:
+        box (np.ndarray): A numpy array of shape (4,) representing the bounding box in the format
+        `[left, top, width, height]`.
+        image_shape (tuple): A tuple of two integers representing the image dimensions `(width, height)`.
+
+    Returns:
+        np.ndarray: A numpy array of shape (4,) representing the sanitized bounding box in the format
+        `[left, top, width, height]`.
+    """
+    bbox[0] = max(0, min(bbox[0], image_shape[0] - 2))
+    bbox[1] = max(0, min(bbox[1], image_shape[1] - 2))
+    bbox[2] = max(1, min(bbox[2], image_shape[0] - 1 - bbox[0]))
+    bbox[3] = max(1, min(bbox[3], image_shape[1] - 1 - bbox[1]))
+    return np.array(bbox)
+
+
+def ltwh_to_xywh(bbox, image_shape=None):
+    """
+    Converts coordinates `[left, top, w, h]` to `[center_x, center_y, w, h]`.
+    If image_shape is provided, the bbox is clipped to the image dimensions and its dimensions are ensured to be valid.
+    """
+    if image_shape:
+        bbox = sanitize_bbox_ltwh(bbox, image_shape)
+    return np.array([bbox[0] + bbox[2] / 2, bbox[1] + bbox[3] / 2, bbox[2], bbox[3]])
+
+
+def ltwh_to_ltrb(bbox, image_shape=None):
+    """
+    Converts coordinates `[left, top, w, h]` to `[left, top, right, bottom]`.
+    If image_shape is provided, the bbox is clipped to the image dimensions and its dimensions are ensured to be valid.
+    """
+    if image_shape:
+        bbox = sanitize_bbox_ltwh(bbox, image_shape)
+    return np.array([bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]])
+
+
+def sanitize_bbox_ltrb(bbox, image_shape):
+    """
+    Sanitizes a bounding box by clipping it to the image dimensions and ensuring that its dimensions are valid.
+
+    Args:
+        box (np.ndarray): A numpy array of shape (4,) representing the bounding box in the format
+        `[left, top, right, bottom]`.
+        image_shape (tuple): A tuple of two integers representing the image dimensions `(width, height)`.
+
+    Returns:
+        np.ndarray: A numpy array of shape (4,) representing the sanitized bounding box in the format
+        `[left, top, right, bottom]`.
+    """
+    bbox[0] = max(0, min(bbox[0], image_shape[0] - 2))  # ensure width > 0
+    bbox[1] = max(0, min(bbox[1], image_shape[1] - 2))  # ensure height > 0
+    bbox[2] = max(1, min(bbox[2], image_shape[0] - 1))  # ensure width > 0
+    bbox[3] = max(1, min(bbox[3], image_shape[1] - 1))  # ensure height > 0
+    return np.array(bbox)
+
+
+def ltrb_to_xywh(bbox, image_shape=None):
+    """
+    Converts coordinates `[left, top, right, bottom]` to `[center_x, center_y, w, h]`.
+    If image_shape is provided, the bbox is clipped to the image dimensions and its dimensions are ensured to be valid.
+    """
+    if image_shape:
+        bbox = sanitize_bbox_ltrb(bbox, image_shape)
+    return np.array(
+        [
+            (bbox[0] + bbox[2]) / 2,
+            (bbox[1] + bbox[3]) / 2,
+            (bbox[2] - bbox[0]),
+            (bbox[3] - bbox[1]),
+        ]
+    )
+
+
+def ltrb_to_ltwh(bbox, image_shape=None):
+    """
+    Converts coordinates `[left, top, right, bottom]` to `[left, top, w, h]`.
+    If image_shape is provided, the bbox is clipped to the image dimensions and its dimensions are ensured to be valid.
+    """
+    if image_shape:
+        bbox = sanitize_bbox_ltrb(bbox, image_shape)
+    return np.array([bbox[0], bbox[1], bbox[2] - bbox[0], bbox[3] - bbox[1]])

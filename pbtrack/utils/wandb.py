@@ -7,7 +7,7 @@ import pandas as pd
 keep_dict = {
     "dataset": ["dataset_path", "nframes", "nvid", "vids_dict"],
     "detect_multiple": [
-        "min_bbox_score",
+        "min_confidence",
         "path_to_config",
         "path_to_checkpoint",
         "instance_min_confidence",
@@ -41,9 +41,9 @@ def normalize_subdict(subdict):
 
 
 def init(cfg):
-    global wandb_enabled
-    wandb_enabled = cfg.wandb_enabled
-    if wandb_enabled:
+    global use_wandb
+    use_wandb = cfg.use_wandb
+    if use_wandb:
         cfg = OmegaConf.to_container(cfg, resolve=True)
         new_cfg = {}
         for key, values in keep_dict.items():

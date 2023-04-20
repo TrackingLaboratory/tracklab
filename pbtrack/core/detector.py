@@ -1,20 +1,20 @@
-from typing import List, Union, Tuple, Any
+from typing import List, Union, Any
 from abc import abstractmethod, ABC
 
-from ..datastruct import Detection, Detections
+import pandas as pd
+
 from ..engine import TrackingEngine
 
 from torch.utils.data.dataloader import default_collate, DataLoader
 
-from pbtrack.datastruct.image_metadatas import ImageMetadata, ImageMetadatas
 from .datapipe import EngineDatapipe
 
 
-class Detector(ABC):
-    """Abstract class to implement for the integration of a new detector
-    in wrappers/detect. The functions to implement are __init__, train
-    (optional), preprocess and process. A description of the expected
-    behavior is provided below.
+class MultiDetector(ABC):
+    """Abstract class to implement for the integration of a new detector in wrappers/detect_multiple.
+    Can either be a bottom-up (outputs directly keypoints and bbox) approach or a bounding box detector
+    (outputs bboxes). The functions to implement are __init__, preprocess and process.
+    A description of the expected behavior is provided below.
     """
 
     collate_fn = default_collate
@@ -25,40 +25,41 @@ class Detector(ABC):
         Args:
             cfg (NameSpace): configuration file from Hydra for the detector
             device (int): device to use for the detector
+            batch_size (int): batch size for the detector
         Attributes:
             id (int): id of the current detection
         """
         self.cfg = cfg
         self.device = device
-        self.id = 0
         self.batch_size = batch_size
+        self.id = 0
         self._datapipe = None
 
     @abstractmethod
-    def preprocess(self, metadata: ImageMetadata) -> object:
-        """Your preprocessing function to adapt the input to your detector
+    def preprocess(self, metadata: pd.Series) -> Any:
+        """Your preprocessing function to adapt the input to your detector.
+        The output is being batched by the collate_fn() and fed to process().
         Args:
-            metadata (ImageMetadata): the image metadata to process
+            metadata (pd.Series): the image metadata to process
         Returns:
-            preprocessed (object): preprocessed input for process()
+            preprocessed (Any): preprocessed input for the process step
         """
         pass
 
     @abstractmethod
     def process(
-        self, preprocessed_batch, metadatas: ImageMetadatas, return_fields=False
-    ) -> Union[List["Detection"], Tuple[List["Detection"], object]]:
+        self, batch: Any, metadatas: pd.DataFrame, **kwargs
+    ) -> Union[pd.Series, List[pd.Series], pd.DataFrame, List[pd.DataFrame],]:
         """Your processing function to run the detector
         Args:
-            preprocessed_batch (object): output of preprocess() by batch
-            metadatas (ImageMetadatas): the images metadata associated to the batch
+            batch (Any): the batched outputs from preprocess() by collate_fn()
+            metadatas (pd.DataFrame): the images metadata associated to the batch
         Returns:
-            detections (List[Detection]): list of new detections for the batch
+            detections (Union[pd.Series, List[pd.Series], pd.DataFrame, List[pd.DataFrame]]): the new detections
+            from the batch. The framework will aggregate automatically all the results according to the `name` of the
+            Series/`index` of the DataFrame. It is thus mandatory here to name correctly your series or index your
+            dataframes. The output will override the previous detections with the same name/index.
         """
-        pass
-
-    def train(self):
-        """Training function for your detector"""
         pass
 
     @property
@@ -79,11 +80,12 @@ class Detector(ABC):
 
 
 class SingleDetector(ABC):
-    """Detector that takes a bounding box and returns a bounding box per bbox.
-
-    The API is exactly the same as the ReIdentifier, but this makes it clear
-    that there is a difference between both.
+    """Abstract class to implement for the integration of a new detector in wrappers/detect_single.
+    For top-down approaches (bboxes as inputs and outputs keypoints).
+    The functions to implement are __init__, preprocess and process.
+    A description of the expected behavior is provided below.
     """
+
     collate_fn = default_collate
 
     @abstractmethod
@@ -91,8 +93,8 @@ class SingleDetector(ABC):
         """Init function
         Args:
             cfg (NameSpace): configuration file from Hydra for the detector
-            device (str): device to use for the detector
-            batch_size (int) : batch size for the dataloader
+            device (int): device to use for the detector
+            batch_size (int): batch size for the detector
         """
         self.cfg = cfg
         self.device = device
@@ -100,31 +102,31 @@ class SingleDetector(ABC):
         self._datapipe = None
 
     @abstractmethod
-    def preprocess(self, detection: "Detection",
-                   metadata: ImageMetadata) -> Any:
-        """Your pre-processing function to adapt the input to your detector
+    def preprocess(self, detection: pd.Series, metadata: pd.Series) -> Any:
+        """Your preprocessing function to adapt the input to your detector.
+        The output is being batched by the collate_fn() and fed to process().
         Args:
-            detection (Detection): the detection to process
-            metadata (ImageMetadata): the image metadata associated to the detection
+            detection (pd.Series): the detection to process
+            metadata (pd.Series): the image metadata to process
         Returns:
-            preprocessed (object): preprocessed input for process()
+            preprocessed (Any): preprocessed input for the process step
         """
         pass
 
     @abstractmethod
-    def process(self, batch: Any,
-                detections: "Detections") -> List["Detection"]:
+    def process(
+        self, batch: Any, detections: pd.DataFrame
+    ) -> Union[pd.Series, List[pd.Series], pd.DataFrame, List[pd.DataFrame]]:
         """Your processing function to run the detector
         Args:
-            batch (object): output of preprocess() by batch
-            detections (Detections): the detections to update
+            batch (Any): the batched outputs from preprocess() by collate_fn()
+            detections (pd.DataFrame): the images metadata associated to the batch
         Returns:
-            detections (List[Detection]): updated detections for the batch
+            detections (Union[pd.Series, List[pd.Series], pd.DataFrame, List[pd.DataFrame]]): the new detections
+            from the batch. The framework will aggregate automatically all the results according to the `name` of the
+            Series/`index` of the DataFrame. It is thus mandatory here to name correctly your series or index your
+            dataframes. The output will override the previous detections with the same name/index.
         """
-        pass
-
-    def train(self):
-        """Training function for your detector"""
         pass
 
     @property

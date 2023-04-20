@@ -21,7 +21,7 @@ def main(cfg):
     set_sharing_strategy()  # Do not touch
 
     device = "cuda" if torch.cuda.is_available() else "cpu"  # TODO support Mac chips
-    log.info(f"Using device: {device}. Starting instantiation of all the instances.")
+    log.info(f"Using device: '{device}'.")
 
     wandb.init(cfg)
 
@@ -36,7 +36,6 @@ def main(cfg):
         model_detect=None,  # FIXME
     )
     track_model = instantiate(cfg.track, device=device)
-    vis_engine = instantiate(cfg.visualization)
     evaluator = instantiate(cfg.eval)
 
     # FIXME, je pense qu'il faut repenser l'entrainement dans ce script

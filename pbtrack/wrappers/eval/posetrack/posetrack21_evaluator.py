@@ -28,6 +28,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
+# FIXME some parts can be cleaned but works for now
 class PoseTrack21Evaluator(EvaluatorBase):
     def __init__(self, cfg):
         self.cfg = cfg
@@ -231,6 +232,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
     @staticmethod
     def _images(image_metadatas):
         len_before_drop = len(image_metadatas)
+        image_metadatas["id"] = image_metadatas.index
         image_metadatas.dropna(
             subset=[
                 "video_name",
@@ -300,13 +302,15 @@ class PoseTrack21Evaluator(EvaluatorBase):
             # 'scores' can already be present if loaded from a json file with external predictions
             # for PoseTrack21 author baselines, not using their provided score induces a big drop in performance
             predictions["scores"] = predictions["keypoints"].apply(lambda x: x[:, 2])
-        predictions["track_id"] = predictions["id"]
-        predictions["person_id"] = predictions["id"]
+        predictions["track_id"] = predictions.index
+        predictions["person_id"] = predictions.index
 
         annotations = {}
         videos_names = image_metadatas["video_name"].unique()
         for video_name in videos_names:
-            image_ids = image_metadatas[image_metadatas["video_name"] == video_name].id
+            image_ids = image_metadatas[
+                image_metadatas["video_name"] == video_name
+            ].index
             predictions_by_video = predictions[predictions["image_id"].isin(image_ids)]
             annotations[video_name] = predictions_by_video[
                 ["bbox", "image_id", "keypoints", "scores", "person_id", "track_id"]
@@ -317,6 +321,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
     @staticmethod
     def _annotations_tracking_eval(predictions, image_metadatas, bbox_column):
         predictions = predictions.copy()
+        predictions["id"] = predictions.index
         col_to_drop = [
             "keypoints_xyc",
             bbox_column,
@@ -347,7 +352,9 @@ class PoseTrack21Evaluator(EvaluatorBase):
         annotations = {}
         videos_names = image_metadatas["video_name"].unique()
         for video_name in videos_names:
-            image_ids = image_metadatas[image_metadatas["video_name"] == video_name].id
+            image_ids = image_metadatas[
+                image_metadatas["video_name"] == video_name
+            ].index
             predictions_by_video = predictions[predictions["image_id"].isin(image_ids)]
             annotations[video_name] = predictions_by_video[
                 ["bbox", "image_id", "keypoints", "scores", "person_id", "track_id"]
@@ -387,7 +394,9 @@ class PoseTrack21Evaluator(EvaluatorBase):
         annotations = {}
         videos_names = image_metadatas["video_name"].unique()
         for video_name in videos_names:
-            image_ids = image_metadatas[image_metadatas["video_name"] == video_name].id
+            image_ids = image_metadatas[
+                image_metadatas["video_name"] == video_name
+            ].index
             predictions_by_video = predictions[predictions["image_id"].isin(image_ids)]
             annotations[video_name] = predictions_by_video[
                 ["bbox", "image_id", "keypoints", "scores", "person_id", "track_id"]
@@ -415,6 +424,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
     # MOT helper functions
     @staticmethod
     def _mot_encoding(predictions, image_metadatas, bbox_column):
+        image_metadatas["id"] = image_metadatas.index
         df = pd.merge(
             image_metadatas.reset_index(drop=True),
             predictions.reset_index(drop=True),
@@ -463,7 +473,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                     "bb_top",
                     "bb_width",
                     "bb_height",
-                    "bbox_score",
+                    "bbox_conf",
                     "x",
                     "y",
                     "z",
@@ -516,7 +526,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
 
     @staticmethod
     def compute_bbox_map(predictions, ground_truths, metadatas):
-        images_ids = metadatas.id.unique()
+        images_ids = metadatas.index
         metric = MeanAveragePrecision(box_format="xywh", iou_type="bbox", num_classes=1)
         preds = []
         targets = []
@@ -538,8 +548,8 @@ class PoseTrack21Evaluator(EvaluatorBase):
                             "boxes": torch.tensor(
                                 np.vstack(preds_by_image.bbox_ltwh.values).astype(float)
                             ),
-                            "scores": torch.tensor(preds_by_image.bbox_score.values),
-                            "labels": torch.tensor(preds_by_image.category_id.values),
+                            "scores": torch.tensor(preds_by_image.bbox_conf.values.astype(float)),
+                            "labels": torch.tensor(preds_by_image.category_id.values.astype(int)),
                         }
                     )
                 else:

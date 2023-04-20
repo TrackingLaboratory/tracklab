@@ -1,15 +1,18 @@
-import os
 import cv2
 import torch
-import requests
 import numpy as np
-from tqdm import tqdm
+import pandas as pd
 
 import mmcv
-from mmpose.apis import init_pose_model, inference_bottom_up_pose_model
+from mmcv.parallel import collate, scatter
+from mmpose.apis import init_pose_model
+from mmpose.core.post_processing import oks_nms
+from mmpose.datasets.dataset_info import DatasetInfo
+from mmpose.datasets.pipelines import Compose
 
-from pbtrack.datastruct import ImageMetadata, ImageMetadatas, Detection
-from pbtrack import Detector
+from pbtrack import MultiDetector
+from pbtrack.utils.openmmlab import get_checkpoint
+from pbtrack.utils.coordinates import sanitize_keypoints, generate_bbox_from_keypoints
 
 import logging
 
@@ -17,100 +20,100 @@ log = logging.getLogger(__name__)
 mmcv.collect_env()
 
 
-def collate_fn(batch):
-    idxs = [b[0] for b in batch]
-    images = [b["image"] for _, b in batch]
-    shapes = [b["shape"] for _, b in batch]
-    return idxs, (images, shapes)
+def mmpose_collate(batch):
+    return collate(batch, len(batch))
 
 
-# FIXME stop using their api and implement here
-class BottomUpMMPose(Detector):
-    collate_fn = collate_fn
+@torch.no_grad()
+class BottomUpMMPose(MultiDetector):
+    collate_fn = mmpose_collate
 
     def __init__(self, cfg, device, batch_size):
         super().__init__(cfg, device, batch_size)
-        self.check_checkpoint(cfg.path_to_checkpoint, cfg.download_url)
+        get_checkpoint(cfg.path_to_checkpoint, cfg.download_url)
+        self.device = device if device != "cpu" else -1
         self.model = init_pose_model(cfg.path_to_config, cfg.path_to_checkpoint, device)
         self.id = 0
 
-    @torch.no_grad()
-    def preprocess(self, metadata: ImageMetadata):
-        image = cv2.imread(metadata.file_path)  # BGR not RGB !
-        return {
-            "image": image,
-            "shape": (image.shape[1], image.shape[0]),
-        }
+        cfg = self.model.cfg
+        self.dataset_info = DatasetInfo(cfg.dataset_info)
+
+        self.test_pipeline = Compose(cfg.test_pipeline)
 
     @torch.no_grad()
-    def process(self, batch: dict, metadatas: ImageMetadatas):
-        images, shapes = batch
+    def preprocess(self, metadata: pd.Series):
+        image = cv2.imread(metadata.file_path)  # BGR not RGB !
+        data = {
+            "dataset": self.dataset_info.dataset_name,
+            "img": image,
+            "ann_info": {
+                "image_size": np.array(self.model.cfg.data_cfg["image_size"]),
+                "heatmap_size": self.model.cfg.data_cfg.get("heatmap_size", None),
+                "num_joints": self.model.cfg.data_cfg["num_joints"],
+                "flip_index": self.dataset_info.flip_index,
+                "skeleton": self.dataset_info.skeleton,
+            },
+        }
+        return self.test_pipeline(data)
+
+    def process(self, batch, metadatas: pd.DataFrame):
+        batch = scatter(batch, [self.device])[0]
+        images = list(batch["img"].unsqueeze(0).permute(1, 0, 2, 3, 4))
         detections = []
-        for image, shape, (_, metadata) in zip(images, shapes, metadatas.iterrows()):
-            pose_results, _ = inference_bottom_up_pose_model(self.model, image)
+        for image, img_metas, (_, metadata) in zip(
+            images, batch["img_metas"], metadatas.iterrows()
+        ):
+            result = self.model(
+                img=image,
+                img_metas=[img_metas],
+                return_loss=False,
+                return_heatmap=False,
+            )
+
+            for idx, pred in enumerate(result["preds"]):
+                area = (np.max(pred[:, 0]) - np.min(pred[:, 0])) * (
+                    np.max(pred[:, 1]) - np.min(pred[:, 1])
+                )
+                pose_results.append(
+                    {
+                        "keypoints": pred[:, :3],
+                        "score": result["scores"][idx],
+                        "area": area,
+                    }
+                )
+
+            # pose nms
+            score_per_joint = self.model.cfg.model.test_cfg.get(
+                "score_per_joint", False
+            )
+            keep = oks_nms(
+                pose_results,
+                self.cfg.nms_threshold,
+                self.dataset_info.sigmas,
+                score_per_joint=score_per_joint,
+            )
+            pose_results = [pose_results[_keep] for _keep in keep]
+
             for pose in pose_results:
-                if pose["score"] >= self.cfg.instance_min_confidence:
-                    keypoints = self.sanitize_keypoints(pose["keypoints"], shape)
-                    bbox = self.generate_bbox(keypoints, shape)
+                if pose["score"] >= self.cfg.min_confidence:
+                    image_shape = (image.shape(2), image.shape(1))
+                    keypoints = sanitize_keypoints(pose["keypoints"], image_shape)
+                    bbox = generate_bbox_from_keypoints(
+                        keypoints, self.cfg.bbox.extension_factor, image_shape
+                    )
                     detections.append(
-                        Detection.create(
-                            image_id=metadata.id,
-                            id=self.id,
-                            keypoints_xyc=keypoints,
-                            keypoints_score=pose["score"],
-                            bbox_ltwh=bbox,
-                            bbox_score=pose["score"],
-                            video_id=metadata.video_id,
-                            category_id=1,  # `person` class in posetrack
+                        pd.Series(
+                            dict(
+                                image_id=metadata.name,
+                                keypoints_xyc=keypoints,
+                                keypoints_conf=pose["score"],
+                                bbox_ltwh=bbox,
+                                bbox_conf=pose["score"],
+                                video_id=metadata.video_id,
+                                category_id=1,  # `person` class in posetrack
+                            ),
+                            name=self.id,
                         )
                     )
                     self.id += 1
         return detections
-
-    def generate_bbox(self, keypoints, image_shape):
-        # generate a bounding box ltwh from the keypoints
-        # the bbox is then sanitized by cropping it to the image shape
-        keypoints = keypoints[keypoints[:, 2] > 0]
-        lt = np.amin(keypoints[:, :2], axis=0)
-        rb = np.amax(keypoints[:, :2], axis=0)
-        bbox_w = rb[0] - lt[0]
-        bbox_h = rb[1] - lt[1]
-        lt[0] -= bbox_w * self.cfg.bbox.left_right_extend_factor
-        rb[0] += bbox_w * self.cfg.bbox.left_right_extend_factor
-        lt[1] -= bbox_h * self.cfg.bbox.top_extend_factor
-        rb[1] += bbox_h * self.cfg.bbox.bottom_extend_factor
-        new_l = np.clip(np.round(lt[0]), 0, image_shape[0])
-        new_t = np.clip(np.round(lt[1]), 0, image_shape[1])
-        new_w = np.clip(np.round(rb[0] - lt[0]), 0, image_shape[0] - new_l)
-        new_h = np.clip(np.round(rb[1] - lt[1]), 0, image_shape[1] - new_t)
-        return np.array([new_l, new_t, new_w, new_h], dtype=int)
-
-    def sanitize_keypoints(self, keypoints, shape):
-        # Clip the keypoints to the image dimensions
-        # and set the confidence to 0 if thresholds are not met
-        keypoints[:, 0] = np.clip(keypoints[:, 0], 0, shape[0])
-        keypoints[:, 1] = np.clip(keypoints[:, 1], 0, shape[1])
-        keypoints[keypoints[:, 2] < self.cfg.keypoint_min_confidence, 2] = 0.0
-        return keypoints
-
-    @staticmethod
-    def check_checkpoint(path_to_checkpoint, download_url):
-        os.makedirs(os.path.dirname(path_to_checkpoint), exist_ok=True)
-        if not os.path.exists(path_to_checkpoint):
-            log.info("Checkpoint not found at {}".format(path_to_checkpoint))
-            log.info("Downloading checkpoint from {}".format(download_url))
-            response = requests.get(download_url, stream=True)
-            total_size_in_bytes = int(response.headers.get("content-length", 0))
-            block_size = 1024
-            progress_bar = tqdm(total=total_size_in_bytes, unit="B", unit_scale=True)
-            with open(path_to_checkpoint, "wb") as file:
-                for data in response.iter_content(block_size):
-                    progress_bar.update(len(data))
-                    file.write(data)
-            progress_bar.close()
-            if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
-                log.warning(
-                    f"Something went wrong while downloading or writing {download_url} to {path_to_checkpoint}"
-                )
-            else:
-                log.info("Checkpoint downloaded successfully")

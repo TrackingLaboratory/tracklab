@@ -5,6 +5,7 @@ defaults:
   - detect_single: hrnet_posetrack18
   - engine: offline
   - eval: posetrack21
+  - machine: local
   - reid: bpbreid
   - state: no_save
   - track: strong_sort
@@ -14,10 +15,10 @@ experiment_name: "???"
 data_dir: "???"
 num_cores: 4
 
-train_detect: True
+train_detect: False
 train_reid: False
 test_tracking: True
-wandb_enabled: True
+use_wandb: True
 
 # configure Hydra to use the current working directory
 # and set up the output directory according to experiment_name

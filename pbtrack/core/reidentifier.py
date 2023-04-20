@@ -1,27 +1,26 @@
-from typing import List
+from typing import List, Any, Union
 from abc import abstractmethod, ABC
 
+import pandas as pd
 from torch.utils.data import DataLoader
 
 import pbtrack
-from pbtrack.datastruct.image_metadatas import ImageMetadata
-from pbtrack.datastruct.detections import Detection, Detections
 from ..utils.collate import default_collate
 
 
 class ReIdentifier(ABC):
-    """Abstract class to implement for the integration of a new reidentifier
-    in wrappers/reid. The functions to implement are __init__, train
-    (optional), preprocess and process. A description of the expected
-    behavior is provided below.
+    """Abstract class to implement for the integration of a new re-identifier in wrappers/reid.
+    The functions to implement are __init__, preprocess and process.
+    A description of the expected behavior is provided below.
     """
 
     @abstractmethod
     def __init__(self, cfg, device, batch_size):
         """Init function
         Args:
-            cfg (NameSpace): configuration file from Hydra for the reidentifier
-            device (str): device to use for the reidentifier
+            cfg (NameSpace): configuration file from Hydra for the detector
+            device (int): device to use for the detector
+            batch_size (int): batch size for the detector
         """
         self.cfg = cfg
         self.device = device
@@ -29,29 +28,31 @@ class ReIdentifier(ABC):
         self._datapipe = None
 
     @abstractmethod
-    def preprocess(self, detection: Detection, metadata: ImageMetadata) -> object:
-        """Your pre-processing function to adapt the input to your reidentifier
+    def preprocess(self, detection: pd.Series, metadata: pd.Series) -> Any:
+        """Your preprocessing function to adapt the input to your detector.
+        The output is being batched by the collate_fn() and fed to process().
         Args:
-            detection (Detection): the detection to process
-            metadata (ImageMetadata): the image metadata associated to the detection
+            detection (pd.Series): the detection to process
+            metadata (pd.Series): the image metadata to process
         Returns:
-            preprocessed (object): preprocessed input for process()
+            preprocessed (Any): preprocessed input for the process step
         """
         pass
 
     @abstractmethod
-    def process(self, batch, detections: Detections) -> List[Detection]:
-        """Your processing function to run the reidentifier
+    def process(
+            self, batch: Any, detections: pd.DataFrame
+    ) -> Union[pd.Series, List[pd.Series], pd.DataFrame, List[pd.DataFrame]]:
+        """Your processing function to run the re-identifier
         Args:
-            batch (object): output of preprocess() by batch
-            detections (Detections): the detections to update
+            batch (Any): the batched outputs from preprocess() by collate_fn()
+            detections (pd.DataFrame): the images metadata associated to the batch
         Returns:
-            detections (List[Detection]): updated detections for the batch
+            detections (Union[pd.Series, List[pd.Series], pd.DataFrame, List[pd.DataFrame]]): the new detections
+            from the batch. The framework will aggregate automatically all the results according to the `name` of the
+            Series/`index` of the DataFrame. It is thus mandatory here to name correctly your series or index your
+            dataframes. The output will override the previous detections with the same name/index.
         """
-        pass
-
-    def train(self):
-        """Training function for your reidentifier"""
         pass
 
     @property

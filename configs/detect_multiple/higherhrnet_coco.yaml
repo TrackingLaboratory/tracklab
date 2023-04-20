@@ -1,13 +1,11 @@
 _target_: pbtrack.wrappers.BottomUpMMPose
 
 cfg:
-  instance_min_confidence: 0.2
-  keypoint_min_confidence: 0.0
+  min_confidence: 0.4
+  nms_threshold: 0.9
 
   bbox:
-    top_extend_factor: 0.03
-    bottom_extend_factor: 0.1
-    left_right_extend_factor: 0.1
+    extension_factor: [ 0.1, 0.03, 0.1 ]  # [top, bottom, right&left]
 
   path_to_config: ${project_dir}/plugins/detect/mmpose/configs/body/2d_kpt_sview_rgb_img/associative_embedding/coco/higherhrnet_w48_coco_512x512.py
   path_to_checkpoint: ${project_dir}/weights/mmpose/higher_hrnet48_coco_512x512-60fedcbc_20200712.pth

@@ -8,18 +8,22 @@ from yacs.config import CfgNode as CN
 
 from .bpbreid_dataset import ReidDataset
 
-from pbtrack.datastruct import ImageMetadata, Detection
 from pbtrack import ReIdentifier
 from pbtrack.utils.images import cv2_load_image
 from pbtrack.utils.coordinates import (
     clip_bbox_ltrb_to_img_dim,
     kp_img_to_kp_bbox,
-    rescale_keypoints, round_bbox_coordinates,
+    rescale_keypoints,
+    round_bbox_coordinates,
+    ltwh_to_ltrb,
 )
 from plugins.reid.bpbreid.scripts.main import build_config, build_torchreid_model_engine
 from plugins.reid.bpbreid.tools.feature_extractor import FeatureExtractor
-from plugins.reid.bpbreid.torchreid.utils.imagetools import build_gaussian_heatmaps, build_gaussian_body_part_heatmaps, \
-    keypoints_to_body_part_visibility_scores
+from plugins.reid.bpbreid.torchreid.utils.imagetools import (
+    build_gaussian_heatmaps,
+    build_gaussian_body_part_heatmaps,
+    keypoints_to_body_part_visibility_scores,
+)
 from pbtrack.utils.collate import Unbatchable
 
 import pbtrack
@@ -32,7 +36,10 @@ sys.path.append(str((root_dir / "plugins/reid").resolve()))  # FIXME : ugly
 import torchreid
 from torch.nn import functional as F
 from plugins.reid.bpbreid.torchreid.utils.tools import extract_test_embeddings
-from plugins.reid.bpbreid.torchreid.data.masks_transforms import CocoToSixBodyMasks, masks_preprocess_transforms
+from plugins.reid.bpbreid.torchreid.data.masks_transforms import (
+    CocoToSixBodyMasks,
+    masks_preprocess_transforms,
+)
 from torchreid.data.datasets import configure_dataset_class
 
 # need that line to not break import of torchreid ('from torchreid... import ...') inside the bpbreid.torchreid module
@@ -54,13 +61,24 @@ class BPBReId(ReIdentifier):
     """
 
     def __init__(
-        self, cfg, tracking_dataset, dataset, device, save_path, model_detect, job_id, use_keypoints_visiblity_scores_for_reid, batch_size
+        self,
+        cfg,
+        tracking_dataset,
+        dataset,
+        device,
+        save_path,
+        model_detect,
+        job_id,
+        use_keypoints_visiblity_scores_for_reid,
+        batch_size,
     ):
         super().__init__(cfg, device, batch_size)
         tracking_dataset.name = dataset.name
         tracking_dataset.nickname = dataset.nickname
         self.dataset_cfg = dataset
-        self.use_keypoints_visiblity_scores_for_reid = use_keypoints_visiblity_scores_for_reid
+        self.use_keypoints_visiblity_scores_for_reid = (
+            use_keypoints_visiblity_scores_for_reid
+        )
         tracking_dataset.name = self.dataset_cfg.name
         tracking_dataset.nickname = self.dataset_cfg.nickname
         additional_args = {
@@ -86,19 +104,18 @@ class BPBReId(ReIdentifier):
         self.training_enabled = not self.cfg.test.evaluate
         self.feature_extractor = None
         self.model = None
-        self.coco_transform = masks_preprocess_transforms[self.cfg.model.bpbreid.masks.preprocess]()
+        self.coco_transform = masks_preprocess_transforms[
+            self.cfg.model.bpbreid.masks.preprocess
+        ]()
 
     @torch.no_grad()
     def preprocess(
-        self, detection: Detection, metadata: ImageMetadata
+        self, detection: pd.Series, metadata: pd.Series
     ):  # Tensor RGB (1, 3, H, W)
         mask_w, mask_h = 32, 64
-        # image = metadata.load_image()  # FIXME load_image() doesn't work because of ImageMetadata.__getattr__(
         image = cv2_load_image(metadata.file_path)
-        ltrb = detection.bbox_ltrb
-        l, t, r, b = clip_bbox_ltrb_to_img_dim(
-            round_bbox_coordinates(ltrb), image.shape[1], image.shape[0]
-        )
+        ltrb = ltwh_to_ltrb(detection.bbox_ltwh, (image.shape[1], image.shape[0]))
+        l, t, r, b = ltrb.round().astype(int)
         # TODO add a check to see if the bbox is not empty. t == b or l == r -> return error
         crop = image[t:b, l:r]
         crop = Unbatchable([crop])
@@ -125,13 +142,19 @@ class BPBReId(ReIdentifier):
             batch["masks"] = pixels_parts_probabilities
 
         if self.use_keypoints_visiblity_scores_for_reid:
-            visibility_score = keypoints_to_body_part_visibility_scores(detection.keypoints_xyc)
-            visibility_score = self.coco_transform.coco_joints_to_body_part_visibility_scores(visibility_score)
+            visibility_score = keypoints_to_body_part_visibility_scores(
+                detection.keypoints_xyc
+            )
+            visibility_score = (
+                self.coco_transform.coco_joints_to_body_part_visibility_scores(
+                    visibility_score
+                )
+            )
             batch["visibility_scores"] = visibility_score
         return batch
 
     @torch.no_grad()
-    def process(self, batch, detections, metadatas):
+    def process(self, batch, detections: pd.DataFrame):
         im_crops = batch["img"]
         im_crops = [im_crop.cpu().detach().numpy() for im_crop in im_crops]
         if "masks" in batch:
@@ -162,7 +185,10 @@ class BPBReId(ReIdentifier):
         if self.use_keypoints_visiblity_scores_for_reid:
             kp_visibility_scores = batch["visibility_scores"].numpy()
             if visibility_scores.shape[1] > kp_visibility_scores.shape[1]:
-                kp_visibility_scores = np.concatenate([np.ones((visibility_scores.shape[0], 1)), kp_visibility_scores], axis=1)
+                kp_visibility_scores = np.concatenate(
+                    [np.ones((visibility_scores.shape[0], 1)), kp_visibility_scores],
+                    axis=1,
+                )
             visibility_scores = np.float32(kp_visibility_scores)
 
         reid_df = pd.DataFrame(
@@ -173,10 +199,10 @@ class BPBReId(ReIdentifier):
             },
             index=detections.index,
         )
-        detections = detections.merge(
-            reid_df, left_index=True, right_index=True, validate="one_to_one"
-        )
-        return detections
+        # detections = detections.merge(
+        #    reid_df, left_index=True, right_index=True, validate="one_to_one"
+        # )
+        return reid_df
 
     def train(self):
         self.engine, self.model = build_torchreid_model_engine(self.cfg)

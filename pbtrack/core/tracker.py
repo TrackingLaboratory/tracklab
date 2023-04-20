@@ -1,31 +1,35 @@
-from typing import List
+from typing import List, Any, Union
 from abc import abstractmethod, ABC
 
 import pandas as pd
 from torch.utils.data import DataLoader
 
 import pbtrack
-from pbtrack.datastruct.image_metadatas import ImageMetadata
-from pbtrack.datastruct.detections import Detection, Detections
 from pbtrack.engine import TrackingEngine
 from pbtrack.utils.images import cv2_load_image
 
 
 class Tracker(ABC):
-    """Abstract class to implement for the integration of a new tracking algorithm
-    in wrappers/track. The functions to implement are __init__, reset
-    (optional), preprocess and process. A description of the expected
-    behavior is provided below.
+    """Abstract class to implement for the integration of a new detector in wrappers/track.
+    The functions to implement are __init__, preprocess and process.
+    A description of the expected behavior is provided below.
     """
 
     def __init__(self, cfg, device, batch_size):
+        """Init function
+        Args:
+            cfg (NameSpace): configuration file from Hydra for the detector
+            device (int): device to use for the detector
+            batch_size (int): batch size for the detector
+        """
         self.cfg = cfg
         self.device = device
         self.batch_size = batch_size
         self._datapipe = None
 
-    def process_video(self, detections, imgs_meta, engine: TrackingEngine) -> Detections:
-        track_detections = []
+    def process_video(
+        self, detections: pd.DataFrame, imgs_meta: pd.DataFrame, engine: TrackingEngine
+    ) -> pd.DataFrame:
         for image_id in imgs_meta.index:
             image = cv2_load_image(imgs_meta.loc[image_id].file_path)
             self.prepare_next_frame(image)
@@ -34,31 +38,34 @@ class Tracker(ABC):
             if len(image_detections) != 0:
                 self.datapipe.update(imgs_meta, image_detections)
                 for batch in self.dataloader():
-                    track_detections.append(engine.track_step(batch, detections, image))
-        if len(track_detections) > 0:
-            return pd.concat(track_detections)
-        else:
-            return Detections()
+                    detections = engine.track_step(batch, detections, image)
+        return detections
 
     @abstractmethod
-    def preprocess(self, detection: Detection, metadata: ImageMetadata) -> object:
-        """Your preprocessing function to adapt the input to your tracking algorithm
+    def preprocess(self, detection: pd.Series, metadata: pd.Series) -> object:
+        """Your preprocessing function to adapt the input to your tracker.
+        The output is being batched by the collate_fn() and fed to process().
         Args:
-            detection (Detection): the detection to process
-            metadata (ImageMetadata): the image metadata associated to the detection
+            detection (pd.Series): the detection to process
+            metadata (pd.Series): the image metadata to process
         Returns:
-            preprocessed (object): preprocessed input for process()
+            preprocessed (Any): preprocessed input for the process step
         """
         pass
 
     @abstractmethod
-    def process(self, preprocessed_batch, detections: Detections) -> List[Detection]:
-        """Your processing function to run the tracking algorithm
+    def process(
+        self, batch: Any, detections: pd.DataFrame
+    ) -> Union[pd.Series, List[pd.Series], pd.DataFrame, List[pd.DataFrame]]:
+        """Your processing function to run the detector
         Args:
-            preprocessed_batch (object): output of preprocess() by batch
-            detections (Detections): the detections to update
+            batch (Any): the batched outputs from preprocess() by collate_fn()
+            detections (pd.DataFrame): the images metadata associated to the batch
         Returns:
-            detections (List[Detection]): updated detections for the batch
+            detections (Union[pd.Series, List[pd.Series], pd.DataFrame, List[pd.DataFrame]]): the new detections
+            from the batch. The framework will aggregate automatically all the results according to the `name` of the
+            Series/`index` of the DataFrame. It is thus mandatory here to name correctly your series or index your
+            dataframes. The output will override the previous detections with the same name/index.
         """
         pass
 
@@ -90,7 +97,7 @@ class Tracker(ABC):
 # FIXME a bit useless no ?
 class OfflineTracker(Tracker):
     @abstractmethod
-    def run(self, video_dets: Detections):
+    def run(self, video_dets: pd.DataFrame):
         # update video_dets
         pass
 

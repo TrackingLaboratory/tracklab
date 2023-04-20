@@ -1,11 +1,11 @@
 import torch
-import numpy as np
+import pandas as pd
 
 from ultralytics import YOLO
 
-from pbtrack.datastruct import ImageMetadata, ImageMetadatas, Detection
-from pbtrack import Detector
+from pbtrack import MultiDetector
 from pbtrack.utils.images import cv2_load_image
+from pbtrack.utils.coordinates import ltrb_to_ltwh
 
 import logging
 
@@ -19,7 +19,8 @@ def collate_fn(batch):
     return idxs, (images, shapes)
 
 
-class YOLOv8(Detector):
+@torch.no_grad()
+class YOLOv8(MultiDetector):
     collate_fn = collate_fn
 
     def __init__(self, cfg, device, batch_size):
@@ -28,16 +29,14 @@ class YOLOv8(Detector):
         self.model.to(device)
         self.id = 0
 
-    @torch.no_grad()
-    def preprocess(self, metadata: ImageMetadata):
+    def preprocess(self, metadata: pd.Series):
         image = cv2_load_image(metadata.file_path)
         return {
             "image": image,
             "shape": (image.shape[1], image.shape[0]),
         }
 
-    @torch.no_grad()
-    def process(self, batch: dict, metadatas: ImageMetadatas):
+    def process(self, batch, metadatas: pd.DataFrame):
         images, shapes = batch
         results_by_image = self.model(images)
         detections = []
@@ -46,27 +45,18 @@ class YOLOv8(Detector):
         ):
             for bbox in results.boxes:
                 # check for `person` class
-                if bbox.cls == 0 and bbox.conf >= self.cfg.min_bbox_score:
+                if bbox.cls == 0 and bbox.conf >= self.cfg.min_confidence:
                     detections.append(
-                        Detection.create(
-                            image_id=metadata.id,
-                            id=self.id,
-                            bbox_ltwh=self.sanitize_bbox(bbox.xyxy, shape),
-                            bbox_score=bbox.conf.item(),
-                            video_id=metadata.video_id,
-                            category_id=1,  # `person` class in posetrack
+                        pd.Series(
+                            dict(
+                                image_id=metadata.name,
+                                bbox_ltwh=ltrb_to_ltwh(bbox.xyxy, shape),
+                                bbox_conf=bbox.conf.item(),
+                                video_id=metadata.video_id,
+                                category_id=1,  # `person` class in posetrack
+                            ),
+                            name=self.id,
                         )
                     )
                     self.id += 1
         return detections
-
-    @staticmethod
-    def sanitize_bbox(bbox, image_shape):
-        # from ltrb to ltwh sanitized
-        # bbox coordinates rounded as int and clipped to the image size
-        bbox = bbox[0].cpu()
-        new_l = np.clip(np.round(bbox[0]), 0, image_shape[0])
-        new_t = np.clip(np.round(bbox[1]), 0, image_shape[1])
-        new_w = np.clip(np.round(bbox[2] - bbox[0]), 0, image_shape[0] - new_l)
-        new_h = np.clip(np.round(bbox[3] - bbox[1]), 0, image_shape[1] - new_t)
-        return np.array([new_l, new_t, new_w, new_h], dtype=int)

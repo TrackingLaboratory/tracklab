@@ -1,9 +1,6 @@
 _target_: pbtrack.wrappers.TopDownMMPose
 
 cfg:
-  min_keypoints_score: 0.0  # keep only detections with a score higher
-  min_keypoints_confidence: 0.0  # consider only keypoints with a confidence higher
-
   path_to_config: ${project_dir}/plugins/detect/mmpose/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/litehrnet_30_coco_384x288.py
   path_to_checkpoint: ${project_dir}/weights/mmpose/litehrnet30_coco_384x288-a3aef5c4_20210626.pth
   download_url: https://download.openmmlab.com/mmpose/top_down/litehrnet/litehrnet30_coco_384x288-a3aef5c4_20210626.pth

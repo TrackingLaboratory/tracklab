@@ -29,6 +29,5 @@ class EngineDatapipe(Dataset):
             )
             return sample
         else:
-            metadata = self.img_metadatas.iloc[idx]
-            sample = (metadata.id, self.model.preprocess(metadata))
+            sample = (self.img_metadatas.index[idx], self.model.preprocess(self.img_metadatas.iloc[idx]))
             return sample

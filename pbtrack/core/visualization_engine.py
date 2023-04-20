@@ -60,7 +60,7 @@ posetrack_human_skeleton = [
     [1, 3],
 ]
 
-
+# FIXME can be cleaned and drawing code should be moved to utils folder
 class VisualizationEngine(Callback):
     def __init__(self, cfg):
         self.cfg = cfg

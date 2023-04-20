@@ -21,9 +21,7 @@ cfg:
 
 
   bbox:
-    top_extend_factor: 0.03
-    bottom_extend_factor: 0.1
-    left_right_extend_factor: 0.1
+    extension_factor: [ 0.1, 0.03, 0.1 ]  # [top, bottom, right&left]
 
   train:
     output: "${hydra:run.dir}/openpifpaf"

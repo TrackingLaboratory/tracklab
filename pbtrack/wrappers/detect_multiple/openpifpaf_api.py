@@ -1,15 +1,14 @@
 import sys
 import torch
-import numpy as np
+import pandas as pd
 from PIL import Image
 from omegaconf.listconfig import ListConfig
 
 import openpifpaf
 
-from pbtrack import Detector
-from pbtrack.datastruct import Detection
+from pbtrack import MultiDetector
 from pbtrack.utils.images import cv2_load_image
-from pbtrack.utils.coordinates import round_bbox_coordinates
+from pbtrack.utils.coordinates import sanitize_keypoints, generate_bbox_from_keypoints
 
 import logging
 
@@ -29,7 +28,7 @@ def collate_images_anns_meta(batch):
     return idxs, (processed_images, anns, metas)
 
 
-class OpenPifPaf(Detector):
+class OpenPifPaf(MultiDetector):
     collate_fn = collate_images_anns_meta
 
     def __init__(self, cfg, device, batch_size):
@@ -51,15 +50,13 @@ class OpenPifPaf(Detector):
             )
 
     @torch.no_grad()
-    def preprocess(self, img_meta):
-        image = Image.fromarray(
-            cv2_load_image(img_meta.file_path)
-        )  # TODO Image should be loaded in track_engine (could be loaded differently, from mp4 for instance)
+    def preprocess(self, metadata: pd.Series):
+        image = Image.fromarray(cv2_load_image(metadata.file_path))
         processed_image, anns, meta = self.pifpaf_preprocess(image, [], {})
         return processed_image, anns, meta
 
     @torch.no_grad()
-    def process(self, batch, metadatas, return_fields=False):
+    def process(self, batch, metadatas: pd.DataFrame, return_fields=False):
         processed_image_batch, _, metas = batch
         pred_batch, fields_batch = self.processor.batch(
             self.model, processed_image_batch, device=self.device
@@ -70,45 +67,24 @@ class OpenPifPaf(Detector):
         ):
             for prediction in predictions:
                 prediction = prediction.inverse_transform(meta)
-                keypoints = prediction.data
-
-                w, h = meta["width_height"]
-                # FIXME do we want this ?
-                keypoints[:, 0] = np.clip(keypoints[:, 0], 0, w)
-                keypoints[:, 1] = np.clip(keypoints[:, 1], 0, h)
-                keypoints[:, 2] = np.clip(keypoints[:, 2], 0, 1)
-
-                bbox_ltrb = self.keypoints_to_bbox(keypoints)
-                bbox_ltrb = round_bbox_coordinates(bbox_ltrb)
-
-                bbox_ltrb[0] = np.clip(bbox_ltrb[0], 0, w)
-                bbox_ltrb[1] = np.clip(bbox_ltrb[1], 0, h)
-                bbox_ltrb[2] = np.clip(bbox_ltrb[2], 0, w)
-                bbox_ltrb[3] = np.clip(bbox_ltrb[3], 0, h)
-                bbox_ltwh = np.array(
-                    [
-                        bbox_ltrb[0],
-                        bbox_ltrb[1],
-                        bbox_ltrb[2] - bbox_ltrb[0],
-                        bbox_ltrb[3] - bbox_ltrb[1],
-                    ]
+                keypoints = sanitize_keypoints(prediction.data, meta["width_height"])
+                bbox = generate_bbox_from_keypoints(
+                    keypoints[keypoints[:, 2] > 0],
+                    self.cfg.bbox.extension_factor,
+                    meta["width_height"],
                 )
-                if bbox_ltwh[2] < 1:
-                    log.warning("Bbox generated with a width of 0. Changed to 1.")
-                    bbox_ltwh[2] = 1
-                if bbox_ltwh[3] < 1:
-                    log.warning("Bbox generated with a height of 0. Changed to 1.")
-                    bbox_ltwh[2] = 1
                 detections.append(
-                    Detection.create(
-                        image_id=metadata.id,
-                        id=self.id,
-                        keypoints_xyc=keypoints,
-                        keypoints_score=np.mean(keypoints[:, 2], axis=0),
-                        bbox_ltwh=bbox_ltwh,
-                        bbox_score=np.mean(keypoints[:, 2], axis=0),
-                        video_id=metadata.video_id,
-                        category_id=1,  # `person` class in posetrack
+                    pd.Series(
+                        dict(
+                            image_id=metadata.name,
+                            keypoints_xyc=keypoints,
+                            keypoints_conf=prediction.score,
+                            bbox_ltwh=bbox,
+                            bbox_conf=prediction.score,
+                            video_id=metadata.video_id,
+                            category_id=1,  # `person` class in posetrack
+                        ),
+                        name=self.id,
                     )
                 )
                 self.id += 1
@@ -116,18 +92,6 @@ class OpenPifPaf(Detector):
             return detections, fields_batch
         else:
             return detections
-
-    def keypoints_to_bbox(self, keypoints):
-        keypoints = keypoints[keypoints[:, 2] > 0]
-        lt = np.amin(keypoints[:, :2], axis=0)
-        rb = np.amax(keypoints[:, :2], axis=0)
-        bbox_w = rb[0] - lt[0]
-        bbox_h = rb[1] - lt[1]
-        lt[0] -= bbox_w * self.cfg.bbox.left_right_extend_factor
-        rb[0] += bbox_w * self.cfg.bbox.left_right_extend_factor
-        lt[1] -= bbox_h * self.cfg.bbox.top_extend_factor
-        rb[1] += bbox_h * self.cfg.bbox.bottom_extend_factor
-        return np.array([lt[0], lt[1], rb[0], rb[1]])
 
     def train(self):
         old_argv = sys.argv
@@ -146,7 +110,8 @@ class OpenPifPaf(Detector):
             f"Loaded trained detection model from file: {self.cfg.predict.checkpoint}"
         )
 
-    def _hydra_to_argv(self, cfg):
+    @staticmethod
+    def _hydra_to_argv(cfg):
         new_argv = ["argv_from_hydra"]
         for k, v in cfg.items():
             new_arg = f"--{str(k)}"

@@ -2,7 +2,7 @@ from abc import abstractmethod, ABC
 
 from pbtrack.datastruct.tracker_state import TrackerState
 
-
+# FIXME is this usefull ?
 class Evaluator(ABC):
     """Abstract class to implement for the integration of a new dataset evaluator
     in wrappers/eval. The functions to implement are __init__ and run. A description

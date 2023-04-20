@@ -1,15 +1,16 @@
+import pandas as pd
 import torch
 import numpy as np
 import plugins.track.strong_sort as strong_sort
 
 from pbtrack import OnlineTracker
-from pbtrack.datastruct import Detections, ImageMetadatas, Detection, ImageMetadata
 
 import logging
 
 log = logging.getLogger(__name__)
 
 
+@torch.no_grad()
 class StrongSORT(OnlineTracker):
     def __init__(self, cfg, device, batch_size):
         super().__init__(cfg, device, batch_size)
@@ -53,13 +54,12 @@ class StrongSORT(OnlineTracker):
                     self.failed_ecc_counter += 1
             self.prev_frame = next_frame
 
-    @torch.no_grad()
-    def preprocess(self, detection: Detection, metadata: ImageMetadata):
+    def preprocess(self, detection: pd.Series, metadata: pd.Series):
         bbox_ltwh = detection.bbox_ltwh
-        score = detection.keypoints_score
+        score = detection.keypoints_conf
         reid_features = detection.embeddings  # .flatten()
         visibility_score = detection.visibility_scores
-        id = detection.id
+        id = detection.name
         classes = np.array(0)
         keypoints = detection.keypoints_xyc
         return (
@@ -73,8 +73,7 @@ class StrongSORT(OnlineTracker):
             keypoints,
         )
 
-    @torch.no_grad()
-    def process(self, batch, image, detections: Detections, metadatas: ImageMetadatas):
+    def process(self, batch, image, detections: pd.DataFrame):
         (
             id,
             bbox_ltwh,
@@ -96,25 +95,4 @@ class StrongSORT(OnlineTracker):
             frame,
             keypoints,
         )
-        detections = self._update_detections(results, detections)
-        return detections
-
-    def _update_detections(self, results, detections):
-        assert results.index.isin(
-            detections.index
-        ).all(), "StrongSORT returned detections with unknown indices"
-        merged_detections = detections.merge(
-            results,
-            how="left",
-            left_index=True,
-            right_index=True,
-            suffixes=("_drop", ""),
-        )
-        if "track_id_drop" in merged_detections.columns:
-            merged_detections.drop(["track_id_drop"], axis=1, inplace=True)
-        assert merged_detections.index.equals(detections.index), (
-            "Merge with StrongSORT results failed, some "
-            "detections were lost or added"
-        )
-        detections = merged_detections
-        return detections
+        return results

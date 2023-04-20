@@ -4,13 +4,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from pbtrack.datastruct import (
-    TrackingDataset,
-    TrackingSet,
-    ImageMetadatas,
-    VideoMetadatas,
-    Detections,
-)
+from pbtrack.datastruct import TrackingDataset, TrackingSet
 
 
 class PoseTrack21(TrackingDataset):
@@ -19,6 +13,7 @@ class PoseTrack21(TrackingDataset):
     Val set: 20161 images
     Test set: ??? images
     """
+
     def __init__(self, dataset_path: str, annotation_path: str, *args, **kwargs):
         self.dataset_path = Path(dataset_path)
         assert self.dataset_path.exists(), "'{}' directory does not exist".format(
@@ -45,9 +40,9 @@ def load_tracking_set(anns_path, dataset_path, split):
     )
     return TrackingSet(
         split,
-        VideoMetadatas(video_metadatas),
-        ImageMetadatas(image_metadatas),
-        Detections(detections),
+        video_metadatas,
+        image_metadatas,
+        detections,
     )
 
 
@@ -65,13 +60,13 @@ def load_annotations(anns_path, split):
             data_dict = json.load(json_file)
             detections.extend(data_dict["annotations"])
             image_metadatas.extend(data_dict["images"])
-            categories = data_dict["categories"]
-            video_metadata = {
-                "id": data_dict["images"][0]["vid_id"],
-                "name": path.stem,
-                "categories": categories,
-            }
-            video_metadatas.append(video_metadata)
+            video_metadatas.append(
+                {
+                    "id": data_dict["images"][0]["vid_id"],
+                    "name": path.stem,
+                    "categories": data_dict["categories"],
+                }
+            )
 
     return (
         pd.DataFrame(video_metadatas),
@@ -82,7 +77,7 @@ def load_annotations(anns_path, split):
 
 def fix_formatting(video_metadatas, image_metadatas, detections, dataset_path):
     # Videos
-    video_metadatas.set_index("id", drop=False, inplace=True)
+    video_metadatas.set_index("id", drop=True, inplace=True)
 
     # Images
     image_metadatas.drop(["image_id"], axis=1, inplace=True)  # id == image_id
@@ -96,10 +91,10 @@ def fix_formatting(video_metadatas, image_metadatas, detections, dataset_path):
         lambda x: int(os.path.basename(x).split(".")[0]) + 1
     )
     image_metadatas.rename(
-        columns={"vid_id": "video_id", "file_name": "file_path", "nframes": "nframes"},
+        columns={"vid_id": "video_id", "file_name": "file_path"},
         inplace=True,
     )
-    image_metadatas.set_index("id", drop=False, inplace=True)
+    image_metadatas.set_index("id", drop=True, inplace=True)
 
     # Detections
     detections.drop(["bbox_head"], axis=1, inplace=True)
@@ -109,7 +104,7 @@ def fix_formatting(video_metadatas, image_metadatas, detections, dataset_path):
     detections.keypoints_xyc = detections.keypoints_xyc.apply(
         lambda x: np.reshape(np.array(x), (-1, 3))
     )
-    detections.set_index("id", drop=False, inplace=True)
+    detections.set_index("id", drop=True, inplace=True)
     # compute detection visiblity as average keypoints visibility
     detections["visibility"] = detections.keypoints_xyc.apply(lambda x: x[:, 2].mean())
     # add video_id to detections, will be used for bpbreid 'camid' parameter

@@ -3,8 +3,6 @@ import cv2
 
 from pathlib import Path
 from pbtrack.datastruct import (
-    ImageMetadatas,
-    VideoMetadatas,
     TrackingDataset,
     TrackingSet,
 )
