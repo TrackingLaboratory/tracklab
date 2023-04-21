@@ -66,9 +66,9 @@ class BBoxSeriesAccessor:
 
     @staticmethod
     def _validate(obj):
-        if "bbox_ltwh" not in obj.columns:
+        if "bbox_ltwh" not in obj.index:
             raise AttributeError("Must have 'bbox_ltwh'.")
-        if "bbox_conf" not in obj.columns:
+        if "bbox_conf" not in obj.index:
             raise AttributeError("Must have 'bbox_conf'.")
 
     def ltwh(self, image_shape=None):

@@ -24,7 +24,6 @@ def mmpose_collate(batch):
     return collate(batch, len(batch))
 
 
-@torch.no_grad()
 class TopDownMMPose(SingleDetector):
     collate_fn = mmpose_collate
 
@@ -36,6 +35,7 @@ class TopDownMMPose(SingleDetector):
         self.dataset_info = DatasetInfo(self.model.cfg.dataset_info)
         self.test_pipeline = Compose(self.model.cfg.test_pipeline)
 
+    @torch.no_grad()
     def preprocess(self, detection: pd.Series, metadata: pd.Series):
         image = cv2.imread(metadata.file_path)  # BGR not RGB !
         data = {
@@ -59,6 +59,7 @@ class TopDownMMPose(SingleDetector):
         }
         return self.test_pipeline(data)
 
+    @torch.no_grad()
     def process(self, batch, detections: pd.DataFrame):
         batch = scatter(batch, [self.device])[0]
         keypoints = list(

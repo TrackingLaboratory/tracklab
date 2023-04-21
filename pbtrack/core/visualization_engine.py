@@ -84,18 +84,18 @@ class VisualizationEngine(Callback):
         image_metadatas = tracker_state.gt.image_metadatas[
             tracker_state.gt.image_metadatas.video_id == video_id
         ]
-        for i, image_id in enumerate(image_metadatas.id):
+        for i, image_id in enumerate(image_metadatas.index):
             # check for process max frame per video
             if i >= self.cfg.process_n_frames_by_video != -1:
                 break
             # retrieve results
             image_metadata = image_metadatas.loc[image_id]
             predictions = tracker_state.predictions[
-                tracker_state.predictions.image_id == image_metadata.id
+                tracker_state.predictions.image_id == image_metadata.name
             ]
             if tracker_state.gt.detections is not None:
                 ground_truths = tracker_state.gt.detections[
-                    tracker_state.gt.detections.image_id == image_metadata.id
+                    tracker_state.gt.detections.image_id == image_metadata.name
                 ]
             else:
                 ground_truths = None
@@ -161,7 +161,7 @@ class VisualizationEngine(Callback):
             detection, is_prediction
         )
         bbox_ltrb = clip_bbox_ltrb_to_img_dim(
-            round_bbox_coordinates(detection.bbox_ltrb), patch.shape[1], patch.shape[0]
+            round_bbox_coordinates(bbox_ltwh2ltrb(detection.bbox_ltwh)), patch.shape[1], patch.shape[0]
         )
         l, t, r, b = bbox_ltrb
         w, h = r - l, b - t
@@ -299,7 +299,7 @@ class VisualizationEngine(Callback):
         ):
             draw_text(
                 patch,
-                f"{detection.keypoints_score:.1f} %",
+                f"{detection.keypoints_conf:.1f} %",
                 (l + 3, t - 5),
                 fontFace=self.cfg.text.font,
                 fontScale=self.cfg.text.scale,

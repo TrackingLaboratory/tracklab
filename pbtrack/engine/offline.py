@@ -29,12 +29,8 @@ class OfflineTrackingEngine(TrackingEngine):
                                                                        imgs_meta,
                                                                        self)
                 else:
-                    detections_list = []
                     for batch in self.dataloaders[model_name]:
-                        detections_list.append(
-                            self.default_step(batch, model_name, detections)
-                        )
-                    detections = pd.concat(detections_list)
+                        detections = self.default_step(batch, model_name, detections)
                 self.callback("on_task_end", task=model_name, detections=detections)
                 if detections.empty:
                     return detections

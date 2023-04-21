@@ -22,9 +22,12 @@ def merge_dataframes(main_df, appended_piece):
     if isinstance(appended_piece, pd.Series):
         appended_piece = pd.DataFrame(appended_piece).T
     elif isinstance(appended_piece, list):  # list of Series or DataFrames
-        appended_piece = pd.concat(
-            [s.to_frame().T if type(s) is pd.Series else s for s in appended_piece]
-        )
+        if len(appended_piece) > 0:
+            appended_piece = pd.concat(
+                [s.to_frame().T if type(s) is pd.Series else s for s in appended_piece]
+            )
+        else:
+            appended_piece = pd.DataFrame()
 
     # Append the columns of the df
     new_columns = appended_piece.columns.difference(main_df.columns)

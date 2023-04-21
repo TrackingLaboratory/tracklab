@@ -30,7 +30,8 @@ class Module(ABC):
 
 class Pipeline:
     def __init__(self, models: List[Module]):
-        self.models = models
+        self.models = [model for model in models if model.name != "skip"]
+        print("Pipeline:", " -> ".join(model.name for model in self.models))
         self.validate()
 
     def validate(self):
@@ -39,10 +40,19 @@ class Pipeline:
             if model.input_columns is None or model.output_columns is None:
                 raise AttributeError(f"{type(model)} should contain input_ and output_columns")
             if not set(model.input_columns).issubset(columns):
-                raise AttributeError(f"The {model} model doesn't have"
+                raise AttributeError(f"The {model} model doesn't have "
                                      "all the input needed, "
                                      f"needed {model.input_columns}, provided {columns}")
             columns.update(model.output_columns)
 
     def __getitem__(self, item: int):
         return self.models[item]
+
+
+class Skip(Module):
+    def __init__(self, **kwargs):
+        pass
+
+    @property
+    def name(self):
+        return "skip"

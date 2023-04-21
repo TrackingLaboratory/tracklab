@@ -27,7 +27,7 @@ def mmpose_collate(batch):
 @torch.no_grad()
 class BottomUpMMPose(MultiDetector):
     collate_fn = mmpose_collate
-    output_columns = ["image_id", "id", "video_id", "category_id"
+    output_columns = ["image_id", "id", "video_id", "category_id",
                       "bbox_ltwh", "bbox_conf", "keypoints_xyc", "keypoints_conf"]
 
 
@@ -59,6 +59,7 @@ class BottomUpMMPose(MultiDetector):
         }
         return self.test_pipeline(data)
 
+    @torch.no_grad()
     def process(self, batch, metadatas: pd.DataFrame):
         batch = scatter(batch, [self.device])[0]
         images = list(batch["img"].unsqueeze(0).permute(1, 0, 2, 3, 4))
@@ -99,7 +100,7 @@ class BottomUpMMPose(MultiDetector):
 
             for pose in pose_results:
                 if pose["score"] >= self.cfg.min_confidence:
-                    image_shape = (image.shape(2), image.shape(1))
+                    image_shape = (image.shape[2], image.shape[1])
                     keypoints = sanitize_keypoints(pose["keypoints"], image_shape)
                     bbox = generate_bbox_from_keypoints(
                         keypoints, self.cfg.bbox.extension_factor, image_shape

@@ -1,9 +1,14 @@
 # @package _global_
+device: "cuda"
 detect_multiple:
   batch_size: 8
+  device: "${..device}"
 detect_single:
   batch_size: 32
+  device: "${..device}"
 reid:
   batch_size: 32
+  device: "${..device}"
 track:
   batch_size: null
+  device: "${..device}"

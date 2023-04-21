@@ -2,6 +2,7 @@ import torch
 import hydra
 from hydra.utils import instantiate
 from pbtrack.datastruct import TrackerState
+from pbtrack.pipeline import Pipeline
 from pbtrack.utils import wandb
 
 import logging
@@ -36,6 +37,13 @@ def main(cfg):
         model_detect=None,  # FIXME
     )
     track_model = instantiate(cfg.track, device=device)
+    pipeline = Pipeline(models=[
+        detect_multi_model,
+        detect_single_model,
+        reid_model,
+        track_model
+    ])
+
     evaluator = instantiate(cfg.eval)
 
     # FIXME, je pense qu'il faut repenser l'entrainement dans ce script
@@ -56,12 +64,11 @@ def main(cfg):
             if tracking_dataset.val_set is not None
             else tracking_dataset.test_set
         )
-        modules = [detect_multi_model, detect_single_model, reid_model, track_model]
-        tracker_state = TrackerState(tracking_set, modules=modules, **cfg.state)
+        tracker_state = TrackerState(tracking_set, modules=pipeline, **cfg.state)
         # Run tracking and visualization
         tracking_engine = instantiate(
             cfg.engine,
-            modules=modules,
+            modules=pipeline,
             tracker_state=tracker_state,
         )
         tracking_engine.track_dataset()

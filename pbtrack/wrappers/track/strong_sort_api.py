@@ -9,9 +9,8 @@ import logging
 
 log = logging.getLogger(__name__)
 
-@torch.no_grad()
 class StrongSORT(Tracker):
-    input_columns = ["bbox_ltwh", "keypoints_xyc", "keypoints_score",
+    input_columns = ["bbox_ltwh", "keypoints_xyc", "keypoints_conf",
                      "embeddings", "visibility_scores"]
     output_columns = ["track_id",
                       "track_bbox_kf_ltwh", "track_bbox_pred_kf_ltwh",
@@ -60,6 +59,7 @@ class StrongSORT(Tracker):
                     self.failed_ecc_counter += 1
             self.prev_frame = next_frame
 
+    @torch.no_grad()
     def preprocess(self, detection: pd.Series, metadata: pd.Series):
         bbox_ltwh = detection.bbox_ltwh
         score = detection.keypoints_conf
@@ -79,6 +79,7 @@ class StrongSORT(Tracker):
             keypoints,
         )
 
+    @torch.no_grad()
     def process(self, batch, image, detections: pd.DataFrame):
         (
             id,

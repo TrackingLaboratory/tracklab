@@ -22,7 +22,6 @@ def mmdet_collate(batch):
     return collate(batch, len(batch))
 
 
-@torch.no_grad()
 class MMDetection(MultiDetector):
     collate_fn = mmdet_collate
 
@@ -39,6 +38,7 @@ class MMDetection(MultiDetector):
         cfg.data.test.pipeline = replace_ImageToTensor(cfg.data.test.pipeline)
         self.test_pipeline = Compose(cfg.data.test.pipeline)
 
+    @torch.no_grad()
     def preprocess(self, metadata: pd.Series):
         image = cv2.imread(metadata.file_path)  # BGR not RGB !
         data = {
@@ -46,6 +46,7 @@ class MMDetection(MultiDetector):
         }
         return self.test_pipeline(data)
 
+    @torch.no_grad()
     def process(self, batch, metadatas: pd.DataFrame):
         # just get the actual data from DataContainer
         batch["img_metas"] = [img_metas.data[0] for img_metas in batch["img_metas"]]

@@ -19,7 +19,6 @@ def collate_fn(batch):
     return idxs, (images, shapes)
 
 
-@torch.no_grad()
 class YOLOv8(MultiDetector):
     collate_fn = collate_fn
 
@@ -29,6 +28,7 @@ class YOLOv8(MultiDetector):
         self.model.to(device)
         self.id = 0
 
+    @torch.no_grad()
     def preprocess(self, metadata: pd.Series):
         image = cv2_load_image(metadata.file_path)
         return {
@@ -36,6 +36,7 @@ class YOLOv8(MultiDetector):
             "shape": (image.shape[1], image.shape[0]),
         }
 
+    @torch.no_grad()
     def process(self, batch, metadatas: pd.DataFrame):
         images, shapes = batch
         results_by_image = self.model(images)
