@@ -14,13 +14,13 @@ class EngineDatapipe(Dataset):
         self.detections = detections
 
     def __len__(self):
-        if self.detections is not None:
+        if not self.detections.empty:
             return len(self.detections)
         else:
             return len(self.img_metadatas)
 
     def __getitem__(self, idx):
-        if self.detections is not None:
+        if not self.detections.empty:
             detection = self.detections.iloc[idx]
             metadata = self.img_metadatas.loc[detection.image_id]
             sample = (

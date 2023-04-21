@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Dict, TYPE_CHECKING, Any
+from typing import Dict, TYPE_CHECKING, Any, List
 
 import numpy as np
 import pandas as pd
@@ -9,13 +9,14 @@ from lightning.fabric import Fabric
 
 from abc import abstractmethod, ABC
 
+from pbtrack.pipeline import Pipeline, Module
+
 if TYPE_CHECKING:
     from pbtrack.callbacks import Callback
 
 from pbtrack.datastruct import TrackerState
 
 
-# noinspection PyCallingNonCallable
 def merge_dataframes(main_df, appended_piece):
     # Convert appended_piece to a DataFrame if it's not already
     if isinstance(appended_piece, pd.Series):
@@ -41,7 +42,6 @@ def merge_dataframes(main_df, appended_piece):
 
 
 class TrackingEngine(ABC):
-
     """Manages the full tracking pipeline.
 
     After initializing the ``TrackingEngine``, users should call ``track_dataset``
@@ -71,17 +71,16 @@ class TrackingEngine(ABC):
         num_workers: number of workers for preprocessing
     """
 
-    def __init__(
-        self,
-        detect_multi_model: "pbtrack.Detector",
-        detect_single_model: "pbtrack.Detector",
-        reid_model: "pbtrack.ReIdentifier",
-        track_model: "pbtrack.Tracker",
-        tracker_state: "TrackerState",
-        num_workers: int,
-        callbacks: "Dict[Callback]" = None,
-    ):
+    def __init__(self,
+                 modules: List[Module],
+                 tracker_state: "TrackerState",
+                 num_workers: int,
+                 callbacks: "Dict[Callback]" = None,
+                 ):
         # super().__init__()
+        modules = Pipeline(modules)
+        self.module_names = [module.name for module in modules]
+        print(self.module_names)
         callbacks = list(callbacks.values()) if callbacks is not None else []
         callbacks = [tracker_state] + callbacks
 
@@ -91,13 +90,7 @@ class TrackingEngine(ABC):
         self.tracker_state = tracker_state
         self.img_metadatas = tracker_state.gt.image_metadatas
         self.video_metadatas = tracker_state.gt.video_metadatas
-
-        self.models = {
-            "detect_multi": detect_multi_model,
-            "detect_single": detect_single_model,
-            "reid": reid_model,
-            "track": track_model,
-        }
+        self.models = {model.name: model for model in modules}
         self.datapipes = {}
         self.dataloaders = {}
         for model_name, model in self.models.items():
@@ -141,7 +134,7 @@ class TrackingEngine(ABC):
         self.callback(f"on_task_step_start", task=task, batch=batch)
         idxs, batch = batch
         idxs = idxs.cpu() if isinstance(idxs, torch.Tensor) else idxs
-        if task == "detect_multi":
+        if task == "multi_detector":
             batch_metadatas = self.img_metadatas.loc[idxs]
             batch_detections = self.models[task].process(batch, batch_metadatas)
         else:
@@ -156,19 +149,3 @@ class TrackingEngine(ABC):
             f"on_task_step_end", task=task, batch=batch, detections=detections
         )
         return detections
-
-    def detect_multi_step(self, batch, detections):
-        detections = self.default_step(batch, "detect_multi", detections)
-        return detections
-
-    def detect_single_step(self, batch, detections):
-        output_detections = self.default_step(batch, "detect_single", detections)
-        return output_detections
-
-    def reid_step(self, batch, detections):
-        output_detections = self.default_step(batch, "reid", detections)
-        return output_detections
-
-    def track_step(self, batch, detections, image):
-        output_detections = self.default_step(batch, "track", detections, image=image)
-        return output_detections

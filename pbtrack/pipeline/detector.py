@@ -3,14 +3,15 @@ from abc import abstractmethod, ABC
 
 import pandas as pd
 
+from . import Module
 from ..engine import TrackingEngine
 
 from torch.utils.data.dataloader import default_collate, DataLoader
 
-from .datapipe import EngineDatapipe
+from pbtrack.engine.datapipe import EngineDatapipe
 
 
-class MultiDetector(ABC):
+class MultiDetector(Module):
     """Abstract class to implement for the integration of a new detector in wrappers/detect_multiple.
     Can either be a bottom-up (outputs directly keypoints and bbox) approach or a bounding box detector
     (outputs bboxes). The functions to implement are __init__, preprocess and process.
@@ -18,6 +19,9 @@ class MultiDetector(ABC):
     """
 
     collate_fn = default_collate
+    input_columns = []
+    output_columns = ["image_id", "id", "video_id", "category_id",
+                      "bbox_ltwh", "bbox_conf"]
 
     @abstractmethod
     def __init__(self, cfg, device, batch_size):
@@ -79,7 +83,7 @@ class MultiDetector(ABC):
         )
 
 
-class SingleDetector(ABC):
+class SingleDetector(Module):
     """Abstract class to implement for the integration of a new detector in wrappers/detect_single.
     For top-down approaches (bboxes as inputs and outputs keypoints).
     The functions to implement are __init__, preprocess and process.
@@ -87,6 +91,8 @@ class SingleDetector(ABC):
     """
 
     collate_fn = default_collate
+    input_columns = ["bbox_ltwh", "bbox_conf"]
+    output_columns = ["keypoints_xyc", "keypoints_conf"]
 
     @abstractmethod
     def __init__(self, cfg, device, batch_size):

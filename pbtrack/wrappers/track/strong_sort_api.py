@@ -3,15 +3,21 @@ import torch
 import numpy as np
 import plugins.track.strong_sort as strong_sort
 
-from pbtrack import OnlineTracker
+from pbtrack.pipeline import Tracker
 
 import logging
 
 log = logging.getLogger(__name__)
 
-
 @torch.no_grad()
-class StrongSORT(OnlineTracker):
+class StrongSORT(Tracker):
+    input_columns = ["bbox_ltwh", "keypoints_xyc", "keypoints_score",
+                     "embeddings", "visibility_scores"]
+    output_columns = ["track_id",
+                      "track_bbox_kf_ltwh", "track_bbox_pred_kf_ltwh",
+                      "matched_with", "costs", "hits",
+                      "age", "time_since_update", "state"]
+
     def __init__(self, cfg, device, batch_size):
         super().__init__(cfg, device, batch_size)
         self.cfg = cfg

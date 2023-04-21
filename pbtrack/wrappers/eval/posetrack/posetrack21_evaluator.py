@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from tabulate import tabulate
 
-from pbtrack import Evaluator as EvaluatorBase
+from pbtrack.core import Evaluator as EvaluatorBase
 from pbtrack.utils import wandb
 
 import posetrack21

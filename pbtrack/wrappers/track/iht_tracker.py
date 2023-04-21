@@ -1,5 +1,5 @@
-from pbtrack import OfflineTracker
+from pbtrack.pipeline import Tracker
 
 
-class IHTTracker(OfflineTracker):
+class IHTTracker(Tracker):
     pass

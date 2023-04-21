@@ -2,7 +2,7 @@ import os
 import numpy as np
 from tabulate import tabulate
 
-from pbtrack import Evaluator as EvaluatorBase
+from pbtrack.core import Evaluator as EvaluatorBase
 from pbtrack.utils import wandb
 
 from poseval.eval_helpers import (

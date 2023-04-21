@@ -56,14 +56,12 @@ def main(cfg):
             if tracking_dataset.val_set is not None
             else tracking_dataset.test_set
         )
-        tracker_state = TrackerState(tracking_set, **cfg.state)
+        modules = [detect_multi_model, detect_single_model, reid_model, track_model]
+        tracker_state = TrackerState(tracking_set, modules=modules, **cfg.state)
         # Run tracking and visualization
         tracking_engine = instantiate(
             cfg.engine,
-            detect_multi_model=detect_multi_model,
-            detect_single_model=detect_single_model,
-            reid_model=reid_model,
-            track_model=track_model,
+            modules=modules,
             tracker_state=tracker_state,
         )
         tracking_engine.track_dataset()

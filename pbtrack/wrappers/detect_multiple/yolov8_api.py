@@ -3,7 +3,7 @@ import pandas as pd
 
 from ultralytics import YOLO
 
-from pbtrack import MultiDetector
+from pbtrack.pipeline import MultiDetector
 from pbtrack.utils.images import cv2_load_image
 from pbtrack.utils.coordinates import ltrb_to_ltwh
 

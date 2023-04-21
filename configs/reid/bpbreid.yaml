@@ -4,7 +4,7 @@ defaults:
 _target_: pbtrack.wrappers.BPBReId
 job_id: "${oc.env:SLURM_JOBID,0}" # TODO
 save_path: reid
-use_keypoints_visiblity_scores_for_reid: False
+use_keypoints_visibility_scores_for_reid: False
 cfg:
   project:
     name: "PbTrack"

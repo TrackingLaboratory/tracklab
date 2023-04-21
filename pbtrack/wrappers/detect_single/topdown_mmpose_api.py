@@ -11,7 +11,7 @@ from mmpose.apis import init_pose_model
 from mmpose.datasets.dataset_info import DatasetInfo
 from mmpose.datasets.pipelines import Compose
 
-from pbtrack import SingleDetector
+from pbtrack.pipeline import SingleDetector
 from pbtrack.utils.openmmlab import get_checkpoint
 
 import logging

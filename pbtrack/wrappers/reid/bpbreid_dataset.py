@@ -12,7 +12,7 @@ from skimage.transform import resize
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from pbtrack import EngineDatapipe
+from pbtrack.engine import EngineDatapipe
 from pbtrack.datastruct import TrackingDataset
 from pbtrack.utils.coordinates import (
     rescale_keypoints,

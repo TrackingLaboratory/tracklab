@@ -6,13 +6,17 @@ from torch.utils.data import DataLoader
 
 import pbtrack
 from ..utils.collate import default_collate
+from pbtrack.pipeline import Module
+from pbtrack.engine import EngineDatapipe
 
 
-class ReIdentifier(ABC):
+class ReIdentifier(Module):
     """Abstract class to implement for the integration of a new re-identifier in wrappers/reid.
     The functions to implement are __init__, preprocess and process.
     A description of the expected behavior is provided below.
     """
+    input_columns = None
+    output_columns = None
 
     @abstractmethod
     def __init__(self, cfg, device, batch_size):
@@ -58,10 +62,10 @@ class ReIdentifier(ABC):
     @property
     def datapipe(self):
         if self._datapipe is None:
-            self._datapipe = pbtrack.EngineDatapipe(self)
+            self._datapipe = EngineDatapipe(self)
         return self._datapipe
 
-    def dataloader(self, engine: "pbtrack.TrackingEngine"):
+    def dataloader(self, engine: "pbtrack.engine.TrackingEngine"):
         datapipe = self.datapipe
         return DataLoader(
             dataset=datapipe,

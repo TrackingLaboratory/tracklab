@@ -8,7 +8,7 @@ from yacs.config import CfgNode as CN
 
 from .bpbreid_dataset import ReidDataset
 
-from pbtrack import ReIdentifier
+from pbtrack.pipeline import ReIdentifier
 from pbtrack.utils.images import cv2_load_image
 from pbtrack.utils.coordinates import (
     clip_bbox_ltrb_to_img_dim,
@@ -59,6 +59,8 @@ class BPBReId(ReIdentifier):
         save folder: uniform with reconnaissance
         wandb support
     """
+    input_columns = ["bbox_ltwh", "bbox_conf", "keypoints_xyc"]
+    output_columns = ["embeddings", "visibility_scores", "body_masks"]
 
     def __init__(
         self,
@@ -69,15 +71,15 @@ class BPBReId(ReIdentifier):
         save_path,
         model_detect,
         job_id,
-        use_keypoints_visiblity_scores_for_reid,
+        use_keypoints_visibility_scores_for_reid,
         batch_size,
     ):
         super().__init__(cfg, device, batch_size)
         tracking_dataset.name = dataset.name
         tracking_dataset.nickname = dataset.nickname
         self.dataset_cfg = dataset
-        self.use_keypoints_visiblity_scores_for_reid = (
-            use_keypoints_visiblity_scores_for_reid
+        self.use_keypoints_visibility_scores_for_reid = (
+            use_keypoints_visibility_scores_for_reid
         )
         tracking_dataset.name = self.dataset_cfg.name
         tracking_dataset.nickname = self.dataset_cfg.nickname
@@ -141,7 +143,7 @@ class BPBReId(ReIdentifier):
                 raise NotImplementedError
             batch["masks"] = pixels_parts_probabilities
 
-        if self.use_keypoints_visiblity_scores_for_reid:
+        if self.use_keypoints_visibility_scores_for_reid:
             visibility_score = keypoints_to_body_part_visibility_scores(
                 detection.keypoints_xyc
             )
@@ -182,7 +184,7 @@ class BPBReId(ReIdentifier):
         visibility_scores = visibility_scores.cpu().detach().numpy()
         body_masks = body_masks.cpu().detach().numpy()
 
-        if self.use_keypoints_visiblity_scores_for_reid:
+        if self.use_keypoints_visibility_scores_for_reid:
             kp_visibility_scores = batch["visibility_scores"].numpy()
             if visibility_scores.shape[1] > kp_visibility_scores.shape[1]:
                 kp_visibility_scores = np.concatenate(
@@ -199,9 +201,6 @@ class BPBReId(ReIdentifier):
             },
             index=detections.index,
         )
-        # detections = detections.merge(
-        #    reid_df, left_index=True, right_index=True, validate="one_to_one"
-        # )
         return reid_df
 
     def train(self):

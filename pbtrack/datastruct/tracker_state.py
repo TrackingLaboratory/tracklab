@@ -19,25 +19,6 @@ log = logging.getLogger(__name__)
 
 
 class TrackerState(AbstractContextManager):
-    LOAD_COLUMNS = dict(
-        detection=[
-            "image_id",
-            "id",
-            "bbox_ltwh",
-            "bbox_conf",
-            "keypoints_xyc",
-            "keypoints_score",
-            "category_id",
-            "video_id",
-        ],
-        reid=[
-            "embeddings",
-            "visibility_scores",
-            "body_masks",
-        ],
-        tracking=["track_bbox_tlwh", "track_bbox_conf", "track_id", "person_id"],
-    )
-
     def __init__(
         self,
         tracking_set: TrackingSet,
@@ -47,34 +28,31 @@ class TrackerState(AbstractContextManager):
         load_from_groundtruth=False,
         compression=zipfile.ZIP_STORED,
         load_step=None,
+        save_step="tracker",
         bbox_format=None,
+        modules=None,
     ):
-        assert load_step in [
-            "detect_single",
-            "detect_multi",
-            "reid",
-            None,
-        ], "Load_step must be one of 'detect_single', 'detect_multi', 'reid', 'None'"
+        self.module_names = [module.name for module in modules]
+        self.modules = modules or {}
+        assert (load_step in self.module_names,
+                f"Load_step must be in {self.module_names}")
         self.gt = tracking_set
         self.predictions = None
         # self.filename = Path(filename)
         self.load_file = Path(load_file) if load_file else None
         self.save_file = Path(save_file) if save_file else None
         self.compression = compression
-        self.LOAD_COLUMNS["reid"] += self.LOAD_COLUMNS["detection"]
-        self.LOAD_COLUMNS["tracking"] += self.LOAD_COLUMNS["reid"]
+        self.load_step = load_step
+        self.save_step = save_step
+        self.load_columns = []
+        self.load_index = self.module_names.index(self.load_step)+1 if self.load_step else 0
         if load_step:
-            self.load_columns = (
-                self.LOAD_COLUMNS[load_step]
-                if load_step not in ["detect_multi", "detect_single"]
-                else self.LOAD_COLUMNS["detection"]
-            )
+            load_index = self.module_names.index(self.load_step) + 1
+            for module in self.modules[:load_index]:
+                self.load_columns += module.output_columns
+
         self.zf = None
         self.video_id = None
-        self.do_detect_multi = load_step is None
-        self.do_detect_single = load_step == "detect_multi" or self.do_detect_multi
-        self.do_reid = load_step == "detect_single" or self.do_detect_single
-        self.do_tracking = load_step == "reid" or self.do_reid
         self.bbox_format = bbox_format
 
         self.json_file = json_file
@@ -144,7 +122,7 @@ class TrackerState(AbstractContextManager):
             left_on="image_id",
             right_index=True,
         )
-        self.json_predictions = Detections(predictions)
+        self.json_predictions = pd.DataFrame(predictions)
         if self.do_tracking:
             self.json_predictions.drop(
                 ["track_id"], axis=1, inplace=True
@@ -194,9 +172,10 @@ class TrackerState(AbstractContextManager):
             self.zf = dict(load=load_zf, save=save_zf)
         return super().__enter__()
 
-    def on_video_loop_end(self, engine, video, video_idx, detections):
-        self.update(detections)
-        self.save()
+    def on_task_end(self, engine, task, detections):
+        if task == self.save_step:
+            self.update(detections)
+            self.save()
 
     def update(self, detections):
         if self.predictions is None:
@@ -235,17 +214,17 @@ class TrackerState(AbstractContextManager):
             bool: True if the pickle contains the video detections,
                 and False otherwise.
         """
+        assert self.video_id is not None, "Load can only be called in a contextmanager"
         if self.json_file is not None:
             return self.json_predictions[
                 self.json_predictions.video_id == self.video_id
-            ]
+                ]
         if self.load_from_groundtruth:
             return self.gt_detections[self.gt_detections.video_id == self.video_id]
         if self.load_file is None:
-            return None
+            return pd.DataFrame()
 
         log.info(f"loading from {self.load_file}")
-        assert self.video_id is not None, "Load can only be called in a contextmanager"
         if f"{self.video_id}.pkl" in self.zf["load"].namelist():
             with self.zf["load"].open(f"{self.video_id}.pkl", "r") as fp:
                 video_detections = pickle.load(fp)
@@ -253,7 +232,7 @@ class TrackerState(AbstractContextManager):
                 return video_detections[self.load_columns]
         else:
             log.info(f"{self.video_id} not in pklz file")
-            return None
+            return pd.DataFrame()
 
     def __exit__(self, exc_type, exc_value, traceback):
         """

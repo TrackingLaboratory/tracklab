@@ -5,11 +5,12 @@ import pandas as pd
 from torch.utils.data import DataLoader
 
 import pbtrack
-from pbtrack.engine import TrackingEngine
+from pbtrack.engine import TrackingEngine, EngineDatapipe
 from pbtrack.utils.images import cv2_load_image
+from . import Module
 
 
-class Tracker(ABC):
+class Tracker(Module):
     """Abstract class to implement for the integration of a new detector in wrappers/track.
     The functions to implement are __init__, preprocess and process.
     A description of the expected behavior is provided below.
@@ -38,7 +39,7 @@ class Tracker(ABC):
             if len(image_detections) != 0:
                 self.datapipe.update(imgs_meta, image_detections)
                 for batch in self.dataloader():
-                    detections = engine.track_step(batch, detections, image)
+                    detections = engine.default_step(batch, self.name, detections, image=image)
         return detections
 
     @abstractmethod
@@ -81,7 +82,7 @@ class Tracker(ABC):
     @property
     def datapipe(self):
         if self._datapipe is None:
-            self._datapipe = pbtrack.EngineDatapipe(self)
+            self._datapipe = EngineDatapipe(self)
         return self._datapipe
 
     def dataloader(self, **kwargs):
@@ -92,17 +93,3 @@ class Tracker(ABC):
             num_workers=0,
             persistent_workers=False,
         )
-
-
-# FIXME a bit useless no ?
-class OfflineTracker(Tracker):
-    @abstractmethod
-    def run(self, video_dets: pd.DataFrame):
-        # update video_dets
-        pass
-
-
-# FIXME a bit useless no ?
-class OnlineTracker(Tracker):
-    def reset(self):
-        pass

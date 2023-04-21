@@ -10,7 +10,7 @@ from mmpose.core.post_processing import oks_nms
 from mmpose.datasets.dataset_info import DatasetInfo
 from mmpose.datasets.pipelines import Compose
 
-from pbtrack import MultiDetector
+from pbtrack.pipeline import MultiDetector
 from pbtrack.utils.openmmlab import get_checkpoint
 from pbtrack.utils.coordinates import sanitize_keypoints, generate_bbox_from_keypoints
 
@@ -27,6 +27,9 @@ def mmpose_collate(batch):
 @torch.no_grad()
 class BottomUpMMPose(MultiDetector):
     collate_fn = mmpose_collate
+    output_columns = ["image_id", "id", "video_id", "category_id"
+                      "bbox_ltwh", "bbox_conf", "keypoints_xyc", "keypoints_conf"]
+
 
     def __init__(self, cfg, device, batch_size):
         super().__init__(cfg, device, batch_size)
@@ -69,7 +72,7 @@ class BottomUpMMPose(MultiDetector):
                 return_loss=False,
                 return_heatmap=False,
             )
-
+            pose_results = []
             for idx, pred in enumerate(result["preds"]):
                 area = (np.max(pred[:, 0]) - np.min(pred[:, 0])) * (
                     np.max(pred[:, 1]) - np.min(pred[:, 1])

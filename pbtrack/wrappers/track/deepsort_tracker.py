@@ -1,5 +1,5 @@
-from pbtrack import OfflineTracker
+from pbtrack.pipeline import Tracker
 
 
-class DeepSORTTracker(OfflineTracker):
+class DeepSORTTracker(Tracker):
     pass
