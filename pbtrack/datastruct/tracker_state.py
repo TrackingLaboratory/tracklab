@@ -8,10 +8,8 @@ from contextlib import AbstractContextManager
 from os.path import abspath
 from pathlib import Path
 
-
 from .tracking_dataset import TrackingSet
-from pbtrack.utils.coordinates import kp_to_bbox_w_threshold, bbox_ltrb2ltwh
-
+from pbtrack.utils.coordinates import generate_bbox_from_keypoints, ltrb_to_ltwh
 
 import logging
 
@@ -34,8 +32,10 @@ class TrackerState(AbstractContextManager):
     ):
         self.module_names = [module.name for module in modules]
         self.modules = modules or {}
-        assert (load_step in self.module_names,
-                f"Load_step must be in {self.module_names}")
+        assert (
+            load_step in self.module_names,
+            f"Load_step must be in {self.module_names}",
+        )
         self.gt = tracking_set
         self.predictions = None
         # self.filename = Path(filename)
@@ -45,7 +45,9 @@ class TrackerState(AbstractContextManager):
         self.load_step = load_step
         self.save_step = save_step
         self.load_columns = []
-        self.load_index = self.module_names.index(self.load_step)+1 if self.load_step else 0
+        self.load_index = (
+            self.module_names.index(self.load_step) + 1 if self.load_step else 0
+        )
         if load_step:
             load_index = self.module_names.index(self.load_step) + 1
             for module in self.modules[:load_index]:
@@ -105,16 +107,18 @@ class TrackerState(AbstractContextManager):
             predictions.loc[
                 predictions["bbox_ltwh"].notna(), "bbox_ltwh"
             ] = predictions[predictions["bbox_ltwh"].notna()].bbox_ltwh.apply(
-                lambda x: bbox_ltrb2ltwh(x)
+                lambda x: ltrb_to_ltwh(x)
             )
         predictions.loc[predictions["bbox_ltwh"].isna(), "bbox_ltwh"] = predictions[
             predictions["bbox_ltwh"].isna()
-        ].keypoints_xyc.apply(lambda x: kp_to_bbox_w_threshold(x, vis_threshold=0))
+        ].keypoints_xyc.apply(
+            lambda x: generate_bbox_from_keypoints(x, [0.0, 0.0, 0.0])
+        )
         predictions["bbox_conf"] = predictions.keypoints_xyc.apply(
             lambda x: x[:, 2].mean()
         )
-        if predictions['bbox_conf'].sum() == 0:
-            predictions['bbox_conf'] = predictions.scores.apply(lambda x: x.mean())
+        if predictions["bbox_conf"].sum() == 0:
+            predictions["bbox_conf"] = predictions.scores.apply(lambda x: x.mean())
             # FIXME confidence score in predictions.keypoints_xyc is always 0
         predictions = predictions.merge(
             self.gt.image_metadatas[["video_id"]],
@@ -218,7 +222,7 @@ class TrackerState(AbstractContextManager):
         if self.json_file is not None:
             return self.json_predictions[
                 self.json_predictions.video_id == self.video_id
-                ]
+            ]
         if self.load_from_groundtruth:
             return self.gt_detections[self.gt_detections.video_id == self.video_id]
         if self.load_file is None:
