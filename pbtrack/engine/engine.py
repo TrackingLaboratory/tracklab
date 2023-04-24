@@ -4,7 +4,6 @@ from typing import Dict, TYPE_CHECKING, Any, List
 import numpy as np
 import pandas as pd
 import torch
-import pbtrack
 from lightning.fabric import Fabric
 
 from abc import abstractmethod, ABC
@@ -83,7 +82,6 @@ class TrackingEngine(ABC):
         # super().__init__()
         modules = Pipeline(modules)
         self.module_names = [module.name for module in modules]
-        print(self.module_names)
         callbacks = list(callbacks.values()) if callbacks is not None else []
         callbacks = [tracker_state] + callbacks
 

@@ -44,15 +44,15 @@ class YOLOv8(MultiDetector):
         for results, shape, (_, metadata) in zip(
             results_by_image, shapes, metadatas.iterrows()
         ):
-            for bbox in results.boxes:
+            for bbox in results.boxes.cpu().numpy():
                 # check for `person` class
                 if bbox.cls == 0 and bbox.conf >= self.cfg.min_confidence:
                     detections.append(
                         pd.Series(
                             dict(
                                 image_id=metadata.name,
-                                bbox_ltwh=ltrb_to_ltwh(bbox.xyxy, shape),
-                                bbox_conf=bbox.conf.item(),
+                                bbox_ltwh=ltrb_to_ltwh(bbox.xyxy[0], shape),
+                                bbox_conf=bbox.conf[0],
                                 video_id=metadata.video_id,
                                 category_id=1,  # `person` class in posetrack
                             ),

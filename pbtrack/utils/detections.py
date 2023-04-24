@@ -1,5 +1,3 @@
-from typing import Union, List
-
 import numpy as np
 import pandas as pd
 
@@ -161,32 +159,3 @@ class KeypointsAccessor:
 
     def conf(self):
         return self._obj.keypoints_conf.map(lambda x: float(x))
-
-
-def merge_df(df: pd.DataFrame, new_df: Union[pd.DataFrame, pd.Series, List[pd.Series]]):
-    """
-    Merge two DataFrames, appending new rows and columns.
-    new_df overrides df if there are conflicts.
-    args:
-        df: DataFrame to be updated
-        new_df: DataFrame to be appended to df
-    """
-    # Convert new_df to a DataFrame if it's not already
-    if isinstance(new_df, pd.Series):
-        new_df = new_df.to_frame().T
-    elif isinstance(new_df, list):
-        new_df = pd.concat([s.to_frame().T for s in new_df])
-
-    # Append the columns of the df
-    new_columns = new_df.columns.difference(df.columns)
-    for column in new_columns:
-        df[column] = pd.np.nan
-
-    # Append the rows of the df
-    new_index = set(new_df.index).difference(df.index)
-    for index in new_index:
-        df.loc[index] = pd.np.nan
-
-    # Update all the values (new_df overrides)
-    df.update(new_df)
-    return df

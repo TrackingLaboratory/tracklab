@@ -3,6 +3,10 @@ import wandb
 from omegaconf import OmegaConf
 import pandas as pd
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # FIXME not sure it is the right to do that. It is annoying to update this every time we add a new config
 keep_dict = {
     "dataset": ["dataset_path", "nframes", "nvid", "vids_dict"],
@@ -29,6 +33,7 @@ keep_dict = {
     "reid": ["data", "loss", "model", "sampler", "test", "train", "dataset"],
     "track": True,
 }
+
 
 def normalize_subdict(subdict):
     if "_target_" in subdict:
@@ -75,8 +80,9 @@ def log(res_dict, name, video_dict=None):
             video_df.insert(0, "video", video_df.index)
             wandb.log({f"{name}/videos": video_df}, step=0)
     except wandb.Error:
-        print("Wandb error, skipping logging")
+        logger.warning("Wandb error, skipping logging")
         pass
+
 
 def apply_recursively(d, f=lambda v: v, filter=lambda k, v: True, always_filter=False):
     """
