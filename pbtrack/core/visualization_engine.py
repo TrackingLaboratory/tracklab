@@ -1,5 +1,3 @@
-from multiprocessing import Process
-
 import cv2
 import numpy as np
 import pandas as pd
@@ -8,6 +6,8 @@ from pathlib import Path
 from pbtrack.callbacks import Callback
 from pbtrack.utils.cv2_utils import draw_text
 from pbtrack.utils.images import cv2_load_image, overlay_heatmap
+
+# FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
 from pbtrack.utils.coordinates import (
     clip_bbox_ltrb_to_img_dim,
     round_bbox_coordinates,
@@ -58,6 +58,7 @@ posetrack_human_skeleton = [
     [1, 2],
     [1, 3],
 ]
+
 
 # FIXME can be cleaned and drawing code should be moved to utils folder
 class VisualizationEngine(Callback):
@@ -160,8 +161,11 @@ class VisualizationEngine(Callback):
         color_bbox, color_text, color_keypoint, color_skeleton = self._colors(
             detection, is_prediction
         )
-        bbox_ltrb = clip_bbox_ltrb_to_img_dim(
-            round_bbox_coordinates(bbox_ltwh2ltrb(detection.bbox_ltwh)), patch.shape[1], patch.shape[0]
+        # FIXME ugly hack (ground truths have no 'bbox_conf')
+        if 'bbox_conf' not in detection:
+            detection['bbox_conf'] = 1
+        bbox_ltrb = detection.bbox.ltrb(
+            image_shape=(patch.shape[1], patch.shape[0]), rounded=True
         )
         l, t, r, b = bbox_ltrb
         w, h = r - l, b - t

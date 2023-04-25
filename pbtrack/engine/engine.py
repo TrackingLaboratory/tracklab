@@ -4,7 +4,6 @@ from typing import Dict, TYPE_CHECKING, Any, List
 import numpy as np
 import pandas as pd
 import torch
-import pbtrack
 from lightning.fabric import Fabric
 
 from abc import abstractmethod, ABC

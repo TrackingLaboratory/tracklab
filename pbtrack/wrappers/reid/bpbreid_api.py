@@ -10,13 +10,9 @@ from .bpbreid_dataset import ReidDataset
 
 from pbtrack.pipeline import ReIdentifier
 from pbtrack.utils.images import cv2_load_image
-from pbtrack.utils.coordinates import (
-    clip_bbox_ltrb_to_img_dim,
-    kp_img_to_kp_bbox,
-    rescale_keypoints,
-    round_bbox_coordinates,
-    ltwh_to_ltrb,
-)
+# FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
+from pbtrack.utils.coordinates import rescale_keypoints
+
 from plugins.reid.bpbreid.scripts.main import build_config, build_torchreid_model_engine
 from plugins.reid.bpbreid.tools.feature_extractor import FeatureExtractor
 from plugins.reid.bpbreid.torchreid.utils.imagetools import (
@@ -59,6 +55,7 @@ class BPBReId(ReIdentifier):
         save folder: uniform with reconnaissance
         wandb support
     """
+
     input_columns = ["bbox_ltwh", "bbox_conf", "keypoints_xyc"]
     output_columns = ["embeddings", "visibility_scores", "body_masks"]
 
@@ -116,18 +113,19 @@ class BPBReId(ReIdentifier):
     ):  # Tensor RGB (1, 3, H, W)
         mask_w, mask_h = 32, 64
         image = cv2_load_image(metadata.file_path)
-        ltrb = ltwh_to_ltrb(detection.bbox_ltwh, (image.shape[1], image.shape[0]))
-        l, t, r, b = ltrb.round().astype(int)
-        # TODO add a check to see if the bbox is not empty. t == b or l == r -> return error
+        l, t, r, b = detection.bbox.ltrb(
+            image_shape=(image.shape[1], image.shape[0]), rounded=True
+        )
         crop = image[t:b, l:r]
         crop = Unbatchable([crop])
         batch = {
             "img": crop,
         }
         if not self.cfg.model.bpbreid.learnable_attention_enabled:
-            keypoints = detection.keypoints_xyc
-            bbox_ltwh = np.array([l, t, r - l, b - t])
-            kp_xyc_bbox = kp_img_to_kp_bbox(keypoints, bbox_ltwh)
+            bbox_ltwh = detection.bbox.ltwh(
+                image_shape=(image.shape[1], image.shape[0]), rounded=True
+            )
+            kp_xyc_bbox = detection.keypoints.in_bbox_coord(bbox_ltwh)
             kp_xyc_mask = rescale_keypoints(
                 kp_xyc_bbox, (bbox_ltwh[2], bbox_ltwh[3]), (mask_w, mask_h)
             )

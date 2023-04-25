@@ -14,13 +14,10 @@ from tqdm import tqdm
 
 from pbtrack.engine import EngineDatapipe
 from pbtrack.datastruct import TrackingDataset
-from pbtrack.utils.coordinates import (
-    rescale_keypoints,
-    clip_bbox_ltwh_to_img_dim,
-    kp_img_to_kp_bbox,
-)
+# FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
+from pbtrack.utils.coordinates import rescale_keypoints
+
 from pbtrack.utils.images import overlay_heatmap
-from hydra.utils import to_absolute_path
 import pbtrack
 
 root_dir = Path(pbtrack.__file__).parents[1]
@@ -70,17 +67,16 @@ class ReidDataset(ImageDataset):
 
     def gallery_filter(self, q_pid, q_camid, q_ann, g_pids, g_camids, g_anns):
         """camid refers to video id: remove gallery samples from the different videos than query sample"""
-        if self.eval_metric == 'mot_inter_intra_video':
+        if self.eval_metric == "mot_inter_intra_video":
             return np.zeros_like(q_pid)
-        elif self.eval_metric == 'mot_inter_video':
+        elif self.eval_metric == "mot_inter_video":
             remove = g_camids == q_camid
             return remove
-        elif self.eval_metric == 'mot_intra_video':
+        elif self.eval_metric == "mot_intra_video":
             remove = g_camids != q_camid
             return remove
         else:
             raise ValueError
-
 
     def __init__(
         self,
@@ -350,12 +346,10 @@ class ReidDataset(ImageDataset):
                 img = cv2.imread(img_metadata.file_path)
                 for det_metadata in dets_from_img.itertuples():
                     # crop and resize bbox from image
-                    bbox_ltwh = det_metadata.bbox_ltwh
-                    bbox_ltwh = clip_bbox_ltwh_to_img_dim(
-                        bbox_ltwh, img.shape[1], img.shape[0]
+                    l, t, w, h = det_metadata.bbox.ltwh(
+                        image_shape=(img.shape[1], img.shape[0]), rounded=True
                     )
                     pid = det_metadata.person_id
-                    l, t, w, h = bbox_ltwh.astype(int)
                     img_crop = img[t : t + h, l : l + w]
                     if h > max_h or w > max_w:
                         img_crop = cv2.resize(img_crop, (max_w, max_h), cv2.INTER_CUBIC)
@@ -452,11 +446,9 @@ class ReidDataset(ImageDataset):
                         # compute human parsing heatmaps as gaussian on each visible keypoint
                         img_crop = cv2.imread(det_metadata.reid_crop_path)
                         img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
-                        l, t, w, h = det_metadata.bbox_ltwh
+                        l, t, w, h = bbox_ltwh = det_metadata.bbox.ltwh(rounded=True)
                         keypoints_xyc = rescale_keypoints(
-                            kp_img_to_kp_bbox(
-                                det_metadata.keypoints_xyc, det_metadata.bbox_ltwh
-                            ),
+                            det_metadata.keypoints.in_bbox_coord(bbox_ltwh),
                             (w, h),
                             (mask_w, mask_h),
                         )
@@ -467,11 +459,9 @@ class ReidDataset(ImageDataset):
                         # compute human parsing heatmaps as shapes around on each visible keypoint
                         img_crop = cv2.imread(det_metadata.reid_crop_path)
                         img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
-                        l, t, w, h = det_metadata.bbox_ltwh
+                        l, t, w, h = bbox_ltwh = det_metadata.bbox.ltwh(rounded=True)
                         keypoints_xyc = rescale_keypoints(
-                            kp_img_to_kp_bbox(
-                                det_metadata.keypoints_xyc, det_metadata.bbox_ltwh
-                            ),
+                            det_metadata.keypoints.in_bbox_coord(bbox_ltwh),
                             (w, h),
                             (mask_w, mask_h),
                         )
@@ -491,10 +481,9 @@ class ReidDataset(ImageDataset):
                         )
                     elif mode == "pose_on_img":
                         # compute human parsing heatmaps using output of pose model on full image
-                        bbox_ltwh = clip_bbox_ltwh_to_img_dim(
-                            det_metadata.bbox_ltwh, img.shape[1], img.shape[0]
-                        ).astype(int)
-                        l, t, w, h = bbox_ltwh
+                        l, t, w, h = det_metadata.bbox.ltwh(
+                            image_shape=(img.shape[1], img.shape[0]), rounded=True
+                        )
                         img_crop = img[t : t + h, l : l + w]
                         img_crop = cv2.resize(img_crop, (fig_w, fig_h), cv2.INTER_CUBIC)
                         masks_gt_crop = masks_gt[:, t : t + h, l : l + w]
@@ -571,13 +560,20 @@ class ReidDataset(ImageDataset):
         queries_per_pid = gt_dets_for_reid.groupby("person_id").apply(
             random_tracklet_sampling
         )
-        if self.eval_metric == 'mot_inter_video' or self.multi_video_queries_only:
+        if self.eval_metric == "mot_inter_video" or self.multi_video_queries_only:
             # keep only queries that are in more than one video
-            queries_per_pid = queries_per_pid.droplevel(level=0).groupby("person_id")['video_id'].filter(lambda g: (g.nunique() > 1)).reset_index()
-            assert len(queries_per_pid) != 0, "There were no identity with more than one videos to be used as queries. " \
-                                              "Try setting 'multi_video_queries_only' to False or not using " \
-                                              "eval_metric='mot_inter_video' or adjust the settings to sample a " \
-                                              "bigger ReID dataset."
+            queries_per_pid = (
+                queries_per_pid.droplevel(level=0)
+                .groupby("person_id")["video_id"]
+                .filter(lambda g: (g.nunique() > 1))
+                .reset_index()
+            )
+            assert len(queries_per_pid) != 0, (
+                "There were no identity with more than one videos to be used as queries. "
+                "Try setting 'multi_video_queries_only' to False or not using "
+                "eval_metric='mot_inter_video' or adjust the settings to sample a "
+                "bigger ReID dataset."
+            )
         gt_dets.loc[gt_dets.split != "none", "split"] = "gallery"
         gt_dets.loc[gt_dets.id.isin(queries_per_pid.id), "split"] = "query"
 
