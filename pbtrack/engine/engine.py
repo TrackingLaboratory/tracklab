@@ -75,15 +75,13 @@ class TrackingEngine(ABC):
     """
 
     def __init__(self,
-                 modules: List[Module],
+                 modules: Pipeline,
                  tracker_state: "TrackerState",
                  num_workers: int,
                  callbacks: "Dict[Callback]" = None,
                  ):
         # super().__init__()
-        modules = Pipeline(modules)
         self.module_names = [module.name for module in modules]
-        print(self.module_names)
         callbacks = list(callbacks.values()) if callbacks is not None else []
         callbacks = [tracker_state] + callbacks
 
