@@ -42,8 +42,8 @@ class Progressbar(Callback):
         self, engine: "TrackingEngine", task: str, dataloader: DataLoader
     ):
         desc = task.replace("_", " ").capitalize()
-        if task == "tracker":
-            length =  len(engine.img_metadatas[engine.img_metadatas.video_id == self.video_id])
+        if hasattr(engine.models[task], "process_video"):
+            length = len(engine.img_metadatas[engine.img_metadatas.video_id == self.video_id])
         else:
             length = len(dataloader)
         self.task_pbars[task]: tqdm = tqdm(
