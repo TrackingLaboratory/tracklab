@@ -30,12 +30,21 @@ log = logging.getLogger(__name__)
 
 # FIXME some parts can be cleaned but works for now
 class PoseTrack21Evaluator(EvaluatorBase):
-    def __init__(self, cfg):
+    def __init__(self, cfg, *args, **kwargs):
         self.cfg = cfg
 
     def run(self, tracker_state):
         log.info("Starting evaluation on PoseTrack21")
-        images = self._images(tracker_state.gt.image_metadatas)
+        image_metadatas = (
+            tracker_state.gt.image_metadatas.merge(
+                tracker_state.gt.video_metadatas["name"],
+                left_on="video_id",
+                right_on="id",
+            )
+            .set_index(tracker_state.gt.image_metadatas.index)
+            .rename(columns={"name": "video_name"})
+        )
+        images = self._images(image_metadatas)
         category = self._category(tracker_state.gt.video_metadatas)
         seqs = list(tracker_state.gt.video_metadatas.name)
         bbox_column = self.cfg.bbox_column_for_eval
@@ -43,7 +52,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
         if self.cfg.eval_pose_estimation:
             annotations = self._annotations_pose_estimation_eval(
                 tracker_state.predictions,
-                tracker_state.gt.image_metadatas,
+                image_metadatas,
                 bbox_column,
                 eval_pose_on_all,
             )
@@ -100,7 +109,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
 
         if self.cfg.eval_pose_tracking:
             annotations = self._annotations_tracking_eval(
-                tracker_state.predictions, tracker_state.gt.image_metadatas, bbox_column
+                tracker_state.predictions, image_metadatas, bbox_column
             )
             trackers_folder = os.path.join(
                 self.cfg.posetrack_trackers_folder, "pose_tracking"
@@ -146,7 +155,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
 
         if self.cfg.eval_reid_pose_tracking:
             annotations = self._annotations_reid_pose_tracking_eval(
-                tracker_state.predictions, tracker_state.gt.image_metadatas, bbox_column
+                tracker_state.predictions, image_metadatas, bbox_column
             )
             trackers_folder = os.path.join(
                 self.cfg.posetrack_trackers_folder, "reid_pose_tracking"
@@ -175,7 +184,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
             # HOTA
             trackers_folder = self.cfg.mot_trackers_folder
             mot_df = self._mot_encoding(
-                tracker_state.predictions, tracker_state.gt.image_metadatas, bbox_column
+                tracker_state.predictions, image_metadatas, bbox_column
             )
             self._save_mot(mot_df, trackers_folder)
             evaluator = posetrack21.api.get_api(
@@ -235,7 +244,6 @@ class PoseTrack21Evaluator(EvaluatorBase):
         image_metadatas["id"] = image_metadatas.index
         image_metadatas.dropna(
             subset=[
-                "video_name",
                 "file_path",
                 "id",
                 "frame",
@@ -464,25 +472,28 @@ class PoseTrack21Evaluator(EvaluatorBase):
         for video_name in videos_names:
             file_path = os.path.join(save_path, f"{video_name}.txt")
             file_df = mot_df[mot_df["video_name"] == video_name].copy()
-            file_df.sort_values(by="frame", inplace=True)
-            file_df[
-                [
-                    "frame",
-                    "track_id",
-                    "bb_left",
-                    "bb_top",
-                    "bb_width",
-                    "bb_height",
-                    "bbox_conf",
-                    "x",
-                    "y",
-                    "z",
-                ]
-            ].to_csv(
-                file_path,
-                header=False,
-                index=False,
-            )
+            if not file_df.empty:
+                file_df.sort_values(by="frame", inplace=True)
+                file_df[
+                    [
+                        "frame",
+                        "track_id",
+                        "bb_left",
+                        "bb_top",
+                        "bb_width",
+                        "bb_height",
+                        "bbox_conf",
+                        "x",
+                        "y",
+                        "z",
+                    ]
+                ].to_csv(
+                    file_path,
+                    header=False,
+                    index=False,
+                )
+            else:
+                open(file_path, "w").close()
 
     @staticmethod
     def format_metric(metric_name, metric_value, scale_factor):
@@ -548,8 +559,12 @@ class PoseTrack21Evaluator(EvaluatorBase):
                             "boxes": torch.tensor(
                                 np.vstack(preds_by_image.bbox_ltwh.values).astype(float)
                             ),
-                            "scores": torch.tensor(preds_by_image.bbox_conf.values.astype(float)),
-                            "labels": torch.tensor(preds_by_image.category_id.values.astype(int)),
+                            "scores": torch.tensor(
+                                preds_by_image.bbox_conf.values.astype(float)
+                            ),
+                            "labels": torch.tensor(
+                                preds_by_image.category_id.values.astype(int)
+                            ),
                         }
                     )
                 else:

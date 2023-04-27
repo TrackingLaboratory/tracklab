@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 
 import pbtrack
 from pbtrack.engine import TrackingEngine, EngineDatapipe
-from pbtrack.utils.images import cv2_load_image
+from pbtrack.utils.cv2 import cv2_load_image
 from . import Module
 
 

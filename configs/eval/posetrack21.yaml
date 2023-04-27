@@ -20,6 +20,7 @@ _target_: pbtrack.wrappers.PoseTrack21Evaluator
 #  - MOTA score is above paper results
 #  - Some videos with ignored regions have negative MOTA
 
+test_set: "val"
 
 cfg:
   eval_pose_estimation: True

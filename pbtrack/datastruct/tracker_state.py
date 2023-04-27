@@ -45,8 +45,9 @@ class TrackerState(AbstractContextManager):
         self.load_step = load_step
         self.save_step = save_step
         self.load_columns = []
-        self.load_index = (
-            self.module_names.index(self.load_step) + 1 if self.load_step else 0
+        self.load_index = min(
+            self.module_names.index(self.load_step) + 1 if self.load_step else 0,
+            len(self.module_names),
         )
         if load_step:
             load_index = self.module_names.index(self.load_step) + 1

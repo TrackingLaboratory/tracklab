@@ -20,7 +20,7 @@ class MultiDetector(Module):
 
     collate_fn = default_collate
     input_columns = []
-    output_columns = ["image_id", "id", "video_id", "category_id",
+    output_columns = ["image_id", "video_id", "category_id",
                       "bbox_ltwh", "bbox_conf"]
 
     @abstractmethod

@@ -30,8 +30,7 @@ def merge_dataframes(main_df, appended_piece):
 
     # Append the columns of the df
     new_columns = appended_piece.columns.difference(main_df.columns)
-    for column in new_columns:
-        main_df[column] = np.nan
+    main_df[new_columns] = np.nan
 
     # Append the rows of the df
     new_index = set(appended_piece.index).difference(main_df.index)

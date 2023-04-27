@@ -33,7 +33,7 @@ class Module(ABC):
 class Pipeline:
     def __init__(self, models: List[Module]):
         self.models = [model for model in models if model.name != "skip"]
-        log.info("Pipeline:" + " -> ".join(model.name for model in self.models))
+        log.info("Pipeline: " + " -> ".join(model.name for model in self.models))
         self.validate()
 
     def validate(self):

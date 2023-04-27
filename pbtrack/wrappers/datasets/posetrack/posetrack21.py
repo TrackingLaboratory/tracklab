@@ -14,7 +14,14 @@ class PoseTrack21(TrackingDataset):
     Test set: ??? images
     """
 
-    def __init__(self, dataset_path: str, annotation_path: str, *args, **kwargs):
+    def __init__(
+        self,
+        dataset_path: str,
+        annotation_path: str,
+        posetrack_version=21,
+        *args,
+        **kwargs
+    ):
         self.dataset_path = Path(dataset_path)
         assert self.dataset_path.exists(), "'{}' directory does not exist".format(
             self.dataset_path
@@ -24,19 +31,23 @@ class PoseTrack21(TrackingDataset):
             self.annotation_path
         )
 
-        train_set = load_tracking_set(self.annotation_path, self.dataset_path, "train")
-        val_set = load_tracking_set(self.annotation_path, self.dataset_path, "val")
-        test_set = None  # TODO no json, load images
+        train_set = load_tracking_set(
+            self.annotation_path, self.dataset_path, "train", posetrack_version
+        )
+        val_set = load_tracking_set(
+            self.annotation_path, self.dataset_path, "val", posetrack_version
+        )
+        test_set = None  # TODO
 
         super().__init__(dataset_path, train_set, val_set, test_set, *args, **kwargs)
 
 
-def load_tracking_set(anns_path, dataset_path, split):
+def load_tracking_set(anns_path, dataset_path, split, posetrack_version=21):
     # Load annotations into Pandas dataframes
     video_metadatas, image_metadatas, detections = load_annotations(anns_path, split)
     # Fix formatting of dataframes to be compatible with pbtrack
     video_metadatas, image_metadatas, detections = fix_formatting(
-        video_metadatas, image_metadatas, detections, dataset_path
+        video_metadatas, image_metadatas, detections, dataset_path, posetrack_version
     )
     return TrackingSet(
         split,
@@ -63,6 +74,7 @@ def load_annotations(anns_path, split):
             video_metadatas.append(
                 {
                     "id": data_dict["images"][0]["vid_id"],
+                    "nframes": len(data_dict["images"]),
                     "name": path.stem,
                     "categories": data_dict["categories"],
                 }
@@ -75,17 +87,18 @@ def load_annotations(anns_path, split):
     )
 
 
-def fix_formatting(video_metadatas, image_metadatas, detections, dataset_path):
+def fix_formatting(
+    video_metadatas, image_metadatas, detections, dataset_path, posetrack_version
+):
+    image_id = "image_id" if posetrack_version == 21 else "frame_id"
+
     # Videos
     video_metadatas.set_index("id", drop=True, inplace=True)
 
     # Images
-    image_metadatas.drop(["image_id"], axis=1, inplace=True)  # id == image_id
-    image_metadatas["video_name"] = image_metadatas["file_name"].apply(
-        lambda x: os.path.basename(os.path.dirname(x))
-    )
+    image_metadatas.drop([image_id, "nframes"], axis=1, inplace=True)
     image_metadatas["file_name"] = image_metadatas["file_name"].apply(
-        lambda x: os.path.join(dataset_path, x)  # FIXME use relative path
+        lambda x: os.path.join(dataset_path, x)
     )
     image_metadatas["frame"] = image_metadatas["file_name"].apply(
         lambda x: int(os.path.basename(x).split(".")[0]) + 1
@@ -105,9 +118,6 @@ def fix_formatting(video_metadatas, image_metadatas, detections, dataset_path):
         lambda x: np.reshape(np.array(x), (-1, 3))
     )
     detections.set_index("id", drop=True, inplace=True)
-    # compute detection visiblity as average keypoints visibility
-    detections["visibility"] = detections.keypoints_xyc.apply(lambda x: x[:, 2].mean())
-    # add video_id to detections, will be used for bpbreid 'camid' parameter
     detections = detections.merge(
         image_metadatas[["video_id"]], how="left", left_on="image_id", right_index=True
     )

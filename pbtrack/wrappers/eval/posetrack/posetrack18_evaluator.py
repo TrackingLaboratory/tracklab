@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 
 class PoseTrack18Evaluator(EvaluatorBase):
-    def __init__(self, cfg):
+    def __init__(self, cfg, *args, **kwargs):
         self.cfg = cfg
 
     def run(self, tracker_state):
