@@ -26,6 +26,7 @@ class Progressbar(Callback):
     ):
         n = index
         total = len(engine.video_metadatas)
+        self.video_id = video_idx
 
     def on_video_loop_end(
         self,
@@ -41,8 +42,12 @@ class Progressbar(Callback):
         self, engine: "TrackingEngine", task: str, dataloader: DataLoader
     ):
         desc = task.replace("_", " ").capitalize()
+        if task == "tracker":
+            length =  len(engine.img_metadatas[engine.img_metadatas.video_id == self.video_id])
+        else:
+            length = len(dataloader)
         self.task_pbars[task]: tqdm = tqdm(
-            total=len(dataloader), desc=desc, leave=False, position=1
+            total=length, desc=desc, leave=False, position=1
         )
 
     def on_task_step_end(
