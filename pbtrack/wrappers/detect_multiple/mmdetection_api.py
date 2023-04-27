@@ -1,5 +1,6 @@
 import cv2
 import torch
+import numpy as np
 import pandas as pd
 
 from pbtrack.pipeline import MultiDetector
@@ -68,6 +69,9 @@ class MMDetection(MultiDetector):
                                 bbox_conf=prediction[4],
                                 video_id=metadata.video_id,
                                 category_id=1,  # `person` class in posetrack
+                                keypoints_xyc=np.nan,
+                                keypoints_conf=np.nan,
+                                track_id=np.nan,
                             ),
                             name=self.id,
                         )

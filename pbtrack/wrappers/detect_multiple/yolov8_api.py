@@ -1,10 +1,13 @@
+import os
 import torch
+import numpy as np
 import pandas as pd
 
+os.environ["YOLO_VERBOSE"] = "False"
 from ultralytics import YOLO
 
 from pbtrack.pipeline import MultiDetector
-from pbtrack.utils.images import cv2_load_image
+from pbtrack.utils.cv2 import cv2_load_image
 from pbtrack.utils.coordinates import ltrb_to_ltwh
 
 import logging
@@ -55,6 +58,9 @@ class YOLOv8(MultiDetector):
                                 bbox_conf=bbox.conf[0],
                                 video_id=metadata.video_id,
                                 category_id=1,  # `person` class in posetrack
+                                keypoints_xyc=np.nan,
+                                keypoints_conf=np.nan,
+                                track_id=np.nan,
                             ),
                             name=self.id,
                         )

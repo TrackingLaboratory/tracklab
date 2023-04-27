@@ -115,6 +115,7 @@ class BottomUpMMPose(MultiDetector):
                                 bbox_conf=pose["score"],
                                 video_id=metadata.video_id,
                                 category_id=1,  # `person` class in posetrack
+                                track_id=np.nan,
                             ),
                             name=self.id,
                         )

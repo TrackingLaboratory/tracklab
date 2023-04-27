@@ -1,3 +1,4 @@
+import os
 import torch
 import hydra
 from hydra.utils import instantiate
@@ -7,6 +8,7 @@ from pbtrack.utils import wandb
 
 import logging
 
+os.environ["HYDRA_FULL_ERROR"] = "1"
 log = logging.getLogger(__name__)
 
 
@@ -37,12 +39,9 @@ def main(cfg):
         model_detect=None,  # FIXME
     )
     track_model = instantiate(cfg.track, device=device)
-    pipeline = Pipeline(models=[
-        detect_multi_model,
-        detect_single_model,
-        reid_model,
-        track_model
-    ])
+    pipeline = Pipeline(
+        models=[detect_multi_model, detect_single_model, reid_model, track_model]
+    )
 
     evaluator = instantiate(cfg.eval)
 
@@ -58,12 +57,13 @@ def main(cfg):
         reid_model.train()
 
     if cfg.test_tracking:
-        log.info("Starting tracking operation.")
-        tracking_set = (
-            tracking_dataset.val_set
-            if tracking_dataset.val_set is not None
-            else tracking_dataset.test_set
-        )
+        log.info(f"Starting tracking operation on {cfg.eval.test_set} set.")
+        if cfg.eval.test_set == "train":
+            tracking_set = tracking_dataset.train_set
+        elif cfg.eval.test_set == "val":
+            tracking_set = tracking_dataset.val_set
+        else:
+            tracking_set = tracking_dataset.test_set
         tracker_state = TrackerState(tracking_set, modules=pipeline, **cfg.state)
         # Run tracking and visualization
         tracking_engine = instantiate(

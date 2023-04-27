@@ -17,7 +17,7 @@ from pbtrack.datastruct import TrackingDataset
 # FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
 from pbtrack.utils.coordinates import rescale_keypoints
 
-from pbtrack.utils.images import overlay_heatmap
+from pbtrack.utils.cv2 import overlay_heatmap
 import pbtrack
 
 root_dir = Path(pbtrack.__file__).parents[1]

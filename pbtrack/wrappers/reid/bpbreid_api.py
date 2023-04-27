@@ -9,7 +9,7 @@ from yacs.config import CfgNode as CN
 from .bpbreid_dataset import ReidDataset
 
 from pbtrack.pipeline import ReIdentifier
-from pbtrack.utils.images import cv2_load_image
+from pbtrack.utils.cv2 import cv2_load_image
 # FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
 from pbtrack.utils.coordinates import rescale_keypoints
 

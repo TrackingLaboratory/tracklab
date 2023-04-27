@@ -1,5 +1,7 @@
 _target_: pbtrack.wrappers.PoseTrack18Evaluator
 
+test_set: "val"
+
 cfg:
   eval_pose_estimation: True
   eval_pose_tracking: True

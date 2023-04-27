@@ -1,5 +1,6 @@
 import sys
 import torch
+import numpy as np
 import pandas as pd
 from PIL import Image
 from omegaconf.listconfig import ListConfig
@@ -7,7 +8,7 @@ from omegaconf.listconfig import ListConfig
 import openpifpaf
 
 from pbtrack.pipeline import MultiDetector
-from pbtrack.utils.images import cv2_load_image
+from pbtrack.utils.cv2 import cv2_load_image
 from pbtrack.utils.coordinates import sanitize_keypoints, generate_bbox_from_keypoints
 
 import logging
@@ -30,8 +31,16 @@ def collate_images_anns_meta(batch):
 
 class OpenPifPaf(MultiDetector):
     collate_fn = collate_images_anns_meta
-    output_columns = ["image_id", "id", "video_id", "category_id",
-                      "bbox_ltwh", "bbox_conf", "keypoints_xyc", "keypoints_conf"]
+    output_columns = [
+        "image_id",
+        "id",
+        "video_id",
+        "category_id",
+        "bbox_ltwh",
+        "bbox_conf",
+        "keypoints_xyc",
+        "keypoints_conf",
+    ]
 
     def __init__(self, cfg, device, batch_size):
         super().__init__(cfg, device, batch_size)
@@ -85,6 +94,7 @@ class OpenPifPaf(MultiDetector):
                             bbox_conf=prediction.score,
                             video_id=metadata.video_id,
                             category_id=1,  # `person` class in posetrack
+                            track_id=np.nan,
                         ),
                         name=self.id,
                     )

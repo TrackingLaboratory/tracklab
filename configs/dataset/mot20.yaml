@@ -1,0 +1,6 @@
+defaults:
+  - default
+
+_target_: pbtrack.wrappers.MOT20
+
+dataset_path: ${data_dir}/MOT20
