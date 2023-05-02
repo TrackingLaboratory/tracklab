@@ -12,7 +12,7 @@ class Evaluate(Callback):
         self.evaluator = evaluator
 
     def on_dataset_track_end(self, engine: "TrackingEngine"):
-        if engine.tracker_state.gt.detections is not None:
+        if engine.tracker_state.detections_gt is not None:
             log.info("Starting evaluation.")
             self.evaluator.run(engine.tracker_state)
         else:

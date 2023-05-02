@@ -26,7 +26,7 @@ def load_train(dataset_path):
 
     video_metadatas = []
     image_metadatas = []
-    detections = []
+    detections_gt = []
     for video_id, video in enumerate(videos):
         image_id_offset = video_id * 100000
 
@@ -43,7 +43,7 @@ def load_train(dataset_path):
                 }
             )
 
-        # detections
+        # ground truths
         gt_path = video / "gt" / "gt.txt"
         with open(gt_path) as f:
             gt = f.readlines()
@@ -51,7 +51,7 @@ def load_train(dataset_path):
             gt = np.array(gt).astype(float)
 
             for detection in gt:
-                detections.append(
+                detections_gt.append(
                     {
                         "image_id": int(image_id_offset + detection[0]),
                         "video_id": video_id,
@@ -72,10 +72,9 @@ def load_train(dataset_path):
         )
 
     return TrackingSet(
-        "train",
         pd.DataFrame(video_metadatas).set_index("id"),
         pd.DataFrame(image_metadatas).set_index("id"),
-        pd.DataFrame(detections),
+        pd.DataFrame(detections_gt),
     )
 
 
@@ -84,7 +83,7 @@ def load_test(dataset_path):
 
     video_metadatas = []
     image_metadatas = []
-    detections = []
+    detections_gt = []
     for video_id, video in enumerate(videos):
         video_id += 10
         image_id_offset = video_id * 100000
@@ -102,14 +101,14 @@ def load_test(dataset_path):
                 }
             )
 
-        # detections
+        # ground truths
         gt_path = video / "det" / "det.txt"
         with open(gt_path) as f:
             gt = f.readlines()
         gt = [x.strip().split(",") for x in gt]
         gt = np.array(gt).astype(float)
         for detection in gt:
-            detections.append(
+            detections_gt.append(
                 {
                     "image_id": int(image_id_offset + detection[0]),
                     "video_id": video_id,
@@ -130,8 +129,7 @@ def load_test(dataset_path):
         )
 
     return TrackingSet(
-        "test",
         pd.DataFrame(video_metadatas).set_index("id"),
         pd.DataFrame(image_metadatas).set_index("id"),
-        pd.DataFrame(detections),
+        pd.DataFrame(detections_gt),
     )

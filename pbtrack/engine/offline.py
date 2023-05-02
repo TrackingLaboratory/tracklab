@@ -1,7 +1,5 @@
 import logging
 
-import pandas as pd
-
 from pbtrack.engine import TrackingEngine
 
 log = logging.getLogger(__name__)

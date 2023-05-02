@@ -1,13 +1,12 @@
 from typing import List, Any, Union
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 
 import pandas as pd
 from torch.utils.data import DataLoader
 
-import pbtrack
 from pbtrack.engine import TrackingEngine, EngineDatapipe
 from pbtrack.utils.cv2 import cv2_load_image
-from . import Module
+from pbtrack.pipeline import Module
 
 
 class Tracker(Module):

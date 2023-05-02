@@ -1,10 +1,10 @@
 from typing import List, Union, Any
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 
 import pandas as pd
 
-from . import Module
-from ..engine import TrackingEngine
+from pbtrack.pipeline import Module
+from pbtrack.engine import TrackingEngine
 
 from torch.utils.data.dataloader import default_collate, DataLoader
 
@@ -20,8 +20,7 @@ class MultiDetector(Module):
 
     collate_fn = default_collate
     input_columns = []
-    output_columns = ["image_id", "video_id", "category_id",
-                      "bbox_ltwh", "bbox_conf"]
+    output_columns = ["image_id", "video_id", "category_id", "bbox_ltwh", "bbox_conf"]
 
     @abstractmethod
     def __init__(self, cfg, device, batch_size):
@@ -72,7 +71,7 @@ class MultiDetector(Module):
             self._datapipe = EngineDatapipe(self, first=True)
         return self._datapipe
 
-    def dataloader(self, engine: "TrackingEngine"):
+    def dataloader(self, engine: TrackingEngine):
         datapipe = self.datapipe
         return DataLoader(
             dataset=datapipe,
@@ -141,7 +140,7 @@ class SingleDetector(Module):
             self._datapipe = EngineDatapipe(self)
         return self._datapipe
 
-    def dataloader(self, engine: "TrackingEngine"):
+    def dataloader(self, engine: TrackingEngine):
         datapipe = self.datapipe
         return DataLoader(
             dataset=datapipe,

@@ -36,22 +36,22 @@ class PoseTrack21Evaluator(EvaluatorBase):
     def run(self, tracker_state):
         log.info("Starting evaluation on PoseTrack21")
         image_metadatas = (
-            tracker_state.gt.image_metadatas.merge(
-                tracker_state.gt.video_metadatas["name"],
+            tracker_state.image_metadatas.merge(
+                tracker_state.video_metadatas["name"],
                 left_on="video_id",
                 right_on="id",
             )
-            .set_index(tracker_state.gt.image_metadatas.index)
+            .set_index(tracker_state.image_metadatas.index)
             .rename(columns={"name": "video_name"})
         )
         images = self._images(image_metadatas)
-        category = self._category(tracker_state.gt.video_metadatas)
-        seqs = list(tracker_state.gt.video_metadatas.name)
+        category = self._category(tracker_state.video_metadatas)
+        seqs = list(tracker_state.video_metadatas.name)
         bbox_column = self.cfg.bbox_column_for_eval
         eval_pose_on_all = self.cfg.eval_pose_on_all
         if self.cfg.eval_pose_estimation:
             annotations = self._annotations_pose_estimation_eval(
-                tracker_state.predictions,
+                tracker_state.detections_pred,
                 image_metadatas,
                 bbox_column,
                 eval_pose_on_all,
@@ -63,9 +63,9 @@ class PoseTrack21Evaluator(EvaluatorBase):
 
             # Bounding box evaluation
             bbox_map = self.compute_bbox_map(
-                tracker_state.predictions,
-                tracker_state.gt.detections,
-                tracker_state.gt.image_metadatas,
+                tracker_state.detections_pred,
+                tracker_state.detections_gt,
+                tracker_state.image_metadatas,
             )
             map(bbox_map.pop, ["map_per_class", "mar_100_per_class"])
             headers = bbox_map.keys()
@@ -109,7 +109,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
 
         if self.cfg.eval_pose_tracking:
             annotations = self._annotations_tracking_eval(
-                tracker_state.predictions, image_metadatas, bbox_column
+                tracker_state.detections_pred, image_metadatas, bbox_column
             )
             trackers_folder = os.path.join(
                 self.cfg.posetrack_trackers_folder, "pose_tracking"
@@ -155,7 +155,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
 
         if self.cfg.eval_reid_pose_tracking:
             annotations = self._annotations_reid_pose_tracking_eval(
-                tracker_state.predictions, image_metadatas, bbox_column
+                tracker_state.detections_pred, image_metadatas, bbox_column
             )
             trackers_folder = os.path.join(
                 self.cfg.posetrack_trackers_folder, "reid_pose_tracking"
@@ -184,7 +184,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
             # HOTA
             trackers_folder = self.cfg.mot_trackers_folder
             mot_df = self._mot_encoding(
-                tracker_state.predictions, image_metadatas, bbox_column
+                tracker_state.detections_pred, image_metadatas, bbox_column
             )
             self._save_mot(mot_df, trackers_folder)
             evaluator = posetrack21.api.get_api(
@@ -278,9 +278,9 @@ class PoseTrack21Evaluator(EvaluatorBase):
     # FIXME fuse different annotations functions
     @staticmethod
     def _annotations_pose_estimation_eval(
-        predictions, image_metadatas, bbox_column, eval_pose_on_all
+        detections_pred, image_metadatas, bbox_column, eval_pose_on_all
     ):
-        predictions = predictions.copy()
+        detections_pred = detections_pred.copy()
         na_col_to_drop = [
             "keypoints_xyc",
             bbox_column,
@@ -290,28 +290,30 @@ class PoseTrack21Evaluator(EvaluatorBase):
             # If set to false, will evaluate pose estimation only on tracked detections (i.e. detections with a
             # defined 'track_id')
             na_col_to_drop.append("track_id")
-        len_before_drop = len(predictions)
-        predictions.dropna(
+        len_before_drop = len(detections_pred)
+        detections_pred.dropna(
             subset=na_col_to_drop,
             how="any",
             inplace=True,
         )
-        if len_before_drop != len(predictions):
+        if len_before_drop != len(detections_pred):
             log.warning(
                 "Dropped {} rows with NA values".format(
-                    len_before_drop - len(predictions)
+                    len_before_drop - len(detections_pred)
                 )
             )
-        predictions.rename(
+        detections_pred.rename(
             columns={"keypoints_xyc": "keypoints", bbox_column: "bbox"},
             inplace=True,
         )
-        if "scores" not in predictions.columns:
-            # 'scores' can already be present if loaded from a json file with external predictions
+        if "scores" not in detections_pred.columns:
+            # 'scores' can already be present if loaded from a json file with external detections_pred
             # for PoseTrack21 author baselines, not using their provided score induces a big drop in performance
-            predictions["scores"] = predictions["keypoints"].apply(lambda x: x[:, 2])
-        predictions["track_id"] = predictions.index
-        predictions["person_id"] = predictions.index
+            detections_pred["scores"] = detections_pred["keypoints"].apply(
+                lambda x: x[:, 2]
+            )
+        detections_pred["track_id"] = detections_pred.index
+        detections_pred["person_id"] = detections_pred.index
 
         annotations = {}
         videos_names = image_metadatas["video_name"].unique()
@@ -319,7 +321,9 @@ class PoseTrack21Evaluator(EvaluatorBase):
             image_ids = image_metadatas[
                 image_metadatas["video_name"] == video_name
             ].index
-            predictions_by_video = predictions[predictions["image_id"].isin(image_ids)]
+            predictions_by_video = detections_pred[
+                detections_pred["image_id"].isin(image_ids)
+            ]
             annotations[video_name] = predictions_by_video[
                 ["bbox", "image_id", "keypoints", "scores", "person_id", "track_id"]
             ].to_dict("records")
@@ -327,35 +331,37 @@ class PoseTrack21Evaluator(EvaluatorBase):
 
     # FIXME fuse different annotations functions
     @staticmethod
-    def _annotations_tracking_eval(predictions, image_metadatas, bbox_column):
-        predictions = predictions.copy()
-        predictions["id"] = predictions.index
+    def _annotations_tracking_eval(detections_pred, image_metadatas, bbox_column):
+        detections_pred = detections_pred.copy()
+        detections_pred["id"] = detections_pred.index
         col_to_drop = [
             "keypoints_xyc",
             bbox_column,
             "image_id",
             "track_id",
         ]
-        col_to_drop = [col for col in col_to_drop if col in predictions.columns]
-        len_before_drop = len(predictions)
-        predictions.dropna(
+        col_to_drop = [col for col in col_to_drop if col in detections_pred.columns]
+        len_before_drop = len(detections_pred)
+        detections_pred.dropna(
             subset=col_to_drop,
             how="any",
             inplace=True,
         )
-        if len_before_drop != len(predictions):
+        if len_before_drop != len(detections_pred):
             log.warning(
                 "Dropped {} rows with NA values".format(
-                    len_before_drop - len(predictions)
+                    len_before_drop - len(detections_pred)
                 )
             )
-        predictions.rename(
+        detections_pred.rename(
             columns={"keypoints_xyc": "keypoints", bbox_column: "bbox"},
             inplace=True,
         )
-        predictions["scores"] = predictions["keypoints"].apply(lambda x: x[:, 2])
-        predictions["track_id"] = predictions["track_id"].astype(int)
-        predictions["person_id"] = predictions["id"].astype(int)
+        detections_pred["scores"] = detections_pred["keypoints"].apply(
+            lambda x: x[:, 2]
+        )
+        detections_pred["track_id"] = detections_pred["track_id"].astype(int)
+        detections_pred["person_id"] = detections_pred["id"].astype(int)
 
         annotations = {}
         videos_names = image_metadatas["video_name"].unique()
@@ -363,7 +369,9 @@ class PoseTrack21Evaluator(EvaluatorBase):
             image_ids = image_metadatas[
                 image_metadatas["video_name"] == video_name
             ].index
-            predictions_by_video = predictions[predictions["image_id"].isin(image_ids)]
+            predictions_by_video = detections_pred[
+                detections_pred["image_id"].isin(image_ids)
+            ]
             annotations[video_name] = predictions_by_video[
                 ["bbox", "image_id", "keypoints", "scores", "person_id", "track_id"]
             ].to_dict("records")
@@ -371,10 +379,12 @@ class PoseTrack21Evaluator(EvaluatorBase):
 
     # FIXME fuse different annotations functions
     @staticmethod
-    def _annotations_reid_pose_tracking_eval(predictions, image_metadatas, bbox_column):
-        predictions = predictions.copy()
-        len_before_drop = len(predictions)
-        predictions.dropna(
+    def _annotations_reid_pose_tracking_eval(
+        detections_pred, image_metadatas, bbox_column
+    ):
+        detections_pred = detections_pred.copy()
+        len_before_drop = len(detections_pred)
+        detections_pred.dropna(
             subset=[
                 "keypoints_xyc",
                 bbox_column,
@@ -385,19 +395,21 @@ class PoseTrack21Evaluator(EvaluatorBase):
             how="any",
             inplace=True,
         )
-        if len_before_drop != len(predictions):
+        if len_before_drop != len(detections_pred):
             log.warning(
                 "Dropped {} rows with NA values".format(
-                    len_before_drop - len(predictions)
+                    len_before_drop - len(detections_pred)
                 )
             )
-        predictions.rename(
+        detections_pred.rename(
             columns={"keypoints_xyc": "keypoints", bbox_column: "bbox"},
             inplace=True,
         )
-        predictions["scores"] = predictions["keypoints"].apply(lambda x: x[:, 2])
-        predictions["track_id"] = predictions["track_id"].astype(int)
-        predictions["person_id"] = predictions["person_id"].astype(int)
+        detections_pred["scores"] = detections_pred["keypoints"].apply(
+            lambda x: x[:, 2]
+        )
+        detections_pred["track_id"] = detections_pred["track_id"].astype(int)
+        detections_pred["person_id"] = detections_pred["person_id"].astype(int)
 
         annotations = {}
         videos_names = image_metadatas["video_name"].unique()
@@ -405,7 +417,9 @@ class PoseTrack21Evaluator(EvaluatorBase):
             image_ids = image_metadatas[
                 image_metadatas["video_name"] == video_name
             ].index
-            predictions_by_video = predictions[predictions["image_id"].isin(image_ids)]
+            predictions_by_video = detections_pred[
+                detections_pred["image_id"].isin(image_ids)
+            ]
             annotations[video_name] = predictions_by_video[
                 ["bbox", "image_id", "keypoints", "scores", "person_id", "track_id"]
             ].to_dict("records")
@@ -431,11 +445,11 @@ class PoseTrack21Evaluator(EvaluatorBase):
 
     # MOT helper functions
     @staticmethod
-    def _mot_encoding(predictions, image_metadatas, bbox_column):
+    def _mot_encoding(detections_pred, image_metadatas, bbox_column):
         image_metadatas["id"] = image_metadatas.index
         df = pd.merge(
             image_metadatas.reset_index(drop=True),
-            predictions.reset_index(drop=True),
+            detections_pred.reset_index(drop=True),
             left_on="id",
             right_on="image_id",
         )
@@ -536,13 +550,13 @@ class PoseTrack21Evaluator(EvaluatorBase):
             )
 
     @staticmethod
-    def compute_bbox_map(predictions, ground_truths, metadatas):
+    def compute_bbox_map(detections_pred, detections_gt, metadatas):
         images_ids = metadatas.index
         metric = MeanAveragePrecision(box_format="xywh", iou_type="bbox", num_classes=1)
         preds = []
         targets = []
         for image_id in images_ids:
-            targets_by_image = ground_truths[ground_truths["image_id"] == image_id]
+            targets_by_image = detections_gt[detections_gt["image_id"] == image_id]
             if not targets_by_image.empty:
                 targets.append(
                     {
@@ -552,7 +566,9 @@ class PoseTrack21Evaluator(EvaluatorBase):
                         "labels": torch.tensor(targets_by_image.category_id.values),
                     }
                 )
-                preds_by_image = predictions[predictions["image_id"] == image_id]
+                preds_by_image = detections_pred[
+                    detections_pred["image_id"] == image_id
+                ]
                 if not preds_by_image.empty:
                     preds.append(
                         {

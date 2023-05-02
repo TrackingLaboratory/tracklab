@@ -1,13 +1,13 @@
 from typing import List, Any, Union
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 
 import pandas as pd
 from torch.utils.data import DataLoader
 
 import pbtrack
-from ..utils.collate import default_collate
+from pbtrack.utils.collate import default_collate
 from pbtrack.pipeline import Module
-from pbtrack.engine import EngineDatapipe
+from pbtrack.engine import TrackingEngine, EngineDatapipe
 
 
 class ReIdentifier(Module):
@@ -15,6 +15,7 @@ class ReIdentifier(Module):
     The functions to implement are __init__, preprocess and process.
     A description of the expected behavior is provided below.
     """
+
     input_columns = None
     output_columns = None
 
@@ -45,7 +46,7 @@ class ReIdentifier(Module):
 
     @abstractmethod
     def process(
-            self, batch: Any, detections: pd.DataFrame
+        self, batch: Any, detections: pd.DataFrame
     ) -> Union[pd.Series, List[pd.Series], pd.DataFrame, List[pd.DataFrame]]:
         """Your processing function to run the re-identifier
         Args:
@@ -65,7 +66,7 @@ class ReIdentifier(Module):
             self._datapipe = EngineDatapipe(self)
         return self._datapipe
 
-    def dataloader(self, engine: "pbtrack.engine.TrackingEngine"):
+    def dataloader(self, engine: TrackingEngine):
         datapipe = self.datapipe
         return DataLoader(
             dataset=datapipe,
