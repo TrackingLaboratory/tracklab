@@ -10,3 +10,6 @@ pytorch_lightning
 lightning
 openmim
 ultralytics
+sphinx
+sphinx_rtd_theme
+myst-parser
