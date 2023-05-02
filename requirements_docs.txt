@@ -1,0 +1,12 @@
+-e './plugins/detect/mmdetection'
+-e './plugins/detect/mmpose'
+-e './plugins/detect/openpifpaf[dev,train,test]'
+-e './plugins/eval/poseval'
+-e './plugins/eval/PoseTrack21/eval/posetrack21'
+-e './plugins/eval/PoseTrack21/eval/posetrack21_mot'
+-e './plugins/reid/bpbreid'
+hydra-core
+pytorch_lightning
+lightning
+openmim
+ultralytics

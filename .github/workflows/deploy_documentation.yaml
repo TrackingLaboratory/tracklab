@@ -1,0 +1,35 @@
+name: Docs
+on:
+  push:
+    branches:
+      - main
+permissions:
+  contents: write
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install PyTorch without CUDA
+        run: pip install torch==1.13.1+cpu torchvision==0.14.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      - name: Install requirements
+        run: |
+          pip install numpy
+          pip install -r requirements
+      - name: Install OpenMM libraries
+        run: mim install "mmcv-full==1.7.1"
+      - name: Build Documentation
+        run: cd docs && make html
+      - name: Deploy Documentation
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          personal_token: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          external_repository: PBTrack/pbtrack.github.io
+          publish_branch: main  # default: gh-pages
+          publish_dir: ./docs/_build/html
+          keep_files: true
