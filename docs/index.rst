@@ -11,6 +11,8 @@ Welcome to PBTrack's documentation!
    :numbered: 3
    :caption: Contents:
 
+   configuration
+   Available_features
    MOT_integration
 
 .. toctree::

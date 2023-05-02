@@ -20,7 +20,7 @@ jobs:
       - name: Install requirements
         run: |
           pip install numpy
-          pip install -r requirements
+          pip install -r requirements_docs.txt
       - name: Install OpenMM libraries
         run: mim install "mmcv-full==1.7.1"
       - name: Build Documentation
