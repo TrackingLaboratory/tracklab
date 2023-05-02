@@ -24,19 +24,19 @@ class MOT20Evaluator(EvaluatorBase):
     def run(self, tracker_state):
         log.info("Starting evaluation on MOT20")
         image_metadatas = (
-            tracker_state.gt.image_metadatas.merge(
-                tracker_state.gt.video_metadatas["name"],
+            tracker_state.image_metadatas.merge(
+                tracker_state.video_metadatas["name"],
                 left_on="video_id",
                 right_on="id",
             )
-            .set_index(tracker_state.gt.image_metadatas.index)
+            .set_index(tracker_state.image_metadatas.index)
             .rename(columns={"name": "video_name"})
         )
-        seqs = list(tracker_state.gt.video_metadatas.name)
+        seqs = list(tracker_state.video_metadatas.name)
         bbox_column = self.cfg.bbox_column_for_eval
 
         mot_df = self._mot_encoding(
-            tracker_state.predictions, image_metadatas, bbox_column
+            tracker_state.detections_pred, image_metadatas, bbox_column
         )
         self._save_mot(mot_df, self.cfg.mot_trackers_folder)
         gtfiles = [os.path.join(self.cfg.mot_gt_folder, i, "gt/gt.txt") for i in seqs]
@@ -76,32 +76,36 @@ class MOT20Evaluator(EvaluatorBase):
                 metrics=mm.metrics.motchallenge_metrics,
                 generate_overall=True,
             )
-            print(
+            log.info("MOT - bbox MOTA")
+            log.info(
                 mm.io.render_summary(
                     summary,
                     formatters=mh.formatters,
                     namemap=mm.io.motchallenge_metric_names,
                 )
             )
+            results_mot_bbox = summary.to_dict(orient="index")
+            wandb.log(
+                results_mot_bbox["OVERALL"],
+                "MOT20/bbox/MOTA",
+                results_mot_bbox,
+            )
 
     # MOT helper functions
     @staticmethod
-    def _mot_encoding(predictions, image_metadatas, bbox_column):
+    def _mot_encoding(detections_pred, image_metadatas, bbox_column):
         image_metadatas["id"] = image_metadatas.index
         df = pd.merge(
             image_metadatas.reset_index(drop=True),
-            predictions.reset_index(drop=True),
+            detections_pred.reset_index(drop=True),
             left_on="id",
             right_on="image_id",
         )
         len_before_drop = len(df)
         df.dropna(
             subset=[
-                "video_name",
-                "frame",
                 "track_id",
                 bbox_column,
-                "keypoints_xyc",
             ],
             how="any",
             inplace=True,

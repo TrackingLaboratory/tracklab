@@ -29,15 +29,15 @@ class PoseTrack18Evaluator(EvaluatorBase):
 
     def run(self, tracker_state):
         log.info("Starting evaluation on PoseTrack18")
-        images = PTEvaluator._images(tracker_state.gt.image_metadatas)
-        category = PTEvaluator._category(tracker_state.gt.video_metadatas)
-        seqs = list(tracker_state.gt.video_metadatas.name)
+        images = PTEvaluator._images(tracker_state.image_metadatas)
+        category = PTEvaluator._category(tracker_state.video_metadatas)
+        seqs = list(tracker_state.video_metadatas.name)
         bbox_column = self.cfg.bbox_column_for_eval
         eval_pose_on_all = self.cfg.eval_pose_on_all
         if self.cfg.eval_pose_estimation:
             annotations = PTEvaluator._annotations_pose_estimation_eval(
-                tracker_state.predictions,
-                tracker_state.gt.image_metadatas,
+                tracker_state.detections_pred,
+                tracker_state.image_metadatas,
                 bbox_column,
                 eval_pose_on_all,
             )
@@ -48,9 +48,9 @@ class PoseTrack18Evaluator(EvaluatorBase):
 
             # Bounding box evaluation
             bbox_map = PTEvaluator.compute_bbox_map(
-                tracker_state.predictions,
-                tracker_state.gt.detections,
-                tracker_state.gt.image_metadatas,
+                tracker_state.detections_pred,
+                tracker_state.detections_gt,
+                tracker_state.image_metadatas,
             )
             map(bbox_map.pop, ["map_per_class", "mar_100_per_class"])
             headers = bbox_map.keys()
@@ -63,9 +63,9 @@ class PoseTrack18Evaluator(EvaluatorBase):
 
             # Bounding box evaluation
             bbox_map = PTEvaluator.compute_bbox_map(
-                tracker_state.predictions,
-                tracker_state.gt.detections,
-                tracker_state.gt.image_metadatas,
+                tracker_state.detections_pred,
+                tracker_state.detections_gt,
+                tracker_state.image_metadatas,
             )
             map(bbox_map.pop, ["map_per_class", "mar_100_per_class"])
             headers = bbox_map.keys()
@@ -109,7 +109,9 @@ class PoseTrack18Evaluator(EvaluatorBase):
 
         if self.cfg.eval_pose_tracking:
             annotations = PTEvaluator._annotations_tracking_eval(
-                tracker_state.predictions, tracker_state.gt.image_metadatas, bbox_column
+                tracker_state.detections_pred,
+                tracker_state.image_metadatas,
+                bbox_column,
             )
             trackers_folder = os.path.join(
                 self.cfg.posetrack_trackers_folder, "pose_tracking"

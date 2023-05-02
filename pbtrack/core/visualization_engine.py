@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
+from pbtrack.datastruct import TrackerState
 from pbtrack.callbacks import Callback
 from pbtrack.utils.cv2 import (
     draw_text,
@@ -68,30 +69,30 @@ class VisualizationEngine(Callback):
             ):
                 self.run(engine.tracker_state, video_idx)
 
-    def run(self, tracker_state, video_id):
-        image_metadatas = tracker_state.gt.image_metadatas[
-            tracker_state.gt.image_metadatas.video_id == video_id
+    def run(self, tracker_state: TrackerState, video_id):
+        image_metadatas = tracker_state.image_metadatas[
+            tracker_state.image_metadatas.video_id == video_id
         ]
         nframes = len(image_metadatas)
-        video_name = tracker_state.gt.video_metadatas.loc[video_id].name
+        video_name = tracker_state.video_metadatas.loc[video_id].name
         for i, image_id in enumerate(image_metadatas.index):
             # check for process max frame per video
             if i >= self.cfg.process_n_frames_by_video != -1:
                 break
             # retrieve results
             image_metadata = image_metadatas.loc[image_id]
-            predictions = tracker_state.predictions[
-                tracker_state.predictions.image_id == image_metadata.name
+            detections_pred = tracker_state.detections_pred[
+                tracker_state.detections_pred.image_id == image_metadata.name
             ]
-            if tracker_state.gt.detections is not None:
-                ground_truths = tracker_state.gt.detections[
-                    tracker_state.gt.detections.image_id == image_metadata.name
+            if tracker_state.detections_gt is not None:
+                ground_truths = tracker_state.detections_gt[
+                    tracker_state.detections_gt.image_id == image_metadata.name
                 ]
             else:
                 ground_truths = None
             # process the detections
             self._process_frame(
-                image_metadata, predictions, ground_truths, video_name, nframes
+                image_metadata, detections_pred, ground_truths, video_name, nframes
             )
         # save the final video
         if self.cfg.save_videos:
@@ -100,7 +101,7 @@ class VisualizationEngine(Callback):
         self.processed_video_counter += 1
 
     def _process_frame(
-        self, image_metadata, predictions, ground_truths, video_name, nframes
+        self, image_metadata, detections_pred, ground_truths, video_name, nframes
     ):
         # load image
         patch = cv2_load_image(image_metadata.file_path)
@@ -115,9 +116,9 @@ class VisualizationEngine(Callback):
         if self.cfg.ground_truth.draw_ignore_region:
             draw_ignore_region(patch, image_metadata)
 
-        # draw predictions
-        for _, prediction in predictions.iterrows():
-            self._draw_detection(patch, prediction, is_prediction=True)
+        # draw detections_pred
+        for _, detection_pred in detections_pred.iterrows():
+            self._draw_detection(patch, detection_pred, is_prediction=True)
 
         # draw ground truths
         if ground_truths is not None:

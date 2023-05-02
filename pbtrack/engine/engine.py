@@ -74,7 +74,7 @@ class TrackingEngine(ABC):
 
     def __init__(self,
                  modules: Pipeline,
-                 tracker_state: "TrackerState",
+                 tracker_state: TrackerState,
                  num_workers: int,
                  callbacks: "Dict[Callback]" = None,
                  ):
@@ -87,8 +87,8 @@ class TrackingEngine(ABC):
         self.callback = partial(self.fabric.call, engine=self)
         self.num_workers = num_workers
         self.tracker_state = tracker_state
-        self.img_metadatas = tracker_state.gt.image_metadatas
-        self.video_metadatas = tracker_state.gt.video_metadatas
+        self.img_metadatas = tracker_state.image_metadatas
+        self.video_metadatas = tracker_state.video_metadatas
         self.models = {model.name: model for model in modules}
         self.datapipes = {}
         self.dataloaders = {}

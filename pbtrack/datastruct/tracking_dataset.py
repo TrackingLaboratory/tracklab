@@ -1,21 +1,15 @@
 from abc import ABC
 from pathlib import Path
+from dataclasses import dataclass
 
 import pandas as pd
 
 
+@dataclass
 class TrackingSet:
-    def __init__(
-        self,
-        split: str,
-        video_metadatas: pd.DataFrame,
-        image_metadatas: pd.DataFrame,
-        detections: pd.DataFrame,
-    ):
-        self.split = split
-        self.video_metadatas = video_metadatas
-        self.image_metadatas = image_metadatas
-        self.detections = detections
+    video_metadatas: pd.DataFrame
+    image_metadatas: pd.DataFrame
+    detections_gt: pd.DataFrame
 
 
 class TrackingDataset(ABC):
@@ -37,26 +31,23 @@ class TrackingDataset(ABC):
         self.test_set = test_set
 
         if self.train_set is not None:
-            self.train_set = self._subsample(self.train_set, nvid, nframes, vids_dict)
+            self.train_set = self._subsample(
+                self.train_set, nvid, nframes, getattr(vids_dict, "train", None)
+            )
         if self.val_set is not None:
-            self.val_set = self._subsample(self.val_set, nvid, nframes, vids_dict)
+            self.val_set = self._subsample(
+                self.val_set, nvid, nframes, getattr(vids_dict, "val", None)
+            )
         if self.test_set is not None:
-            self.test_set = self._subsample(self.test_set, nvid, nframes, vids_dict)
+            self.test_set = self._subsample(
+                self.test_set, nvid, nframes, getattr(vids_dict, "test", None)
+            )
 
-    def _subsample(self, tracking_set, nvid, nframes, vids_dict):
-        if (
-            nvid < 1
-            and nframes < 1
-            and (vids_dict is None or len(vids_dict[tracking_set.split]) < 1)
-        ):
+    def _subsample(self, tracking_set, nvid, nframes, vids_names):
+        if nvid < 1 and nframes < 1 and (vids_names is None or len(vids_names) == 0):
             return tracking_set
 
         # filter videos:
-        vids_names = (
-            set(vids_dict[tracking_set.split])
-            if tracking_set.split in vids_dict
-            else None
-        )
         if vids_names is not None and len(vids_names) > 0:  # keep videos in vids_dict
             videos_to_keep = tracking_set.video_metadatas[
                 tracking_set.video_metadatas.name.isin(vids_names)
@@ -84,15 +75,13 @@ class TrackingDataset(ABC):
             )
 
         # filter detections:
-        if tracking_set.detections is not None:
-            tiny_detections = tracking_set.detections[
-                tracking_set.detections.image_id.isin(tiny_image_metadatas.index)
+        tiny_detections = None
+        if tracking_set.detections_gt is not None:
+            tiny_detections = tracking_set.detections_gt[
+                tracking_set.detections_gt.image_id.isin(tiny_image_metadatas.index)
             ]
-        else:
-            tiny_detections = None
 
         return TrackingSet(
-            tracking_set.split,
             tiny_video_metadatas,
             tiny_image_metadatas,
             tiny_detections,

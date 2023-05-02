@@ -140,8 +140,8 @@ class ReidDataset(ImageDataset):
             is_test_set=True,
         )
 
-        train_gt_dets = tracking_dataset.train_set.detections
-        val_gt_dets = tracking_dataset.val_set.detections
+        train_gt_dets = tracking_dataset.train_set.detections_gt
+        val_gt_dets = tracking_dataset.val_set.detections_gt
 
         # Get train/query/gallery sets as torchreid list format
         train_df = train_gt_dets[train_gt_dets["split"] == "train"]
