@@ -1,4 +1,4 @@
-# How to integrate a new dataset into pbtrack
+# New dataset integration
 
 For this tutorial we are going to integrate the [MOT20](https://motchallenge.net/data/MOT20/) dataset. 
 Please refer to their documentation to download the dataset on your own machine. You can download all the 
@@ -14,11 +14,11 @@ A `TrackingDataset` is an abstract class that allows to work on a subset of the 
 about ground truth detections, images and videos metadata which are stored as of `pandas` dataframes.
 
 Basically, you need to here define the way to load the files and fill the `pandas` dataframes that 
-respectively contain the information about the detection ground truths, image metadata and video metadata
-for each split of your dataset. The minimum required information to be 
+respectively contain the information about the detection ground truths, 
+images metadata and videos metadata for each split of your dataset. The minimum required information to be 
 included in the `pd.DataFrame` are the following:
 
-| `detections`               | `image_metadas`                    | `video_metadas`       |
+| `detections`               | `image_metadatas`                  | `video_metadatas`     |
 |----------------------------|------------------------------------|-----------------------|
 | `[image_id, video_id, ..]` | `[video_id, file_path, frame, ..]` | `[name, nframes, ..]` |
 
@@ -30,7 +30,7 @@ You can find the example of the MOT20 implementation of the `TrackingDataset`
 that we implemented in `pbtrack/wrappers/dataset/mot20.py`. Do not forget to add your 
 new class to the `pbtrack/wrappers/dataset/__init__.py` file.
 
-### Create your config file
+## Config file
 
 Our framework works with the [Hydra](https://hydra.cc/) configuration system which 
 takes advantage of a hierarchical configuration via files. This is very convenient
@@ -45,24 +45,3 @@ file in `configs/dataset/mot20.yaml`.
 
 Then you have to change in the main config file (`configs/config.yaml`) the entry in 
 datasets in defaults to `mot20` (the name of the new file without the extension).
-
-## Create your own evaluator
-
-The evaluator must extend the abstract class `EvaluatorBase` which is 
-described in `core/evaluator.py`. 
-Specifically, the function `run(tracker_state)` must be implemented for the evaluation to be done.
-
-The `tracker_state` object is the data structure that aggregates all the information 
-related to the tracking. It contains in particular the `predicitions` obtained during 
-the inference but also the information concerning the ground truths: `gt.detections`, 
-`gt.image_metadas` and `gt.video_metadas` which were created during the dataset 
-initialization. All these attributes are `pd.DataFrame`, which makes sorting for evaluation 
-much easier.
-
-You can find an example of an evaluator for the MOT challenge in the file 
-`wrappers/eval/mot/mot20_evaluator.py`. 
-
-Again, don't forget to add the evaluator in the `__init__.py` file and create 
-the configuration file which is available for example in the example in the 
-file `configs/eval/mot20.yaml`. You will also have to change in the main config 
-file the field `eval: mot20` to evaluate on this dataset.

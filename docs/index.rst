@@ -7,16 +7,32 @@ Welcome to PBTrack's documentation!
 ===================================
 
 .. toctree::
-   :maxdepth: 2
-   :numbered: 3
-   :caption: Contents:
+   :maxdepth: 0
+   :caption: Contents
 
-   configuration
    Available_features
-   MOT_integration
+   configuration
+   installation
+   logging
 
 .. toctree::
-   :maxdepth: 3
-   :caption: Api Documentation:
+   :maxdepth: 0
+   :caption: Tutorials
+
+   tutorials/MOT_dataset
+   tutorials/MOT_eval
+
+.. toctree::
+   :maxdepth: 0
+   :caption: Api Documentation
 
    api/pbtrack
+
+.. toctree::
+   :maxdepth: 0
+   :caption: Additional
+
+   additional/citation
+   additional/coming_soon
+   additional/contribute
+   additional/licence

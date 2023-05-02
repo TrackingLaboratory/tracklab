@@ -43,7 +43,11 @@
 
 #### Trackers
 
-- [x] 
+- [x] StrongSort
+- [ ] Deep OCSort
+- [ ] OCSort
+- [ ] ByteTrack
+- [ ] BotSort
 
 ### Datasets
 
