@@ -33,7 +33,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           personal_token: ${{ secrets.ACTIONS_DEPLOY_KEY }}
-          external_repository: PBTrack/pbtrack.github.io
+          external_repository: PbTrack/pbtrack.github.io
           publish_branch: main  # default: gh-pages
           publish_dir: ./docs/_build/html
           keep_files: true
