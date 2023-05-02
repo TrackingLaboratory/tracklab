@@ -1,5 +1,5 @@
-# -e './plugins/detect/mmdetection'
-# -e './plugins/detect/mmpose'
+-e './plugins/detect/mmdetection'
+-e './plugins/detect/mmpose'
 -e './plugins/detect/openpifpaf[dev,train,test]'
 -e './plugins/eval/poseval'
 -e './plugins/eval/PoseTrack21/eval/posetrack21'
@@ -9,8 +9,6 @@ hydra-core
 pytorch_lightning
 lightning
 openmim
-mmdet
-mmpose
 ultralytics
 sphinx
 sphinx_rtd_theme
