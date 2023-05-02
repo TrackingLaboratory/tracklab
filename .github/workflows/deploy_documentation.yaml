@@ -22,7 +22,7 @@ jobs:
         run: "python -c 'import torch; print(torch.cuda.is_available())'"
       - name: Install requirements
         run: |
-          python -m pip install numpy wheel Cython scipy
+          python -m pip install numpy wheel Cython scipy cv2
           python -m pip install --no-build-isolation -r requirements_docs.txt
       - name: Install OpenMM libraries
         run: mim install "mmcv-full==1.7.1"
