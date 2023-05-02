@@ -14,7 +14,7 @@ Welcome to PBTrack's documentation!
    MOT_integration
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Api Documentation:
 
    api/pbtrack
