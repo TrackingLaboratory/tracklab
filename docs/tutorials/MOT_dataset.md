@@ -27,8 +27,8 @@ update of the results accross the pipeline relies on the uniqueness of the
 indexes.
 
 You can find the example of the MOT20 implementation of the `TrackingDataset` 
-that we implemented in `pbtrack/wrappers/dataset/mot20.py`. Do not forget to add your 
-new class to the `pbtrack/wrappers/dataset/__init__.py` file.
+that we implemented in `pbtrack/wrappers/dataset/mot20.py`. You will then 
+need to add your new class to the `pbtrack/wrappers/dataset/__init__.py` file.
 
 ## Config file
 

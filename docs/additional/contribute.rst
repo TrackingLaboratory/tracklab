@@ -10,7 +10,7 @@ Getting Started
 
 1. **Fork the repository:** If you haven't already, start by creating your own fork of the PBTrack repository. You can do this by clicking the "Fork" button on the repository page.
 
-2. **Clone the repository:** Clone your fork of the repository to your local machine using the `git clone` command. For example:
+2. **Clone the repository:** Clone your fork of the repository to your local machine using the ``git clone`` command. For example:
 
    .. code-block:: bash
 

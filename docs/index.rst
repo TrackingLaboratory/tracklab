@@ -19,6 +19,7 @@ Welcome to PBTrack's documentation!
    :maxdepth: 0
    :caption: Tutorials
 
+   tutorials/Yolov8_pose_estimation
    tutorials/MOT_dataset
    tutorials/MOT_eval
 

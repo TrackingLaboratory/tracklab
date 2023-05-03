@@ -14,7 +14,8 @@ All these attributes are `pd.DataFrame`, which makes sorting for evaluation
 much easier.
 
 You can find an example of an evaluator for the MOT challenge in the file 
-`wrappers/eval/mot/mot20_evaluator.py`.
+`wrappers/eval/mot/mot20_evaluator.py`. You will then have to add the new 
+object evaluator in the `__init__.py` file.
 
 ## Config file
 
@@ -22,9 +23,10 @@ Our framework works with the [Hydra](https://hydra.cc/) configuration system whi
 takes advantage of a hierarchical configuration via files. This is very convenient
 to easily change modules.
 
-Again, don't forget to add the evaluator in the `__init__.py` file and create 
-the configuration file. As example, the new created one is available in file 
-`configs/eval/mot20.yaml`. 
+You will have to create a new `.yaml` configuration file, add the required 
+arguments in the `cfg` field and link the `_target_` to the new object for the 
+instantiation. The completed example is available in `configs/eval/mot20.
+yaml`. 
 
 You will also have to change in the main config file `configs/config.yaml` the field
-`eval: mot20` to evaluate with your new evaluator on this dataset.
+`eval: mot20` to evaluate with your new evaluator.

@@ -36,6 +36,7 @@
   - HigherHRNet
   - DEKR
   - ...
+- [x] [Yolov8-Pose](https://docs.ultralytics.com/tasks/pose/)
 - [ ] ...
 
 #### Apparence features extraction
@@ -43,11 +44,11 @@
 
 #### Trackers
 
-- [x] StrongSort
-- [ ] Deep OCSort
-- [ ] OCSort
-- [ ] ByteTrack
-- [ ] BotSort
+- [x] [StrongSORT](https://arxiv.org/abs/2202.13514)
+- [ ] [OCSort](https://arxiv.org/abs/2203.14360)
+- [ ] [DeepSort](https://arxiv.org/abs/1703.07402)
+- [ ] [ByteTrack](https://arxiv.org/abs/2110.06864)
+- [ ] [BotSort](https://arxiv.org/abs/2206.14651)
 
 ### Datasets
 
