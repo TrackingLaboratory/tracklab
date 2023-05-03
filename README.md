@@ -2,9 +2,9 @@
 
 PbTrack is an easy-to-use modular framework for multi-object pose/segmentation/bbox tracking that supports many tracking datasets and evaluation metrics.  
 
-<p float="left">
-  <img src="docs/assets/gifs/PoseTrack21_008827.gif" width="500" />
-  <img src="docs/assets/gifs/PoseTrack21_016236.gif" width="500" /> 
+<p align="center">
+  <img src="docs/assets/gifs/PoseTrack21_008827.gif" width="470" />
+  <img src="docs/assets/gifs/PoseTrack21_016236.gif" width="470" /> 
 </p>
 
 ## News
