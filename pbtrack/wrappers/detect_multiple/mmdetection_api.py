@@ -69,9 +69,6 @@ class MMDetection(MultiDetector):
                                 bbox_conf=prediction[4],
                                 video_id=metadata.video_id,
                                 category_id=1,  # `person` class in posetrack
-                                keypoints_xyc=np.nan,
-                                keypoints_conf=np.nan,
-                                track_id=np.nan,
                             ),
                             name=self.id,
                         )

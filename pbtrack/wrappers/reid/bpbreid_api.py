@@ -47,7 +47,7 @@ from bpbreid.scripts.default_config import engine_run_kwargs
 class BPBReId(ReIdentifier):
     """
     TODO:
-        why bbox move after strongsort?
+        why bbox move after strong_sort?
         training
         batch process
         save config + commit hash with model weights

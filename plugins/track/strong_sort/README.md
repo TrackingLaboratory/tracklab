@@ -1,1 +1,0 @@
-# From mikel-brostrom, Borda, hdnh2006, gkeechin [StrongSORT with OSNet](https://github.com/mikel-brostrom/Yolov5_StrongSORT_OSNet)

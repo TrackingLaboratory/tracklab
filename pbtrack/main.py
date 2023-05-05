@@ -74,7 +74,7 @@ def main(cfg):
         tracking_engine.track_dataset()
         # Evaluation
         if cfg.dataset.nframes == -1:
-            if tracker_state.gt.detections is not None:
+            if tracker_state.detections_gt is not None:
                 log.info("Starting evaluation.")
                 evaluator.run(tracker_state)
             else:

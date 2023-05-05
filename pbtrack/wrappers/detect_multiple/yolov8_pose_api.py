@@ -61,7 +61,6 @@ class YOLOv8Pose(MultiDetector):
                                 category_id=1,  # `person` class in posetrack
                                 keypoints_xyc=keypoints,
                                 keypoints_conf=np.mean(keypoints[:, 2], axis=0),
-                                track_id=np.nan,
                             ),
                             name=self.id,
                         )

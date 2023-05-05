@@ -1,6 +1,8 @@
 # vim: expandtab:ts=4:sw=4
+import cv2
 import numpy as np
-from plugins.track.strong_sort.sort.kalman_filter import KalmanFilter
+from .kalman_filter import KalmanFilter
+from collections import deque
 
 
 class TrackState:
@@ -13,16 +15,16 @@ class TrackState:
 
     """
 
-    Tentative = 't'
-    Confirmed = 'c'
-    Deleted = 'd'
+    Tentative = 1
+    Confirmed = 2
+    Deleted = 3
 
 
 class Track:
     """
-    A single target track with state space `(x, y, w, h)` and associated
-    velocities, where `(x, y)` is the center of the bounding box, `w` is the
-    width and `h` is the height.
+    A single target track with state space `(x, y, a, h)` and associated
+    velocities, where `(x, y)` is the center of the bounding box, `a` is the
+    aspect ratio and `h` is the height.
 
     Parameters
     ----------
@@ -65,19 +67,21 @@ class Track:
 
     """
 
-    def __init__(self, detection, track_id, class_id, conf, n_init, max_age, ema_alpha, max_kalman_prediction_without_update,
-                 feature=None):
+    def __init__(self, detection, track_id, class_id, conf, n_init, max_age, ema_alpha,
+                 feature=None, pbtrack_id=None):
         self.track_id = track_id
         self.class_id = int(class_id)
         self.hits = 1
         self.age = 1
         self.time_since_update = 0
+        self.max_num_updates_wo_assignment = 7
+        self.updates_wo_assignment = 0
         self.ema_alpha = ema_alpha
 
         self.state = TrackState.Tentative
         self.features = []
         if feature is not None:
-            # feature["reid_features"] /= np.linalg.norm(feature["reid_features"])  # TODO can cause div by 0 + check if norm is already performed in compute_distance_matrix_using_bp_features
+            feature /= np.linalg.norm(feature)
             self.features.append(feature)
 
         self.conf = conf
@@ -85,14 +89,27 @@ class Track:
         self._max_age = max_age
 
         self.kf = KalmanFilter()
-        self.mean, self.covariance = self.kf.initiate(detection.ltwh)
-        self.last_detection = detection
-        self.update_state()  # update state to confirmed if n_init = 1
-        self.last_kf_pred_ltwh = None
-        self.max_kalman_prediction_without_update = max_kalman_prediction_without_update
+        self.mean, self.covariance = self.kf.initiate(detection)
+        
+        # Initializing trajectory queue
+        self.q = deque(maxlen=25)
 
-    def to_ltwh(self):
-        return self.mean[:4].copy()
+        self.pbtrack_id = pbtrack_id
+
+    def to_tlwh(self):
+        """Get current position in bounding box format `(top left x, top left y,
+        width, height)`.
+
+        Returns
+        -------
+        ndarray
+            The bounding box.
+
+        """
+        ret = self.mean[:4].copy()
+        ret[2] *= ret[3]
+        ret[:2] -= ret[2:] / 2
+        return ret
 
     def to_tlbr(self):
         """Get kf estimated current position in bounding box format `(min x, miny, max x,
@@ -104,32 +121,155 @@ class Track:
             The predicted kf bounding box.
 
         """
-        ret = self.to_ltwh()
+        ret = self.to_tlwh()
         ret[2:] = ret[:2] + ret[2:]
         return ret
 
-    def camera_update(self, matrix):
+
+    def ECC(self, src, dst, warp_mode = cv2.MOTION_EUCLIDEAN, eps = 1e-5,
+        max_iter = 100, scale = 0.1, align = False):
+        """Compute the warp matrix from src to dst.
+        Parameters
+        ----------
+        src : ndarray 
+            An NxM matrix of source img(BGR or Gray), it must be the same format as dst.
+        dst : ndarray
+            An NxM matrix of target img(BGR or Gray).
+        warp_mode: flags of opencv
+            translation: cv2.MOTION_TRANSLATION
+            rotated and shifted: cv2.MOTION_EUCLIDEAN
+            affine(shift,rotated,shear): cv2.MOTION_AFFINE
+            homography(3d): cv2.MOTION_HOMOGRAPHY
+        eps: float
+            the threshold of the increment in the correlation coefficient between two iterations
+        max_iter: int
+            the number of iterations.
+        scale: float or [int, int]
+            scale_ratio: float
+            scale_size: [W, H]
+        align: bool
+            whether to warp affine or perspective transforms to the source image
+        Returns
+        -------
+        warp matrix : ndarray
+            Returns the warp matrix from src to dst.
+            if motion models is homography, the warp matrix will be 3x3, otherwise 2x3
+        src_aligned: ndarray
+            aligned source image of gray
+        """
+
+        # BGR2GRAY
+        if src.ndim == 3:
+            # Convert images to grayscale
+            src = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+            dst = cv2.cvtColor(dst, cv2.COLOR_BGR2GRAY)
+
+        # make the imgs smaller to speed up
+        if scale is not None:
+            if isinstance(scale, float) or isinstance(scale, int):
+                if scale != 1:
+                    src_r = cv2.resize(src, (0, 0), fx = scale, fy = scale,interpolation =  cv2.INTER_LINEAR)
+                    dst_r = cv2.resize(dst, (0, 0), fx = scale, fy = scale,interpolation =  cv2.INTER_LINEAR)
+                    scale = [scale, scale]
+                else:
+                    src_r, dst_r = src, dst
+                    scale = None
+            else:
+                if scale[0] != src.shape[1] and scale[1] != src.shape[0]:
+                    src_r = cv2.resize(src, (scale[0], scale[1]), interpolation = cv2.INTER_LINEAR)
+                    dst_r = cv2.resize(dst, (scale[0], scale[1]), interpolation=cv2.INTER_LINEAR)
+                    scale = [scale[0] / src.shape[1], scale[1] / src.shape[0]]
+                else:
+                    src_r, dst_r = src, dst
+                    scale = None
+        else:
+            src_r, dst_r = src, dst
+
+        # Define 2x3 or 3x3 matrices and initialize the matrix to identity
+        if warp_mode == cv2.MOTION_HOMOGRAPHY :
+            warp_matrix = np.eye(3, 3, dtype=np.float32)
+        else :
+            warp_matrix = np.eye(2, 3, dtype=np.float32)
+
+        # Define termination criteria
+        criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, max_iter, eps)
+
+        # Run the ECC algorithm. The results are stored in warp_matrix.
+        try:
+            (cc, warp_matrix) = cv2.findTransformECC (src_r, dst_r, warp_matrix, warp_mode, criteria, None, 1)
+        except cv2.error as e:
+            print('ecc transform failed')
+            return None, None
+        
+        if scale is not None:
+            warp_matrix[0, 2] = warp_matrix[0, 2] / scale[0]
+            warp_matrix[1, 2] = warp_matrix[1, 2] / scale[1]
+
+        if align:
+            sz = src.shape
+            if warp_mode == cv2.MOTION_HOMOGRAPHY:
+                # Use warpPerspective for Homography
+                src_aligned = cv2.warpPerspective(src, warp_matrix, (sz[1],sz[0]), flags=cv2.INTER_LINEAR)
+            else :
+                # Use warpAffine for Translation, Euclidean and Affine
+                src_aligned = cv2.warpAffine(src, warp_matrix, (sz[1],sz[0]), flags=cv2.INTER_LINEAR)
+            return warp_matrix, src_aligned
+        else:
+            return warp_matrix, None
+
+
+    def get_matrix(self, matrix):
+        eye = np.eye(3)
+        dist = np.linalg.norm(eye - matrix)
+        if dist < 100:
+            return matrix
+        else:
+            return eye
+
+    def camera_update(self, previous_frame, next_frame):
+        warp_matrix, src_aligned = self.ECC(previous_frame, next_frame)
+        if warp_matrix is None and src_aligned is None:
+            return
+        [a,b] = warp_matrix
+        warp_matrix=np.array([a,b,[0,0,1]])
+        warp_matrix = warp_matrix.tolist()
+        matrix = self.get_matrix(warp_matrix)
+
         x1, y1, x2, y2 = self.to_tlbr()
         x1_, y1_, _ = matrix @ np.array([x1, y1, 1]).T
         x2_, y2_, _ = matrix @ np.array([x2, y2, 1]).T
         w, h = x2_ - x1_, y2_ - y1_
         cx, cy = x1_ + w / 2, y1_ + h / 2
-        self.mean[:4] = [cx, cy, w, h]
+        self.mean[:4] = [cx, cy, w / h, h]
+
 
     def increment_age(self):
         self.age += 1
         self.time_since_update += 1
 
-    def predict(self):
+    def predict(self, kf):
         """Propagate the state distribution to the current time step using a
         Kalman filter prediction step.
+
+        Parameters
+        ----------
+        kf : kalman_filter.KalmanFilter
+            The Kalman filter.
+
         """
-        if self.time_since_update < self.max_kalman_prediction_without_update:
-            self.mean, self.covariance = self.kf.predict(self.mean, self.covariance)
+        self.mean, self.covariance = self.kf.predict(self.mean, self.covariance)
         self.age += 1
         self.time_since_update += 1
+        
+    def update_kf(self, bbox, confidence=0.5):
+        self.updates_wo_assignment = self.updates_wo_assignment + 1
+        self.mean, self.covariance = self.kf.update(self.mean, self.covariance, bbox, confidence)
+        tlbr = self.to_tlbr()
+        x_c = int((tlbr[0] + tlbr[2]) / 2)
+        y_c = int((tlbr[1] + tlbr[3]) / 2)
+        self.q.append(('predupdate', (x_c, y_c)))
 
-    def update(self, detection, class_id, conf):
+    def update(self, detection, class_id, conf, pbtrack_id=None):
         """Perform Kalman filter measurement update step and update the feature
         cache.
         Parameters
@@ -139,39 +279,26 @@ class Track:
         """
         self.conf = conf
         self.class_id = class_id.int()
-        self.last_detection = detection
-        self.last_kf_pred_ltwh = self.to_ltwh()
-        self.mean, self.covariance = self.kf.update(self.mean, self.covariance, detection.ltwh, detection.confidence)
+        self.mean, self.covariance = self.kf.update(self.mean, self.covariance, detection.to_xyah(), detection.confidence)
 
-        detection_features = detection.feature['reid_features']
-        detection_vis_scores = detection.feature['visibility_scores']
+        feature = detection.feature / np.linalg.norm(detection.feature)
 
-        tracklet_features = self.features[-1]['reid_features']
-        tracklet_vis_scores = self.features[-1]['visibility_scores']
-
-        xor = np.logical_xor(tracklet_vis_scores, detection_vis_scores)
-        ema_scores_tracklet = (tracklet_vis_scores * detection_vis_scores) * np.float32(
-            self.ema_alpha) + xor * tracklet_vis_scores
-        ema_scores_detection = (tracklet_vis_scores * detection_vis_scores) * np.float32(
-            1 - self.ema_alpha) + xor * detection_vis_scores
-        smooth_feat = np.expand_dims(ema_scores_tracklet, 1) * tracklet_features + np.expand_dims(
-            ema_scores_detection, 1) * detection_features
-        smooth_visibility_scores = np.maximum(tracklet_vis_scores, detection_vis_scores)
-        smooth_feat[np.logical_and(ema_scores_tracklet == 0., ema_scores_detection == 0.)] = 1
-        # smooth_feat /= np.linalg.norm(smooth_feat, axis=-1, keepdims=True)  # TODO can cause div by 0 + check if norm is already performed in compute_distance_matrix_using_bp_features
-        self.features = [{
-            'reid_features': smooth_feat,
-            'visibility_scores': smooth_visibility_scores
-        }]
+        smooth_feat = self.ema_alpha * self.features[-1] + (1 - self.ema_alpha) * feature
+        smooth_feat /= np.linalg.norm(smooth_feat)
+        self.features = [smooth_feat]
 
         self.hits += 1
         self.time_since_update = 0
-        self.update_state()
-
-    def update_state(self):
-        """Update the state of the tracklet to "confirmed" if it was updated enough times"""
         if self.state == TrackState.Tentative and self.hits >= self._n_init:
             self.state = TrackState.Confirmed
+        
+        tlbr = self.to_tlbr()
+        x_c = int((tlbr[0] + tlbr[2]) / 2)
+        y_c = int((tlbr[1] + tlbr[3]) / 2)
+        self.q.append(('observationupdate', (x_c, y_c)))
+
+        if pbtrack_id is not None:
+            self.pbtrack_id = pbtrack_id
 
     def mark_missed(self):
         """Mark this track as missed (no association at the current time step).

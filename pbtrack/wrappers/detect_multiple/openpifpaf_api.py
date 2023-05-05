@@ -94,7 +94,6 @@ class OpenPifPaf(MultiDetector):
                             bbox_conf=prediction.score,
                             video_id=metadata.video_id,
                             category_id=1,  # `person` class in posetrack
-                            track_id=np.nan,
                         ),
                         name=self.id,
                     )

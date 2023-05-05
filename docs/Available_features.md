@@ -41,14 +41,17 @@
 
 #### Apparence features extraction
 
+- [x] [BPBReID](https://arxiv.org/abs/2211.03679)
+- [ ] ...
 
 #### Trackers
 
 - [x] [StrongSORT](https://arxiv.org/abs/2202.13514)
-- [ ] [OCSort](https://arxiv.org/abs/2203.14360)
-- [ ] [DeepSort](https://arxiv.org/abs/1703.07402)
-- [ ] [ByteTrack](https://arxiv.org/abs/2110.06864)
-- [ ] [BotSort](https://arxiv.org/abs/2206.14651)
+- [x] [OCSort](https://arxiv.org/abs/2203.14360)
+- [x] [DeepSort](https://arxiv.org/abs/1703.07402)
+- [x] [ByteTrack](https://arxiv.org/abs/2110.06864)
+- [x] [BotSort](https://arxiv.org/abs/2206.14651)
+- [ ] ...
 
 ### Datasets
 

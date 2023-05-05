@@ -1,21 +1,22 @@
 _target_: pbtrack.wrappers.StrongSORT
 
+# FIXME check for camera compensation (image format is right?)
+
 cfg:
-  ecc: False # activate camera motion compensation  # FIXME doesn't work
-  ema_alpha: 0.9 # updates  appearance  state in  an exponential moving average manner # FIXME is it still used?
-  mc_lambda: 0.995 # matching with both appearance (1 - MC_LAMBDA) and KF gated cost
-  max_dist: 0.5 # The reid matching threshold. Samples with larger distance are considered an invalid match
-  motion_criterium: "oks" # "iou" or "oks"
-  max_iou_distance: 0.7 # Gating threshold. Associations with cost larger than this value are disregarded.
-  max_oks_distance: 0.7 # Gating threshold. Associations with cost larger than this value are disregarded.
-  max_age: 300 # Maximum number of missed misses before a track is deleted
-  n_init: 3 # Number of frames that a track remains in initialization phase
-  nn_budget: 100 # Maximum size of the appearance descriptors gallery
-  min_bbox_confidence: 0.5  # bbox below this confidence threshold are not considered for matching
-  only_position_for_kf_gating: False   # if True, only the position (x, y) is used by the Kalman filter for gating
-  max_kalman_prediction_without_update: ${.max_age}  # do not make any predictions if the Kalman filter has not been updated for more than this number of frames
-  matching_strategy: "strong_sort_matching"  # {"strong_sort_matching", "bot_sort_matching"}
-  gating_thres_factor: 1
-  w_kfgd: 1
-  w_reid: 1
-  w_st: 1
+  # weights can be downloaded from :
+  # https://github.com/mikel-brostrom/yolov8_tracking/tree/master/trackers/strongsort/deep/checkpoint
+  model_weights: ${project_dir}/weights/osnet/osnet_x1_0_msmt17.pt
+  fp16: false
+
+  min_confidence: 0.4
+  ecc: false  # default = true
+
+  hyperparams:
+    ema_alpha: 0.8962157769329083  # default = 0.9
+    max_age: 40  # default = 70
+    max_dist: 0.1594374041012136  # default = 0.2
+    max_iou_dist: 0.5431835667667874  # default = 0.7
+    max_unmatched_preds: 7  # default = 7
+    mc_lambda: 0.995  # default = 0.995
+    n_init: 0  # default = 3
+    nn_budget: 100  # default = 100

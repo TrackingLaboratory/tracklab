@@ -1,148 +1,154 @@
 import numpy as np
-import pandas as pd
+import torch
+import sys
+import cv2
+import gdown
+from os.path import exists as file_exists, join
+import torchvision.transforms as transforms
 
 from .sort.nn_matching import NearestNeighborDistanceMetric
 from .sort.detection import Detection
 from .sort.tracker import Tracker
 
-__all__ = ["StrongSORT"]
+from .reid_multibackend import ReIDDetectMultiBackend
+
+from ultralytics.yolo.utils.ops import xyxy2xywh
 
 
 class StrongSORT(object):
-    def __init__(
-        self,
-        ema_alpha=0.9,
-        mc_lambda=0.995,
-        max_dist=0.2,
-        motion_criterium="iou",
-        max_iou_distance=0.7,
-        max_oks_distance=0.7,
-        max_age=30,
-        n_init=3,
-        nn_budget=100,
-        min_bbox_confidence=0.2,
-        only_position_for_kf_gating=False,
-        max_kalman_prediction_without_update=7,
-        matching_strategy="strong_sort_matching",
-        gating_thres_factor=1.5,
-        w_kfgd=1,
-        w_reid=1,
-        w_st=1,
-    ):
+    def __init__(self, 
+                 model_weights,
+                 device,
+                 fp16,
+                 max_dist=0.2,
+                 max_iou_dist=0.7,
+                 max_age=70,
+                 max_unmatched_preds=7,
+                 n_init=3,
+                 nn_budget=100,
+                 mc_lambda=0.995,
+                 ema_alpha=0.9
+                ):
+
+        self.model = ReIDDetectMultiBackend(weights=model_weights, device=device, fp16=fp16)
+        
         self.max_dist = max_dist
-        self.min_bbox_confidence = min_bbox_confidence
-        metric = NearestNeighborDistanceMetric("part_based", self.max_dist, nn_budget)
+        metric = NearestNeighborDistanceMetric(
+            "cosine", self.max_dist, nn_budget)
         self.tracker = Tracker(
-            metric,
-            motion_criterium=motion_criterium,
-            max_iou_distance=max_iou_distance,
-            max_oks_distance=max_oks_distance,
-            max_age=max_age,
-            n_init=n_init,
-            ema_alpha=ema_alpha,
-            mc_lambda=mc_lambda,
-            only_position_for_kf_gating=only_position_for_kf_gating,
-            max_kalman_prediction_without_update=max_kalman_prediction_without_update,
-            matching_strategy=matching_strategy,
-            gating_thres_factor=gating_thres_factor,
-            w_kfgd=w_kfgd,
-            w_reid=w_reid,
-            w_st=w_st,
-        )
+            metric, max_iou_dist=max_iou_dist, max_age=max_age, n_init=n_init, max_unmatched_preds=max_unmatched_preds, mc_lambda=mc_lambda, ema_alpha=ema_alpha)
 
-    def update(
-        self,
-        ids,
-        bbox_ltwh,
-        reid_features,
-        visibility_scores,
-        confidences,
-        classes,
-        ori_img,
-        frame,
-        keypoints,
-    ):
+    def update(self, dets,  ori_img):
+        
+        xyxys = dets[:, 0:4]
+        confs = dets[:, 4]
+        clss = dets[:, 5]
+        pbtrack_ids = dets[:, 6]
+        
+        classes = clss.numpy()
+        xywhs = xyxy2xywh(xyxys.numpy())
+        confs = confs.numpy()
+        pbtrack_ids = pbtrack_ids.numpy()
         self.height, self.width = ori_img.shape[:2]
+        
         # generate detections
-        detections = [
-            Detection(
-                ids[i].cpu().detach().numpy(),
-                np.asarray(bbox_ltwh[i].cpu().detach().numpy(), dtype=np.float),
-                conf.cpu().detach().numpy(),
-                {
-                    "reid_features": np.asarray(
-                        reid_features[i].cpu().detach().numpy(), dtype=np.float32
-                    ),
-                    "visibility_scores": np.asarray(
-                        visibility_scores[i].cpu().detach().numpy()
-                    ),
-                },
-                keypoints=keypoints[i].cpu().detach().numpy(),
-            )
-            for i, conf in enumerate(confidences)
-        ]
+        features = self._get_features(xywhs, ori_img)
+        bbox_tlwh = self._xywh_to_tlwh(xywhs)
+        detections = [Detection(bbox_tlwh[i], conf, features[i])
+                      for i, conf in enumerate(confs)]
 
-        detections = self.filter_detections(detections)
+        # run on non-maximum supression
+        boxes = np.array([d.tlwh for d in detections])
+        scores = np.array([d.confidence for d in detections])
 
         # update tracker
-        assert self.tracker.predict_done, "predict() must be called before update()"
-        if len(detections) > 0:
-            self.tracker.update(detections, classes, confidences)
-        self.tracker.predict_done = False
+        self.tracker.predict()
+        self.tracker.update(detections, clss, confs, pbtrack_ids)
 
         # output bbox identities
         outputs = []
-        ids = []
         for track in self.tracker.tracks:
-            if not track.is_confirmed() or track.time_since_update > 0:
-                # Vlad: Before 'track.time_since_update > 0', it was 'track.time_since_update > 1', which means that a
-                # track that was not updated at the current frame but was updated at the previous frame would still be
-                # returned. Because of this, the last detection in that track would be outputted twice in a row,
-                # which is not what we want. The original StrongSORT implementation was not returning the last detection
-                # in the tracklet, but rather the predicted bbox in the current frame (computed using the Kalman filter
-                # and the tracklet history). Consequently, it could have made sense to output the predicted bbox here
-                # even if the tracklet was not updated, but why doing it onlu for tracklets with
-                # track.time_since_update = 1? Why not put that value "1" as a parameter of the tracker?
+            if not track.is_confirmed() or track.time_since_update > 1:
                 continue
 
-            # TODO should update all detections, and set default values for non match (e.g. -1)
-            det = track.last_detection
-            # KF predicted bbox to be stored next to actual bbox :
-            result_det = {  # if keys are added/updated here, don't forget to update the columns in the pd.DataFrame below
-                "track_id": track.track_id,
-                "track_bbox_kf_ltwh": track.to_ltwh(),
-                "track_bbox_pred_kf_ltwh": track.last_kf_pred_ltwh,
-                "matched_with": det.matched_with,
-                "costs": det.costs,
-                "hits": track.hits,
-                "age": track.age,
-                "time_since_update": track.time_since_update,
-                "state": track.state,
-            }
-            ids.append(det.id)
-            outputs.append(result_det)
-        # FIXME I do not like to use a pandas dataframe here since it brings some hacky code to handle
-        # it in the API. I would rather use a list of dicts ? For me it should be general here and then we do the
-        # plumbery in the API
-        outputs = pd.DataFrame(
-            outputs,
-            index=np.array(ids),
-            columns=[
-                "track_id",
-                "track_bbox_kf_ltwh",
-                "track_bbox_pred_kf_ltwh",
-                "matched_with",
-                "costs",
-                "hits",
-                "age",
-                "time_since_update",
-                "state",
-            ],
-        )
+            box = track.to_tlwh()
+            x1, y1, x2, y2 = self._tlwh_to_xyxy(box)
+            
+            track_id = track.track_id
+            class_id = track.class_id
+            conf = track.conf
+            queue = track.q
+            pbtrack_id = track.pbtrack_id
+            outputs.append(np.array([x1, y1, x2, y2, track_id, class_id, conf, queue, pbtrack_id], dtype=object))
+        if len(outputs) > 0:
+            outputs = np.stack(outputs, axis=0)
         return outputs
 
-    def filter_detections(self, detections):
-        detections = [
-            det for det in detections if det.confidence > self.min_bbox_confidence
-        ]
-        return detections
+    """
+    TODO:
+        Convert bbox from xc_yc_w_h to xtl_ytl_w_h
+    Thanks JieChen91@github.com for reporting this bug!
+    """
+    @staticmethod
+    def _xywh_to_tlwh(bbox_xywh):
+        if isinstance(bbox_xywh, np.ndarray):
+            bbox_tlwh = bbox_xywh.copy()
+        elif isinstance(bbox_xywh, torch.Tensor):
+            bbox_tlwh = bbox_xywh.clone()
+        bbox_tlwh[:, 0] = bbox_xywh[:, 0] - bbox_xywh[:, 2] / 2.
+        bbox_tlwh[:, 1] = bbox_xywh[:, 1] - bbox_xywh[:, 3] / 2.
+        return bbox_tlwh
+
+    def _xywh_to_xyxy(self, bbox_xywh):
+        x, y, w, h = bbox_xywh
+        x1 = max(int(x - w / 2), 0)
+        x2 = min(int(x + w / 2), self.width - 1)
+        y1 = max(int(y - h / 2), 0)
+        y2 = min(int(y + h / 2), self.height - 1)
+        return x1, y1, x2, y2
+
+    def _tlwh_to_xyxy(self, bbox_tlwh):
+        """
+        TODO:
+            Convert bbox from xtl_ytl_w_h to xc_yc_w_h
+        Thanks JieChen91@github.com for reporting this bug!
+        """
+        x, y, w, h = bbox_tlwh
+        x1 = max(int(x), 0)
+        x2 = min(int(x+w), self.width - 1)
+        y1 = max(int(y), 0)
+        y2 = min(int(y+h), self.height - 1)
+        return x1, y1, x2, y2
+
+    def increment_ages(self):
+        self.tracker.increment_ages()
+
+    def _xyxy_to_tlwh(self, bbox_xyxy):
+        x1, y1, x2, y2 = bbox_xyxy
+
+        t = x1
+        l = y1
+        w = int(x2 - x1)
+        h = int(y2 - y1)
+        return t, l, w, h
+
+    def _get_features(self, bbox_xywh, ori_img):
+        im_crops = []
+        for box in bbox_xywh:
+            x1, y1, x2, y2 = self._xywh_to_xyxy(box)
+            im = ori_img[y1:y2, x1:x2]
+            im_crops.append(im)
+        if im_crops:
+            features = self.model(im_crops)
+        else:
+            features = np.array([])
+        return features
+    
+    def trajectory(self, im0, q, color):
+        # Add rectangle to image (PIL-only)
+        for i, p in enumerate(q):
+            thickness = int(np.sqrt(float (i + 1)) * 1.5)
+            if p[0] == 'observationupdate': 
+                cv2.circle(im0, p[1], 2, color=color, thickness=thickness)
+            else:
+                cv2.circle(im0, p[1], 2, color=(255,255,255), thickness=thickness)

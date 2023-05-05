@@ -1,15 +1,15 @@
 defaults:
   - _self_
   - dataset: posetrack21
-  - engine: offline
   - eval: posetrack21
+  - engine: offline
   - machine: local
   - state: no_save
   - visualization: save_videos
   - detect_multiple: yolox
   - detect_single: hrnet_posetrack18
   - reid: bpbreid
-  - track: strong_sort
+  - track: bpbreid_strong_sort
 
 experiment_name: "???"
 data_dir: "???"

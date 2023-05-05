@@ -14,8 +14,8 @@ class Detection(object):
         Detector confidence score.
     feature : array_like
         A feature vector that describes the object contained in this image.
-    keypoints: array_like Nx3
-        Keypoint format `(x, y, conf)`
+    pbtrack_id: int
+        The id of the tracklet in the pbtrack
 
     Attributes
     ----------
@@ -25,26 +25,21 @@ class Detection(object):
         Detector confidence score.
     feature : ndarray | NoneType
         A feature vector that describes the object contained in this image.
+    pbtrack_id: int
+        The id of the tracklet in the pbtrack
 
     """
 
-    def __init__(self, id, bbox_ltwh, confidence, feature, keypoints):
-        self.ltwh = bbox_ltwh
+    def __init__(self, tlwh, confidence, feature):
+        self.tlwh = np.asarray(tlwh, dtype=np.float32)
         self.confidence = float(confidence)
-        self.feature = feature
-        self.id = id
-        self.keypoints = keypoints
-        self.matched_with = None
-        self.costs = {}
-
-    def to_ltwh(self):
-        return self.ltwh.copy()
+        self.feature = np.asarray(feature.cpu(), dtype=np.float32)
 
     def to_tlbr(self):
         """Convert bounding box to format `(min x, min y, max x, max y)`, i.e.,
         `(top left, bottom right)`.
         """
-        ret = self.to_ltwh()
+        ret = self.tlwh.copy()
         ret[2:] += ret[:2]
         return ret
 
@@ -52,7 +47,16 @@ class Detection(object):
         """Convert bounding box to format `(center x, center y, aspect ratio,
         height)`, where the aspect ratio is `width / height`.
         """
-        ret = self.to_ltwh()
+        ret = self.tlwh.copy()
         ret[:2] += ret[2:] / 2
         ret[2] /= ret[3]
         return ret
+    
+def to_xyah_ext(bbox):
+    """Convert bounding box to format `(center x, center y, aspect ratio,
+    height)`, where the aspect ratio is `width / height`.
+    """
+    ret = bbox.copy()
+    ret[:2] += ret[2:] / 2
+    ret[2] /= ret[3]
+    return ret
