@@ -75,16 +75,17 @@ class TrackerState(AbstractContextManager):
         assert (
             load_step != "reid"
         ), "Cannot load from groundtruth in reid step. Can only load bboxes or keypoints"
-        self.detections_gt = self.detections_gt.copy()
-        if load_step == "detect_multi":
-            self.detections_gt["keypoints_xyc"] = pd.NA
-            self.detections_gt["track_id"] = pd.NA
-            self.detections_gt.drop(columns=["track_id"], inplace=True)
-            self.detections_gt.rename(columns={"visibility": "bbox_conf"}, inplace=True)
-        elif load_step == "detect_single":
-            self.detections_gt["track_id"] = pd.NA
-            self.detections_gt.drop(columns=["track_id"], inplace=True)
-            self.detections_gt.rename(columns={"visibility": "bbox_conf"}, inplace=True)
+        self.detections_pred = self.detections_gt.copy()
+        if load_step == "multi_detector":
+            self.detections_pred["keypoints_xyc"] = pd.NA
+            self.detections_pred["track_id"] = pd.NA
+            self.detections_pred["bbox_conf"] = 1.0
+            self.detections_pred.drop(columns=["track_id"], inplace=True)
+        elif load_step == "single_detector":
+            self.detections_pred["track_id"] = pd.NA
+            self.detections_pred["bbox_conf"] = 1.0
+            self.detections_pred["keypoints_conf"] = 1.0
+            self.detections_pred.drop(columns=["track_id"], inplace=True)
 
     def load_detections_pred_from_json(self, json_file):
         anns_path = Path(json_file)
@@ -227,7 +228,7 @@ class TrackerState(AbstractContextManager):
                 self.json_detections_pred.video_id == self.video_id
             ]
         if self.load_from_groundtruth:
-            return self.detections_gt[self.detections_gt.video_id == self.video_id]
+            return self.detections_pred[self.detections_pred.video_id == self.video_id]
         if self.load_file is None:
             return pd.DataFrame()
 
