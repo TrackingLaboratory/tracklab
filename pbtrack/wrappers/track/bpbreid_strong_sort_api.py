@@ -1,9 +1,9 @@
-import pandas as pd
 import torch
 import numpy as np
-import plugins.track.bpbreid_strong_sort.strong_sort as strong_sort
+import pandas as pd
 
 from pbtrack.pipeline import Tracker
+import plugins.track.bpbreid_strong_sort.strong_sort as strong_sort
 
 import logging
 

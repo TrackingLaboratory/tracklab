@@ -63,7 +63,7 @@ class StrongSORT(object):
 
         # update tracker
         self.tracker.predict()
-        self.tracker.update(detections, clss, confs, pbtrack_ids)
+        self.tracker.update(detections, classes, confs, pbtrack_ids)
 
         # output bbox identities
         outputs = []

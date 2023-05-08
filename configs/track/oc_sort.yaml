@@ -1,7 +1,5 @@
 _target_: pbtrack.wrappers.OCSORT
 
-# FIXME check for camera compensation (image format is right?)
-
 cfg:
   min_confidence: 0.4
 

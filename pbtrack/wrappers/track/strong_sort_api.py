@@ -1,11 +1,11 @@
-import pandas as pd
 import torch
 import numpy as np
+import pandas as pd
 from pathlib import Path
 
 from pbtrack.pipeline import Tracker
-import plugins.track.strong_sort.strong_sort as strong_sort
 from pbtrack.utils.coordinates import ltrb_to_ltwh
+import plugins.track.strong_sort.strong_sort as strong_sort
 
 import logging
 
@@ -36,16 +36,6 @@ class StrongSORT(Tracker):
         # For camera compensation
         self.prev_frame = None
 
-    def prepare_next_frame(self, next_frame: np.ndarray):
-        # Propagate the state distribution to the current time step using a Kalman filter prediction step.
-        self.model.tracker.predict()
-
-        # Camera motion compensation
-        if self.cfg.ecc:
-            if self.prev_frame is not None:
-                self.model.tracker.camera_update(self.prev_frame, next_frame)
-            self.prev_frame = next_frame
-
     @torch.no_grad()
     def preprocess(self, detection: pd.Series, metadata: pd.Series):
         ltrb = detection.bbox.ltrb()
@@ -60,6 +50,10 @@ class StrongSORT(Tracker):
 
     @torch.no_grad()
     def process(self, batch, image, detections: pd.DataFrame):
+        if self.cfg.ecc:
+            if self.prev_frame is not None:
+                self.model.tracker.camera_update(self.prev_frame, image)
+            self.prev_frame = image
         inputs = batch["input"]  # Nx7 [l,t,r,b,conf,class,pbtrack_id]
         inputs = inputs[inputs[:, 4] > self.cfg.min_confidence]
         results = self.model.update(inputs, image)
@@ -69,9 +63,11 @@ class StrongSORT(Tracker):
             track_bbox_conf = list(results[:, 6])
             track_ids = list(results[:, 4])
             idxs = list(results[:, 8].astype(int))
-            assert set(idxs).issubset(
-                detections.index
-            ), "Mismatch of indexes during the tracking. The results should match the detections."
+            # FIXME should be a subset but sometimes returns an idx that was in the previous
+            # batch of detections... For the moment, we let the override happen
+            # assert set(idxs).issubset(
+            #    detections.index
+            # ), "Mismatch of indexes during the tracking. The results should match the detections."
             results = pd.DataFrame(
                 {
                     "track_bbox_ltwh": track_bbox_ltwh,

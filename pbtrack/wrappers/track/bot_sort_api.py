@@ -1,11 +1,11 @@
-import pandas as pd
 import torch
 import numpy as np
+import pandas as pd
 from pathlib import Path
 
 from pbtrack.pipeline import Tracker
-import plugins.track.bot_sort.bot_sort as bot_sort
 from pbtrack.utils.coordinates import ltrb_to_ltwh
+import plugins.track.bot_sort.bot_sort as bot_sort
 
 import logging
 

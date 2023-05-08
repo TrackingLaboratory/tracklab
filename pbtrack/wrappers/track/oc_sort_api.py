@@ -1,10 +1,10 @@
-import pandas as pd
 import torch
 import numpy as np
+import pandas as pd
 
 from pbtrack.pipeline import Tracker
-import plugins.track.oc_sort.ocsort as ocsort
 from pbtrack.utils.coordinates import ltrb_to_ltwh
+import plugins.track.oc_sort.ocsort as ocsort
 
 import logging
 
