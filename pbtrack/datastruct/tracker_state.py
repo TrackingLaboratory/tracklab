@@ -100,7 +100,9 @@ class TrackerState(AbstractContextManager):
                 detections_pred.extend(data_dict["annotations"])
         detections_pred = pd.DataFrame(detections_pred)
         detections_pred.rename(columns={"bbox": "bbox_ltwh"}, inplace=True)
-        detections_pred.bbox_ltwh = detections_pred.bbox_ltwh.apply(lambda x: np.array(x))
+        detections_pred.bbox_ltwh = detections_pred.bbox_ltwh.apply(
+            lambda x: np.array(x)
+        )
         detections_pred["id"] = detections_pred.index
         detections_pred.rename(columns={"keypoints": "keypoints_xyc"}, inplace=True)
         detections_pred.keypoints_xyc = detections_pred.keypoints_xyc.apply(
@@ -113,16 +115,18 @@ class TrackerState(AbstractContextManager):
             ] = detections_pred[detections_pred["bbox_ltwh"].notna()].bbox_ltwh.apply(
                 lambda x: ltrb_to_ltwh(x)
             )
-        detections_pred.loc[detections_pred["bbox_ltwh"].isna(), "bbox_ltwh"] = detections_pred[
-            detections_pred["bbox_ltwh"].isna()
-        ].keypoints_xyc.apply(
+        detections_pred.loc[
+            detections_pred["bbox_ltwh"].isna(), "bbox_ltwh"
+        ] = detections_pred[detections_pred["bbox_ltwh"].isna()].keypoints_xyc.apply(
             lambda x: generate_bbox_from_keypoints(x, [0.0, 0.0, 0.0])
         )
         detections_pred["bbox_conf"] = detections_pred.keypoints_xyc.apply(
             lambda x: x[:, 2].mean()
         )
         if detections_pred["bbox_conf"].sum() == 0:
-            detections_pred["bbox_conf"] = detections_pred.scores.apply(lambda x: x.mean())
+            detections_pred["bbox_conf"] = detections_pred.scores.apply(
+                lambda x: x.mean()
+            )
             # FIXME confidence score in detections_pred.keypoints_xyc is always 0
         detections_pred = detections_pred.merge(
             self.image_metadatas[["video_id"]],
@@ -180,12 +184,17 @@ class TrackerState(AbstractContextManager):
             self.zf = dict(load=load_zf, save=save_zf)
         return super().__enter__()
 
-    def on_task_end(self, engine, task, detections):
-        if task == self.save_step:
-            self.update(detections)
-            self.save()
+    def on_video_loop_end(
+        self,
+        engine: "TrackingEngine",
+        video_metadata: pd.Series,
+        video_idx: int,
+        detections: pd.DataFrame,
+    ):
+        self.update(detections)
+        self.save()
 
-    def update(self, detections):
+    def update(self, detections: pd.DataFrame):
         if self.detections_pred is None:
             self.detections_pred = detections
         else:

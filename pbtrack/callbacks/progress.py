@@ -22,7 +22,7 @@ class Progressbar(Callback):
         self.pbar.close()
 
     def on_video_loop_start(
-        self, engine: TrackingEngine, video: Any, video_idx: int, index: int
+        self, engine: TrackingEngine, video_metadata: pd.Series, video_idx: int, index: int
     ):
         n = index
         total = len(engine.video_metadatas)
@@ -31,7 +31,7 @@ class Progressbar(Callback):
     def on_video_loop_end(
         self,
         engine: TrackingEngine,
-        video: Any,
+        video_metadata: pd.Series,
         video_idx: int,
         detections: pd.DataFrame,
     ):

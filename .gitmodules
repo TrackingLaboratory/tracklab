@@ -8,7 +8,7 @@
 	branch = pbtrack
 [submodule "plugins/reid/bpbreid"]
 	path = plugins/reid/bpbreid
-	url = git@github.com:VlSomers/person-reid.git # TODO https://github.com/VlSomers/bpbreid.git
+	url = git@github.com:VlSomers/person-reid.git   # https://github.com/VlSomers/person-reid.git
 	branch = pbtrack
 [submodule "plugins/eval/poseval"]
 	path = plugins/eval/poseval
