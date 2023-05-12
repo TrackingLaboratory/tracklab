@@ -22,7 +22,6 @@ from poseval.evaluateAP import evaluateAP
 from poseval.evaluateTracking import evaluateTracking
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
-
 import logging
 
 log = logging.getLogger(__name__)
@@ -60,21 +59,6 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 self.cfg.posetrack_trackers_folder, "pose_estimation"
             )
             self._save_json(images, annotations, category, trackers_folder)
-
-            # Bounding box evaluation
-            bbox_map = self.compute_bbox_map(
-                tracker_state.detections_pred,
-                tracker_state.detections_gt,
-                tracker_state.image_metadatas,
-            )
-            map(bbox_map.pop, ["map_per_class", "mar_100_per_class"])
-            headers = bbox_map.keys()
-            data = [np.round(100 * bbox_map[name].item(), 2) for name in headers]
-            log.info(
-                "Pose estimation - bbox metrics\n"
-                + tabulate([data], headers=headers, tablefmt="plain")
-            )
-            wandb.log(bbox_map, "PoseTrack21/bbox/AP")
 
             # Keypoint evaluation
             argv = ["", self.cfg.posetrack_gt_folder, trackers_folder]
@@ -181,6 +165,20 @@ class PoseTrack21Evaluator(EvaluatorBase):
 
         if self.cfg.eval_mot:
             # Bounding box evaluation
+            # AP
+            bbox_map = self.compute_bbox_map(
+                tracker_state.detections_pred,
+                tracker_state.detections_gt,
+                tracker_state.image_metadatas,
+            )
+            map(bbox_map.pop, ["map_per_class", "mar_100_per_class"])
+            headers = bbox_map.keys()
+            data = [np.round(100 * bbox_map[name].item(), 2) for name in headers]
+            log.info(
+                "MOT - bbox mAP\n" + tabulate([data], headers=headers, tablefmt="plain")
+            )
+            wandb.log(bbox_map, "PoseTrack21/bbox/AP")
+
             # HOTA
             trackers_folder = self.cfg.mot_trackers_folder
             mot_df = self._mot_encoding(
@@ -566,7 +564,8 @@ class PoseTrack21Evaluator(EvaluatorBase):
 
     @staticmethod
     def compute_bbox_map(detections_pred, detections_gt, metadatas):
-        images_ids = metadatas.index
+        images_ids = metadatas[metadatas.is_labeled].index
+        detections_pred = detections_pred[detections_pred.ignored == False]
         metric = MeanAveragePrecision(box_format="xywh", iou_type="bbox", num_classes=1)
         preds = []
         targets = []
