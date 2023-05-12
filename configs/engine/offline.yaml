@@ -6,5 +6,5 @@ callbacks:
     _target_: pbtrack.callbacks.Progressbar
   ignored_regions:
     _target_: pbtrack.callbacks.IgnoredRegions
-    iou_threshold: 0.9
+    max_intersection: 0.9
   vis: ${visualization}

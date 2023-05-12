@@ -337,7 +337,6 @@ class PoseTrack21Evaluator(EvaluatorBase):
     @staticmethod
     def _annotations_tracking_eval(detections_pred, image_metadatas, bbox_column):
         detections_pred = detections_pred.copy()
-        detections_pred.drop(detections_pred["ignored"].index, inplace=True)
         detections_pred["id"] = detections_pred.index
         col_to_drop = [
             "keypoints_xyc",
@@ -480,9 +479,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
             inplace=True,
         )
         # drop detections that are in ignored regions
-        detections_pred.drop(
-            detections_pred[detections_pred.ignored].index, inplace=True
-        )
+        df.drop(df[df.ignored].index, inplace=True)
         if len_before_drop != len(df):
             log.warning(
                 "Dropped {} rows with NA values".format(len_before_drop - len(df))

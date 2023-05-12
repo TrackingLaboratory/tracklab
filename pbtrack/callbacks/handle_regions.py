@@ -26,8 +26,8 @@ class IgnoredRegions(Callback):
             lambda x: self.mark_ignored(x, image_metadatas), axis=1
         )
 
-    def __init__(self, iou_threshold=0.9):
-        self.iou_threshold = iou_threshold
+    def __init__(self, max_intersection=0.9):
+        self.max_intersection = max_intersection
 
     def mark_ignored(self, detection, image_metadatas):
         if hasattr(image_metadatas, "ignore_regions_x") and hasattr(
@@ -42,7 +42,8 @@ class IgnoredRegions(Callback):
         return False
 
     def compute_iou(self, bbox_ltrb, ignore_regions_x, ignore_regions_y):
-        """Compute the intersection over union of a detection and a list of ignore regions.
+        """Compute the intersection of a detection and a list of ignore regions and check whether
+        it is higher than a portion of the area or not.
 
         Args:
             bbox_ltrb (np.array): bounding box of the detection [left, top, right, bottom]
@@ -50,7 +51,8 @@ class IgnoredRegions(Callback):
             ignore_regions_y (tuple): list of ignore regions y coordinates
 
         Returns:
-            bool: True if the detection is in an ignore region, False otherwise
+            bool: True if the area of the detection is higher than a certain threshold in an ignore region,
+            False otherwise
         """
         l, t, r, b = bbox_ltrb
 
@@ -67,8 +69,7 @@ class IgnoredRegions(Callback):
             ignore_mask = np.zeros(image_dim_max, dtype=np.uint8)
             ignore_mask = cv2.fillPoly(ignore_mask, [polygon_points], 1)
             intersection_area = np.logical_and(bbox_mask, ignore_mask).sum()
-            union_area = np.logical_or(bbox_mask, ignore_mask).sum()
-            iou = intersection_area / union_area
-            if iou > self.iou_threshold:
+            bbox_area = (r - l) * (b - t)
+            if intersection_area > self.max_intersection * bbox_area:
                 return True
         return False
