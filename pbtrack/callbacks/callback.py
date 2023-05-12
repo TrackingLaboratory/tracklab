@@ -16,14 +16,20 @@ class Callback:
         pass
 
     def on_video_loop_start(
-        self, engine: "TrackingEngine", video: Any, video_idx: int, index: int
+        self,
+        engine: "TrackingEngine",
+        video_metadata: pd.Series,  # FIXME keep ?
+        # image_metadatas: pd.DataFrame,  # FIXME add ?
+        video_idx: int,
+        index: int,  # FIXME change name ?
     ):
         pass
 
     def on_video_loop_end(
         self,
         engine: "TrackingEngine",
-        video: Any,
+        video_metadata: pd.Series,  # FIXME keep ?
+        # image_metadatas: pd.DataFrame,  # FIXME add ?
         video_idx: int,
         detections: pd.DataFrame,
     ):

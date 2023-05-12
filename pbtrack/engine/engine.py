@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Dict, TYPE_CHECKING, Any, List
+from typing import Dict, TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -8,7 +8,7 @@ from lightning.fabric import Fabric
 
 from abc import abstractmethod, ABC
 
-from pbtrack.pipeline import Pipeline, Module
+from pbtrack.pipeline import Pipeline
 
 if TYPE_CHECKING:
     from pbtrack.callbacks import Callback
@@ -30,7 +30,7 @@ def merge_dataframes(main_df, appended_piece):
 
     # Append the columns of the df
     new_columns = appended_piece.columns.difference(main_df.columns)
-    main_df[new_columns] = np.nan
+    main_df.loc[:, new_columns] = np.nan
 
     # Append the rows of the df
     new_index = set(appended_piece.index).difference(main_df.index)
@@ -72,16 +72,17 @@ class TrackingEngine(ABC):
         num_workers: number of workers for preprocessing
     """
 
-    def __init__(self,
-                 modules: Pipeline,
-                 tracker_state: TrackerState,
-                 num_workers: int,
-                 callbacks: "Dict[Callback]" = None,
-                 ):
+    def __init__(
+        self,
+        modules: Pipeline,
+        tracker_state: TrackerState,
+        num_workers: int,
+        callbacks: "Dict[Callback]" = None,
+    ):
         # super().__init__()
         self.module_names = [module.name for module in modules]
         callbacks = list(callbacks.values()) if callbacks is not None else []
-        callbacks = [tracker_state] + callbacks
+        callbacks = callbacks + [tracker_state]
 
         self.fabric = Fabric(callbacks=callbacks)
         self.callback = partial(self.fabric.call, engine=self)
@@ -99,21 +100,29 @@ class TrackingEngine(ABC):
     def track_dataset(self):
         """Run tracking on complete dataset."""
         self.callback("on_dataset_track_start")
-        for i, (video_idx, video) in enumerate(self.video_metadatas.iterrows()):
-            self.callback(
-                "on_video_loop_start", video=video, video_idx=video_idx, index=i
-            )
-            detections = self.video_loop(video, video_idx)
-            self.callback(
-                "on_video_loop_end",
-                video=video,
-                video_idx=video_idx,
-                detections=detections,
-            )
+        for i, (video_idx, video_metadata) in enumerate(
+            self.video_metadatas.iterrows()
+        ):
+            with self.tracker_state(video_idx) as tracker_state:
+                self.callback(
+                    "on_video_loop_start",
+                    video_metadata=video_metadata,
+                    video_idx=video_idx,
+                    index=i,
+                )
+                detections = self.video_loop(tracker_state, video_metadata, video_idx)
+                self.callback(
+                    "on_video_loop_end",
+                    video_metadata=video_metadata,
+                    video_idx=video_idx,
+                    detections=detections,
+                )
         self.callback("on_dataset_track_end")
 
     @abstractmethod
-    def video_loop(self, video, video_id) -> pd.DataFrame:
+    def video_loop(
+        self, tracker_state: TrackerState, video_metadata: pd.Series, video_id: int
+    ) -> pd.DataFrame:
         """Run tracking on one video.
 
         The pipeline for each video looks like :
@@ -121,8 +130,9 @@ class TrackingEngine(ABC):
         detect_multi -> (detect_single) -> reid -> track
 
         Args:
-            video: ...
-            video_id: ...
+            tracker_state (TrackerState): tracker state object
+            video_metadata (pd.Series): metadata for the video
+            video_id (int): id of the video
 
         Returns:
             detections: a dataframe of all detections

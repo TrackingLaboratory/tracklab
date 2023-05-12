@@ -61,7 +61,7 @@ class VisualizationEngine(Callback):
         self.processed_video_counter = 0
         self.process = None
 
-    def on_video_loop_end(self, engine, video, video_idx, detections):
+    def on_video_loop_end(self, engine, video_metadata, video_idx, detections):
         if self.cfg.save_videos or self.cfg.save_images:
             if (
                 self.processed_video_counter < self.cfg.process_n_videos

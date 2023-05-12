@@ -296,6 +296,10 @@ class PoseTrack21Evaluator(EvaluatorBase):
             how="any",
             inplace=True,
         )
+        # drop detections that are in ignored regions
+        detections_pred.drop(
+            detections_pred[detections_pred.ignored].index, inplace=True
+        )
         if len_before_drop != len(detections_pred):
             log.warning(
                 "Dropped {} rows with NA values".format(
@@ -347,6 +351,10 @@ class PoseTrack21Evaluator(EvaluatorBase):
             how="any",
             inplace=True,
         )
+        # drop detections that are in ignored regions
+        detections_pred.drop(
+            detections_pred[detections_pred.ignored].index, inplace=True
+        )
         if len_before_drop != len(detections_pred):
             log.warning(
                 "Dropped {} rows with NA values".format(
@@ -394,6 +402,10 @@ class PoseTrack21Evaluator(EvaluatorBase):
             ],
             how="any",
             inplace=True,
+        )
+        # drop detections that are in ignored regions
+        detections_pred.drop(
+            detections_pred[detections_pred.ignored].index, inplace=True
         )
         if len_before_drop != len(detections_pred):
             log.warning(
@@ -446,6 +458,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
     # MOT helper functions
     @staticmethod
     def _mot_encoding(detections_pred, image_metadatas, bbox_column):
+        detections_pred = detections_pred.copy()
         image_metadatas["id"] = image_metadatas.index
         df = pd.merge(
             image_metadatas.reset_index(drop=True),
@@ -465,6 +478,8 @@ class PoseTrack21Evaluator(EvaluatorBase):
             how="any",
             inplace=True,
         )
+        # drop detections that are in ignored regions
+        df.drop(df[df.ignored].index, inplace=True)
         if len_before_drop != len(df):
             log.warning(
                 "Dropped {} rows with NA values".format(len_before_drop - len(df))
