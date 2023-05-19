@@ -67,9 +67,9 @@ class VisualizationEngine(Callback):
                 self.processed_video_counter < self.cfg.process_n_videos
                 or self.cfg.process_n_videos == -1
             ):
-                self.run(engine.tracker_state, video_idx)
+                self.run(engine.tracker_state, video_idx, detections)
 
-    def run(self, tracker_state: TrackerState, video_id):
+    def run(self, tracker_state: TrackerState, video_id, detections):
         image_metadatas = tracker_state.image_metadatas[
             tracker_state.image_metadatas.video_id == video_id
         ]
@@ -81,8 +81,8 @@ class VisualizationEngine(Callback):
                 break
             # retrieve results
             image_metadata = image_metadatas.loc[image_id]
-            detections_pred = tracker_state.detections_pred[
-                tracker_state.detections_pred.image_id == image_metadata.name
+            detections_pred = detections[
+                detections.image_id == image_metadata.name
             ]
             if tracker_state.detections_gt is not None:
                 ground_truths = tracker_state.detections_gt[
