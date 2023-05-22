@@ -10,6 +10,7 @@ log = logging.getLogger(__name__)
 class Module(ABC):
     input_columns = None
     output_columns = None
+    forget_columns = []
 
     @property
     def name(self):
