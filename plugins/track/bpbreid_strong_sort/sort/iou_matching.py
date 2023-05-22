@@ -73,6 +73,6 @@ def iou_cost(tracks, detections, track_indices=None,
     for row, track_idx in enumerate(track_indices):
         bbox = tracks[track_idx].to_ltwh()
         candidates = np.asarray(
-            [detections[i].ltwh for i in detection_indices])
+            [detections[i].to_ltwh() for i in detection_indices])
         cost_matrix[row, :] = 1. - iou(bbox, candidates)
     return cost_matrix

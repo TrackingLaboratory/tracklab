@@ -20,9 +20,9 @@ class TrackState:
 
 class Track:
     """
-    A single target track with state space `(x, y, w, h)` and associated
-    velocities, where `(x, y)` is the center of the bounding box, `w` is the
-    width and `h` is the height.
+    A single target track with state space `(x, y, a, h)` and associated
+    velocities, where `(x, y)` is the center of the bounding box, `a` is the
+    aspect ratio (w/h) and `h` is the height.
 
     Parameters
     ----------
@@ -85,14 +85,19 @@ class Track:
         self._max_age = max_age
 
         self.kf = KalmanFilter()
-        self.mean, self.covariance = self.kf.initiate(detection.ltwh)
+        self.mean, self.covariance = self.kf.initiate(detection.to_xyah())
         self.last_detection = detection
         self.update_state()  # update state to confirmed if n_init = 1
         self.last_kf_pred_ltwh = None
         self.max_kalman_prediction_without_update = max_kalman_prediction_without_update
 
-    def to_ltwh(self):
+    def to_xyah(self):
         return self.mean[:4].copy()
+
+    def to_ltwh(self):
+        xyah = self.to_xyah()
+        width = xyah[2] * xyah[3]
+        return np.array([xyah[0] - width / 2, xyah[1] - xyah[3] / 2, width, xyah[3]])
 
     def to_tlbr(self):
         """Get kf estimated current position in bounding box format `(min x, miny, max x,
@@ -114,7 +119,7 @@ class Track:
         x2_, y2_, _ = matrix @ np.array([x2, y2, 1]).T
         w, h = x2_ - x1_, y2_ - y1_
         cx, cy = x1_ + w / 2, y1_ + h / 2
-        self.mean[:4] = [cx, cy, w, h]
+        self.mean[:4] = [cx, cy, w/h, h]
 
     def increment_age(self):
         self.age += 1
@@ -141,7 +146,7 @@ class Track:
         self.class_id = class_id.int()
         self.last_detection = detection
         self.last_kf_pred_ltwh = self.to_ltwh()
-        self.mean, self.covariance = self.kf.update(self.mean, self.covariance, detection.ltwh, detection.confidence)
+        self.mean, self.covariance = self.kf.update(self.mean, self.covariance, detection.to_xyah(), detection.confidence)
 
         detection_features = detection.feature['reid_features']
         detection_vis_scores = detection.feature['visibility_scores']

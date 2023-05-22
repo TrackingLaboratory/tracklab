@@ -44,7 +44,7 @@ class Tracker:
         self,
         metric,
         motion_criterium="iou",
-        max_iou_distance=0.9,
+        max_iou_distance=0.7,
         max_oks_distance=0.7,
         max_age=30,
         n_init=3,
@@ -184,7 +184,7 @@ class Tracker:
 
         # Compute First the Position-based Cost Matrix
         pos_cost = np.empty([len(track_indices), len(detection_indices)])
-        msrs = np.asarray([dets[i].to_ltwh() for i in detection_indices])
+        msrs = np.asarray([dets[i].to_xyah() for i in detection_indices])
         for row, track_idx in enumerate(track_indices):
             track = tracks[track_idx]
             pos_cost[row, :] = (
@@ -389,7 +389,7 @@ class Tracker:
         track_indices = list(range(len(self.tracks)))
         detection_indices = list(range(len(detections)))
         measurements = np.asarray(
-            [detections[i].to_ltwh() for i in detection_indices])
+            [detections[i].to_xyah() for i in detection_indices])
         cost_matrix_kf_gating = np.zeros((len(self.tracks), len(detections)))
         for row, track_idx in enumerate(track_indices):
             track = self.tracks[track_idx]
