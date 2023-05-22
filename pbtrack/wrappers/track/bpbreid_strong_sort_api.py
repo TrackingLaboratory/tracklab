@@ -72,7 +72,10 @@ class BPBReIDStrongSORT(Tracker):
     @torch.no_grad()
     def preprocess(self, detection: pd.Series, metadata: pd.Series):
         bbox_ltwh = detection.bbox_ltwh
-        score = detection.keypoints_conf
+        if hasattr(detection, "bbox_conf"):
+            score = detection.bbox.conf()
+        else:
+            score = detection.keypoints_conf
         reid_features = detection.embeddings  # .flatten()
         visibility_score = detection.visibility_scores
         id = detection.name
