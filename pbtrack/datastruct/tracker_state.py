@@ -56,6 +56,10 @@ class TrackerState(AbstractContextManager):
             for module in self.modules[:load_index]:
                 self.load_columns += module.output_columns
 
+        self.forget_columns = []
+        for module in self.modules:
+            self.forget_columns += getattr(module, "forget_columns", [])
+
         self.zf = None
         self.video_id = None
         self.bbox_format = bbox_format
@@ -260,3 +264,9 @@ class TrackerState(AbstractContextManager):
                 self.zf[zf_type].close()
                 self.zf[zf_type] = None
         self.video_id = None
+
+        self.detections_pred = self.detections_pred.drop(
+            columns=self.forget_columns,
+            errors="ignore"
+        )
+
