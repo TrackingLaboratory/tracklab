@@ -1,10 +1,10 @@
 _target_: pbtrack.wrappers.BPBReIDStrongSORT
 
 cfg:
-  ecc: False # activate camera motion compensation  # FIXME doesn't work
+  ecc: True # activate camera motion compensation
   ema_alpha: 0.9 # updates  appearance  state in  an exponential moving average manner # FIXME is it still used?
   mc_lambda: 0.995 # matching with both appearance (1 - MC_LAMBDA) and KF gated cost
-  max_dist: 0.5 # The reid matching threshold. Samples with larger distance are considered an invalid match
+  max_dist: 0.2 # The reid matching threshold. Samples with larger distance are considered an invalid match
   motion_criterium: "iou" # "iou" or "oks"
   max_iou_distance: 0.7 # Gating threshold. Associations with cost larger than this value are disregarded.
   max_oks_distance: 0.7 # Gating threshold. Associations with cost larger than this value are disregarded.
@@ -12,8 +12,8 @@ cfg:
   n_init: 0 # Number of frames that a track remains in initialization phase
   nn_budget: 100 # Maximum size of the appearance descriptors gallery
   min_bbox_confidence: 0.4  # bbox below this confidence threshold are not considered for matching
-  only_position_for_kf_gating: False   # if True, only the position (x, y) is used by the Kalman filter for gating
-  max_kalman_prediction_without_update: ${track.cfg.max_age}  # do not make any predictions if the Kalman filter has not been updated for more than this number of frames
+  only_position_for_kf_gating: False  # if True, only the position (x, y) is used by the Kalman filter for gating
+  max_kalman_prediction_without_update: 7  # do not make any predictions if the Kalman filter has no measurements for more than this number of frames
   matching_strategy: "strong_sort_matching"  # {"strong_sort_matching", "bot_sort_matching"}
   gating_thres_factor: 1
   w_kfgd: 1
