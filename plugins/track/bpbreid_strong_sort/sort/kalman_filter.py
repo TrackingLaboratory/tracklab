@@ -73,11 +73,11 @@ class KalmanFilter(object):
         std = [
             2 * self._std_weight_position * measurement[3],
             2 * self._std_weight_position * measurement[3],
-            1e-2,
+            2 * self._std_weight_position * measurement[3],  # StrongSORT : 1e-2; yolov8tracking : 1 * measurement[2]
             2 * self._std_weight_position * measurement[3],
             10 * self._std_weight_velocity * measurement[3],
             10 * self._std_weight_velocity * measurement[3],
-            1e-5,
+            10 * self._std_weight_velocity * measurement[3],  # StrongSORT : 1e-5; yolov8tracking : 0.1 * measurement[2]
             10 * self._std_weight_velocity * measurement[3]]
         covariance = np.diag(np.square(std))
         return mean, covariance
@@ -103,12 +103,12 @@ class KalmanFilter(object):
         std_pos = [
             self._std_weight_position * mean[3],
             self._std_weight_position * mean[3],
-            1e-2,
+            self._std_weight_position * mean[3],  # StrongSORT : 1e-2; yolov8tracking : 1 * mean[2]
             self._std_weight_position * mean[3]]
         std_vel = [
             self._std_weight_velocity * mean[3],
             self._std_weight_velocity * mean[3],
-            1e-5,
+            self._std_weight_velocity * mean[3],  # StrongSORT : 1e-5; yolov8tracking : 0.1 * mean[2]
             self._std_weight_velocity * mean[3]]
         motion_cov = np.diag(np.square(np.r_[std_pos, std_vel]))
 
@@ -139,10 +139,10 @@ class KalmanFilter(object):
         std = [
             self._std_weight_position * mean[3],
             self._std_weight_position * mean[3],
-            1e-1,
+            self._std_weight_position * mean[3],  # StrongSORT : 1e-1; yolov8tracking : 1e-1
             self._std_weight_position * mean[3]]
 
-        # std = [(1 - confidence) * x for x in std]  # FIXME see if we keep it
+        std = [(1 - confidence) * x for x in std]
 
         innovation_cov = np.diag(np.square(std))
 
