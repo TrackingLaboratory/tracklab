@@ -1,22 +1,6 @@
 _target_: pbtrack.wrappers.TopDownMMPose
-
-cfg:
-  path_to_config: ${project_dir}/plugins/detect/mmpose/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_384x288_dark.py
-  path_to_checkpoint: ${project_dir}/weights/mmpose/hrnet_w48_coco_384x288_dark-e881a4b6_20210203.pth
-  download_url: https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w48_coco_384x288_dark-e881a4b6_20210203.pth
-
-# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w32_coco_256x192_dark.py
-# https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w32_coco_256x192_dark-07f147eb_20200812.pth
-# AP: 0.757
-
-# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w32_coco_384x288_dark.py
-# https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w32_coco_384x288_dark-307dafc2_20210203.pth
-# AP: 0.766
-
-# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_dark.py
-# https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w48_coco_256x192_dark-8cba3197_20200812.pth
-# AP: 0.764
-
-# configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_384x288_dark.py
-# https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w48_coco_384x288_dark-e881a4b6_20210203.pth
-# AP: 0.772
+#config_name: topdown_heatmap_hrnet_w32_coco_256x192_dark # AP: 0.757
+#config_name: topdown_heatmap_hrnet_w32_coco_384x288_dark # AP: 0.766
+#config_name: topdown_heatmap_hrnet_w48_coco_256x192_dark # AP: 0.764
+config_name: topdown_heatmap_hrnet_w48_coco_384x288_dark # AP: 0.772
+path_to_checkpoint: ${project_dir}/weights/${.config_name}.pth

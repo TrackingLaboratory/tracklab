@@ -1,8 +1,12 @@
+from pathlib import Path
+
 import cv2
 import pandas as pd
 import torch
 import requests
 import numpy as np
+from mim import get_model_info
+from mim.utils import get_installed_path
 from tqdm import tqdm
 
 import mmcv
@@ -27,10 +31,16 @@ def mmpose_collate(batch):
 class TopDownMMPose(SingleDetector):
     collate_fn = mmpose_collate
 
-    def __init__(self, cfg, device, batch_size):
-        super().__init__(cfg, device, batch_size)
-        get_checkpoint(cfg.path_to_checkpoint, cfg.download_url)
-        self.model = init_pose_model(cfg.path_to_config, cfg.path_to_checkpoint, device)
+    def __init__(self, device, batch_size, config_name, path_to_checkpoint):
+        super().__init__(device, batch_size)
+        model_df = get_model_info(package="mmpose", configs=[config_name])
+        if len(model_df) != 1:
+            raise ValueError("Multiple values found for the config name")
+        download_url = model_df.weight.item()
+        package_path = Path(get_installed_path("mmpose"))
+        path_to_config = package_path / ".mim" / model_df.config.item()
+        get_checkpoint(path_to_checkpoint, download_url)
+        self.model = init_pose_model(str(path_to_config), path_to_checkpoint, device)
 
         self.dataset_info = DatasetInfo(self.model.cfg.dataset_info)
         self.test_pipeline = Compose(self.model.cfg.test_pipeline)

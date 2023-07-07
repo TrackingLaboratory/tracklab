@@ -31,10 +31,8 @@ class TrackerState(AbstractContextManager):
         modules=None,
     ):
         self.module_names = [module.name for module in modules]
-        assert (
-            load_step in self.module_names,
-            f"Load_step must be in {self.module_names}",
-        )
+        assert load_step in self.module_names + [None], \
+            f"Load_step must be in {self.module_names}, not {load_step}"
         self.modules = modules or {}
         self.video_metadatas = tracking_set.video_metadatas
         self.image_metadatas = tracking_set.image_metadatas

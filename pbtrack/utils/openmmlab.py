@@ -1,11 +1,24 @@
 import os
+from pathlib import Path
+
 import requests
+from mim.utils import get_installed_path
 from tqdm import tqdm
 
 import logging
 
 log = logging.getLogger(__name__)
 
+def get_config_path(package, config_name):
+    installed_path = Path(get_installed_path(package))
+    # configs will be put in package/.mim in PR #68
+    possible_config_paths = [
+        installed_path / '.mim' / config_name,
+        installed_path / config_name,
+    ]
+    for config_path in possible_config_paths:
+        if config_path.exists():
+            return config_path
 
 def get_checkpoint(path_to_checkpoint, download_url):
     os.makedirs(os.path.dirname(path_to_checkpoint), exist_ok=True)
