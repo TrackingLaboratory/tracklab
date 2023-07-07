@@ -4,7 +4,7 @@ from abc import abstractmethod
 import pandas as pd
 from torch.utils.data import DataLoader
 
-from pbtrack.engine import TrackingEngine, EngineDatapipe
+from pbtrack.datastruct import EngineDatapipe
 from pbtrack.utils.cv2 import cv2_load_image
 from pbtrack.pipeline import Module
 
@@ -28,7 +28,7 @@ class Tracker(Module):
         self._datapipe = None
 
     def process_video(
-        self, detections: pd.DataFrame, imgs_meta: pd.DataFrame, engine: TrackingEngine
+        self, detections: pd.DataFrame, imgs_meta: pd.DataFrame, engine: "TrackingEngine"
     ) -> pd.DataFrame:
         for image_id in imgs_meta.index:
             image = cv2_load_image(imgs_meta.loc[image_id].file_path)

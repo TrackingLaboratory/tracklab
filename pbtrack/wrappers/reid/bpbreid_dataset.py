@@ -12,7 +12,7 @@ from skimage.transform import resize
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from pbtrack.engine import EngineDatapipe
+from pbtrack.datastruct import EngineDatapipe
 from pbtrack.datastruct import TrackingDataset
 # FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
 from pbtrack.utils.coordinates import rescale_keypoints

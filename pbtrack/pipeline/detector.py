@@ -3,12 +3,12 @@ from abc import abstractmethod
 
 import pandas as pd
 
-from pbtrack.pipeline import Module
-from pbtrack.engine import TrackingEngine
+from . import Module
+# from ..engine import TrackingEngine
 
 from torch.utils.data.dataloader import default_collate, DataLoader
 
-from pbtrack.engine.datapipe import EngineDatapipe
+from pbtrack.datastruct import EngineDatapipe
 
 
 class MultiDetector(Module):
@@ -71,7 +71,7 @@ class MultiDetector(Module):
             self._datapipe = EngineDatapipe(self, first=True)
         return self._datapipe
 
-    def dataloader(self, engine: TrackingEngine):
+    def dataloader(self, engine: "TrackingEngine"):
         datapipe = self.datapipe
         return DataLoader(
             dataset=datapipe,
@@ -94,7 +94,7 @@ class SingleDetector(Module):
     output_columns = ["keypoints_xyc", "keypoints_conf"]
 
     @abstractmethod
-    def __init__(self, cfg, device, batch_size):
+    def __init__(self, device, batch_size, cfg=None):
         """Init function
         Args:
             cfg (NameSpace): configuration file from Hydra for the detector
@@ -140,7 +140,7 @@ class SingleDetector(Module):
             self._datapipe = EngineDatapipe(self)
         return self._datapipe
 
-    def dataloader(self, engine: TrackingEngine):
+    def dataloader(self, engine: "TrackingEngine"):
         datapipe = self.datapipe
         return DataLoader(
             dataset=datapipe,

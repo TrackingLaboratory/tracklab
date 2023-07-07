@@ -11,7 +11,7 @@ from hydra import initialize_config_dir as init_hydra, compose
 from hydra.utils import instantiate
 from hydra.core.utils import configure_log
 
-from pbtrack import TrackerState
+from pbtrack.datastruct import TrackerState
 
 TrackEngine = namedtuple(
     "TrackEngine", ["cfg", "engine", "state", "evaluator", "dataset"]

@@ -45,7 +45,7 @@ def merge_dataframes(main_df, appended_piece):
 class TrackingEngine(ABC):
     """Manages the full tracking pipeline.
 
-    After initializing the ``TrackingEngine``, users should call ``track_dataset``
+    After initializing the :class:`TrackingEngine`, users should call :class:`track_dataset`
     which will track each video in turn. The call stack looks like :
 
     track_dataset
@@ -54,12 +54,14 @@ class TrackingEngine(ABC):
     |
     -> detect_multi_step -> detect_single_step -> reid_step -> track_step
 
-    Implementors of ``TrackingEngine`` will need to *at least* implement ``video_step``.
+    Implementors of :class:`TrackingEngine` will need to *at least* implement
+    :func:`video_loop`.
     for example, an online engine will simply call each step in turn for every image in
     a video. An offline engine might instead call each step for all the images before
     doing the next step in the pipeline.
 
     You should take care to implement the different callback hooks, by calling::
+
         self.fabric.call("a_callback_function", *args, **kwargs)
 
     Args:

@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 import pbtrack
 from pbtrack.utils.collate import default_collate
 from pbtrack.pipeline import Module
-from pbtrack.engine import TrackingEngine, EngineDatapipe
+from pbtrack.datastruct import EngineDatapipe
 
 
 class ReIdentifier(Module):
@@ -66,7 +66,7 @@ class ReIdentifier(Module):
             self._datapipe = EngineDatapipe(self)
         return self._datapipe
 
-    def dataloader(self, engine: TrackingEngine):
+    def dataloader(self, engine: "pbtrack.engine.TrackingEngine"):
         datapipe = self.datapipe
         return DataLoader(
             dataset=datapipe,

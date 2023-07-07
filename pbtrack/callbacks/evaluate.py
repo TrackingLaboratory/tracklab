@@ -1,4 +1,4 @@
-from pbtrack import Evaluator
+from pbtrack.core import Evaluator
 from pbtrack.callbacks import Callback
 from pbtrack.engine import TrackingEngine
 
