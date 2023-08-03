@@ -22,9 +22,12 @@ class IgnoredRegions(Callback):
             lambda x: self.mark_ignored(x, image_metadatas), axis=1
         ))
         """
-        detections["ignored"] = detections.apply(
-            lambda x: self.mark_ignored(x, image_metadatas), axis=1
-        )
+        if len(detections):
+            detections["ignored"] = detections.apply(
+                lambda x: self.mark_ignored(x, image_metadatas), axis=1
+            )
+        else:
+            detections["ignored"] = pd.NA
 
     def __init__(self, max_intersection=0.9):
         self.max_intersection = max_intersection
