@@ -24,6 +24,8 @@ def collate_fn(batch):
 
 class YOLOv8Pose(MultiDetector):
     collate_fn = collate_fn
+    output_columns = ["image_id", "id", "video_id", "category_id",
+                      "bbox_ltwh", "bbox_conf", "keypoints_xyc", "keypoints_conf"]
 
     def __init__(self, cfg, device, batch_size):
         super().__init__(cfg, device, batch_size)
