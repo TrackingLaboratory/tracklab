@@ -47,10 +47,10 @@ class YOLOv8Pose(MultiDetector):
         results_by_image = self.model(images)
         detections = []
         for results, shape, (_, metadata) in zip(
-            results_by_image, shapes, metadatas.iterrows()
+                results_by_image, shapes, metadatas.iterrows()
         ):
             for bbox, keypoints in zip(
-                results.boxes.cpu().numpy(), results.keypoints.cpu().numpy()
+                    results.boxes.cpu().numpy(), results.keypoints.cpu().numpy()
             ):
                 if bbox.cls == 0 and bbox.conf >= self.cfg.min_confidence:
                     detections.append(
@@ -61,8 +61,8 @@ class YOLOv8Pose(MultiDetector):
                                 bbox_conf=bbox.conf[0],
                                 video_id=metadata.video_id,
                                 category_id=1,  # `person` class in posetrack
-                                keypoints_xyc=keypoints,
-                                keypoints_conf=np.mean(keypoints[:, 2], axis=0),
+                                keypoints_xyc=keypoints.data[0],
+                                keypoints_conf=np.mean(keypoints.data[0, :, 2], axis=0),
                             ),
                             name=self.id,
                         )

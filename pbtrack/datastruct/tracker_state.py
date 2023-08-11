@@ -18,17 +18,17 @@ log = logging.getLogger(__name__)
 
 class TrackerState(AbstractContextManager):
     def __init__(
-        self,
-        tracking_set: TrackingSet,
-        load_file=None,
-        json_file=None,  # TODO merge with above behavior
-        save_file=None,
-        load_from_groundtruth=False,
-        compression=zipfile.ZIP_STORED,
-        load_step=None,
-        save_step="tracker",
-        bbox_format=None,
-        modules=None,
+            self,
+            tracking_set: TrackingSet,
+            load_file=None,
+            json_file=None,  # TODO merge with above behavior
+            save_file=None,
+            load_from_groundtruth=False,
+            compression=zipfile.ZIP_STORED,
+            load_step=None,
+            save_step="tracker",
+            bbox_format=None,
+            modules=None,
     ):
         self.module_names = [module.name for module in modules]
         assert load_step in self.module_names + [None], \
@@ -75,7 +75,7 @@ class TrackerState(AbstractContextManager):
         # We consider here that detect_multi detects the bbox
         # and that detect_single detects the keypoints
         assert (
-            load_step != "reid"
+                load_step != "reid"
         ), "Cannot load from groundtruth in reid step. Can only load bboxes or keypoints"
         self.detections_pred = self.detections_gt.copy()
         if load_step == "multi_detector":
@@ -187,11 +187,11 @@ class TrackerState(AbstractContextManager):
         return super().__enter__()
 
     def on_video_loop_end(
-        self,
-        engine: "TrackingEngine",
-        video_metadata: pd.Series,
-        video_idx: int,
-        detections: pd.DataFrame,
+            self,
+            engine: "TrackingEngine",
+            video_metadata: pd.Series,
+            video_idx: int,
+            detections: pd.DataFrame,
     ):
         self.update(detections)
         self.save()
@@ -216,13 +216,13 @@ class TrackerState(AbstractContextManager):
         log.info(f"saving to {abspath(self.save_file)}")
         assert self.video_id is not None, "Save can only be called in a contextmanager"
         assert (
-            self.detections_pred is not None
+                self.detections_pred is not None
         ), "The detections_pred should not be empty when saving"
         if f"{self.video_id}.pkl" not in self.zf["save"].namelist():
             with self.zf["save"].open(f"{self.video_id}.pkl", "w") as fp:
                 detections_pred = self.detections_pred[
                     self.detections_pred.video_id == self.video_id
-                ]
+                    ]
                 pickle.dump(detections_pred, fp, protocol=pickle.DEFAULT_PROTOCOL)
         else:
             log.info(f"{self.video_id} already exists in {self.save_file} file")
@@ -237,7 +237,7 @@ class TrackerState(AbstractContextManager):
         if self.json_file is not None:
             return self.json_detections_pred[
                 self.json_detections_pred.video_id == self.video_id
-            ]
+                ]
         if self.load_from_groundtruth:
             return self.detections_pred[self.detections_pred.video_id == self.video_id]
         if self.load_file is None:
@@ -263,8 +263,8 @@ class TrackerState(AbstractContextManager):
                 self.zf[zf_type] = None
         self.video_id = None
 
-        self.detections_pred = self.detections_pred.drop(
-            columns=self.forget_columns,
-            errors="ignore"
-        )
-
+        if self.detections_pred is not None:
+            self.detections_pred = self.detections_pred.drop(
+                columns=self.forget_columns,
+                errors="ignore"
+            )
