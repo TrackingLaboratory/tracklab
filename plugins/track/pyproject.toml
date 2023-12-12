@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "track-bench-track"
+version = "1.0.1"
+description = ""
+authors = ["Vladimir Somers <vladimir.somers@uclouvain.be>", "Victor Joos <victor.joos@uclouvain.be>", "Baptiste Standaert <baptiste.standaert@uclouvain.be>"]
+packages = [
+    {include = "bot_sort"},
+    {include = "bpbreid_strong_sort"},
+    {include = "byte_track"},
+    {include = "deep_oc_sort"},
+    {include = "oc_sort"},
+    {include = "strong_sort"},
+]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
