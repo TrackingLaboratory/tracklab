@@ -4,7 +4,7 @@ import pandas as pd
 
 from pbtrack.pipeline import Tracker
 from pbtrack.utils.coordinates import ltrb_to_ltwh
-import plugins.track.oc_sort.ocsort as ocsort
+import oc_sort.ocsort as ocsort
 
 import logging
 

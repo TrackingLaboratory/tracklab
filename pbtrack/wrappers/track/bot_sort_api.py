@@ -5,7 +5,7 @@ from pathlib import Path
 
 from pbtrack.pipeline import Tracker
 from pbtrack.utils.coordinates import ltrb_to_ltwh
-import plugins.track.bot_sort.bot_sort as bot_sort
+import bot_sort.bot_sort as bot_sort
 
 import logging
 

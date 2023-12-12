@@ -4,7 +4,7 @@ import pandas as pd
 
 from pbtrack.pipeline import Tracker
 from pbtrack.utils.coordinates import ltrb_to_ltwh
-import plugins.track.byte_track.byte_tracker as byte_tracker
+import byte_track.byte_tracker as byte_tracker
 
 import logging
 
