@@ -2,15 +2,3 @@
 	path = plugins/reid/bpbreid
 	url = git@github.com:VlSomers/person-reid.git   # https://github.com/VlSomers/person-reid.git
 	branch = pbtrack
-[submodule "plugins/eval/poseval"]
-	path = plugins/eval/poseval
-	url = https://github.com/PbTrack/poseval.git
-	branch = pbtrack
-[submodule "plugins/detect/mmpose"]
-	path = plugins/detect/mmpose
-	url = https://github.com/PbTrack/mmpose.git
-	branch = pbtrack
-[submodule "plugins/detect/mmdetection"]
-	path = plugins/detect/mmdetection
-	url = https://github.com/PbTrack/mmdetection.git
-	branch = pbtrack
