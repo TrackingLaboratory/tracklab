@@ -6,6 +6,7 @@ from pbtrack.datastruct import TrackerState
 from pbtrack.pipeline import Pipeline
 from pbtrack.utils import wandb
 
+from pbtrack.wrappers import EasyOCR
 import logging
 
 os.environ["HYDRA_FULL_ERROR"] = "1"
@@ -39,8 +40,9 @@ def main(cfg):
         model_detect=None,  # FIXME
     )
     track_model = instantiate(cfg.track, device=device)
+    jn_model = instantiate(cfg.jn_detect, device=device)
     pipeline = Pipeline(
-        models=[detect_multi_model, detect_single_model, reid_model, track_model]
+        models=[detect_multi_model, detect_single_model, reid_model, track_model, jn_model],
     )
 
     evaluator = instantiate(cfg.eval)

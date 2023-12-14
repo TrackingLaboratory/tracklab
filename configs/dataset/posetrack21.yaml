@@ -3,8 +3,8 @@ defaults:
 
 _target_: pbtrack.wrappers.PoseTrack21
 
-dataset_path: ${data_dir}/PoseTrack21
-annotation_path: ${data_dir}/PoseTrack21/posetrack_data
+dataset_path: ${data_dir}/TinyPoseTrack21
+annotation_path: ${data_dir}/TinyPoseTrack21/posetrack_data
 
 ####### Interesting videos for PoseTrack21 #######
 #

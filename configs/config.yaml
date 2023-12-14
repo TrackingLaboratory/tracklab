@@ -10,9 +10,10 @@ defaults:
   - detect_single: hrnet_posetrack18
   - reid: bpbreid
   - track: bpbreid_strong_sort
+  - jn_detect: easyocr
 
-experiment_name: "???"
-data_dir: "???"
+experiment_name: "pbtrack"
+data_dir: "/globalscratch/users/a/b/abolfazl/PbTrack_files/dataset/"
 num_cores: 4
 
 train_detect: False
@@ -27,6 +28,6 @@ hydra:
   job:
     chdir: True
   run:
-    dir: "outputs/${experiment_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}"
+    dir: "/globalscratch/users/a/b/abolfazl/PbTrack_files/outputs/${experiment_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}"
   sweep:
     dir: "multirun_outputs/${experiment_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}"

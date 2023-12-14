@@ -18,7 +18,11 @@ class OfflineTrackingEngine(TrackingEngine):
             f"Inference will be composed of the following steps: {', '.join(x for x in self.module_names[start:])}"
         )
         model_names = self.module_names[start:]
+        # print('in offline.py, model_names: ', model_names)
         for model_name in model_names:
+            print('in offline.py, model_name: ', model_name)
+            # print('in offline.py, self.datapipes: ', self.datapipes)
+            # print('in offline.py, len(detections): ', len(detections))
             self.datapipes[model_name].update(imgs_meta, detections)
             self.callback(
                 "on_task_start",
@@ -35,5 +39,7 @@ class OfflineTrackingEngine(TrackingEngine):
             self.callback("on_task_end", task=model_name, detections=detections)
             if detections.empty:
                 return detections
-
+        # print('in offline.py, detections: ', detections)
+        print('in offline.py, detections saved to detections.pkl')
+        detections.to_pickle('detections.pkl')
         return detections

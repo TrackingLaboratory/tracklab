@@ -37,7 +37,7 @@ cfg:
     name: "bpbreid"
     pretrained: True
     save_model_flag: True
-    load_weights: ""
+    load_weights: "/globalscratch/users/a/b/abolfazl/PbTrack_files/pretrained/job-35493841_85mAP_95r1_ta_model.pth.tar"
     bpbreid:
       pooling: "gwap" # ['gap', 'gmp', 'gwap', 'gwap2']
       normalization: "identity" # 'batch_norm_2d' 'identity'
@@ -53,7 +53,7 @@ cfg:
       test_embeddings: ["bn_foreg", "parts"] #  ['globl', 'foreg', 'conct', 'parts']
       test_use_target_segmentation: "none" # 'none' 'hard' 'soft'
       shared_parts_id_classifier: False
-      hrnet_pretrained_path: "" # FIXME refactor model loading (use urls)
+      hrnet_pretrained_path: "/globalscratch/users/a/b/abolfazl/PbTrack_files/pretrained" # FIXME refactor model loading (use urls)
       masks:
         type: "disk"
         dir: "${.....dataset.masks_mode}" # relative import, with a lot of indirection
