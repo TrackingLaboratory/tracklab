@@ -1,0 +1,8 @@
+numpy
+Pillow
+pytest
+scipy
+Shapely
+sparse
+xmltodict
+lap # for eval/mot
