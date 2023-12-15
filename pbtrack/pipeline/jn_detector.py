@@ -3,7 +3,7 @@ from abc import abstractmethod
 
 import pandas as pd
 
-from . import PersonAtts, Module
+from . import Module
 from pbtrack.utils.cv2 import cv2_load_image
 from ..engine import TrackingEngine
 
