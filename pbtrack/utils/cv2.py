@@ -36,8 +36,6 @@ def cv2_load_image(file_path):
 
 def crop_bbox_ltwh(img, bbox):
     bbox = np.array(bbox).astype(int)
-    print('in cv2.py, bbox: ', bbox)
-    print('in cv2.py, bbox.shape: ', bbox.shape)
     img = img[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0]+bbox[2]]
     return img
     
