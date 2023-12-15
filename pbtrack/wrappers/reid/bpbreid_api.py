@@ -13,35 +13,30 @@ from pbtrack.utils.cv2 import cv2_load_image
 # FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
 from pbtrack.utils.coordinates import rescale_keypoints
 
-from plugins.reid.bpbreid.scripts.main import build_config, build_torchreid_model_engine
-from plugins.reid.bpbreid.tools.feature_extractor import FeatureExtractor
-from plugins.reid.bpbreid.torchreid.utils.imagetools import (
+from torchreid.scripts.main import build_config, build_torchreid_model_engine
+from torchreid.tools.feature_extractor import FeatureExtractor
+from torchreid.utils.imagetools import (
     build_gaussian_heatmaps,
-    build_gaussian_body_part_heatmaps,
-    keypoints_to_body_part_visibility_scores,
 )
 from pbtrack.utils.collate import Unbatchable
 
 import pbtrack
 from pathlib import Path
 
-root_dir = Path(pbtrack.__file__).parents[1]
-sys.path.append(str((root_dir / "plugins/reid/bpbreid").resolve()))  # FIXME : ugly
-sys.path.append(str((root_dir / "plugins/reid").resolve()))  # FIXME : ugly
 
 import torchreid
 from torch.nn import functional as F
-from plugins.reid.bpbreid.torchreid.utils.tools import extract_test_embeddings
-from plugins.reid.bpbreid.torchreid.data.masks_transforms import (
+from torchreid.data.masks_transforms import (
     CocoToSixBodyMasks,
     masks_preprocess_transforms,
 )
+from torchreid.utils.tools import extract_test_embeddings
 from torchreid.data.datasets import configure_dataset_class
 
 # need that line to not break import of torchreid ('from torchreid... import ...') inside the bpbreid.torchreid module
 # to remove the 'from torchreid... import ...' error 'Unresolved reference 'torchreid' in PyCharm, right click
 # on 'bpbreid' folder, then choose 'Mark Directory as' -> 'Sources root'
-from bpbreid.scripts.default_config import engine_run_kwargs
+from torchreid.scripts.default_config import engine_run_kwargs
 
 
 class BPBReId(ReIdentifier):
@@ -97,7 +92,7 @@ class BPBReId(ReIdentifier):
         self.cfg.data.save_dir = save_path
         self.cfg.project.job_id = job_id
         self.cfg.use_gpu = torch.cuda.is_available()
-        self.cfg = build_config(config_file=self.cfg)
+        self.cfg = build_config(config=self.cfg)
         self.test_embeddings = self.cfg.model.bpbreid.test_embeddings
         # Register the PoseTrack21ReID dataset to Torchreid that will be instantiated when building Torchreid engine.
         self.training_enabled = not self.cfg.test.evaluate
@@ -133,24 +128,10 @@ class BPBReId(ReIdentifier):
                 pixels_parts_probabilities = build_gaussian_heatmaps(
                     kp_xyc_mask, mask_w, mask_h
                 )
-            elif self.dataset_cfg.masks_mode == "gaussian_joints":
-                pixels_parts_probabilities = build_gaussian_body_part_heatmaps(
-                    kp_xyc_mask, mask_w, mask_h
-                )
             else:
                 raise NotImplementedError
             batch["masks"] = pixels_parts_probabilities
 
-        if self.use_keypoints_visibility_scores_for_reid:
-            visibility_score = keypoints_to_body_part_visibility_scores(
-                detection.keypoints_xyc
-            )
-            visibility_score = (
-                self.coco_transform.coco_joints_to_body_part_visibility_scores(
-                    visibility_score
-                )
-            )
-            batch["visibility_scores"] = visibility_score
         return batch
 
     @torch.no_grad()

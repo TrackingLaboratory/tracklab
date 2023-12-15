@@ -1,4 +1,4 @@
-_target_: pbtrack.wrappers.OpenPifPaf
+_target_: pbtrack.wrappers.detect_multiple.openpifpaf_api.OpenPifPaf
 
 cfg:
   predict:

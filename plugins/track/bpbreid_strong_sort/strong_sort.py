@@ -67,7 +67,7 @@ class StrongSORT(object):
         detections = [
             Detection(
                 ids[i].cpu().detach().numpy(),
-                np.asarray(bbox_ltwh[i].cpu().detach().numpy(), dtype=np.float),
+                np.asarray(bbox_ltwh[i].cpu().detach().numpy(), dtype=float),
                 conf.cpu().detach().numpy(),
                 {
                     "reid_features": np.asarray(

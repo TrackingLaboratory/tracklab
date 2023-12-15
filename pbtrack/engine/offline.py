@@ -1,6 +1,7 @@
 import logging
 
 from pbtrack.engine import TrackingEngine
+from pbtrack.utils.cv2 import cv2_load_image
 
 log = logging.getLogger(__name__)
 
@@ -12,6 +13,7 @@ class OfflineTrackingEngine(TrackingEngine):
                 model.reset()
 
         imgs_meta = self.img_metadatas[self.img_metadatas.video_id == video_id]
+        images = {idx: cv2_load_image(fn) for idx, fn in imgs_meta["file_path"].items()}
         detections = tracker_state.load()
         start = tracker_state.load_index
         log.info(
@@ -19,7 +21,7 @@ class OfflineTrackingEngine(TrackingEngine):
         )
         model_names = self.module_names[start:]
         for model_name in model_names:
-            self.datapipes[model_name].update(imgs_meta, detections)
+            self.datapipes[model_name].update(images, imgs_meta, detections)
             self.callback(
                 "on_task_start",
                 task=model_name,

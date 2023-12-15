@@ -1,5 +1,8 @@
 from typing import Mapping, Sequence
-import wandb
+try:
+    import wandb
+except:
+    pass
 from omegaconf import OmegaConf
 import pandas as pd
 

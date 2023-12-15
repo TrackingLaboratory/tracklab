@@ -20,13 +20,10 @@ from pbtrack.utils.coordinates import rescale_keypoints
 from pbtrack.utils.cv2 import overlay_heatmap
 import pbtrack
 
-root_dir = Path(pbtrack.__file__).parents[1]
-sys.path.append(str((root_dir / "plugins/reid/bpbreid").resolve()))  # FIXME : ugly
 from torchreid.data import ImageDataset
 from torchreid.utils.imagetools import (
     gkern,
     build_gaussian_heatmaps,
-    build_gaussian_body_part_heatmaps,
 )
 import logging
 

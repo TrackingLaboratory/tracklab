@@ -8,9 +8,10 @@ from pbtrack.utils.coordinates import ltrb_to_ltwh
 from pbtrack.utils.openmmlab import get_checkpoint
 
 import mmcv
-from mmcv.parallel import collate, scatter
+from mmengine.dataset.utils import default_collate as collate
+# from mmcv.parallel import collate, scatter
 from mmdet.apis import init_detector
-from mmdet.datasets import replace_ImageToTensor
+from mmengine.dataset.utils import replace_ImageToTensor
 from mmdet.datasets.pipelines import Compose
 
 import logging
@@ -36,7 +37,7 @@ class MMDetection(MultiDetector):
         cfg = cfg.copy()  # FIXME check if needed
         # set loading pipeline type
         cfg.data.test.pipeline[0].type = "LoadImageFromWebcam"
-        cfg.data.test.pipeline = replace_ImageToTensor(cfg.data.test.pipeline)
+        # cfg.data.test.pipeline = replace_ImageToTensor(cfg.data.test.pipeline)
         self.test_pipeline = Compose(cfg.data.test.pipeline)
 
     @torch.no_grad()
@@ -52,7 +53,7 @@ class MMDetection(MultiDetector):
         # just get the actual data from DataContainer
         batch["img_metas"] = [img_metas.data[0] for img_metas in batch["img_metas"]]
         batch["img"] = [img.data[0] for img in batch["img"]]
-        batch = scatter(batch, [self.device])[0]
+        batch = batch.to(self.device)
         results = self.model(return_loss=False, rescale=True, **batch)
         shapes = [(x["ori_shape"][1], x["ori_shape"][0]) for x in batch["img_metas"][0]]
         detections = []

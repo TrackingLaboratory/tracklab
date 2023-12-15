@@ -6,10 +6,10 @@ defaults:
   - machine: local
   - state: no_save
   - visualization: save_videos
-  - detect_multiple: yolox
-  - detect_single: hrnet_posetrack18
+  - detect_multiple: openpifpaf
+  - detect_single: skip
   - reid: bpbreid
-  - track: bpbreid_strong_sort
+  - track: oc_sort
 
 experiment_name: "???"
 data_dir: "???"
