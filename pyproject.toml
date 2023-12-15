@@ -22,8 +22,8 @@ sphinx = "^7.2"
 sphinx_rtd_theme = "^2.0"
 myst-parser = "^2.0"
 filterpy = "^1.4.5"
-torch = {version = "1.13.1+cu117", source = "pytorch"}
-torchvision = {version = "0.14.1+cu117", source = "pytorch"}
+torch = {version = "1.13.1", source = "pytorch"}
+torchvision = {version = "0.14.1", source = "pytorch"}
 mmdet = "^3.2.0"
 chumpy = "0.66"
 mmpose = {git = "https://github.com/PbTrack/mmpose", rev = "pbtrack", develop = true}
