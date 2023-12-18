@@ -47,7 +47,7 @@ Here's what makes PbTrack different from other existing tracking frameworks:
 ### Clone the repository
 
 ```bash
-git clone https://github.com/PbTrack/TrackBench.git --recurse-submodules
+git clone -b soccernet https://github.com/PbTrack/pb-track.git pbtrack-soccernet --recurse-submodules
 cd pb-track
 ```
 
