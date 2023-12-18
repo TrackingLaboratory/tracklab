@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 
 from pbtrack.pipeline import Tracker
+from pbtrack.pipeline.imagelevel_module import ImageLevelModule
 from pbtrack.utils.coordinates import ltrb_to_ltwh
 import oc_sort.ocsort as ocsort
 
@@ -11,7 +12,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class OCSORT(Tracker):
+class OCSORT(ImageLevelModule):
     input_columns = [
         "bbox_ltwh",
         "bbox_conf",
@@ -19,9 +20,10 @@ class OCSORT(Tracker):
     ]
     output_columns = ["track_id", "track_bbox_ltwh", "track_bbox_conf"]
 
-    def __init__(self, cfg, device, batch_size):
-        super().__init__(cfg, device, batch_size)
+    def __init__(self, cfg, device):
+        super().__init__(batch_size=1)  # Fixed batch size of 1 for trackers
         self.cfg = cfg
+        self.device = device
         self.reset()
 
     def reset(self):
@@ -29,20 +31,27 @@ class OCSORT(Tracker):
         self.model = ocsort.OCSort(**self.cfg.hyperparams)
 
     @torch.no_grad()
-    def preprocess(self, detection: pd.Series, metadata: pd.Series):
-        ltrb = detection.bbox.ltrb()
-        conf = detection.bbox.conf()
-        cls = detection.category_id
-        pbtrack_id = detection.name
+    def preprocess(self, image, detections: pd.DataFrame, metadata: pd.Series):
+        processed_detections = []
+        if len(detections) == 0:
+            return {"input": []}
+        for det_id, detection in detections.iterrows():
+            ltrb = detection.bbox.ltrb()
+            conf = detection.bbox.conf()
+            cls = detection.category_id
+            pbtrack_id = detection.name
+            processed_detections.append(
+                np.array([*ltrb, conf, cls, pbtrack_id])
+            )
         return {
-            "input": np.array(
-                [ltrb[0], ltrb[1], ltrb[2], ltrb[3], conf, cls, pbtrack_id]
-            ),
+            "input": np.stack(processed_detections),
         }
 
     @torch.no_grad()
-    def process(self, batch, image, detections: pd.DataFrame):
-        inputs = batch["input"]  # Nx7 [l,t,r,b,conf,class,pbtrack_id]
+    def process(self, batch, detections: pd.DataFrame, metadatas: pd.DataFrame):
+        if len(detections) == 0:
+            return []
+        inputs = batch["input"][0]  # Nx7 [l,t,r,b,conf,class,pbtrack_id]
         inputs = inputs[inputs[:, 4] > self.cfg.min_confidence]
         results = self.model.update(inputs, None)
         results = np.asarray(results)  # N'x8 [l,t,r,b,track_id,class,conf,idx]

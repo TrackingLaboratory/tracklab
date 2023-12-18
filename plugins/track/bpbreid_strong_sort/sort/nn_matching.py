@@ -2,8 +2,8 @@
 import numpy as np
 import torch
 
-from bpbreid.torchreid.metrics import compute_distance_matrix
-from bpbreid.torchreid.metrics.distance import compute_distance_matrix_using_bp_features
+from torchreid.metrics import compute_distance_matrix
+from torchreid.metrics.distance import compute_distance_matrix_using_bp_features
 from torch.nn import functional as F
 
 def _pdist(a, b):
@@ -126,7 +126,6 @@ def _nn_part_based(y, x, normalize_features=True):
                                                           y_visibility_scores.unsqueeze(0),
                                                           x_visibility_scores,
                                                           use_gpu=False,
-                                                          use_logger=False
                                                           )
     distances = distances[0] / 2    # When feature are normalized, the above function returns distances within [0, 2]
     # TODO handle invalid distances

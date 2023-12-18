@@ -10,5 +10,4 @@ reid:
   batch_size: 32
   device: "${..device}"
 track:
-  batch_size: null
   device: "${..device}"

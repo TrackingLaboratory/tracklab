@@ -12,6 +12,7 @@ from pbtrack.pipeline import ReIdentifier
 from pbtrack.utils.cv2 import cv2_load_image
 # FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
 from pbtrack.utils.coordinates import rescale_keypoints
+from pbtrack.utils.collate import default_collate
 
 from torchreid.scripts.main import build_config, build_torchreid_model_engine
 from torchreid.tools.feature_extractor import FeatureExtractor
@@ -38,8 +39,10 @@ from torchreid.data.datasets import configure_dataset_class
 # on 'bpbreid' folder, then choose 'Mark Directory as' -> 'Sources root'
 from torchreid.scripts.default_config import engine_run_kwargs
 
+from ...pipeline.detectionlevel_module import DetectionLevelModule
 
-class BPBReId(ReIdentifier):
+
+class BPBReId(DetectionLevelModule):
     """
     TODO:
         why bbox move after strong_sort?
@@ -51,6 +54,7 @@ class BPBReId(ReIdentifier):
         wandb support
     """
 
+    collate_fn = default_collate
     input_columns = ["bbox_ltwh", "bbox_conf", "keypoints_xyc"]
     output_columns = ["embeddings", "visibility_scores", "body_masks"]
 
@@ -66,7 +70,9 @@ class BPBReId(ReIdentifier):
         use_keypoints_visibility_scores_for_reid,
         batch_size,
     ):
-        super().__init__(cfg, device, batch_size)
+        super().__init__(batch_size)
+        self.cfg = cfg
+        self.device = device
         tracking_dataset.name = dataset.name
         tracking_dataset.nickname = dataset.nickname
         self.dataset_cfg = dataset
@@ -104,10 +110,9 @@ class BPBReId(ReIdentifier):
 
     @torch.no_grad()
     def preprocess(
-        self, detection: pd.Series, metadata: pd.Series
+        self, image, detection: pd.Series, metadata: pd.Series
     ):  # Tensor RGB (1, 3, H, W)
         mask_w, mask_h = 32, 64
-        image = cv2_load_image(metadata.file_path)
         l, t, r, b = detection.bbox.ltrb(
             image_shape=(image.shape[1], image.shape[0]), rounded=True
         )
@@ -135,7 +140,7 @@ class BPBReId(ReIdentifier):
         return batch
 
     @torch.no_grad()
-    def process(self, batch, detections: pd.DataFrame):
+    def process(self, batch, detections: pd.DataFrame, metadatas: pd.DataFrame):
         im_crops = batch["img"]
         im_crops = [im_crop.cpu().detach().numpy() for im_crop in im_crops]
         if "masks" in batch:

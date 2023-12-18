@@ -1,3 +1,4 @@
+import argparse
 import sys
 import torch
 import numpy as np
@@ -8,6 +9,7 @@ from omegaconf.listconfig import ListConfig
 import openpifpaf
 
 from pbtrack.pipeline import MultiDetector
+from pbtrack.pipeline.imagelevel_module import ImageLevelModule
 from pbtrack.utils.cv2 import cv2_load_image
 from pbtrack.utils.coordinates import sanitize_keypoints, generate_bbox_from_keypoints
 
@@ -29,8 +31,9 @@ def collate_images_anns_meta(batch):
     return idxs, (processed_images, anns, metas)
 
 
-class OpenPifPaf(MultiDetector):
+class OpenPifPaf(ImageLevelModule):
     collate_fn = collate_images_anns_meta
+    input_columns = []
     output_columns = [
         "image_id",
         "id",
@@ -43,13 +46,15 @@ class OpenPifPaf(MultiDetector):
     ]
 
     def __init__(self, cfg, device, batch_size):
-        super().__init__(cfg, device, batch_size)
+        super().__init__(batch_size)
+        self.cfg = cfg
+        self.device = device
         self.id = 0
 
         if cfg.predict.checkpoint:
             old_argv = sys.argv
             sys.argv = self._hydra_to_argv(cfg.predict)
-            openpifpaf.predict.pbtrack_cli()
+            pbtrack_cli()
             predictor = openpifpaf.Predictor()
             sys.argv = old_argv
 
@@ -61,15 +66,15 @@ class OpenPifPaf(MultiDetector):
             )
 
     @torch.no_grad()
-    def preprocess(self, metadata: pd.Series):
-        image = Image.fromarray(cv2_load_image(metadata.file_path))
+    def preprocess(self, image, detections: pd.DataFrame, metadata: pd.Series):
+        image = Image.fromarray(image)
         processed_image, anns, meta = self.pifpaf_preprocess(image, [], {})
         return processed_image, anns, meta
 
     @torch.no_grad()
-    def process(self, batch, metadatas: pd.DataFrame, return_fields=False):
+    def process(self, batch, detections: pd.DataFrame, metadatas: pd.DataFrame):
         processed_image_batch, _, metas = batch
-        pred_batch, fields_batch = self.processor.batch(
+        pred_batch = self.processor.batch(
             self.model, processed_image_batch, device=self.device
         )
         detections = []
@@ -99,10 +104,8 @@ class OpenPifPaf(MultiDetector):
                     )
                 )
                 self.id += 1
-        if return_fields:
-            return detections, fields_batch
-        else:
-            return detections
+
+        return detections
 
     def train(self):
         old_argv = sys.argv
@@ -136,3 +139,45 @@ class OpenPifPaf(MultiDetector):
             else:
                 new_argv.append(new_arg)
         return new_argv
+
+
+from openpifpaf import decoder, logger, network, show, visualizer
+
+def pbtrack_cli(): # for pbtrack integration
+    parser = argparse.ArgumentParser(
+        prog='python3 -m openpifpaf.predict',
+        usage='%(prog)s [options] images',
+        description=__doc__,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument('--version', action='version',
+                        version='OpenPifPaf {version}'.format(version=openpifpaf.__version__))
+
+    decoder.cli(parser)
+    logger.cli(parser)
+    network.Factory.cli(parser)
+    openpifpaf.Predictor.cli(parser)
+
+    parser.add_argument('--json-output', default=None, nargs='?', const=True,
+                        help='Whether to output a json file, '
+                             'with the option to specify the output path or directory')
+    parser.add_argument('--disable-cuda', action='store_true',
+                        help='disable CUDA')
+    args = parser.parse_args()
+
+    logger.configure(args, log)  # logger first
+
+    # add args.device
+    args.device = torch.device('cpu')
+    args.pin_memory = False
+    if not args.disable_cuda and torch.cuda.is_available():
+        args.device = torch.device('cuda')
+        args.pin_memory = True
+    log.info('neural network device: %s (CUDA available: %s, count: %d)',
+             args.device, torch.cuda.is_available(), torch.cuda.device_count())
+
+    decoder.configure(args)
+    network.Factory.configure(args)
+    openpifpaf.Predictor.configure(args)
+
+    return args

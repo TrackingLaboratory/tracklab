@@ -1,5 +1,5 @@
 import re
-from abc import ABC
+from abc import ABC, ABCMeta
 from typing import List
 
 import logging
@@ -7,16 +7,34 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class Module(ABC):
+class MetaModule(ABCMeta):
+    @property
+    def name(cls):
+        name = cls.__name__
+        return name  # re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+
+    @property
+    def level(cls):
+        name = cls.__bases__[0].__name__
+        name = re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+        return name.split("_")[0]
+
+
+class Module(metaclass=ABCMeta):
     input_columns = None
     output_columns = None
     forget_columns = []
 
     @property
     def name(self):
+        name = self.__class__.__name__
+        return name  # re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+
+    @property
+    def level(self):
         name = self.__class__.__bases__[0].__name__
-        name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+        name = re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+        return name.split("_")[0]
 
     def validate_input(self, dataframe):
         assert self.input_columns is not None, "Every model should define its inputs"
@@ -51,6 +69,9 @@ class Pipeline:
                     f"needed {model.input_columns}, provided {columns}"
                 )
             columns.update(model.output_columns)
+
+    def __str__(self):
+        return " -> ".join(model.name for model in self.models)
 
     def __getitem__(self, item: int):
         return self.models[item]
