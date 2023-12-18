@@ -30,31 +30,22 @@ def main(cfg):
 
     # Initiate all the instances
     tracking_dataset = instantiate(cfg.dataset)
-    detect_multi_model = instantiate(cfg.detect_multiple, device=device)
-    detect_single_model = instantiate(cfg.detect_single, device=device)
-    reid_model = instantiate(
-        cfg.reid,
-        tracking_dataset=tracking_dataset,
-        device=device,
-        model_detect=None,  # FIXME
-    )
-    track_model = instantiate(cfg.track, device=device)
-    pipeline = Pipeline(
-        models=[detect_multi_model, detect_single_model, reid_model, track_model]
-    )
+    modules = []
+    for name, module in cfg.modules.items():
+        inst_module = instantiate(module, device=device, tracking_dataset=tracking_dataset)
+        modules.append(inst_module)
+
+    pipeline = Pipeline(models=modules)
 
     evaluator = instantiate(cfg.eval)
 
     # FIXME, je pense qu'il faut repenser l'entrainement dans ce script
     # On peut pas entrainer 3 modèles dans un script quoi qu'il arrive
     # Il faut que l'entrainement soit fait dans un script propre à la librairie
-    if cfg.train_detect:
-        log.info("Training detection model.")
-        detect_multi_model.train()
-
-    if cfg.train_reid:
-        log.info("Training reid model.")
-        reid_model.train()
+    for module in modules:
+        if hasattr(module, "train"):
+            log.info(f"Not actually training {module.name}")
+            pass  # FIXME : really train if they want
 
     if cfg.test_tracking:
         log.info(f"Starting tracking operation on {cfg.eval.test_set} set.")

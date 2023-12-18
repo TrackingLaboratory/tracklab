@@ -1,13 +1,11 @@
 # @package _global_
 device: "cuda"
-detect_multiple:
-  batch_size: 8
-  device: "${..device}"
-detect_single:
-  batch_size: 32
-  device: "${..device}"
-reid:
-  batch_size: 32
-  device: "${..device}"
-track:
-  device: "${..device}"
+modules:
+  pose_bottomup:
+    batch_size: 8
+    device: "${..device}"
+  reid:
+    batch_size: 4
+    device: "${..device}"
+  track:
+    device: "${..device}"

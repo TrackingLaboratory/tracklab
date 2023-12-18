@@ -20,7 +20,7 @@ class OCSORT(ImageLevelModule):
     ]
     output_columns = ["track_id", "track_bbox_ltwh", "track_bbox_conf"]
 
-    def __init__(self, cfg, device):
+    def __init__(self, cfg, device, **kwargs):
         super().__init__(batch_size=1)  # Fixed batch size of 1 for trackers
         self.cfg = cfg
         self.device = device

@@ -45,7 +45,7 @@ class OpenPifPaf(ImageLevelModule):
         "keypoints_conf",
     ]
 
-    def __init__(self, cfg, device, batch_size):
+    def __init__(self, cfg, device, batch_size, **kwargs):
         super().__init__(batch_size)
         self.cfg = cfg
         self.device = device

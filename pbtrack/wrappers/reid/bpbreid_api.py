@@ -65,7 +65,6 @@ class BPBReId(DetectionLevelModule):
         dataset,
         device,
         save_path,
-        model_detect,
         job_id,
         use_keypoints_visibility_scores_for_reid,
         batch_size,
@@ -84,7 +83,7 @@ class BPBReId(DetectionLevelModule):
         additional_args = {
             "tracking_dataset": tracking_dataset,
             "reid_config": self.dataset_cfg,
-            "pose_model": model_detect,
+            "pose_model": None,
         }
         torchreid.data.register_image_dataset(
             tracking_dataset.name,
