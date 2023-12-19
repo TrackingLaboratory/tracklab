@@ -1,7 +1,0 @@
-defaults:
-  - default
-
-_target_: pbtrack.wrappers.SoccerNet2023
-
-dataset_path: ${data_dir}/SoccerNet2023
-annotation_path: ${data_dir}/SoccerNet2023

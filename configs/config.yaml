@@ -1,12 +1,12 @@
 defaults:
   - _self_
-  - dataset: posetrack21
-  - eval: posetrack21
+  - dataset: soccernet_mot
+  - eval: soccernet_mot
   - engine: offline
   - machine: local
   - state: no_save
   - visualization: save_videos
-  - modules/pose_bottomup: openpifpaf
+  - modules/pose_bottomup: yolov8
   - modules/reid: bpbreid
   - modules/track: oc_sort
 

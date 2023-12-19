@@ -1,11 +1,13 @@
 # @package _global_
 device: "cuda"
+
+# /!\ increase batch size below for faster inference
 modules:
   pose_bottomup:
-    batch_size: 8
+    batch_size: 16
     device: "${..device}"
   reid:
-    batch_size: 4
+    batch_size: 64
     device: "${..device}"
   track:
     device: "${..device}"
