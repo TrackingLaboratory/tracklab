@@ -2,6 +2,8 @@ import os
 import torch
 import hydra
 from hydra.utils import instantiate
+from omegaconf import OmegaConf
+
 from pbtrack.datastruct import TrackerState
 from pbtrack.pipeline import Pipeline
 from pbtrack.utils import wandb
@@ -27,6 +29,8 @@ def main(cfg):
     log.info(f"Using device: '{device}'.")
 
     wandb.init(cfg)
+    if cfg.print_config:
+        log.info(OmegaConf.to_yaml(cfg))
 
     # Initiate all the instances
     tracking_dataset = instantiate(cfg.dataset)

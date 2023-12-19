@@ -18,6 +18,7 @@ train_detect: False
 train_reid: False
 test_tracking: True
 use_wandb: False
+print_config: True
 
 # configure Hydra to use the current working directory
 # and set up the output directory according to experiment_name
