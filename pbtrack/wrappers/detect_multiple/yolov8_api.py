@@ -1,7 +1,9 @@
 import os
 import torch
-import numpy as np
 import pandas as pd
+
+from typing import Any
+from pbtrack.pipeline.imagelevel_module import ImageLevelModule
 
 os.environ["YOLO_VERBOSE"] = "False"
 from ultralytics import YOLO
@@ -22,25 +24,28 @@ def collate_fn(batch):
     return idxs, (images, shapes)
 
 
-class YOLOv8(MultiDetector):
+class YOLOv8(ImageLevelModule):
     collate_fn = collate_fn
+    input_columns = []
+    output_columns = ["image_id", "id", "video_id", "category_id",
+                      "bbox_ltwh", "bbox_conf"]
 
-    def __init__(self, cfg, device, batch_size):
-        super().__init__(cfg, device, batch_size)
+    def __init__(self, cfg, device, batch_size, *args, **kwargs):
+        super().__init__(batch_size)
+        self.cfg = cfg
         self.model = YOLO(cfg.path_to_checkpoint)
         self.model.to(device)
         self.id = 0
 
     @torch.no_grad()
-    def preprocess(self, metadata: pd.Series):
-        image = cv2_load_image(metadata.file_path)
+    def preprocess(self, image, detections: pd.DataFrame, metadata: pd.Series):
         return {
             "image": image,
             "shape": (image.shape[1], image.shape[0]),
         }
 
     @torch.no_grad()
-    def process(self, batch, metadatas: pd.DataFrame):
+    def process(self, batch: Any, detections: pd.DataFrame, metadatas: pd.DataFrame):
         images, shapes = batch
         results_by_image = self.model(images)
         detections = []
