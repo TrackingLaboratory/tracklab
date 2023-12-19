@@ -178,7 +178,7 @@ class VisualizationEngine(Callback):
             )
 
         # keypoints, confidences, skeleton
-        if (is_prediction and self.cfg.prediction.draw_keypoints) or (
+        if "keypoints_xyc" in detection and (is_prediction and self.cfg.prediction.draw_keypoints) or (
             not is_prediction and self.cfg.ground_truth.draw_keypoints
         ):
             print_confidence = (
