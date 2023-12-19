@@ -1,1 +1,1 @@
-from .soccernet2023 import SoccerNet2023
+from .soccernet_mot import SoccerNetMOT

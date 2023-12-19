@@ -4,7 +4,7 @@ from pathlib import Path
 from pbtrack.datastruct import TrackingDataset, TrackingSet
 
 
-class SoccerNet2023(TrackingDataset):
+class SoccerNetMOT(TrackingDataset):
     def __init__(self, dataset_path: str, *args, **kwargs):
         self.dataset_path = Path(dataset_path)
         assert self.dataset_path.exists(), "'{}' directory does not exist".format(
@@ -12,9 +12,9 @@ class SoccerNet2023(TrackingDataset):
         )
 
         train_set = load_set(self.dataset_path / "train")
-        val_set = load_set(self.dataset_path / "val")
-        test_set = load_set(self.dataset_path / "test")
-        challenge_set = load_set(self.dataset_path / "challenge")
+        val_set = load_set(self.dataset_path / "test")
+        # test_set = load_set(self.dataset_path / "challenge")
+        test_set = None
 
         super().__init__(dataset_path, train_set, val_set, test_set, *args, **kwargs)
 
@@ -120,24 +120,28 @@ def load_set(dataset_path):
         video_metadata['categories'] = categories_set
 
     # Concatenate dataframes
-    video_metadatas = pd.DataFrame(video_metadatas_list)
+    video_metadata = pd.DataFrame(video_metadatas_list)
     image_metadata = pd.concat(image_metadata_list, ignore_index=True)
     detections = pd.concat(detections_list, ignore_index=True)
 
-    # Set 'id' column as the index in the detections and image dataframe
+    # Set 'id' column as the index   in the detections and image dataframe
     detections['id'] = detections.index
     image_metadata['id'] = image_metadata.index
 
+    detections.set_index("id", drop=True, inplace=True)
+    image_metadata.set_index("id", drop=True, inplace=True)
+    video_metadata.set_index("id", drop=True, inplace=True)
+
     # Reorder columns in dataframes
-    video_metadatas = video_metadatas[
-        ['id', 'name', 'nframes', 'frame_rate', 'seq_length', 'im_width', 'im_height', 'game_id', 'action_position',
+    video_metadata = video_metadata[
+        ['name', 'nframes', 'frame_rate', 'seq_length', 'im_width', 'im_height', 'game_id', 'action_position',
          'action_class', 'visibility', 'clip_start', 'game_time_start', 'clip_stop', 'game_time_stop', 'num_tracklets',
          'half_period_start', 'half_period_stop', 'categories']]
-    image_metadata = image_metadata[['id', 'video_id', 'frame', 'file_path']]
-    detections = detections[['id', 'image_id', 'video_id', 'track_id', 'person_id', 'bbox_ltwh', 'class', 'visibility']]
+    image_metadata = image_metadata[['video_id', 'frame', 'file_path']]
+    detections = detections[['image_id', 'video_id', 'track_id', 'person_id', 'bbox_ltwh', 'class', 'visibility']]
 
     return TrackingSet(
-        video_metadatas,
+        video_metadata,
         image_metadata,
         detections,
     )
