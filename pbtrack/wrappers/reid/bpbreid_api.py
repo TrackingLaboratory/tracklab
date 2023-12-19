@@ -1,44 +1,27 @@
-import sys
 import numpy as np
 import pandas as pd
 import torch
+import torchreid
 
 from omegaconf import OmegaConf
 from yacs.config import CfgNode as CN
-
 from .bpbreid_dataset import ReidDataset
-
-from pbtrack.pipeline import ReIdentifier
-from pbtrack.utils.cv2 import cv2_load_image
 # FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
 from pbtrack.utils.coordinates import rescale_keypoints
 from pbtrack.utils.collate import default_collate
-
-from torchreid.scripts.main import build_config, build_torchreid_model_engine
-from torchreid.tools.feature_extractor import FeatureExtractor
-from torchreid.utils.imagetools import (
-    build_gaussian_heatmaps,
-)
+from scripts.default_config import engine_run_kwargs
+from scripts.main import build_config, build_torchreid_model_engine
+from tools.feature_extractor import FeatureExtractor
+from torchreid.utils.imagetools import build_gaussian_heatmaps
 from pbtrack.utils.collate import Unbatchable
-
-import pbtrack
-from pathlib import Path
-
-
-import torchreid
-from torch.nn import functional as F
-from torchreid.data.masks_transforms import (
-    CocoToSixBodyMasks,
-    masks_preprocess_transforms,
-)
+from torchreid.data.masks_transforms import masks_preprocess_transforms
 from torchreid.utils.tools import extract_test_embeddings
 from torchreid.data.datasets import configure_dataset_class
 
 # need that line to not break import of torchreid ('from torchreid... import ...') inside the bpbreid.torchreid module
 # to remove the 'from torchreid... import ...' error 'Unresolved reference 'torchreid' in PyCharm, right click
 # on 'bpbreid' folder, then choose 'Mark Directory as' -> 'Sources root'
-from torchreid.scripts.default_config import engine_run_kwargs
-
+# from torchreid.scripts.default_config import engine_run_kwargs
 from ...pipeline.detectionlevel_module import DetectionLevelModule
 
 
@@ -55,7 +38,7 @@ class BPBReId(DetectionLevelModule):
     """
 
     collate_fn = default_collate
-    input_columns = ["bbox_ltwh", "bbox_conf", "keypoints_xyc"]
+    input_columns = ["bbox_ltwh"]
     output_columns = ["embeddings", "visibility_scores", "body_masks"]
 
     def __init__(
@@ -97,7 +80,7 @@ class BPBReId(DetectionLevelModule):
         self.cfg.data.save_dir = save_path
         self.cfg.project.job_id = job_id
         self.cfg.use_gpu = torch.cuda.is_available()
-        self.cfg = build_config(config=self.cfg)
+        self.cfg = build_config(config_file=self.cfg)
         self.test_embeddings = self.cfg.model.bpbreid.test_embeddings
         # Register the PoseTrack21ReID dataset to Torchreid that will be instantiated when building Torchreid engine.
         self.training_enabled = not self.cfg.test.evaluate
