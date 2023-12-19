@@ -1,6 +1,7 @@
 import os
 import torch
 import hydra
+from pbtrack.utils import monkeypatch_hydra
 from hydra.utils import instantiate
 from pbtrack.datastruct import TrackerState
 from pbtrack.pipeline import Pipeline
