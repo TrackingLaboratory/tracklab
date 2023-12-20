@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import torch
-import torchreid
 
 from omegaconf import OmegaConf
 from yacs.config import CfgNode as CN

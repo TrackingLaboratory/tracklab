@@ -12,9 +12,9 @@ defaults:
   - modules/track: oc_sort
   - modules/jn_detect: easyocr
 
-pipeline: [pose_bottomup, reid, track, jn_detect]
-experiment_name: "pbtrack"
-data_dir: "/globalscratch/users/a/b/abolfazl/PbTrack_files/dataset/"
+pipeline: [bbox_detector, reid, track, jn_detect]
+experiment_name: "???"
+data_dir: "???"
 num_cores: 4
 
 train_detect: False
