@@ -7,9 +7,7 @@ from pbtrack.datastruct import TrackingDataset, TrackingSet
 class SoccerNetMOT(TrackingDataset):
     def __init__(self, dataset_path: str, *args, **kwargs):
         self.dataset_path = Path(dataset_path)
-        assert self.dataset_path.exists(), "'{}' directory does not exist".format(
-            self.dataset_path
-        )
+        assert self.dataset_path.exists(), f"'{self.dataset_path}' directory does not exist. Please check the path or download the dataset following the instructions here: https://github.com/SoccerNet/sn-tracking"
 
         train_set = load_set(self.dataset_path / "train")
         val_set = load_set(self.dataset_path / "test")
