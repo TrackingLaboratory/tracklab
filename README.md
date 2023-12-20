@@ -47,14 +47,8 @@ Here's what makes PbTrack different from other existing tracking frameworks:
 ### Clone the repository
 
 ```bash
-git clone -b soccernet https://github.com/PbTrack/pb-track.git pbtrack-soccernet --recurse-submodules
-cd pb-track
-```
-
-If you cloned the repo without using the `--recurse-submodules` option, you can still download the submodules with :
-
-```bash
-git submodule update --init --recursive
+git clone -b soccernet https://github.com/PbTrack/pb-track.git pbtrack-soccernet
+cd pb-track-soccernet
 ```
 
 ### Manage the environment
@@ -77,18 +71,7 @@ pip install -e .
 mim install mmcv-full
 ```
 
-Note: if you re-install dependencies after pulling the last changes, and a new git submodule has been added, do not forget to recursively update all the submodule before running above commands:
-
-```bash
-git submodule update --init --recursive
-```
-
-#### Setup reid
-
-```bash
-cd plugins/reid/bpbreid/
-python setup.py develop
-```
+You might need to redo this if you update the repository, and some dependencies changed.
 
 ### External dependencies
 
@@ -96,13 +79,41 @@ python setup.py develop
 - Or get out custom **TinyPoseTrack21** dataset with only two videos [here](https://drive.google.com/file/d/15aX67GAKpf8faaBE4SOJAs_KGghzfWl4/view?usp=sharing).
 - Get the pretrained weights of **BPBReID** [here](https://github.com/VlSomers/bpbreid#download-the-pre-trained-models).
 
+### Setup
+
+You will need to set up some variables before running the code : 
+
+1. In configs/config.yaml :
+   - `data_dir`: the directory where you will store the different datasets (must be an absolute path !)
+   - `model_dir`: the directory which contains the (pretrained) weights of the models you want to run
+   (must be an absolute path !)
+   - All the parameters under the "Machine configuration" header
+2. In the corresponding modules (configs/modules/.../....yaml) :
+   - The `batch_size`
+   - You might want to change the model hyperparameters
+
+All these variables are also configurable from the command-line, e.g. : (more info on Hydra's override grammar [here](https://hydra.cc/docs/advanced/override_grammar/basic/))
+```bash
+tracklab 'data_dir=${project_dir}/data' 'model_dir=${project_dir}/models' modules/reid=bpbreid pipeline=[bbox_detector,reid,track]
+```
+`${project_dir}` is a variable that is configured to be the root of the project you're running the code in. When using
+it in a command, make sure to use single quotes (') as they would otherwise be seen as 
+environment variables.
+
+To find all the (many) configuration options you have, use :
+```bash
+tracklab --help
+```
+
+The first section contains the configuration groups, while the second section
+shows all the possible options you can modify.
 
 ### Quick (dirty?) install guide for inference
 1. Follow above instruction for setting up the environment
 2. Download the pretrained weights of OpenPifPaf and BPBreID on [Google Drive](https://drive.google.com/drive/folders/1ZLKYpWIFPOw0-op0dNVP1Csw3CjKr-1B?usp=share_link)
 3. Update configs to point to the downloaded weights:
-4. 'configs/reid/torchreid.yaml' -> load_weights: "/path/to/job-35493841_85mAP_95r1_ta_model.pth.tar"
-4. 'configs/reid/torchreid.yaml' -> hrnet_pretrained_path: "/path/to/weights/folder" # /!\ just put the folder name in which the weights 'hrnetv2_w32_imagenet_pretrained.pth' are stored, not the filename
+4. 'configs/reid/bpbreid.yaml' -> load_weights: "/path/to/job-35493841_85mAP_95r1_ta_model.pth.tar"
+4. 'configs/reid/bpbreid.yaml' -> hrnet_pretrained_path: "/path/to/weights/folder" # /!\ just put the folder name in which the weights 'hrnetv2_w32_imagenet_pretrained.pth' are stored, not the filename
 5. 'configs/detect/openpifpaf.yaml' -> checkpoint: "/path/to/shufflenetv2k30_dense_default_wo_augm.f07de325"
 6. Update config to point to your inference video: in 'configs/config.yaml', remplace '  - dataset: posetrack21'  (line 8) with '  - dataset: external_video'
 7. In 'configs/dataset/external_video.yaml', update the path to your video file (under 'video_path')

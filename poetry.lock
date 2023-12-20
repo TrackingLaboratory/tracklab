@@ -936,6 +936,21 @@ requests-oauthlib = ">=0.7.0"
 tool = ["click (>=6.0.0)"]
 
 [[package]]
+name = "google-measurement-protocol"
+version = "1.1.0"
+description = "A Python implementation of Google Analytics Measurement Protocol"
+optional = false
+python-versions = "*"
+files = [
+    {file = "google-measurement-protocol-1.1.0.tar.gz", hash = "sha256:aba4a80d956a4b47974d26adc578ab48c363f21f61e8097250c6ef560f3b3416"},
+    {file = "google_measurement_protocol-1.1.0-py2.py3-none-any.whl", hash = "sha256:387800809d143bf490353e19d78bf856066875fdad80817d9f148219c483f087"},
+]
+
+[package.dependencies]
+prices = ">=1.0.0"
+requests = ">=2.0,<3.0a0"
+
+[[package]]
 name = "grpcio"
 version = "1.60.0"
 description = "HTTP/2-based RPC framework"
@@ -2505,6 +2520,20 @@ reference = "pbtrack"
 resolved_reference = "0df5b1d1653e9f4dfb64f3a8a5f36375792e5d21"
 
 [[package]]
+name = "prices"
+version = "1.1.1"
+description = "Python price handling for humans"
+optional = false
+python-versions = "*"
+files = [
+    {file = "prices-1.1.1-py3-none-any.whl", hash = "sha256:75975b59a5ec1014e3cea5599e13313a24fa858149047353e30efd55dfe04b5c"},
+    {file = "prices-1.1.1.tar.gz", hash = "sha256:53bf5d7b5991cf9fde6a4d10e0551b4658584c46c40a9fd18a65646b1040d12f"},
+]
+
+[package.dependencies]
+babel = ">=2.5.0"
+
+[[package]]
 name = "protobuf"
 version = "4.25.1"
 description = ""
@@ -2576,6 +2605,20 @@ files = [
 
 [package.dependencies]
 pyasn1 = ">=0.4.6,<0.6.0"
+
+[[package]]
+name = "pycocoevalcap"
+version = "1.2"
+description = "MS-COCO Caption Evaluation for Python 3"
+optional = false
+python-versions = ">=3"
+files = [
+    {file = "pycocoevalcap-1.2-py3-none-any.whl", hash = "sha256:083ed7910f1aec000b0a237ef6665f74edf19954204d0b1cbdb8399ed132228d"},
+    {file = "pycocoevalcap-1.2.tar.gz", hash = "sha256:7857f4d596ca2fa0b1a9a3c2067588a4257556077b7ad614d00b2b7b8f57cdde"},
+]
+
+[package.dependencies]
+pycocotools = ">=2.0.2"
 
 [[package]]
 name = "pycocotools"
@@ -3310,6 +3353,22 @@ examples = ["matplotlib (>=3.1.3)", "pandas (>=1.0.5)", "plotly (>=5.14.0)", "po
 tests = ["black (>=23.3.0)", "matplotlib (>=3.1.3)", "mypy (>=1.3)", "numpydoc (>=1.2.0)", "pandas (>=1.0.5)", "pooch (>=1.6.0)", "pyamg (>=4.0.0)", "pytest (>=7.1.2)", "pytest-cov (>=2.9.0)", "ruff (>=0.0.272)", "scikit-image (>=0.16.2)"]
 
 [[package]]
+name = "scikit-video"
+version = "1.1.11"
+description = "Video Processing in Python"
+optional = false
+python-versions = "*"
+files = [
+    {file = "scikit-video-1.1.11.tar.gz", hash = "sha256:5061d2aeae1892b73a97c89a82942b3e8eebf2fe23e59c60e06ede5f8a24ed1e"},
+    {file = "scikit_video-1.1.11-py2.py3-none-any.whl", hash = "sha256:4fc131e509aaeeb0eecb6acb58b92a7ef905be5dbe27ed1d1ae089634b601f23"},
+]
+
+[package.dependencies]
+numpy = "*"
+pillow = "*"
+scipy = "*"
+
+[[package]]
 name = "scipy"
 version = "1.11.4"
 description = "Fundamental algorithms for scientific computing in Python"
@@ -3622,6 +3681,24 @@ files = [
     {file = "snowballstemmer-2.2.0-py2.py3-none-any.whl", hash = "sha256:c8e1716e83cc398ae16824e5572ae04e0d9fc2c6b985fb0f900f5f0c96ecba1a"},
     {file = "snowballstemmer-2.2.0.tar.gz", hash = "sha256:09b16deb8547d3412ad7b590689584cd0fe25ec8db3be37788be3810cbf19cb1"},
 ]
+
+[[package]]
+name = "soccernet"
+version = "0.1.53"
+description = "SoccerNet SDK"
+optional = false
+python-versions = "*"
+files = [
+    {file = "SoccerNet-0.1.53-py3-none-any.whl", hash = "sha256:543e43896c04e340acd724cb0b6df4f36b5b5b9406f89c6c7b7d959e2771948b"},
+    {file = "SoccerNet-0.1.53.tar.gz", hash = "sha256:5754d7df607734f858272facda34090021e85cf982890a0f761763e6e4347207"},
+]
+
+[package.dependencies]
+google-measurement-protocol = "*"
+matplotlib = "*"
+pycocoevalcap = "*"
+scikit-video = "*"
+tqdm = "*"
 
 [[package]]
 name = "soupsieve"
@@ -4463,4 +4540,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "24dd65a24095996c5e15d9b5f906e4f75517efd87455bd23de401969b00d7730"
+content-hash = "d5b5a1a9d74553564e981cdec292c3bda2def58704766bc41e02bef53c0a4ae3"

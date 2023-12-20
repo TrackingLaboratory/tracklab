@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import pandas as pd
 
-from pbtrack.pipeline import Tracker
+from pbtrack.pipeline import ImageLevelModule
 from pbtrack.utils.coordinates import ltrb_to_ltwh
 import byte_track.byte_tracker as byte_tracker
 
@@ -11,7 +11,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class ByteTrack(Tracker):
+class ByteTrack(ImageLevelModule):
     input_columns = [
         "bbox_ltwh",
         "bbox_conf",
