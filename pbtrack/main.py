@@ -32,7 +32,8 @@ def main(cfg):
     # Initiate all the instances
     tracking_dataset = instantiate(cfg.dataset)
     modules = []
-    for name, module in cfg.modules.items():
+    for name in cfg.pipeline:
+        module = cfg.modules[name]
         inst_module = instantiate(module, device=device, tracking_dataset=tracking_dataset)
         modules.append(inst_module)
 

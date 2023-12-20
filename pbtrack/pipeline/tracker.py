@@ -36,7 +36,7 @@ class Tracker(Module):
             image_detections = detections[detections.image_id == image_id]
 
             if len(image_detections) != 0:
-                self.datapipe.update(imgs_meta, image_detections)
+                self.datapipe.update(image, imgs_meta, image_detections)
                 for batch in self.dataloader():
                     detections = engine.default_step(batch, self.name, detections, image=image)
         return detections

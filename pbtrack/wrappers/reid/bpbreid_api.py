@@ -34,9 +34,6 @@ from torchreid.data.masks_transforms import (
 from torchreid.utils.tools import extract_test_embeddings
 from torchreid.data.datasets import configure_dataset_class
 
-# need that line to not break import of torchreid ('from torchreid... import ...') inside the bpbreid.torchreid module
-# to remove the 'from torchreid... import ...' error 'Unresolved reference 'torchreid' in PyCharm, right click
-# on 'bpbreid' folder, then choose 'Mark Directory as' -> 'Sources root'
 from torchreid.scripts.default_config import engine_run_kwargs
 
 from ...pipeline.detectionlevel_module import DetectionLevelModule

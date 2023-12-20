@@ -4,10 +4,10 @@ This tutorial aims to integrate a new pose detector in the framework.
 [Yolov8](https://docs.ultralytics.com/tasks/pose/) proposes a pose detector 
 which takes as input an image and provides as output the positions of the 
 detected joints and the bouding boxes. To do this, we will start by extending 
-the abstract class `MultiDetector`.
+the abstract class `ImageLevelModule`.
 
-## `MultiDetector` extension
-The abstract class `MultiDetector` is defined in the file `pipeline/detector.py`. 
+## `ImageLevelModule` extension
+The abstract class `ImageLevelModule` is defined in the file `pipeline/imagelevel_module.py`. 
 It allows to define a common interface for the different detectors and the 
 automation of the aggregation of the results in the pipeline.
 
