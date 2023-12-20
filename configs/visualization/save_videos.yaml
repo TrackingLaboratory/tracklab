@@ -6,7 +6,7 @@ cfg:
 
   process_n_videos: -1                      # -1 to process all videos
   process_n_frames_by_video: -1             # -1 to process all the frames
-  video_fps: 30
+  video_fps: 25
 
   prediction:
     draw_bbox: True
