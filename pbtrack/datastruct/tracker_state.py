@@ -41,6 +41,8 @@ class TrackerState(AbstractContextManager):
 
         self.load_file = Path(load_file) if load_file else None
         self.save_file = Path(save_file) if save_file else None
+        if self.save_file is not None:
+            log.info(f"Saving TrackerState to {abspath(self.save_file)}")
         self.compression = compression
         self.load_step = load_step
         self.save_step = save_step
@@ -213,7 +215,6 @@ class TrackerState(AbstractContextManager):
         """
         if self.save_file is None:
             return
-        log.info(f"saving to {abspath(self.save_file)}")
         assert self.video_id is not None, "Save can only be called in a contextmanager"
         assert (
                 self.detections_pred is not None
