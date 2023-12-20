@@ -11,7 +11,7 @@ defaults:
   - modules/reid: bpbreid
   - modules/track: oc_sort
 
-pipeline: [pose_bottomup, reid, track]
+pipeline: [bbox_detector, reid, track]
 experiment_name: "???"
 data_dir: "???"
 num_cores: 4
