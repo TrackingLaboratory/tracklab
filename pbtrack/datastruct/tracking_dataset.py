@@ -48,7 +48,8 @@ class TrackingDataset(ABC):
             return tracking_set
 
         # filter videos:
-        if vids_names is not None and len(vids_names) > 0:  # keep videos in vids_dict
+        if vids_names is not None and len(vids_names) > 0:
+            assert set(vids_names).issubset(tracking_set.video_metadatas.name.unique()), f"Some videos to process {set(vids_names) - set(tracking_set.video_metadatas.name.unique())} does not exist in the tracking set"
             videos_to_keep = tracking_set.video_metadatas[
                 tracking_set.video_metadatas.name.isin(vids_names)
             ].index
@@ -80,6 +81,9 @@ class TrackingDataset(ABC):
             tiny_detections = tracking_set.detections_gt[
                 tracking_set.detections_gt.image_id.isin(tiny_image_metadatas.index)
             ]
+
+        assert len(tiny_video_metadatas) > 0, "No videos left after subsampling the tracking set"
+        assert len(tiny_image_metadatas) > 0, "No images left after subsampling the tracking set"
 
         return TrackingSet(
             tiny_video_metadatas,

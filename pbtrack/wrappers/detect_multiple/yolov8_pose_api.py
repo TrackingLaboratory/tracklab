@@ -3,6 +3,8 @@ import torch
 import numpy as np
 import pandas as pd
 
+from pbtrack.pipeline.imagelevel_module import ImageLevelModule
+
 os.environ["YOLO_VERBOSE"] = "False"
 from ultralytics import YOLO
 
@@ -22,13 +24,13 @@ def collate_fn(batch):
     return idxs, (images, shapes)
 
 
-class YOLOv8Pose(MultiDetector):
+class YOLOv8Pose(ImageLevelModule):
     collate_fn = collate_fn
     output_columns = ["image_id", "id", "video_id", "category_id",
                       "bbox_ltwh", "bbox_conf", "keypoints_xyc", "keypoints_conf"]
 
     def __init__(self, cfg, device, batch_size):
-        super().__init__(cfg, device, batch_size)
+        super().__init__(batch_size)
         self.model = YOLO(cfg.path_to_checkpoint)
         self.model.to(device)
         self.id = 0

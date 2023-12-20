@@ -1,15 +1,11 @@
-import sys
 import numpy as np
 import pandas as pd
 import torch
+import torchreid
 
 from omegaconf import OmegaConf
 from yacs.config import CfgNode as CN
-
 from .bpbreid_dataset import ReidDataset
-
-from pbtrack.pipeline import ReIdentifier
-from pbtrack.utils.cv2 import cv2_load_image
 # FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
 from pbtrack.utils.coordinates import rescale_keypoints
 from pbtrack.utils.collate import default_collate
@@ -52,7 +48,7 @@ class BPBReId(DetectionLevelModule):
     """
 
     collate_fn = default_collate
-    input_columns = ["bbox_ltwh", "bbox_conf", "keypoints_xyc"]
+    input_columns = ["bbox_ltwh"]
     output_columns = ["embeddings", "visibility_scores", "body_masks"]
 
     def __init__(

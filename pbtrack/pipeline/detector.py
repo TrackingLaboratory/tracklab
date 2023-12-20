@@ -68,7 +68,7 @@ class MultiDetector(Module):
     @property
     def datapipe(self):
         if self._datapipe is None:
-            self._datapipe = EngineDatapipe(self, first=True)
+            self._datapipe = EngineDatapipe(self)
         return self._datapipe
 
     def dataloader(self, engine: "TrackingEngine"):

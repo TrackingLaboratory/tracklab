@@ -1,11 +1,10 @@
 import torch
 import numpy as np
 import pandas as pd
+import bpbreid_strong_sort.strong_sort as strong_sort
+import logging
 
 from pbtrack.pipeline import Tracker
-import bpbreid_strong_sort.strong_sort as strong_sort
-
-import logging
 
 log = logging.getLogger(__name__)
 

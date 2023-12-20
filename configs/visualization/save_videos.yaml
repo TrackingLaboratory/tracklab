@@ -6,12 +6,12 @@ cfg:
 
   process_n_videos: -1                      # -1 to process all videos
   process_n_frames_by_video: -1             # -1 to process all the frames
-  video_fps: 5
+  video_fps: 30
 
   prediction:
     draw_bbox: True
-    draw_keypoints: True
-    draw_skeleton: True
+    draw_keypoints: False
+    draw_skeleton: False
     print_id: True
     print_bbox_confidence: True
     # debug

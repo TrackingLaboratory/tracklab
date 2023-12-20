@@ -1,8 +1,8 @@
 import os
 import torch
-import numpy as np
 import pandas as pd
 
+from typing import Any
 from pbtrack.pipeline.imagelevel_module import ImageLevelModule
 
 os.environ["YOLO_VERBOSE"] = "False"
@@ -45,7 +45,7 @@ class YOLOv8(ImageLevelModule):
         }
 
     @torch.no_grad()
-    def process(self, batch, detections, metadatas: pd.DataFrame):
+    def process(self, batch: Any, detections: pd.DataFrame, metadatas: pd.DataFrame):
         images, shapes = batch
         results_by_image = self.model(images)
         detections = []
