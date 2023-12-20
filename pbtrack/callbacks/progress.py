@@ -1,13 +1,13 @@
 import pandas as pd
+import logging
 
 from typing import Any, Optional
-
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-
 from pbtrack.callbacks import Callback
 from pbtrack.engine import TrackingEngine
 
+log = logging.getLogger(__name__)
 
 class Progressbar(Callback):
     def __init__(self):
@@ -16,6 +16,8 @@ class Progressbar(Callback):
 
     def on_dataset_track_start(self, engine: TrackingEngine):
         total = len(engine.video_metadatas)
+        start = engine.tracker_state.load_index
+        log.info(f"Inference will be composed of the following steps: {', '.join(x for x in engine.module_names[start:])}")
         self.pbar = tqdm(total=total, desc="Tracking videos")
 
     def on_dataset_track_end(self, engine: TrackingEngine):
