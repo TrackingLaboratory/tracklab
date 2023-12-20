@@ -35,6 +35,11 @@ def main(cfg):
 
     # Initiate all the instances
     tracking_dataset = instantiate(cfg.dataset)
+
+    for handler in log.root.handlers:
+        if type(handler) is logging.StreamHandler:
+            handler.setLevel(logging.INFO)
+
     modules = []
     for name in cfg.pipeline:
         module = cfg.modules[name]
