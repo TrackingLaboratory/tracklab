@@ -4,8 +4,8 @@ cfg:
   save_images: False
   save_videos: True
 
-  process_n_videos: -1                      # -1 to process all videos
-  process_n_frames_by_video: -1             # -1 to process all the frames
+  process_n_videos: -1                      # Amount of video to visualize, -1 to process all videos
+  process_n_frames_by_video: -1             # Amount of images to visualize per video, -1 to process all the frames
   video_fps: 25
 
   prediction:
