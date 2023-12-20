@@ -1,7 +1,7 @@
 defaults:
   - _self_
-  - dataset: soccernet_mot
-  - eval: soccernet_mot
+  - dataset: external_video
+  - eval: posetrack21
   - engine: offline
   - machine: local
   - state: no_save
@@ -10,10 +10,11 @@ defaults:
   - modules/pose_bottomup: openpifpaf
   - modules/reid: bpbreid
   - modules/track: oc_sort
+  - modules/jn_detect: easyocr
 
-pipeline: [pose_bottomup, reid, track]
-experiment_name: "???"
-data_dir: "???"
+pipeline: [pose_bottomup, reid, track, jn_detect]
+experiment_name: "pbtrack"
+data_dir: "/globalscratch/users/a/b/abolfazl/PbTrack_files/dataset/"
 num_cores: 4
 
 train_detect: False
@@ -29,6 +30,6 @@ hydra:
   job:
     chdir: True
   run:
-    dir: "outputs/${experiment_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}"
+    dir: "/globalscratch/users/a/b/abolfazl/PbTrack_files/outputs/${experiment_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}"
   sweep:
     dir: "multirun_outputs/${experiment_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}"

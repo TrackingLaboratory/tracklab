@@ -9,6 +9,7 @@ from pbtrack.datastruct import TrackerState
 from pbtrack.pipeline import Pipeline
 from pbtrack.utils import wandb
 
+from pbtrack.wrappers import EasyOCR
 import logging
 
 os.environ["HYDRA_FULL_ERROR"] = "1"

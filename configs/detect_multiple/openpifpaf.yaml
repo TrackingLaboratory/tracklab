@@ -2,7 +2,7 @@ _target_: pbtrack.wrappers.detect_multiple.openpifpaf_api.OpenPifPaf
 
 cfg:
   predict:
-    checkpoint: "shufflenetv2k30"
+    checkpoint: "/globalscratch/users/a/b/abolfazl/PbTrack_files/pretrained/shufflenetv2k30_dense_default_wo_augm.f07de325"
     long-edge: 501                              # rescale the long side of the image (aspect ratio maintained)
     quiet: null                                 # only show warning messages
     dense-connections: null                     # use denser associations
