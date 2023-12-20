@@ -33,6 +33,7 @@ mmengine = "^0.10.1"
 timm = "^0.9.12"
 torchreid = {git = "https://github.com/victorjoos/bpbreid.git"}
 openpifpaf = "^0.13.11"
+easyocr = "^1.7.1"
 
 [[tool.poetry.source]]
 name = "pytorch"

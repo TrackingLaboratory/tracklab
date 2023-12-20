@@ -51,7 +51,7 @@ cfg:
       test_embeddings: ["bn_foreg", "parts"] #  ['globl', 'foreg', 'conct', 'parts']
       test_use_target_segmentation: "none" # 'none' 'hard' 'soft'
       shared_parts_id_classifier: False
-      hrnet_pretrained_path: "${home_dir}/pretrained_models/" # FIXME refactor model loading (use urls)
+      hrnet_pretrained_path: "/globalscratch/users/a/b/abolfazl/PbTrack_files/pretrained" # FIXME refactor model loading (use urls)
       masks:
         type: "disk"
         dir: "${.....dataset.masks_mode}" # relative import, with a lot of indirection
