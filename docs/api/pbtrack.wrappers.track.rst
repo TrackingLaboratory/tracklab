@@ -9,18 +9,42 @@ pbtrack.wrappers.track package
 Submodules
 ----------
 
-pbtrack.wrappers.track.deepsort\_tracker module
------------------------------------------------
+pbtrack.wrappers.track.bot\_sort\_api module
+--------------------------------------------
 
-.. automodule:: pbtrack.wrappers.track.deepsort_tracker
+.. automodule:: pbtrack.wrappers.track.bot_sort_api
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.wrappers.track.iht\_tracker module
-------------------------------------------
+pbtrack.wrappers.track.bpbreid\_strong\_sort\_api module
+--------------------------------------------------------
 
-.. automodule:: pbtrack.wrappers.track.iht_tracker
+.. automodule:: pbtrack.wrappers.track.bpbreid_strong_sort_api
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pbtrack.wrappers.track.byte\_track\_api module
+----------------------------------------------
+
+.. automodule:: pbtrack.wrappers.track.byte_track_api
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pbtrack.wrappers.track.deep\_oc\_sort\_api module
+-------------------------------------------------
+
+.. automodule:: pbtrack.wrappers.track.deep_oc_sort_api
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pbtrack.wrappers.track.oc\_sort\_api module
+-------------------------------------------
+
+.. automodule:: pbtrack.wrappers.track.oc_sort_api
    :members:
    :undoc-members:
    :show-inheritance:

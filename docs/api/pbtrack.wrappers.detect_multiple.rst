@@ -40,3 +40,11 @@ pbtrack.wrappers.detect\_multiple.yolov8\_api module
    :members:
    :undoc-members:
    :show-inheritance:
+
+pbtrack.wrappers.detect\_multiple.yolov8\_pose\_api module
+----------------------------------------------------------
+
+.. automodule:: pbtrack.wrappers.detect_multiple.yolov8_pose_api
+   :members:
+   :undoc-members:
+   :show-inheritance:

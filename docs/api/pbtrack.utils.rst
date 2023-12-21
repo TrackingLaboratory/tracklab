@@ -33,10 +33,26 @@ pbtrack.utils.cv2 module
    :undoc-members:
    :show-inheritance:
 
+pbtrack.utils.easyocr module
+----------------------------
+
+.. automodule:: pbtrack.utils.easyocr
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pbtrack.utils.instantiate module
 --------------------------------
 
 .. automodule:: pbtrack.utils.instantiate
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pbtrack.utils.monkeypatch\_hydra module
+---------------------------------------
+
+.. automodule:: pbtrack.utils.monkeypatch_hydra
    :members:
    :undoc-members:
    :show-inheritance:

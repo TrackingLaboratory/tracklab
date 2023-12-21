@@ -25,6 +25,14 @@ pbtrack.callbacks.evaluate module
    :undoc-members:
    :show-inheritance:
 
+pbtrack.callbacks.handle\_regions module
+----------------------------------------
+
+.. automodule:: pbtrack.callbacks.handle_regions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pbtrack.callbacks.profiler module
 ---------------------------------
 

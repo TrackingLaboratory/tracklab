@@ -1,6 +1,7 @@
-# New evaluator integration
+New evaluator integration
+=========================
 
-The evaluator must extend the abstract class `EvaluatorBase` which is described in `core/evaluator.py`. 
+The evaluator must extend the abstract class :class:`Evaluator<pbtrack.core.evaluator.Evaluator>` which is described in `core/evaluator.py`.
 Specifically, the function `run(tracker_state)` must be implemented for the evaluation to be done.
 
 ## `EvaluatorBase` extension
@@ -17,7 +18,8 @@ You can find an example of an evaluator for the MOT challenge in the file
 `wrappers/eval/mot/mot20_evaluator.py`. You will then have to add the new 
 object evaluator in the `__init__.py` file.
 
-## Config file
+Config file
+-----------
 
 Our framework works with the [Hydra](https://hydra.cc/) configuration system which 
 takes advantage of a hierarchical configuration via files. This is very convenient
