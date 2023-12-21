@@ -1,0 +1,1 @@
+from .easyocr_api import EasyOCR

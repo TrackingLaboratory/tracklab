@@ -10,10 +10,9 @@ from mmpose.core.post_processing import oks_nms
 from mmpose.datasets.dataset_info import DatasetInfo
 from mmpose.datasets.pipelines import Compose
 
-from pbtrack.pipeline import MultiDetector
 from pbtrack.utils.openmmlab import get_checkpoint
 from pbtrack.utils.coordinates import sanitize_keypoints, generate_bbox_from_keypoints
-
+from pbtrack.pipeline import ImageLevelModule
 import logging
 
 log = logging.getLogger(__name__)
@@ -25,7 +24,7 @@ def mmpose_collate(batch):
 
 
 @torch.no_grad()
-class BottomUpMMPose(MultiDetector):
+class BottomUpMMPose(ImageLevelModule):
     collate_fn = mmpose_collate
     output_columns = [
         "image_id",

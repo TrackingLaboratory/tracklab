@@ -1,8 +1,0 @@
-_target_: pbtrack.wrappers.TopDownMMPose
-#config_name: topdown_heatmap_hrnet_w32_coco_256x192_udp # AP: 0.76
-#config_name: topdown_heatmap_hrnet_w32_coco_384x288_udp # AP: 0.769
-#config_name: topdown_heatmap_hrnet_w48_coco_256x192_udp # AP: 0.767
-config_name: topdown_heatmap_hrnet_w48_coco_384x288_udp # AP: 0.772
-path_to_checkpoint: ${project_dir}/weights/${.config_name}.pth
-vis_kp_threshold: 0.4
-min_num_vis_kp: 3

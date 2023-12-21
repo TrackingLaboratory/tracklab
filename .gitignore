@@ -1,6 +1,7 @@
 configs_user/
 runs/
 data/
+models/
 outputs/
 multiruns/
 pb-track/

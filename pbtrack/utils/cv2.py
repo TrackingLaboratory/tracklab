@@ -34,6 +34,11 @@ def cv2_load_image(file_path):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
 
+def crop_bbox_ltwh(img, bbox):
+    bbox = np.array(bbox).astype(int)
+    img = img[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0]+bbox[2]]
+    return img
+    
 
 def draw_keypoints(
     detection,

@@ -15,7 +15,7 @@ from mmpose.apis import init_pose_model
 from mmpose.datasets.dataset_info import DatasetInfo
 from mmpose.datasets.pipelines import Compose
 
-from pbtrack.pipeline import SingleDetector
+from pbtrack.pipeline import ImageLevelModule
 from pbtrack.utils.openmmlab import get_checkpoint
 
 import logging
@@ -28,7 +28,7 @@ def mmpose_collate(batch):
     return collate(batch, len(batch))
 
 
-class TopDownMMPose(SingleDetector):
+class TopDownMMPose(ImageLevelModule):
     collate_fn = mmpose_collate
     output_columns = ["keypoints_xyc", "keypoints_conf"]
 

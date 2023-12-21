@@ -8,9 +8,8 @@ from omegaconf.listconfig import ListConfig
 
 import openpifpaf
 
-from pbtrack.pipeline import MultiDetector
+
 from pbtrack.pipeline.imagelevel_module import ImageLevelModule
-from pbtrack.utils.cv2 import cv2_load_image
 from pbtrack.utils.coordinates import sanitize_keypoints, generate_bbox_from_keypoints
 
 import logging

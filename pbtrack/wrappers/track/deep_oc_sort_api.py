@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from pbtrack.pipeline import Tracker
+from pbtrack.pipeline import ImageLevelModule
 from pbtrack.utils.coordinates import ltrb_to_ltwh
 from deep_oc_sort import ocsort
 
@@ -12,7 +12,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class DeepOCSORT(Tracker):
+class DeepOCSORT(ImageLevelModule):
     input_columns = [
         "bbox_ltwh",
         "bbox_conf",

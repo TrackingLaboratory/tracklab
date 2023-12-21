@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from pbtrack.pipeline import Tracker
+from pbtrack.pipeline import ImageLevelModule
 from pbtrack.utils.coordinates import ltrb_to_ltwh
 import strong_sort.strong_sort as strong_sort
 
@@ -12,7 +12,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class StrongSORT(Tracker):
+class StrongSORT(ImageLevelModule):
     input_columns = [
         "bbox_ltwh",
         "bbox_conf",

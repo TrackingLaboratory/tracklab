@@ -15,8 +15,8 @@ class OfflineTrackingEngine(TrackingEngine):
         imgs_meta = self.img_metadatas[self.img_metadatas.video_id == video_id]
         images = {idx: cv2_load_image(fn) for idx, fn in imgs_meta["file_path"].items()}
         detections = tracker_state.load()
-        start = tracker_state.load_index
-        model_names = self.module_names[start:]
+        model_names = self.module_names
+        # print('in offline.py, model_names: ', model_names)
         for model_name in model_names:
             self.datapipes[model_name].update(images, imgs_meta, detections)
             self.callback(
@@ -34,5 +34,4 @@ class OfflineTrackingEngine(TrackingEngine):
             self.callback("on_task_end", task=model_name, detections=detections)
             if detections.empty:
                 return detections
-
         return detections
