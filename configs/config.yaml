@@ -20,6 +20,7 @@ train_detect: False
 train_reid: False
 test_tracking: True
 use_wandb: False
+use_rich: True
 print_config: True
 
 # configure Hydra to use the current working directory

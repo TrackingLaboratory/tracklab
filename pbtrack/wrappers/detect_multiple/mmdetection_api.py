@@ -1,6 +1,5 @@
 import cv2
 import torch
-import numpy as np
 import pandas as pd
 
 from pbtrack.pipeline import MultiDetector
@@ -26,6 +25,13 @@ def mmdet_collate(batch):
 
 class MMDetection(MultiDetector):
     collate_fn = mmdet_collate
+    output_columns = [
+        "image_id",
+        "video_id",
+        "category_id",
+        "bbox_ltwh",
+        "bbox_conf",
+    ]
 
     def __init__(self, cfg, device, batch_size):
         super().__init__(cfg, device, batch_size)

@@ -77,7 +77,7 @@ class TrackingDataset(ABC):
 
         # filter detections:
         tiny_detections = None
-        if tracking_set.detections_gt is not None:
+        if tracking_set.detections_gt is not None and not tracking_set.detections_gt.empty:
             tiny_detections = tracking_set.detections_gt[
                 tracking_set.detections_gt.image_id.isin(tiny_image_metadatas.index)
             ]

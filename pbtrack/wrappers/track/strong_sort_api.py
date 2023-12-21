@@ -20,7 +20,7 @@ class StrongSORT(Tracker):
     ]
     output_columns = ["track_id", "track_bbox_ltwh", "track_bbox_conf"]
 
-    def __init__(self, cfg, device, batch_size):
+    def __init__(self, cfg, device, batch_size, **kwargs):
         super().__init__(cfg, device, batch_size)
         self.cfg = cfg
         self.reset()

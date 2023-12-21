@@ -143,6 +143,10 @@ class VisualizationEngine(Callback):
 
     def _draw_detection(self, patch, detection, is_prediction):
         is_matched = pd.notna(detection.track_id)
+
+        if not is_matched and not self.cfg.prediction.draw_unmatched:
+            return
+
         # colors
         color_bbox, color_text, color_keypoint, color_skeleton = self._colors(
             detection, is_prediction
@@ -189,6 +193,8 @@ class VisualizationEngine(Callback):
             draw_skeleton = (is_prediction and self.cfg.prediction.draw_skeleton) or (
                 not is_prediction and self.cfg.ground_truth.draw_skeleton
             )
+            detection.keypoints_xyc[detection.keypoints_xyc[:, 2] < self.cfg.vis_kp_threshold] = 0.
+
             draw_keypoints(
                 detection,
                 patch,
@@ -279,13 +285,14 @@ class VisualizationEngine(Callback):
                 draw_text(
                     patch,
                     f"{detection.matched_with[0]}|{detection.matched_with[1]:.2f}",
-                    (l + 3, t + 5),
+                    (r-3, t + 20),
                     fontFace=self.cfg.text.font,
                     fontScale=self.cfg.text.scale,
                     thickness=self.cfg.text.thickness,
                     color_txt=(255, 0, 0),
                     color_bg=(255, 255, 255),
                     alignV="t",
+                    alignH="r",
                 )
         # display_n_closer_tracklets_costs
         if is_prediction and self.cfg.prediction.display_n_closer_tracklets_costs > 0:
@@ -296,7 +303,7 @@ class VisualizationEngine(Callback):
                 nt = self.cfg.prediction.display_n_closer_tracklets_costs
                 if "R" in detection.costs:
                     sorted_reid_costs = sorted(
-                        list(detection.costs["R"].items()), key=lambda x: x[1]
+                        list(detection.costs["R"].items()), key=lambda x: x[1], reverse=True
                     )
                     processed_reid_costs = {
                         t[0]: np.around(t[1], 2) for t in sorted_reid_costs[:nt]
@@ -308,12 +315,12 @@ class VisualizationEngine(Callback):
                         fontFace=self.cfg.text.font,
                         fontScale=self.cfg.text.scale,
                         thickness=self.cfg.text.thickness,
-                        color_txt=(255, 0, 0),
+                        color_txt=(150, 0, 0),
                         color_bg=(255, 255, 255),
                     )
                 if "S" in detection.costs:
                     sorted_st_costs = sorted(
-                        list(detection.costs["S"].items()), key=lambda x: x[1]
+                        list(detection.costs["S"].items()), key=lambda x: x[1], reverse=True
                     )
                     processed_st_costs = {
                         t[0]: np.around(t[1], 2) for t in sorted_st_costs[:nt]
@@ -325,12 +332,12 @@ class VisualizationEngine(Callback):
                         fontFace=self.cfg.text.font,
                         fontScale=self.cfg.text.scale,
                         thickness=self.cfg.text.thickness,
-                        color_txt=(0, 255, 0),
+                        color_txt=(0, 150, 0),
                         color_bg=(255, 255, 255),
                     )
                 if "K" in detection.costs:
                     sorted_gated_kf_costs = sorted(
-                        list(detection.costs["K"].items()), key=lambda x: x[1]
+                        list(detection.costs["K"].items()), key=lambda x: x[1], reverse=True
                     )
                     processed_gated_kf_costs = {
                         t[0]: np.around(t[1], 2) for t in sorted_gated_kf_costs[:nt]
@@ -342,7 +349,7 @@ class VisualizationEngine(Callback):
                         fontFace=self.cfg.text.font,
                         fontScale=self.cfg.text.scale,
                         thickness=self.cfg.text.thickness,
-                        color_txt=(0, 0, 255),
+                        color_txt=(0, 0, 150),
                         color_bg=(255, 255, 255),
                     )
 

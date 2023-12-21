@@ -12,6 +12,7 @@ cfg:
     draw_bbox: True
     draw_keypoints: True
     draw_skeleton: True
+    draw_unmatched: False
     print_id: True
     print_bbox_confidence: True
     # debug

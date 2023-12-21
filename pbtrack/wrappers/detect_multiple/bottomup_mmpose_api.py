@@ -27,9 +27,15 @@ def mmpose_collate(batch):
 @torch.no_grad()
 class BottomUpMMPose(MultiDetector):
     collate_fn = mmpose_collate
-    output_columns = ["image_id", "id", "video_id", "category_id",
-                      "bbox_ltwh", "bbox_conf", "keypoints_xyc", "keypoints_conf"]
-
+    output_columns = [
+        "image_id",
+        "video_id",
+        "category_id",
+        "bbox_ltwh",
+        "bbox_conf",
+        "keypoints_xyc",
+        "keypoints_conf",
+    ]
 
     def __init__(self, cfg, device, batch_size):
         super().__init__(cfg, device, batch_size)

@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 
 def keypoints_in_bbox_coord(kp_xyc_img, bbox_ltwh):
@@ -15,16 +16,16 @@ def keypoints_in_bbox_coord(kp_xyc_img, bbox_ltwh):
     kp_xyc_bbox = kp_xyc_img.copy()
 
     # put keypoints in bbox coord space
-    kp_xyc_bbox[:, 0] = kp_xyc_img[:, 0] - l
-    kp_xyc_bbox[:, 1] = kp_xyc_img[:, 1] - t
+    kp_xyc_bbox[..., 0] = kp_xyc_img[..., 0] - l
+    kp_xyc_bbox[..., 1] = kp_xyc_img[..., 1] - t
 
     # remove out of bbox keypoints
     kp_xyc_bbox[
-        (kp_xyc_bbox[:, 2] == 0)
-        | (kp_xyc_bbox[:, 0] < 0)
-        | (kp_xyc_bbox[:, 0] >= w)
-        | (kp_xyc_bbox[:, 1] < 0)
-        | (kp_xyc_bbox[:, 1] >= h)
+        (kp_xyc_bbox[..., 2] == 0)
+        | (kp_xyc_bbox[..., 0] < 0)
+        | (kp_xyc_bbox[..., 0] >= w)
+        | (kp_xyc_bbox[..., 1] < 0)
+        | (kp_xyc_bbox[..., 1] >= h)
     ] = 0
 
     return kp_xyc_bbox
@@ -43,12 +44,87 @@ def rescale_keypoints(rf_keypoints, size, new_size):
     """
     w, h = size
     new_w, new_h = new_size
-    rf_keypoints[:, 0] = rf_keypoints[:, 0] * new_w / w
-    rf_keypoints[:, 1] = rf_keypoints[:, 1] * new_h / h
+    rf_keypoints = rf_keypoints.copy()
+    rf_keypoints[..., 0] = rf_keypoints[..., 0] * new_w / w
+    rf_keypoints[..., 1] = rf_keypoints[..., 1] * new_h / h
+
+    assert ((rf_keypoints[..., 0] >= 0) & (rf_keypoints[..., 0] <= new_w)).all()
+    assert ((rf_keypoints[..., 1] >= 0) & (rf_keypoints[..., 1] <= new_h)).all()
+
     return rf_keypoints
 
 
-# FIXME to be removed (duplicated with detection.bbox.ltrb(rounded=False))
+def clip_keypoints_to_image(kps, image_size):
+    """
+    Clip keypoints to image size.
+
+    Parameters:
+    - kps: a tensor/array of size 17x3 representing keypoints.
+           Can be either a numpy array or a torch tensor.
+    - image_size (tuple): a tuple containing the width and height of the target image.
+
+    Returns:
+    - clipped_kps: keypoints clipped to image size.
+                   Returns in the same format as input (numpy array or torch tensor).
+    """
+
+    # Get image width and height
+    w, h = image_size
+
+    # Check if the input is a numpy array
+    if isinstance(kps, np.ndarray):
+        kps[..., 0] = np.clip(kps[..., 0], 0, w)
+        kps[..., 1] = np.clip(kps[..., 1], 0, h)
+        return kps
+    # Check if the input is a torch tensor
+    elif torch.is_tensor(kps):
+        kps[..., 0] = torch.clamp(kps[..., 0], 0, w)
+        kps[..., 1] = torch.clamp(kps[..., 1], 0, h)
+        return kps
+    else:
+        raise ValueError("Input keypoints must be either a numpy array or a torch tensor.")
+
+
+def clip_bbox_ltwh_to_img_dim(bbox_ltwh, img_w, img_h):
+    """
+    Clip bounding box to image dimensions.
+    Args:
+        bbox_ltwh (np.ndarray): bounding box, shape (4,)
+        img_w (int): image width
+        img_h (int): image height
+    Returns:
+        bbox_ltwh (np.ndarray): clipped bounding box, shape (4,)
+    """
+    l, t, w, h = bbox_ltwh
+    l = np.clip(l, 0, img_w - 1)
+    t = np.clip(t, 0, img_h - 1)
+    w = np.clip(w, 0, img_w - 1 - l)
+    h = np.clip(h, 0, img_h - 1 - t)
+    assert np.equal(
+        np.array([l, t, w, h]), clip_bbox_ltwh_to_img_dim_old(bbox_ltwh, img_w, img_h)
+    ).all()
+    return np.array([l, t, w, h])
+
+
+def clip_bbox_ltwh_to_img_dim_old(bbox_ltwh, img_w, img_h):
+    """
+    Clip bounding box to image dimensions.
+    Args:
+        bbox_ltwh (np.ndarray): bounding box, shape (4,)
+        img_w (int): image width
+        img_h (int): image height
+
+    Returns:
+        bbox_ltwh (np.ndarray): clipped bounding box, shape (4,)
+    """
+    l, t, w, h = bbox_ltwh.copy()
+    l = max(l, 0)
+    t = max(t, 0)
+    w = min(l + w, img_w - 1) - l
+    h = min(t + h, img_h - 1) - t
+    return np.array([l, t, w, h])
+
+
 def clip_bbox_ltrb_to_img_dim(bbox_ltrb, img_w, img_h):
     """
     Clip bounding box to image dimensions.
@@ -102,6 +178,7 @@ def generate_bbox_from_keypoints(keypoints, extension_factor, image_shape=None):
         np.ndarray: A numpy array of shape (4,) representing the bounding box in the format (left, top, w, h).
     """
     keypoints = sanitize_keypoints(keypoints, image_shape)
+    keypoints = keypoints[keypoints[:, 2] > 0]
     lt, rb = np.min(keypoints[:, :2], axis=0), np.max(keypoints[:, :2], axis=0)
     w, h = rb - lt
     lt -= np.array([extension_factor[2] * w, extension_factor[0] * h])
@@ -128,7 +205,7 @@ def sanitize_keypoints(keypoints, image_shape=None, rounded=False):
         2,
         3,
     ), "Keypoints must be a numpy array of shape (K, 2 or 3)."
-    if image_shape is not None:
+    if image_shape:
         keypoints[:, 0] = np.clip(keypoints[:, 0], 0, image_shape[0] - 1)
         keypoints[:, 1] = np.clip(keypoints[:, 1], 0, image_shape[1] - 1)
     if rounded:
@@ -154,7 +231,7 @@ def sanitize_bbox_ltwh(bbox: np.array, image_shape=None, rounded=False):
         bbox, np.ndarray
     ), f"Expected bbox to be of type np.ndarray, got {type(bbox)}"
     assert bbox.shape == (4,), f"Expected bbox to be of shape (4,), got {bbox.shape}"
-    if image_shape is not None:
+    if image_shape:
         bbox[0] = max(0, min(bbox[0], image_shape[0] - 2))
         bbox[1] = max(0, min(bbox[1], image_shape[1] - 2))
         bbox[2] = max(1, min(bbox[2], image_shape[0] - 1 - bbox[0]))
@@ -169,7 +246,7 @@ def ltwh_to_xywh(bbox, image_shape=None, rounded=False):
     Converts coordinates `[left, top, w, h]` to `[center_x, center_y, w, h]`.
     If image_shape is provided, the bbox is clipped to the image dimensions and its dimensions are ensured to be valid.
     """
-    if image_shape is not None:
+    if image_shape:
         bbox = sanitize_bbox_ltwh(bbox, image_shape)
     bbox = np.array([bbox[0] + bbox[2] / 2, bbox[1] + bbox[3] / 2, bbox[2], bbox[3]])
     if rounded:
@@ -182,7 +259,7 @@ def ltwh_to_ltrb(bbox, image_shape=None, rounded=False):
     Converts coordinates `[left, top, w, h]` to `[left, top, right, bottom]`.
     If image_shape is provided, the bbox is clipped to the image dimensions and its dimensions are ensured to be valid.
     """
-    if image_shape is not None:
+    if image_shape:
         bbox = sanitize_bbox_ltwh(bbox, image_shape)
     bbox = np.array([bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]])
     if rounded:
@@ -208,7 +285,7 @@ def sanitize_bbox_ltrb(bbox, image_shape=None, rounded=False):
         bbox, np.ndarray
     ), f"Expected bbox to be of type np.ndarray, got {type(bbox)}"
     assert bbox.shape == (4,), f"Expected bbox to be of shape (4,), got {bbox.shape}"
-    if image_shape is not None:
+    if image_shape:
         bbox[0] = max(0, min(bbox[0], image_shape[0] - 2))  # ensure width > 0
         bbox[1] = max(0, min(bbox[1], image_shape[1] - 2))  # ensure height > 0
         bbox[2] = max(1, min(bbox[2], image_shape[0] - 1))  # ensure width > 0
@@ -223,7 +300,7 @@ def ltrb_to_xywh(bbox, image_shape=None, rounded=False):
     Converts coordinates `[left, top, right, bottom]` to `[center_x, center_y, w, h]`.
     If image_shape is provided, the bbox is clipped to the image dimensions and its dimensions are ensured to be valid.
     """
-    if image_shape is not None:
+    if image_shape:
         bbox = sanitize_bbox_ltrb(bbox, image_shape)
     bbox = np.array(
         [
@@ -243,7 +320,7 @@ def ltrb_to_ltwh(bbox, image_shape=None, rounded=False):
     Converts coordinates `[left, top, right, bottom]` to `[left, top, w, h]`.
     If image_shape is provided, the bbox is clipped to the image dimensions and its dimensions are ensured to be valid.
     """
-    if image_shape is not None:
+    if image_shape:
         bbox = sanitize_bbox_ltrb(bbox, image_shape)
     bbox = np.array([bbox[0], bbox[1], bbox[2] - bbox[0], bbox[3] - bbox[1]])
     if rounded:
@@ -273,7 +350,7 @@ def xywh_to_ltrb(bbox, image_shape=None, rounded=False):
     Converts coordinates `[center_x, center_y, w, h]` to `[left, top, right, bottom]`.
     If image_shape is provided, the bbox is clipped to the image dimensions and its dimensions are ensured to be valid.
     """
-    if image_shape is not None:
+    if image_shape:
         bbox = sanitize_bbox_xywh(bbox, image_shape)
     bbox = np.array(
         [
@@ -293,7 +370,7 @@ def xywh_to_ltwh(bbox, image_shape=None, rounded=False):
     Converts coordinates `[center_x, center_y, w, h]` to `[left, top, w, h]`.
     If image_shape is provided, the bbox is clipped to the image dimensions and its dimensions are ensured to be valid.
     """
-    if image_shape is not None:
+    if image_shape:
         bbox = sanitize_bbox_xywh(bbox, image_shape)
     bbox = np.array([bbox[0] - bbox[2] / 2, bbox[1] - bbox[3] / 2, bbox[2], bbox[3]])
     if rounded:

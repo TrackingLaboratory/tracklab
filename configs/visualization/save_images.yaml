@@ -8,13 +8,17 @@ cfg:
   process_n_frames_by_video: -1             # -1 to process all the frames
   video_fps: 5
 
+  vis_kp_threshold: 0.3
+
   prediction:
     draw_bbox: True
     draw_keypoints: True
     draw_skeleton: True
+    draw_unmatched: False
     print_id: True
     print_bbox_confidence: True
     print_keypoints_confidence: False
+    print_bbox_state: True
     # debug
     draw_bpbreid_heatmaps: False
     heatmaps_display_threshold: 0.05  # heatmaps (blue) pixels with value below this threshold are not displayed

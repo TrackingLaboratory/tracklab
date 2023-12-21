@@ -117,3 +117,7 @@ def apply_recursively(d, f=lambda v: v, filter=lambda k, v: True, always_filter=
         else:
             d[k] = f(v) if filter(k, v) else v
     return d
+
+
+def finish():
+    wandb.finish()

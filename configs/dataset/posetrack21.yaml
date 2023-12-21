@@ -37,7 +37,7 @@ annotation_path: ${data_dir}/PoseTrack21/posetrack_data
 #  "018090_mpii_test",  # head close up, face tracking
 #  "016236_mpii_test",  # football with well visible full body but a lot of interesting occlusions
 #  "016180_mpii_test",  # video with a lot of people at different scales
-#  "013293_mpii_test",  # partially occcluded musicians
+#  "013293_mpii_test",  # partially occluded musicians
 #  "012834_mpii_test",  # a lot of small people
 #  "000522_mpii_test",  # 100m hurdle (haies) race
 #  "004622_mpii_test",  # a lot of trampoline jumpers with similar appearance

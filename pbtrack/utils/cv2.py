@@ -1,6 +1,6 @@
 import cv2
-import numpy as np
 from functools import lru_cache
+from .coordinates import *
 
 
 import logging
@@ -89,7 +89,7 @@ def draw_keypoints(
                                 keypoints_xy[link[1] - 1, 0],
                                 keypoints_xy[link[1] - 1, 1],
                             ),
-                            color=skeleton_color,
+                            color=kp_color,
                             thickness=skeleton_thickness,
                             lineType=cv2.LINE_AA,
                         )
@@ -128,8 +128,8 @@ def draw_bbox(
         try:
             draw_text(
                 patch,
-                f"{detection.bbox.conf():.1f} %",
-                (l, t),
+                f"{detection.bbox.conf():.2f}%|{detection.keypoints_conf:.2f}",
+                (l+5, t+5),
                 fontFace=text_font,
                 fontScale=text_scale,
                 thickness=text_thickness,
@@ -137,6 +137,7 @@ def draw_bbox(
                 alignH="l",
                 alignV="t",
                 color_bg=(255, 255, 255),
+                darken=0.7,
             )
         except KeyError:
             log.warning(
@@ -145,18 +146,20 @@ def draw_bbox(
             )
     if print_id:
         try:
-            draw_text(
-                patch,
-                "nan" if np.isnan(detection.track_id) else f"{int(detection.track_id)}",
-                (r, t),
-                fontFace=text_font,
-                fontScale=text_scale,
-                thickness=text_thickness,
-                alignH="c",
-                alignV="t",
-                color_txt=text_color,
-                color_bg=(255, 255, 255),
-            )
+            if not np.isnan(detection.track_id):
+                draw_text(
+                    patch,
+                    f"{int(detection.track_id)}",
+                    (r-5, t-15),
+                    fontFace=text_font,
+                    fontScale=text_scale,
+                    thickness=text_thickness,
+                    alignH="r",
+                    alignV="t",
+                    color_txt=text_color,
+                    color_bg=(255, 255, 255),
+                    darken=0.7,
+                )
         except KeyError:
             log.warning(
                 "You tried to draw the track id but no 'track_id' was found in the "
@@ -240,11 +243,14 @@ def print_count_frame(patch, frame, nframes):
     draw_text(
         patch,
         f"{frame}/{nframes}",
-        (6, patch.shape[0] - 6),
+        (6, 15),
         fontFace=1,
-        fontScale=1.0,
+        fontScale=2.0,
         thickness=1,
         color_txt=(255, 0, 0),
+        color_bg=(255, 255, 255),
+        alignH="l",
+        alignV="t",
     )
 
 
@@ -264,6 +270,7 @@ def draw_text(
     color_bg=None,
     alignH="l",  # l: left, c: center, r: right
     alignV="b",  # t: top, c: center, b: bottom
+    darken=1.0,
 ):
     # TODO: add multiline support
     # TODO: add scale: txt size depend on scale of bbox?
@@ -310,7 +317,7 @@ def draw_text(
         text_position,
         fontFace=fontFace,
         fontScale=fontScale,
-        color=color_txt,
+        color=np.array(color_txt) * darken,
         thickness=thickness,
         lineType=lineType,
     )

@@ -1,5 +1,8 @@
 import os
 import json
+import tempfile
+from pathlib import Path
+
 import torch
 import numpy as np
 import pandas as pd
@@ -47,12 +50,18 @@ class PoseTrack21Evaluator(EvaluatorBase):
         category = self._category(tracker_state.video_metadatas)
         seqs = list(tracker_state.video_metadatas.name)
         bbox_column = self.cfg.bbox_column_for_eval
+        keypoints_column = self.cfg.keypoints_column_for_eval
         eval_pose_on_all = self.cfg.eval_pose_on_all
+        if not self.cfg.get("save_eval", True):
+            tempdir = Path(tempfile.TemporaryDirectory().name)
+            self.cfg.posetrack_trackers_folder = str(tempdir / self.cfg.posetrack_trackers_folder)
+            self.cfg.mot_trackers_folder = str(tempdir / self.cfg.mot_trackers_folder)
         if self.cfg.eval_pose_estimation:
             annotations = self._annotations_pose_estimation_eval(
                 tracker_state.detections_pred,
                 image_metadatas,
                 bbox_column,
+                keypoints_column,
                 eval_pose_on_all,
             )
             trackers_folder = os.path.join(
@@ -93,7 +102,10 @@ class PoseTrack21Evaluator(EvaluatorBase):
 
         if self.cfg.eval_pose_tracking:
             annotations = self._annotations_tracking_eval(
-                tracker_state.detections_pred, image_metadatas, bbox_column
+                tracker_state.detections_pred,
+                image_metadatas,
+                bbox_column,
+                keypoints_column,
             )
             trackers_folder = os.path.join(
                 self.cfg.posetrack_trackers_folder, "pose_tracking"
@@ -106,7 +118,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 gt_folder=self.cfg.posetrack_gt_folder,
                 eval_type="pose_tracking",
                 use_parallel=self.cfg.use_parallel,
-                num_parallel_cores=self.cfg.num_parallel_cores,
+                num_parallel_cores=max(1, self.cfg.num_parallel_cores),
                 SEQS=seqs,
             )
             res_combined, res_by_video = evaluator.eval()
@@ -122,12 +134,18 @@ class PoseTrack21Evaluator(EvaluatorBase):
             argv = ["", self.cfg.posetrack_gt_folder, trackers_folder]
             gtFramesAll, prFramesAll = load_data_dir(argv, seqs)
             metricsAll = evaluateTracking(gtFramesAll, prFramesAll, "", False, False)
-            metrics = np.zeros([Joint().count + 4, 1])
+
+            metrics = np.zeros([Joint().count + 7, 1])
             for i in range(Joint().count + 1):
                 metrics[i, 0] = metricsAll["mota"][0, i]
             metrics[Joint().count + 1, 0] = metricsAll["motp"][0, Joint().count]
             metrics[Joint().count + 2, 0] = metricsAll["pre"][0, Joint().count]
             metrics[Joint().count + 3, 0] = metricsAll["rec"][0, Joint().count]
+            metrics[Joint().count + 4, 0] = metricsAll["num_misses"][0, Joint().count]
+            metrics[Joint().count + 5, 0] = metricsAll["num_switches"][0, Joint().count]
+            metrics[Joint().count + 6, 0] = metricsAll["num_false_positives"][
+                0, Joint().count
+            ]
             res_combined = motmetrics2dict(metrics)
             self._print_results(
                 res_combined,
@@ -139,7 +157,10 @@ class PoseTrack21Evaluator(EvaluatorBase):
 
         if self.cfg.eval_reid_pose_tracking:
             annotations = self._annotations_reid_pose_tracking_eval(
-                tracker_state.detections_pred, image_metadatas, bbox_column
+                tracker_state.detections_pred,
+                image_metadatas,
+                bbox_column,
+                keypoints_column,
             )
             trackers_folder = os.path.join(
                 self.cfg.posetrack_trackers_folder, "reid_pose_tracking"
@@ -150,7 +171,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 gt_folder=self.cfg.posetrack_gt_folder,
                 eval_type="reid_tracking",
                 use_parallel=self.cfg.use_parallel,
-                num_parallel_cores=self.cfg.num_parallel_cores,
+                num_parallel_cores=max(1, self.cfg.num_parallel_cores),
                 SEQS=seqs,
             )
             res_combined, res_by_video = evaluator.eval()
@@ -170,6 +191,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 tracker_state.detections_pred,
                 tracker_state.detections_gt,
                 tracker_state.image_metadatas,
+                bbox_column,
             )
             map(bbox_map.pop, ["map_per_class", "mar_100_per_class"])
             headers = bbox_map.keys()
@@ -190,7 +212,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 gt_folder=self.cfg.mot_gt_folder,
                 eval_type="posetrack_mot",
                 use_parallel=self.cfg.use_parallel,
-                num_parallel_cores=self.cfg.num_parallel_cores,
+                num_parallel_cores=max(1, self.cfg.num_parallel_cores),
                 SEQS=seqs,
             )
             res_combined, res_by_video = evaluator.eval()
@@ -274,20 +296,24 @@ class PoseTrack21Evaluator(EvaluatorBase):
         return video_metadatas.categories[0]
 
     # FIXME fuse different annotations functions
-    @staticmethod
     def _annotations_pose_estimation_eval(
-        detections_pred, image_metadatas, bbox_column, eval_pose_on_all
+        self,
+        detections_pred,
+        image_metadatas,
+        bbox_column,
+        keypoints_column,
+        eval_pose_on_all,
     ):
         detections_pred = detections_pred.copy()
-        na_col_to_drop = [
-            "keypoints_xyc",
-            bbox_column,
-            "image_id",
-        ]
+        detections_pred["id"] = detections_pred.index
+        na_col_to_drop = [keypoints_column, bbox_column, "image_id"]
         if not eval_pose_on_all:
             # If set to false, will evaluate pose estimation only on tracked detections (i.e. detections with a
             # defined 'track_id')
             na_col_to_drop.append("track_id")
+        na_col_to_drop = [
+            col for col in na_col_to_drop if col in detections_pred.columns
+        ]
         len_before_drop = len(detections_pred)
         detections_pred.dropna(
             subset=na_col_to_drop,
@@ -295,27 +321,30 @@ class PoseTrack21Evaluator(EvaluatorBase):
             inplace=True,
         )
         # drop detections that are in ignored regions
-        detections_pred.drop(
-            detections_pred[detections_pred.ignored].index, inplace=True
+        detections_pred = detections_pred[detections_pred.ignored == False]
+        # drop detections that are not reliable
+        detections_pred["enough_vis_kp"] = detections_pred[keypoints_column].apply(
+            lambda x: self.has_enough_vis_kp(x)
         )
+        detections_pred = detections_pred[detections_pred.enough_vis_kp == True]
+        detections_pred = self.check_if_tracklet(detections_pred)
+        detections_pred = detections_pred[detections_pred.is_tracklet == True]
         if len_before_drop != len(detections_pred):
             log.warning(
-                "Dropped {} rows with NA values".format(
-                    len_before_drop - len(detections_pred)
-                )
+                "Dropped {} detections".format(len_before_drop - len(detections_pred))
             )
+        detections_pred[keypoints_column] = detections_pred[keypoints_column].apply(
+            lambda x: self.remove_not_visible_kps(x)
+        )
+        detections_pred["scores"] = detections_pred[keypoints_column].apply(
+            lambda x: x[:, 2]
+        )
+        detections_pred["track_id"] = detections_pred["track_id"].astype(int)
+        detections_pred["person_id"] = detections_pred["id"].astype(int)
         detections_pred.rename(
-            columns={"keypoints_xyc": "keypoints", bbox_column: "bbox"},
+            columns={keypoints_column: "keypoints", bbox_column: "bbox"},
             inplace=True,
         )
-        if "scores" not in detections_pred.columns:
-            # 'scores' can already be present if loaded from a json file with external detections_pred
-            # for PoseTrack21 author baselines, not using their provided score induces a big drop in performance
-            detections_pred["scores"] = detections_pred["keypoints"].apply(
-                lambda x: x[:, 2]
-            )
-        detections_pred["track_id"] = detections_pred.index
-        detections_pred["person_id"] = detections_pred.index
 
         annotations = {}
         videos_names = image_metadatas["video_name"].unique()
@@ -331,43 +360,78 @@ class PoseTrack21Evaluator(EvaluatorBase):
             ].to_dict("records")
         return annotations
 
+    def remove_not_visible_kps(self, x):
+        x[x[:, 2] < self.cfg.vis_kp_threshold, :] = 0.0
+        return x
+
+    def has_enough_vis_kp(self, x):
+        return (
+            x[x[:, 2] > self.cfg.vis_kp_threshold, :].shape[0]
+            >= self.cfg.min_num_vis_kp
+        )
+
+    def check_if_tracklet(self, detections):
+        detections = detections.sort_values(by=["video_id", "track_id"])
+
+        tracklet_lengths = (
+            detections.groupby(["video_id", "track_id"])
+            .size()
+            .reset_index(name="tracklet_len")
+        )
+
+        detections = detections.merge(tracklet_lengths, on=["video_id", "track_id"])
+        detections["is_tracklet"] = detections["tracklet_len"].apply(
+            lambda x: x >= self.cfg.min_tracklet_length
+        )
+
+        return detections
+
     # FIXME fuse different annotations functions
-    @staticmethod
-    def _annotations_tracking_eval(detections_pred, image_metadatas, bbox_column):
+    def _annotations_tracking_eval(
+        self, detections_pred, image_metadatas, bbox_column, keypoints_column
+    ):
         detections_pred = detections_pred.copy()
         detections_pred["id"] = detections_pred.index
-        col_to_drop = [
-            "keypoints_xyc",
+        na_col_to_drop = [
+            keypoints_column,
             bbox_column,
             "image_id",
             "track_id",
         ]
-        col_to_drop = [col for col in col_to_drop if col in detections_pred.columns]
+        na_col_to_drop = [
+            col for col in na_col_to_drop if col in detections_pred.columns
+        ]
         len_before_drop = len(detections_pred)
         detections_pred.dropna(
-            subset=col_to_drop,
+            subset=na_col_to_drop,
             how="any",
             inplace=True,
         )
         # drop detections that are in ignored regions
-        detections_pred.drop(
-            detections_pred[detections_pred.ignored].index, inplace=True
+        detections_pred = detections_pred[detections_pred.ignored == False]
+        # drop detections that are not reliable
+        detections_pred["enough_vis_kp"] = detections_pred[keypoints_column].apply(
+            lambda x: self.has_enough_vis_kp(x)
         )
+        detections_pred = detections_pred[detections_pred.enough_vis_kp == True]
+        detections_pred = self.check_if_tracklet(detections_pred)
+        detections_pred = detections_pred[detections_pred.is_tracklet == True]
         if len_before_drop != len(detections_pred):
             log.warning(
-                "Dropped {} rows with NA values".format(
-                    len_before_drop - len(detections_pred)
-                )
+                "Dropped {} detections".format(len_before_drop - len(detections_pred))
             )
-        detections_pred.rename(
-            columns={"keypoints_xyc": "keypoints", bbox_column: "bbox"},
-            inplace=True,
+        detections_pred[keypoints_column] = detections_pred[keypoints_column].apply(
+            lambda x: self.remove_not_visible_kps(x)
         )
-        detections_pred["scores"] = detections_pred["keypoints"].apply(
+        detections_pred["scores"] = detections_pred[keypoints_column].apply(
             lambda x: x[:, 2]
         )
         detections_pred["track_id"] = detections_pred["track_id"].astype(int)
         detections_pred["person_id"] = detections_pred["id"].astype(int)
+        detections_pred.rename(
+            columns={keypoints_column: "keypoints", bbox_column: "bbox"},
+            inplace=True,
+        )
 
         annotations = {}
         videos_names = image_metadatas["video_name"].unique()
@@ -386,13 +450,13 @@ class PoseTrack21Evaluator(EvaluatorBase):
     # FIXME fuse different annotations functions
     @staticmethod
     def _annotations_reid_pose_tracking_eval(
-        detections_pred, image_metadatas, bbox_column
+        detections_pred, image_metadatas, bbox_column, keypoints_column
     ):
         detections_pred = detections_pred.copy()
         len_before_drop = len(detections_pred)
         detections_pred.dropna(
             subset=[
-                "keypoints_xyc",
+                keypoints_column,
                 bbox_column,
                 "image_id",
                 "track_id",
@@ -412,7 +476,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 )
             )
         detections_pred.rename(
-            columns={"keypoints_xyc": "keypoints", bbox_column: "bbox"},
+            columns={keypoints_column: "keypoints", bbox_column: "bbox"},
             inplace=True,
         )
         detections_pred["scores"] = detections_pred["keypoints"].apply(
@@ -454,8 +518,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 )
 
     # MOT helper functions
-    @staticmethod
-    def _mot_encoding(detections_pred, image_metadatas, bbox_column):
+    def _mot_encoding(self, detections_pred, image_metadatas, bbox_column):
         detections_pred = detections_pred.copy()
         image_metadatas["id"] = image_metadatas.index
         df = pd.merge(
@@ -463,6 +526,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
             detections_pred.reset_index(drop=True),
             left_on="id",
             right_on="image_id",
+            suffixes=('', '_y')
         )
         len_before_drop = len(df)
         df.dropna(
@@ -471,13 +535,14 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 "frame",
                 "track_id",
                 bbox_column,
-                "keypoints_xyc",
             ],
             how="any",
             inplace=True,
         )
         # drop detections that are in ignored regions
-        df.drop(df[df.ignored].index, inplace=True)
+        df = df[df.ignored == False]
+        df = self.check_if_tracklet(df)
+        df = df[df.is_tracklet == True]
         if len_before_drop != len(df):
             log.warning(
                 "Dropped {} rows with NA values".format(len_before_drop - len(df))
@@ -530,9 +595,11 @@ class PoseTrack21Evaluator(EvaluatorBase):
             or "FP" in metric_name
             or "TN" in metric_name
         ):
+            if metric_name == "MOTP":
+                return np.around(metric_value * scale_factor, 3)
             return int(metric_value)
         else:
-            return np.around(metric_value * scale_factor, 2)
+            return np.around(metric_value * scale_factor, 3)
 
     @staticmethod
     def _print_results(
@@ -563,10 +630,10 @@ class PoseTrack21Evaluator(EvaluatorBase):
             )
 
     @staticmethod
-    def compute_bbox_map(detections_pred, detections_gt, metadatas):
+    def compute_bbox_map(detections_pred, detections_gt, metadatas, bbox_column):
         images_ids = metadatas[metadatas.is_labeled].index
         detections_pred = detections_pred[detections_pred.ignored == False]
-        metric = MeanAveragePrecision(box_format="xywh", iou_type="bbox", num_classes=1)
+        metric = MeanAveragePrecision(box_format="xywh", iou_type="bbox")
         preds = []
         targets = []
         for image_id in images_ids:
@@ -587,7 +654,9 @@ class PoseTrack21Evaluator(EvaluatorBase):
                     preds.append(
                         {
                             "boxes": torch.tensor(
-                                np.vstack(preds_by_image.bbox_ltwh.values).astype(float)
+                                np.vstack(preds_by_image[bbox_column].values).astype(
+                                    float
+                                )
                             ),
                             "scores": torch.tensor(
                                 preds_by_image.bbox_conf.values.astype(float)

@@ -1,7 +1,8 @@
 import os
+import rich.logging
 import torch
 import hydra
-from pbtrack.utils import monkeypatch_hydra
+from pbtrack.utils import monkeypatch_hydra  # needed to avoid complex hydra stacktraces when errors occur in "instantiate(...)"
 from hydra.utils import instantiate
 from omegaconf import OmegaConf
 
@@ -14,6 +15,8 @@ import logging
 os.environ["HYDRA_FULL_ERROR"] = "1"
 log = logging.getLogger(__name__)
 
+import warnings
+warnings.filterwarnings("ignore")
 
 def set_sharing_strategy():
     torch.multiprocessing.set_sharing_strategy(
@@ -36,9 +39,13 @@ def main(cfg):
     # Initiate all the instances
     tracking_dataset = instantiate(cfg.dataset)
 
-    for handler in log.root.handlers:
-        if type(handler) is logging.StreamHandler:
-            handler.setLevel(logging.INFO)
+    if cfg.use_rich:
+        log.root.addHandler(rich.logging.RichHandler(level=logging.INFO))
+    else:
+        # TODO : Fix for mmcv fix. This should be done in a nicer way
+        for handler in log.root.handlers:
+            if type(handler) is logging.StreamHandler:
+                handler.setLevel(logging.INFO)
 
     modules = []
     for name in cfg.pipeline:
@@ -75,7 +82,7 @@ def main(cfg):
         )
         tracking_engine.track_dataset()
         # Evaluation
-        if cfg.dataset.nframes == -1:
+        if cfg.get("eval_tracking", True) and cfg.dataset.nframes == -1:
             if tracker_state.detections_gt is not None:
                 log.info("Starting evaluation.")
                 evaluator.run(tracker_state)
@@ -91,6 +98,8 @@ def main(cfg):
 
         if tracker_state.save_file is not None:
             log.info(f"Saved state at : {tracker_state.save_file.resolve()}")
+
+    wandb.finish()
 
     return 0
 

@@ -26,8 +26,15 @@ def collate_fn(batch):
 
 class YOLOv8Pose(ImageLevelModule):
     collate_fn = collate_fn
-    output_columns = ["image_id", "id", "video_id", "category_id",
-                      "bbox_ltwh", "bbox_conf", "keypoints_xyc", "keypoints_conf"]
+    output_columns = [
+        "image_id",
+        "video_id",
+        "category_id",
+        "bbox_ltwh",
+        "bbox_conf",
+        "keypoints_xyc",
+        "keypoints_conf",
+    ]
 
     def __init__(self, cfg, device, batch_size):
         super().__init__(batch_size)
@@ -49,10 +56,10 @@ class YOLOv8Pose(ImageLevelModule):
         results_by_image = self.model(images)
         detections = []
         for results, shape, (_, metadata) in zip(
-                results_by_image, shapes, metadatas.iterrows()
+            results_by_image, shapes, metadatas.iterrows()
         ):
             for bbox, keypoints in zip(
-                    results.boxes.cpu().numpy(), results.keypoints.cpu().numpy()
+                results.boxes.cpu().numpy(), results.keypoints.cpu().numpy()
             ):
                 if bbox.cls == 0 and bbox.conf >= self.cfg.min_confidence:
                     detections.append(
@@ -64,7 +71,7 @@ class YOLOv8Pose(ImageLevelModule):
                                 video_id=metadata.video_id,
                                 category_id=1,  # `person` class in posetrack
                                 keypoints_xyc=keypoints.data[0],
-                                keypoints_conf=np.mean(keypoints.data[0, :, 2], axis=0),
+                                keypoints_conf=np.mean(keypoints.conf[0], axis=0),
                             ),
                             name=self.id,
                         )

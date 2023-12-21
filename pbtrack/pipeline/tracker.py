@@ -28,7 +28,10 @@ class Tracker(Module):
         self._datapipe = None
 
     def process_video(
-        self, detections: pd.DataFrame, imgs_meta: pd.DataFrame, engine: "TrackingEngine"
+        self,
+        detections: pd.DataFrame,
+        imgs_meta: pd.DataFrame,
+        engine: "TrackingEngine",
     ) -> pd.DataFrame:
         for image_id in imgs_meta.index:
             image = cv2_load_image(imgs_meta.loc[image_id].file_path)

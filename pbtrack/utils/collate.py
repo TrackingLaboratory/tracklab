@@ -2,6 +2,7 @@ import re
 import torch
 
 np_str_obj_array_pattern = re.compile(r"[SaUO]")
+from torch._six import string_classes
 import collections
 
 default_collate_err_msg_format = (
@@ -9,7 +10,6 @@ default_collate_err_msg_format = (
     "dicts or lists; found {}"
 )
 
-string_classes = (str, bytes)
 
 class Unbatchable(tuple):
     pass

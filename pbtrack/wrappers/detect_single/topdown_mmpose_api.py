@@ -30,8 +30,10 @@ def mmpose_collate(batch):
 
 class TopDownMMPose(SingleDetector):
     collate_fn = mmpose_collate
+    output_columns = ["keypoints_xyc", "keypoints_conf"]
 
-    def __init__(self, device, batch_size, config_name, path_to_checkpoint):
+    def __init__(self, device, batch_size, config_name, path_to_checkpoint,
+                 vis_kp_threshold=0.4, min_num_vis_kp=3):
         super().__init__(device, batch_size)
         model_df = get_model_info(package="mmpose", configs=[config_name])
         if len(model_df) != 1:
@@ -41,7 +43,8 @@ class TopDownMMPose(SingleDetector):
         path_to_config = package_path / ".mim" / model_df.config.item()
         get_checkpoint(path_to_checkpoint, download_url)
         self.model = init_pose_model(str(path_to_config), path_to_checkpoint, device)
-
+        self.vis_kp_threshold = vis_kp_threshold
+        self.min_num_vis_kp = min_num_vis_kp
         self.dataset_info = DatasetInfo(self.model.cfg.dataset_info)
         self.test_pipeline = Compose(self.model.cfg.test_pipeline)
 
@@ -72,18 +75,21 @@ class TopDownMMPose(SingleDetector):
     @torch.no_grad()
     def process(self, batch, detections: pd.DataFrame):
         batch = scatter(batch, [self.device])[0]
-        keypoints = list(
-            self.model(
+        keypoints = self.model(
                 img=batch["img"],
                 img_metas=batch["img_metas"],
                 return_loss=False,
                 return_heatmap=False,
             )["preds"]
-        )
-        detections["keypoints_conf"] = [
-            np.mean(kp[:, 2]) * s["bbox_score"]
-            for kp, s in zip(keypoints, batch["img_metas"])
-        ]
+        keypoints[keypoints[:, :, 2] < self.vis_kp_threshold, 2] = 0
+        keypoints = list(keypoints)
+        confs = []
+        for kp in keypoints:
+            if kp[kp[:, 2] != 0].shape[0] < self.min_num_vis_kp:
+                confs.append(0.)
+            else:
+                confs.append(np.mean(kp[kp[:, 2] != 0, 2]))
+        detections["keypoints_conf"] = confs
         detections["keypoints_xyc"] = keypoints
         return detections
 
