@@ -8,21 +8,14 @@ Clone the repository
 
 .. code:: bash
 
-   git clone https://github.com/PbTrack/pb-track.git --recurse-submodules
+   git clone https://github.com/PbTrack/pb-track.git
    cd pb-track
-
-If you cloned the repo without using the ``--recurse-submodules``
-option, you can still download the submodules with :
-
-.. code:: bash
-
-   git submodule update --init --recursive
 
 Manage the environment
 ----------------------
 
-Create and activate a new environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Create and activate a new environment with conda
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
 
@@ -34,6 +27,13 @@ hardware. Please check on `Pytorch
 website <https://pytorch.org/get-started/previous-versions/>`_ to find
 the right version for you.
 
+.. note::
+
+ You can also install the framework in a regular python virtual environment, and can then install
+ the dependencies directly, but make sure that you install it in a *separate* environment !
+
+ For advanced users, this project can also be installed with `Poetry <https://python-poetry.org/>`_.
+
 Install the dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -41,25 +41,11 @@ Get into your repo and install the requirements with :
 
 .. code:: bash
 
-   pip install -r requirements.txt
+   pip install -e .
    mim install mmcv-full
 
-Note: if you re-install dependencies after pulling the last changes, and
-a new git submodule has been added, do not forget to recursively update
-all the submodule before running above commands:
-
-.. code:: bash
-
-   git submodule update --init --recursive
-
-Setup reid
-~~~~~~~~~~
-
-.. code:: bash
-
-   cd plugins/reid/bpbreid/
-   python setup.py develop
 
 .. [1]
    Tested on ``conda 22.11.1``, ``Python 3.10.8``, ``pip 22.3.1``,
    ``g++ 11.3.0`` and ``gcc 11.3.0``
+

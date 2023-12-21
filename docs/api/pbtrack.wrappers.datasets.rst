@@ -14,6 +14,7 @@ Subpackages
 
    pbtrack.wrappers.datasets.mot
    pbtrack.wrappers.datasets.posetrack
+   pbtrack.wrappers.datasets.soccernet
 
 Submodules
 ----------

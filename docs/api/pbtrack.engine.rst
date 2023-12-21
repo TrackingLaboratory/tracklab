@@ -9,6 +9,14 @@ pbtrack.engine package
 Submodules
 ----------
 
+pbtrack.engine.batch module
+---------------------------
+
+.. automodule:: pbtrack.engine.batch
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pbtrack.engine.engine module
 ----------------------------
 

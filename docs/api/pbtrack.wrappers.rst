@@ -16,5 +16,6 @@ Subpackages
    pbtrack.wrappers.detect_multiple
    pbtrack.wrappers.detect_single
    pbtrack.wrappers.eval
+   pbtrack.wrappers.jn_detector
    pbtrack.wrappers.reid
    pbtrack.wrappers.track

@@ -1,6 +1,6 @@
-# PbTrack
-
-PbTrack is an easy-to-use modular framework for multi-object pose/segmentation/bbox tracking that supports many tracking datasets and evaluation metrics.  
+# TrackLab
+<p align="center"></p>
+TrackLab is an easy-to-use modular framework for multi-object pose/segmentation/bbox tracking that supports many tracking datasets and evaluation metrics.  
 
 <p align="center">
   <img src="docs/assets/gifs/PoseTrack21_008827.gif" width="400" />
@@ -11,12 +11,12 @@ PbTrack is an easy-to-use modular framework for multi-object pose/segmentation/b
 - [2023.xx.yy] Planned public release 
 
 ## Introduction
-Welcome to this official repository of PbTrack, a modular framework for multi-object tracking.
-PbTrack is designed for research purposes and supports many types of detectors (bounding boxes, pose, segmentation), datasets, evaluation metrics.
-Every component of PbTrack, such as detector, tracker, re-identifier, etc, is configurable via standard yaml files
-PbTrack is designed to be easily extended to support new methods.
+Welcome to this official repository of TrackLab, a modular framework for multi-object tracking.
+TrackLab is designed for research purposes and supports many types of detectors (bounding boxes, pose, segmentation), datasets, evaluation metrics.
+Every component of TrackLab, such as detector, tracker, re-identifier, etc, is configurable via standard yaml files
+TrackLab is designed to be easily extended to support new methods.
 
-PbTrack is composed of multiple modules:
+TrackLab is composed of multiple modules:
 1. A detector (OpenPifPaf, YOLO, ...)
 2. A re-identification model (BPBReID, ...)
 3. A camera motion compensation algorithm (findTransformECC, ...)
@@ -26,7 +26,7 @@ PbTrack is composed of multiple modules:
 7. An association algorithm (Hungarian algorithm, ...)
 
 
-Here's what makes PbTrack different from other existing tracking frameworks:
+Here's what makes TrackLab different from other existing tracking frameworks:
 - Fully modular framework to quickly integrate any detection/reid/tracking method or develop your own
 - It allows supervised training of the ReID model on the tracking training set
 - It provides a fully configurable visualization tool with the possibility to display any dev/debug information
@@ -39,6 +39,10 @@ Here's what makes PbTrack different from other existing tracking frameworks:
   - multi-person cross-video tracking
   - person re-identification
 
+## Documentation
+
+You can find the documentation in the docs/ folder. After installing, you can run `make html` inside this folder
+to get an html version of the documentation.
 
 ## Installation guide[^1]
 
@@ -47,7 +51,7 @@ Here's what makes PbTrack different from other existing tracking frameworks:
 ### Clone the repository
 
 ```bash
-git clone -b soccernet https://github.com/PbTrack/pb-track.git pbtrack-soccernet
+git clone -b soccernet https://github.com/PbTrack/pb-track.git tracklab-soccernet
 cd pb-track-soccernet
 ```
 
@@ -56,8 +60,8 @@ cd pb-track-soccernet
 #### Create and activate a new environment
 
 ```bash
-conda create -n pbtrack pip python=3.10 pytorch==1.13.0 torchvision==0.14.0 pytorch-cuda=11.7 -c pytorch -c nvidia -y
-conda activate pbtrack
+conda create -n tracklab pip python=3.10 pytorch==1.13.0 torchvision==0.14.0 pytorch-cuda=11.7 -c pytorch -c nvidia -y
+conda activate tracklab
 ```
 
 You might need to change your torch installation depending on your hardware. Please check on 
