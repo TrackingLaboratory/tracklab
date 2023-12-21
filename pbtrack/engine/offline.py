@@ -19,7 +19,8 @@ class OfflineTrackingEngine(TrackingEngine):
         # print('in offline.py, model_names: ', model_names)
         for model_name in model_names:
             if self.models[model_name].level == "video":
-                self.models[model_name].process(detections, imgs_meta)
+                detections = self.models[model_name].process(detections, imgs_meta)
+                continue
             self.datapipes[model_name].update(images, imgs_meta, detections)
             self.callback(
                 "on_task_start",
