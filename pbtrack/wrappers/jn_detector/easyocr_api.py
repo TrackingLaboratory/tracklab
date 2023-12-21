@@ -60,7 +60,7 @@ class EasyOCR(DetectionLevelModule):
     @torch.no_grad()
     def process(self, batch, detections: pd.DataFrame, metadatas: pd.DataFrame):
         jn_bbox_ltwh = []
-        jn_number = []
+        jursey_number = []
         jn_confidence = []
         # for file_path, bbox in zip(batch['file_path'], batch['bbox']):
             # img = cv2_load_image(file_path)
@@ -81,12 +81,13 @@ class EasyOCR(DetectionLevelModule):
                     jn = self.no_jursey_number()
                 else:
                     jn = [bbox_easyocr_to_image_ltwh(result[0], bbox), result[1], result[2]]
+                    # log.info(f"Jursey number found: {jn}")
                 
             jn_bbox_ltwh.append(jn[0])
-            jn_number.append(jn[1])
+            jursey_number.append(jn[1])
             jn_confidence.append(jn[2])
         detections['jn_bbox_ltwh'] = jn_bbox_ltwh
-        detections['jn_number'] = jn_number
+        detections['jursey_number'] = jursey_number
         detections['jn_confidence'] = jn_confidence
         
         return detections
