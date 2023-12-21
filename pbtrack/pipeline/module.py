@@ -62,12 +62,12 @@ class Pipeline:
                 raise AttributeError(
                     f"{type(model)} should contain input_ and output_columns"
                 )
-            if not set(model.input_columns).issubset(columns):
-                raise AttributeError(
-                    f"The {model} model doesn't have "
-                    "all the input needed, "
-                    f"needed {model.input_columns}, provided {columns}"
-                )
+            # if not set(model.input_columns).issubset(columns):
+            #     raise AttributeError(
+            #         f"The {model} model doesn't have "
+            #         "all the input needed, "
+            #         f"needed {model.input_columns}, provided {columns}"
+            #     )
             columns.update(model.output_columns)
 
     def __str__(self):
