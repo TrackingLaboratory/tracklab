@@ -25,15 +25,10 @@ class TrackerState(AbstractContextManager):
             save_file=None,
             load_from_groundtruth=False,
             compression=zipfile.ZIP_STORED,
-            load_step=None,
-            save_step="tracker",
             bbox_format=None,
             modules=None,
     ):
-        self.module_names = [module.name for module in modules]
-        assert load_step in self.module_names + [None], \
-            f"Load_step must be in {self.module_names}, not {load_step}"
-        self.modules = modules or {}
+        modules = modules or {}
         self.video_metadatas = tracking_set.video_metadatas
         self.image_metadatas = tracking_set.image_metadatas
         self.detections_gt = tracking_set.detections_gt
@@ -44,22 +39,28 @@ class TrackerState(AbstractContextManager):
         if self.save_file is not None:
             log.info(f"Saving TrackerState to {abspath(self.save_file)}")
         self.compression = compression
-        self.load_step = load_step
-        self.save_step = save_step
-        self.load_columns = []
-        self.load_index = min(
-            self.module_names.index(self.load_step) + 1 if self.load_step else 0,
-            len(self.module_names),
-        )
-        if load_step:
-            load_index = self.module_names.index(self.load_step) + 1
-            for module in self.modules[:load_index]:
-                self.load_columns += module.output_columns
-
+        with zipfile.ZipFile(self.load_file) as zf:
+            if "summary.json" in zf.namelist():
+                with zf.open("summary.json") as fp:
+                    summary = json.load(fp)
+                    load_columns = set(summary["columns"])
+            else:
+                with zf.open(zf.namelist()[0]) as fp:
+                    dets = pickle.load(fp)
+                    load_columns = set(dets.columns)
+        self.input_columns = set()
+        self.output_columns = set()
         self.forget_columns = []
-        for module in self.modules:
+        for module in modules:
+            self.input_columns |= (set(module.input_columns) - self.output_columns)
+            self.output_columns |= set(module.output_columns)
             self.forget_columns += getattr(module, "forget_columns", [])
 
+        self.load_columns = list((load_columns - self.output_columns)
+                                 | self.input_columns
+                                 | {"image_id", "video_id"})
+        if self.load_file:
+            log.info(f"Loading {self.load_columns} from {self.load_file}")
         self.zf = None
         self.video_id = None
         self.bbox_format = bbox_format
@@ -70,26 +71,13 @@ class TrackerState(AbstractContextManager):
 
         self.load_from_groundtruth = load_from_groundtruth
         if self.load_from_groundtruth:
-            self.load_groundtruth(load_step)
+            self.load_groundtruth(self.load_columns)
 
-    def load_groundtruth(self, load_step):
+    def load_groundtruth(self, load_columns):
         # FIXME only work for topdown -> handle bottomup
         # We consider here that detect_multi detects the bbox
         # and that detect_single detects the keypoints
-        assert (
-                load_step != "reid"
-        ), "Cannot load from groundtruth in reid step. Can only load bboxes or keypoints"
-        self.detections_pred = self.detections_gt.copy()
-        if load_step == "multi_detector":
-            self.detections_pred["keypoints_xyc"] = pd.NA
-            self.detections_pred["track_id"] = pd.NA
-            self.detections_pred["bbox_conf"] = 1.0
-            self.detections_pred.drop(columns=["track_id"], inplace=True)
-        elif load_step == "single_detector":
-            self.detections_pred["track_id"] = pd.NA
-            self.detections_pred["bbox_conf"] = 1.0
-            self.detections_pred["keypoints_conf"] = 1.0
-            self.detections_pred.drop(columns=["track_id"], inplace=True)
+        self.detections_pred = self.detections_gt.copy()[load_columns]
 
     def load_detections_pred_from_json(self, json_file):
         anns_path = Path(json_file)
@@ -220,6 +208,12 @@ class TrackerState(AbstractContextManager):
                 self.detections_pred is not None
         ), "The detections_pred should not be empty when saving"
         if f"{self.video_id}.pkl" not in self.zf["save"].namelist():
+            if "summary.json" not in self.zf["save"].namelist():
+                with self.zf["save"].open("summary.json", "w") as fp:
+                    summary = {"columns": list(self.detections_pred.columns)}
+                    summary_bytes = json.dumps(summary, ensure_ascii=False, indent=4).encode(
+                        'utf-8')
+                    fp.write(summary_bytes)
             with self.zf["save"].open(f"{self.video_id}.pkl", "w") as fp:
                 detections_pred = self.detections_pred[
                     self.detections_pred.video_id == self.video_id
@@ -244,7 +238,6 @@ class TrackerState(AbstractContextManager):
         if self.load_file is None:
             return pd.DataFrame()
 
-        log.info(f"loading from {self.load_file}")
         if f"{self.video_id}.pkl" in self.zf["load"].namelist():
             with self.zf["load"].open(f"{self.video_id}.pkl", "r") as fp:
                 video_detections = pickle.load(fp)

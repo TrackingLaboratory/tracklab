@@ -8,8 +8,6 @@ from pbtrack.pipeline.imagelevel_module import ImageLevelModule
 os.environ["YOLO_VERBOSE"] = "False"
 from ultralytics import YOLO
 
-from pbtrack.pipeline import MultiDetector
-from pbtrack.utils.cv2 import cv2_load_image
 from pbtrack.utils.coordinates import ltrb_to_ltwh
 
 import logging

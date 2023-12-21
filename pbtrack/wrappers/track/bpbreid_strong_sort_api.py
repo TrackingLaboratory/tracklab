@@ -4,12 +4,12 @@ import pandas as pd
 import bpbreid_strong_sort.strong_sort as strong_sort
 import logging
 
-from pbtrack.pipeline import Tracker
+from pbtrack.pipeline import ImageLevelModule
 
 log = logging.getLogger(__name__)
 
 
-class BPBReIDStrongSORT(Tracker):
+class BPBReIDStrongSORT(ImageLevelModule):
     input_columns = [
         "bbox_ltwh",
         "keypoints_xyc",

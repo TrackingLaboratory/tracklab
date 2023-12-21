@@ -1,6 +1,0 @@
-_target_: pbtrack.wrappers.TopDownMMPose
-#config_name: topdown_heatmap_litehrnet_18_coco_256x192 # AP: 0.643
-#config_name: topdown_heatmap_litehrnet_18_coco_384x288 # AP: 0.677
-#config_name: topdown_heatmap_litehrnet_30_coco_256x192 # AP: 0.675
-config_name: topdown_heatmap_litehrnet_30_coco_384x288 # AP: 0.7
-path_to_checkpoint: ${project_dir}/weights/${.config_name}.pth

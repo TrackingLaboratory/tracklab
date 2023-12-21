@@ -2,8 +2,7 @@ import torch
 import numpy as np
 import pandas as pd
 
-from pbtrack.pipeline import Tracker
-from pbtrack.pipeline.imagelevel_module import ImageLevelModule
+from pbtrack.pipeline import ImageLevelModule
 from pbtrack.utils.coordinates import ltrb_to_ltwh
 import oc_sort.ocsort as ocsort
 

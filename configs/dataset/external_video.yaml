@@ -3,4 +3,4 @@ defaults:
 
 _target_: pbtrack.wrappers.ExternalVideo
 
-video_path: "/globalscratch/users/a/b/abolfazl/PbTrack_files/dataset/england_epl/2014-2015/2015-02-21 - 18-00 Crystal Palace 1 - 2 Arsenal/1_720p.mkv"
+video_path: "/path/to/video.mp4"

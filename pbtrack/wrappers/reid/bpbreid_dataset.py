@@ -31,7 +31,7 @@ log = logging.getLogger(__name__)
 
 
 class ReidDataset(ImageDataset):
-    dataset_dir = "TinyPoseTrack21"  # TODO
+    dataset_dir = "PoseTrack21"  # TODO
     annotations_dir = "posetrack_data"  # TODO
     img_ext = ".jpg"
     masks_ext = ".npy"
