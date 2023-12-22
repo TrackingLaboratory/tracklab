@@ -32,7 +32,7 @@ class VideoLevelModule(Module):
     output_columns = None
 
     @abstractmethod
-    def __init__(self, batch_size: int):
+    def __init__(self):
         """Init function
 
         The arguments to this function are completely free
@@ -40,8 +40,7 @@ class VideoLevelModule(Module):
 
         You should call the __init__ function from the super() class.
         """
-        self.batch_size = batch_size
-        self._datapipe = None
+        pass
 
     @abstractmethod
     def process(self, detections: pd.DataFrame, metadatas: pd.DataFrame):

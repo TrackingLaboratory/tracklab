@@ -96,8 +96,8 @@ class TrackingEngine(ABC):
         self.datapipes = {}
         self.dataloaders = {}
         for model_name, model in self.models.items():
-            self.datapipes[model_name] = model.datapipe
-            self.dataloaders[model_name] = model.dataloader(engine=self)
+            self.datapipes[model_name] = getattr(model, "datapipe", None)
+            self.dataloaders[model_name] = getattr(model, "dataloader", lambda **kwargs: ...)(engine=self)
 
     def track_dataset(self):
         """Run tracking on complete dataset."""

@@ -370,15 +370,15 @@ class VisualizationEngine(Callback):
         if (
             is_prediction
             and self.cfg.prediction.display_jursey_number
-            and hasattr(detection, "jursey_number")
+            and hasattr(detection, "jn_tracklet")
         ):
-            if not pd.isna(detection.jursey_number):
+            if not pd.isna(detection.jn_tracklet):
                 l, t, r, b = detection.bbox.ltrb(
                     image_shape=(patch.shape[1], patch.shape[0]), rounded=True
                 )
                 draw_text(
                     patch,
-                    f"JN: {int(detection.jursey_number)}",
+                    f"JN: {int(detection.jn_tracklet)}",
                     (int((l + r)/2), int((t + b)/2)),
                     fontFace=self.cfg.text.font,
                     fontScale=self.cfg.text.scale,
