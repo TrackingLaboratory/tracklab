@@ -14,3 +14,4 @@ Subpackages
 
    pbtrack.wrappers.eval.mot
    pbtrack.wrappers.eval.posetrack
+   pbtrack.wrappers.eval.soccernet

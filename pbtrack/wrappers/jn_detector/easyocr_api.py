@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 class EasyOCR(DetectionLevelModule):
     
     input_columns = []
-    output_columns = ["jn_bbox_ltwh", "jn_number", "jn_confidence"]
+    output_columns = ["jursey_number", "jn_confidence"]
     
     def __init__(self, cfg, device, tracking_dataset=None):
         super().__init__(batch_size=1)
@@ -59,8 +59,8 @@ class EasyOCR(DetectionLevelModule):
 
     @torch.no_grad()
     def process(self, batch, detections: pd.DataFrame, metadatas: pd.DataFrame):
-        jn_bbox_ltwh = []
-        jn_number = []
+        # jn_bbox_ltwh = []
+        jursey_number = []
         jn_confidence = []
         # for file_path, bbox in zip(batch['file_path'], batch['bbox']):
             # img = cv2_load_image(file_path)
@@ -80,13 +80,15 @@ class EasyOCR(DetectionLevelModule):
                 except ValueError:
                     jn = self.no_jursey_number()
                 else:
-                    jn = [bbox_easyocr_to_image_ltwh(result[0], bbox), result[1], result[2]]
+                    # jn = [bbox_easyocr_to_image_ltwh(result[0], bbox), result[1], result[2]]
+                    jn = [result[0], result[1], result[2]]
+                    # log.info(f"Jursey number found: {jn}")
                 
-            jn_bbox_ltwh.append(jn[0])
-            jn_number.append(jn[1])
+            # jn_bbox_ltwh.append(jn[0])
+            jursey_number.append(jn[1])
             jn_confidence.append(jn[2])
-        detections['jn_bbox_ltwh'] = jn_bbox_ltwh
-        detections['jn_number'] = jn_number
+        # detections['jn_bbox_ltwh'] = jn_bbox_ltwh
+        detections['jursey_number'] = jursey_number
         detections['jn_confidence'] = jn_confidence
         
         return detections

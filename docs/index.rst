@@ -3,17 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PBTrack's documentation!
+Welcome to TrackLab's documentation!
 ===================================
 
 .. toctree::
    :maxdepth: 0
-   :caption: Contents
+   :caption: General
 
-   Available_features
-   configuration
    installation
+   configuration
    logging
+   Available_features
 
 .. toctree::
    :maxdepth: 0

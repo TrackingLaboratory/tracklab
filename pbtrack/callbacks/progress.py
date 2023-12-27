@@ -17,8 +17,7 @@ class Progressbar(Callback):
 
     def on_dataset_track_start(self, engine: TrackingEngine):
         total = len(engine.video_metadatas)
-        start = engine.tracker_state.load_index
-        log.info(f"Inference will be composed of the following steps: {', '.join(x for x in engine.module_names[start:])}")
+        log.info(f"Inference will be composed of the following steps: {', '.join(x for x in engine.module_names)}")
         self.pbar = tqdm(total=total, desc="Tracking videos")
 
     def on_dataset_track_end(self, engine: TrackingEngine):

@@ -39,15 +39,18 @@ class TrackerState(AbstractContextManager):
         if self.save_file is not None:
             log.info(f"Saving TrackerState to {abspath(self.save_file)}")
         self.compression = compression
-        with zipfile.ZipFile(self.load_file) as zf:
-            if "summary.json" in zf.namelist():
-                with zf.open("summary.json") as fp:
-                    summary = json.load(fp)
-                    load_columns = set(summary["columns"])
-            else:
-                with zf.open(zf.namelist()[0]) as fp:
-                    dets = pickle.load(fp)
-                    load_columns = set(dets.columns)
+        if self.load_file:
+            with zipfile.ZipFile(self.load_file) as zf:
+                if "summary.json" in zf.namelist():
+                    with zf.open("summary.json") as fp:
+                        summary = json.load(fp)
+                        load_columns = set(summary["columns"])
+                else:
+                    with zf.open(zf.namelist()[0]) as fp:
+                        dets = pickle.load(fp)
+                        load_columns = set(dets.columns)
+        else:
+            load_columns = set()
         self.input_columns = set()
         self.output_columns = set()
         self.forget_columns = []

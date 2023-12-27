@@ -15,6 +15,7 @@ defaults:
   - modules/reid: bpbreid
   - modules/track: oc_sort
   - modules/jn_detect: easyocr
+  - modules/jn_tracklet: voting
 
 # Pipeline definition :
 # Defines the order in which the modules will be called
@@ -23,6 +24,7 @@ pipeline:
   - reid
   - track
   - jn_detect
+  - jn_tracklet
 
 # Experiment name
 experiment_name: "tracklab"

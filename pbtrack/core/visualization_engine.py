@@ -372,6 +372,27 @@ class VisualizationEngine(Callback):
                 color_txt=(0, 0, 0),
                 color_bg=(255, 255, 255),
             )
+            
+        # display jursey number
+        if (
+            is_prediction
+            and self.cfg.prediction.display_jursey_number
+            and hasattr(detection, "jn_tracklet")
+        ):
+            if not pd.isna(detection.jn_tracklet):
+                l, t, r, b = detection.bbox.ltrb(
+                    image_shape=(patch.shape[1], patch.shape[0]), rounded=True
+                )
+                draw_text(
+                    patch,
+                    f"JN: {int(detection.jn_tracklet)}",
+                    (int((l + r)/2), int((t + b)/2)),
+                    fontFace=self.cfg.text.font,
+                    fontScale=self.cfg.text.scale,
+                    thickness=self.cfg.text.thickness,
+                    color_txt=(0, 0, 0),
+                    color_bg=(255, 255, 255),
+                )
 
     def _colors(self, detection, is_prediction):
         cmap = prediction_cmap if is_prediction else ground_truth_cmap

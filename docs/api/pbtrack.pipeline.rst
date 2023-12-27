@@ -9,10 +9,26 @@ pbtrack.pipeline package
 Submodules
 ----------
 
-pbtrack.pipeline.detector module
---------------------------------
+pbtrack.pipeline.datasetlevel\_module module
+--------------------------------------------
 
-.. automodule:: pbtrack.pipeline.detector
+.. automodule:: pbtrack.pipeline.datasetlevel_module
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pbtrack.pipeline.detectionlevel\_module module
+----------------------------------------------
+
+.. automodule:: pbtrack.pipeline.detectionlevel_module
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pbtrack.pipeline.imagelevel\_module module
+------------------------------------------
+
+.. automodule:: pbtrack.pipeline.imagelevel_module
    :members:
    :undoc-members:
    :show-inheritance:
@@ -25,18 +41,10 @@ pbtrack.pipeline.module module
    :undoc-members:
    :show-inheritance:
 
-pbtrack.pipeline.reidentifier module
-------------------------------------
+pbtrack.pipeline.videolevel\_module module
+------------------------------------------
 
-.. automodule:: pbtrack.pipeline.reidentifier
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-pbtrack.pipeline.tracker module
--------------------------------
-
-.. automodule:: pbtrack.pipeline.tracker
+.. automodule:: pbtrack.pipeline.videolevel_module
    :members:
    :undoc-members:
    :show-inheritance:
