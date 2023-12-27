@@ -36,7 +36,7 @@ model_dir: "???"
 # Machine configuration
 num_cores: 4
 use_wandb: False
-use_rich: True
+use_rich: False
 
 # Flags
 test_tracking: True

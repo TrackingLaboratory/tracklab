@@ -205,7 +205,7 @@ def sanitize_keypoints(keypoints, image_shape=None, rounded=False):
         2,
         3,
     ), "Keypoints must be a numpy array of shape (K, 2 or 3)."
-    if image_shape:
+    if image_shape is not None:
         keypoints[:, 0] = np.clip(keypoints[:, 0], 0, image_shape[0] - 1)
         keypoints[:, 1] = np.clip(keypoints[:, 1], 0, image_shape[1] - 1)
     if rounded:
@@ -231,7 +231,7 @@ def sanitize_bbox_ltwh(bbox: np.array, image_shape=None, rounded=False):
         bbox, np.ndarray
     ), f"Expected bbox to be of type np.ndarray, got {type(bbox)}"
     assert bbox.shape == (4,), f"Expected bbox to be of shape (4,), got {bbox.shape}"
-    if image_shape:
+    if image_shape is not None:
         bbox[0] = max(0, min(bbox[0], image_shape[0] - 2))
         bbox[1] = max(0, min(bbox[1], image_shape[1] - 2))
         bbox[2] = max(1, min(bbox[2], image_shape[0] - 1 - bbox[0]))

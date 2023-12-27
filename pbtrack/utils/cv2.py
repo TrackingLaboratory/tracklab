@@ -133,7 +133,7 @@ def draw_bbox(
         try:
             draw_text(
                 patch,
-                f"{detection.bbox.conf():.2f}%|{detection.keypoints_conf:.2f}",
+                f"{detection.bbox.conf():.2f}%s",
                 (l+5, t+5),
                 fontFace=text_font,
                 fontScale=text_scale,

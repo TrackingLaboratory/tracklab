@@ -14,6 +14,7 @@ cfg:
     draw_keypoints: False
     draw_skeleton: False
     draw_unmatched: False
+    display_jursey_number: True
     print_id: True
     print_bbox_confidence: True
     print_bbox_state: True
@@ -30,7 +31,7 @@ cfg:
     draw_bbox: False
     draw_keypoints: False
     draw_skeleton: False
-    draw_ignore_region: True
+    draw_ignore_region: False
     # debug
     print_id: False
     print_bbox_confidence: False
