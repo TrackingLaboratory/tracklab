@@ -2,7 +2,6 @@ import cv2
 import torch
 import pandas as pd
 
-from pbtrack.pipeline import MultiDetector
 from pbtrack.utils.coordinates import ltrb_to_ltwh
 from pbtrack.utils.openmmlab import get_checkpoint
 
