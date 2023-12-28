@@ -24,7 +24,7 @@ def set_sharing_strategy():
     )  # FIXME : why are we using too much file descriptors ?
 
 
-@hydra.main(version_base=None, config_path="../configs_user", config_name="config")
+@hydra.main(version_base=None, config_path="../configs", config_name="config")
 def main(cfg):
     # For Hydra and Slurm compatibility
     set_sharing_strategy()  # Do not touch
