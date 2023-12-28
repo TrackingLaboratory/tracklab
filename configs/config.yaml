@@ -18,7 +18,8 @@ defaults:
   - modules/jn_tracklet: voting
 
 # Pipeline definition :
-# Defines the order in which the modules will be called
+# - Defines the order in which the modules will be called
+# - If loading a tracking state from disk, remove modules whose outputs are already provided in the loaded state
 pipeline:
   - bbox_detector
   - reid

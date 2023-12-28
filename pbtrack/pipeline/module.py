@@ -23,6 +23,7 @@ class MetaModule(ABCMeta):
 class Module(metaclass=ABCMeta):
     input_columns = None
     output_columns = None
+    training_enabled = False
     forget_columns = []
 
     @property

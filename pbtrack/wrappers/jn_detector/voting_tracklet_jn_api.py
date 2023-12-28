@@ -21,7 +21,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class VotingTrackletJurseyNumber(VideoLevelModule):
+class VotingTrackletJerseyNumber(VideoLevelModule):
     
     input_columns = []
     output_columns = ["jn_tracklet"]

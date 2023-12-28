@@ -21,24 +21,17 @@ warnings.filterwarnings("ignore")
 def set_sharing_strategy():
     torch.multiprocessing.set_sharing_strategy(
         "file_system"
-    )  # FIXME : why are we using too much file descriptors ?
+    )
 
 
-@hydra.main(version_base=None, config_path="../configs", config_name="config")
-def main(cfg):
+def init_environment(cfg):
     # For Hydra and Slurm compatibility
     set_sharing_strategy()  # Do not touch
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"  # TODO support Mac chips
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     log.info(f"Using device: '{device}'.")
-
     wandb.init(cfg)
     if cfg.print_config:
         log.info(OmegaConf.to_yaml(cfg))
-
-    # Initiate all the instances
-    tracking_dataset = instantiate(cfg.dataset)
-
     if cfg.use_rich:
         log.root.addHandler(rich.logging.RichHandler(level=logging.INFO))
     else:
@@ -46,6 +39,20 @@ def main(cfg):
         for handler in log.root.handlers:
             if type(handler) is logging.StreamHandler:
                 handler.setLevel(logging.INFO)
+    return device
+
+
+def close_enviroment():
+    wandb.finish()
+
+
+@hydra.main(version_base=None, config_path="../configs", config_name="config")
+def main(cfg):
+    device = init_environment(cfg)
+
+    # Instantiate all modules
+    tracking_dataset = instantiate(cfg.dataset)
+    evaluator = instantiate(cfg.eval)
 
     modules = []
     for name in cfg.pipeline:
@@ -55,32 +62,28 @@ def main(cfg):
 
     pipeline = Pipeline(models=modules)
 
-    evaluator = instantiate(cfg.eval)
-
-    # FIXME, je pense qu'il faut repenser l'entrainement dans ce script
-    # On peut pas entrainer 3 modèles dans un script quoi qu'il arrive
-    # Il faut que l'entrainement soit fait dans un script propre à la librairie
+    # Train tracking modules
     for module in modules:
-        if hasattr(module, "train"):
-            log.info(f"Not actually training {module.name}")
-            pass  # FIXME : really train if they want
+        if module.training_enabled:
+            # module.train()
+            raise NotImplementedError("Module training is not implemented yet.")
 
+    # Test tracking
     if cfg.test_tracking:
         log.info(f"Starting tracking operation on {cfg.eval.test_set} set.")
-        if cfg.eval.test_set == "train":
-            tracking_set = tracking_dataset.train_set
-        elif cfg.eval.test_set == "val":
-            tracking_set = tracking_dataset.val_set
-        else:
-            tracking_set = tracking_dataset.test_set
+
+        # Init tracker state and tracking engine
+        tracking_set = getattr(tracking_dataset, cfg.eval.test_set + "_set")
         tracker_state = TrackerState(tracking_set, modules=pipeline, **cfg.state)
-        # Run tracking and visualization
         tracking_engine = instantiate(
             cfg.engine,
             modules=pipeline,
             tracker_state=tracker_state,
         )
+
+        # Run tracking and visualization
         tracking_engine.track_dataset()
+
         # Evaluation
         if cfg.get("eval_tracking", True) and cfg.dataset.nframes == -1:
             if tracker_state.detections_gt is not None:
@@ -88,7 +91,7 @@ def main(cfg):
                 evaluator.run(tracker_state)
             else:
                 log.warning(
-                    "Skipping evaluation because there's no ground truth detection."
+                    "Skipping evaluation because there is no ground truth detection."
                 )
         else:
             log.warning(
@@ -96,10 +99,11 @@ def main(cfg):
                 "to -1)"
             )
 
+        # Save tracker state
         if tracker_state.save_file is not None:
             log.info(f"Saved state at : {tracker_state.save_file.resolve()}")
 
-    wandb.finish()
+    close_enviroment()
 
     return 0
 
