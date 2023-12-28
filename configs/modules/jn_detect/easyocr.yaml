@@ -2,4 +2,4 @@ _target_: pbtrack.wrappers.EasyOCR
 cfg:
   text_threshold: 0.5
   link_threshold: 0.3
-# batch_size: 4
+batch_size: 256
