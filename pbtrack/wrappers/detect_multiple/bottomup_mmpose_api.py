@@ -37,16 +37,16 @@ class BottomUpMMPose(ImageLevelModule):
     ]
 
     def __init__(self, cfg, device, batch_size):
-        super().__init__(cfg, device, batch_size)
+        super().__init__(batch_size)
         get_checkpoint(cfg.path_to_checkpoint, cfg.download_url)
         self.device = device if device != "cpu" else -1
         self.model = init_pose_model(cfg.path_to_config, cfg.path_to_checkpoint, device)
         self.id = 0
 
-        cfg = self.model.cfg
-        self.dataset_info = DatasetInfo(cfg.dataset_info)
+        self.cfg = self.model.cfg
+        self.dataset_info = DatasetInfo(self.cfg.dataset_info)
 
-        self.test_pipeline = Compose(cfg.test_pipeline)
+        self.test_pipeline = Compose(self.cfg.test_pipeline)
 
     @torch.no_grad()
     def preprocess(self, metadata: pd.Series):

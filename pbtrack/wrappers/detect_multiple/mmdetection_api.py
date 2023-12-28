@@ -1,7 +1,9 @@
 import cv2
 import torch
 import pandas as pd
+from mmpose.datasets import Compose
 
+from pbtrack.pipeline import ImageLevelModule
 from pbtrack.utils.coordinates import ltrb_to_ltwh
 from pbtrack.utils.openmmlab import get_checkpoint
 
@@ -9,8 +11,6 @@ import mmcv
 from mmengine.dataset.utils import default_collate as collate
 # from mmcv.parallel import collate, scatter
 from mmdet.apis import init_detector
-from mmengine.dataset.utils import replace_ImageToTensor
-from mmdet.datasets.pipelines import Compose
 
 import logging
 
@@ -22,7 +22,7 @@ def mmdet_collate(batch):
     return collate(batch, len(batch))
 
 
-class MMDetection(MultiDetector):
+class MMDetection(ImageLevelModule):
     collate_fn = mmdet_collate
     output_columns = [
         "image_id",
@@ -33,15 +33,16 @@ class MMDetection(MultiDetector):
     ]
 
     def __init__(self, cfg, device, batch_size):
-        super().__init__(cfg, device, batch_size)
+        super().__init__(batch_size)
         get_checkpoint(cfg.path_to_checkpoint, cfg.download_url)
         self.model = init_detector(cfg.path_to_config, cfg.path_to_checkpoint, device)
         self.id = 0
+        self.device = device
 
         cfg = self.model.cfg
-        cfg = cfg.copy()  # FIXME check if needed
+        self.cfg = cfg.copy()  # FIXME check if needed
         # set loading pipeline type
-        cfg.data.test.pipeline[0].type = "LoadImageFromWebcam"
+        self.cfg.data.test.pipeline[0].type = "LoadImageFromWebcam"
         # cfg.data.test.pipeline = replace_ImageToTensor(cfg.data.test.pipeline)
         self.test_pipeline = Compose(cfg.data.test.pipeline)
 
