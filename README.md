@@ -13,7 +13,7 @@ TrackLab is an easy-to-use modular framework for multi-object pose/segmentation/
 ## Introduction
 Welcome to this official repository of TrackLab, a modular framework for multi-object tracking.
 TrackLab is designed for research purposes and supports many types of detectors (bounding boxes, pose, segmentation), datasets and evaluation metrics.
-Every component of TrackLab, such as detector, tracker, re-identifier, etc, is configurable via standard yaml files ([Hydra cofnig framework](https://github.com/facebookresearch/hydra))
+Every component of TrackLab, such as detector, tracker, re-identifier, etc, is configurable via standard yaml files ([Hydra config framework](https://github.com/facebookresearch/hydra))
 TrackLab is designed to be easily extended to support new methods.
 
 TrackLab is composed of multiple modules:
