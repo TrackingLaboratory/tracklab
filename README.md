@@ -12,19 +12,14 @@ TrackLab is an easy-to-use modular framework for multi-object pose/segmentation/
 
 ## Introduction
 Welcome to this official repository of TrackLab, a modular framework for multi-object tracking.
-TrackLab is designed for research purposes and supports many types of detectors (bounding boxes, pose, segmentation), datasets, evaluation metrics.
-Every component of TrackLab, such as detector, tracker, re-identifier, etc, is configurable via standard yaml files
+TrackLab is designed for research purposes and supports many types of detectors (bounding boxes, pose, segmentation), datasets and evaluation metrics.
+Every component of TrackLab, such as detector, tracker, re-identifier, etc, is configurable via standard yaml files ([Hydra cofnig framework](https://github.com/facebookresearch/hydra))
 TrackLab is designed to be easily extended to support new methods.
 
 TrackLab is composed of multiple modules:
-1. A detector (OpenPifPaf, YOLO, ...)
+1. A detector (YOLOv8, ...)
 2. A re-identification model (BPBReID, ...)
-3. A camera motion compensation algorithm (findTransformECC, ...)
-4. A detection forecaster (Kalman filter, ...)
-5. An appearance similarity metric (cosine similarity, ...)
-6. An spatio-temporal similarity metric (IOU, OKS, ...)
-7. An association algorithm (Hungarian algorithm, ...)
-
+3. A tracker (DeepSORT, StrongSORT, OC-SORT, ...)
 
 Here's what makes TrackLab different from other existing tracking frameworks:
 - Fully modular framework to quickly integrate any detection/reid/tracking method or develop your own
@@ -35,12 +30,10 @@ Here's what makes TrackLab different from other existing tracking frameworks:
   - multi-object (bbox) tracking
   - multi-person pose tracking
   - multi-person pose estimation
-  - person search
-  - multi-person cross-video tracking
   - person re-identification
 
-## Documentation
 
+## Documentation
 You can find the documentation in the docs/ folder. After installing, you can run `make html` inside this folder
 to get an html version of the documentation.
 
@@ -51,8 +44,8 @@ to get an html version of the documentation.
 ### Clone the repository
 
 ```bash
-git clone -b soccernet https://github.com/PbTrack/pb-track.git tracklab-soccernet
-cd pb-track-soccernet
+git clone https://github.com/TrackingLaboratory/tracklab.git
+cd tracklab
 ```
 
 ### Manage the environment
@@ -79,9 +72,8 @@ You might need to redo this if you update the repository, and some dependencies 
 
 ### External dependencies
 
-- Get the **PoseTrack21** dataset [here](https://github.com/anDoer/PoseTrack21/tree/35bd7033ec4e1a352ae39b9522df5a683f83781b#how-to-get-the-dataset).
-- Or get out custom **TinyPoseTrack21** dataset with only two videos [here](https://drive.google.com/file/d/15aX67GAKpf8faaBE4SOJAs_KGghzfWl4/view?usp=sharing).
-- Get the pretrained weights of **BPBReID** [here](https://github.com/VlSomers/bpbreid#download-the-pre-trained-models).
+- Get the **SoccerNet Tracking** dataset [here](https://github.com/SoccerNet/sn-tracking).
+- Download the pretrained model weights [here](https://drive.google.com/drive/folders/1MmDkSHWJ1S-V9YcLMkFOjm3zo65UELjJ?usp=drive_link) and put the "pretrained_models" directory under the main project directory (i.e. "/path/to/tracklab/pretrained_models").
 
 ### Setup
 
@@ -89,8 +81,6 @@ You will need to set up some variables before running the code :
 
 1. In configs/config.yaml :
    - `data_dir`: the directory where you will store the different datasets (must be an absolute path !)
-   - `model_dir`: the directory which contains the (pretrained) weights of the models you want to run
-   (must be an absolute path !)
    - All the parameters under the "Machine configuration" header
 2. In the corresponding modules (configs/modules/.../....yaml) :
    - The `batch_size`
@@ -111,14 +101,3 @@ tracklab --help
 
 The first section contains the configuration groups, while the second section
 shows all the possible options you can modify.
-
-### Quick (dirty?) install guide for inference
-1. Follow above instruction for setting up the environment
-2. Download the pretrained weights of OpenPifPaf and BPBreID on [Google Drive](https://drive.google.com/drive/folders/1ZLKYpWIFPOw0-op0dNVP1Csw3CjKr-1B?usp=share_link)
-3. Update configs to point to the downloaded weights:
-4. 'configs/reid/bpbreid.yaml' -> load_weights: "/path/to/job-35493841_85mAP_95r1_ta_model.pth.tar"
-4. 'configs/reid/bpbreid.yaml' -> hrnet_pretrained_path: "/path/to/weights/folder" # /!\ just put the folder name in which the weights 'hrnetv2_w32_imagenet_pretrained.pth' are stored, not the filename
-5. 'configs/detect/openpifpaf.yaml' -> checkpoint: "/path/to/shufflenetv2k30_dense_default_wo_augm.f07de325"
-6. Update config to point to your inference video: in 'configs/config.yaml', remplace '  - dataset: posetrack21'  (line 8) with '  - dataset: external_video'
-7. In 'configs/dataset/external_video.yaml', update the path to your video file (under 'video_path')
-8. Finally, execute 'python main.py' to run the inference on the video file 'test.mp4'
