@@ -67,7 +67,7 @@ Important TrackLab classes include:
 
 ### Execution Flow Overview
 Here is an overview of what happen when you run TrackLab:
-[tracklab/main.py](tracklab/main.py) is the main entry point and receives the complete Hydra's configuration an input. 
+[tracklab/main.py](tracklab/main.py) is the main entry point and receives the complete Hydra's configuration as input. 
 [tracklab/main.py](tracklab/main.py) is usually called via the following command through the root [main.py](main.py) file: python main.py.
 Within [tracklab/main.py](tracklab/main.py), all modules are first instantiated.
 Training any tracking module (e.g. re-identification model) on the tracking training set is supported by calling the "train" method of the corresponding module.
