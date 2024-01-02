@@ -133,7 +133,15 @@ You will need to set up some variables before running the code :
    - The `batch_size`
    - You might want to change the model hyperparameters
 
-All these variables are also configurable from the command-line, e.g. : (more info on Hydra's override grammar [here](https://hydra.cc/docs/advanced/override_grammar/basic/))
+To launch TrackLab with the default configuration defined in [configs/config.yaml](configs/config.yaml), simply run: 
+```bash
+tracklab
+```
+
+If you want to override some configuration parameters, e.g. to use another detection module or dataset, you can do so by modifying the corresponding parameters directly in the .yaml files under configs/.
+```bash
+
+All parameters are also configurable from the command-line, e.g. : (more info on Hydra's override grammar [here](https://hydra.cc/docs/advanced/override_grammar/basic/))
 ```bash
 tracklab 'data_dir=${project_dir}/data' 'model_dir=${project_dir}/models' modules/reid=bpbreid pipeline=[bbox_detector,reid,track]
 ```
