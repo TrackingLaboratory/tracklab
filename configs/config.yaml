@@ -8,7 +8,7 @@ defaults:
   - dataset: soccernet_mot
   - eval: soccernet_mot
   - engine: offline
-  - state: no_save
+  - state: save
   - visualization: save_videos
   - modules/bbox_detector: yolov8
   - modules/pose_bottomup: openpifpaf
