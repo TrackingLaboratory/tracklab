@@ -51,12 +51,12 @@ Important TrackLab classes include:
   - Example: **[OfflineTrackingEngine](pbtrack/engine/offline.py)**: The offline tracking engine performs tracking one module after another to speed up inference by leveraging large batch sizes and maximum GPU utilization. For instance, YoloV8 is first applied on an entire video by batching multiple images, then the re-identification model is applied on all detections of the video with large detections batches, etc. 
 - **[Pipeline](pbtrack/pipeline/module.py)**: Define the order in which modules are executed by the TrackingEngine. If a tracker_state is loaded from disk, modules that should not be executed again should be removed.
   - Example: [bbox_detector, reid, track, jn_detect, jn_tracklet]
-- **[VideoLevelModule](pbtrack/pipeline/videolevel_module.py)**: 
+- **[VideoLevelModule](pbtrack/pipeline/videolevel_module.py)**: TODO
   - Example: [VotingTrackletJerseyNumber](pbtrack/wrappers/jn_detector/voting_tracklet_jn_api.py): To perform majority voting within each tracklet and compute a consistent tracklet level jersey number. Update the "jersey_number" column within detections_pred.
-- **[ImageLevelModule](pbtrack/pipeline/imagelevel_module.py)**: 
+- **[ImageLevelModule](pbtrack/pipeline/imagelevel_module.py)**: TODO
   - Example 1: [YOLOv8](pbtrack/wrappers/detect_multiple/yolov8_api.py): To perform object detection on each image with [YOLOv8](https://github.com/ultralytics/ultralytics). Create a new row (i.e. detection) within detections_pred.
   - Example 2: [StrongSORT](pbtrack/wrappers/track/strong_sort_api.py): To perform online tracking with [StrongSORT](https://github.com/dyhBUPT/StrongSORT). Creates a new "track_id" column for each detection within detections_pred. 
-- **[DetectionLevelModule](pbtrack/pipeline/detectionlevel_module.py)**: 
+- **[DetectionLevelModule](pbtrack/pipeline/detectionlevel_module.py)**: TODO 
   - Example 1: [EasyOCR](pbtrack/wrappers/jn_detector/easyocr_api.py): To perform jersey number recognition on each detection with [EasyOCR](https://github.com/JaidedAI/EasyOCR). Create a new "jersey_number" column within detections_pred.
   - Example 2: [BPBReId](pbtrack/wrappers/reid/bpbreid_api.py): To perform person re-identification on each detection with [BPBReID](https://github.com/VlSomers/bpbreid). Create a new "embedding" column within detections_pred.
 - **[Callback](pbtrack/callbacks/callback.py)**: Implement this class to add a callback to be called at a specific point during the tracking process, e.g. when task/dataset/video processing starts/ends.
