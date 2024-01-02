@@ -32,7 +32,7 @@ experiment_name: "tracklab"
 
 # Path definitions
 data_dir: "???"
-model_dir: "???"
+model_dir: "${project_dir}/pretrained_models"
 
 # Machine configuration
 num_cores: 4
