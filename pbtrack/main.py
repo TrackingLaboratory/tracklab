@@ -2,48 +2,21 @@ import os
 import rich.logging
 import torch
 import hydra
+import warnings
+import logging
+
 from pbtrack.utils import monkeypatch_hydra  # needed to avoid complex hydra stacktraces when errors occur in "instantiate(...)"
 from hydra.utils import instantiate
 from omegaconf import OmegaConf
-
 from pbtrack.datastruct import TrackerState
 from pbtrack.pipeline import Pipeline
 from pbtrack.utils import wandb
 
-import logging
 
 os.environ["HYDRA_FULL_ERROR"] = "1"
 log = logging.getLogger(__name__)
 
-import warnings
 warnings.filterwarnings("ignore")
-
-def set_sharing_strategy():
-    torch.multiprocessing.set_sharing_strategy(
-        "file_system"
-    )
-
-
-def init_environment(cfg):
-    # For Hydra and Slurm compatibility
-    set_sharing_strategy()  # Do not touch
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    log.info(f"Using device: '{device}'.")
-    wandb.init(cfg)
-    if cfg.print_config:
-        log.info(OmegaConf.to_yaml(cfg))
-    if cfg.use_rich:
-        log.root.addHandler(rich.logging.RichHandler(level=logging.INFO))
-    else:
-        # TODO : Fix for mmcv fix. This should be done in a nicer way
-        for handler in log.root.handlers:
-            if type(handler) is logging.StreamHandler:
-                handler.setLevel(logging.INFO)
-    return device
-
-
-def close_enviroment():
-    wandb.finish()
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="config")
@@ -85,19 +58,7 @@ def main(cfg):
         tracking_engine.track_dataset()
 
         # Evaluation
-        if cfg.get("eval_tracking", True) and cfg.dataset.nframes == -1:
-            if tracker_state.detections_gt is not None:
-                log.info("Starting evaluation.")
-                evaluator.run(tracker_state)
-            else:
-                log.warning(
-                    "Skipping evaluation because there is no ground truth detection."
-                )
-        else:
-            log.warning(
-                "Skipping evaluation because only part of video was tracked (i.e. 'cfg.dataset.nframes' was not set "
-                "to -1)"
-            )
+        evaluate(cfg, evaluator, tracker_state)
 
         # Save tracker state
         if tracker_state.save_file is not None:
@@ -106,6 +67,50 @@ def main(cfg):
     close_enviroment()
 
     return 0
+
+
+def set_sharing_strategy():
+    torch.multiprocessing.set_sharing_strategy(
+        "file_system"
+    )
+
+
+def init_environment(cfg):
+    # For Hydra and Slurm compatibility
+    set_sharing_strategy()  # Do not touch
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    log.info(f"Using device: '{device}'.")
+    wandb.init(cfg)
+    if cfg.print_config:
+        log.info(OmegaConf.to_yaml(cfg))
+    if cfg.use_rich:
+        log.root.addHandler(rich.logging.RichHandler(level=logging.INFO))
+    else:
+        # TODO : Fix for mmcv fix. This should be done in a nicer way
+        for handler in log.root.handlers:
+            if type(handler) is logging.StreamHandler:
+                handler.setLevel(logging.INFO)
+    return device
+
+
+def close_enviroment():
+    wandb.finish()
+
+
+def evaluate(cfg, evaluator, tracker_state):
+    if cfg.get("eval_tracking", True) and cfg.dataset.nframes == -1:
+        if tracker_state.detections_gt is not None:
+            log.info("Starting evaluation.")
+            evaluator.run(tracker_state)
+        else:
+            log.warning(
+                "Skipping evaluation because there is no ground truth detection."
+            )
+    else:
+        log.warning(
+            "Skipping evaluation because only part of video was tracked (i.e. 'cfg.dataset.nframes' was not set "
+            "to -1)"
+        )
 
 
 if __name__ == "__main__":
