@@ -35,20 +35,20 @@ class Callback:
     ):
         pass
 
-    def on_task_start(
+    def on_module_start(
         self, engine: "TrackingEngine", task: str, dataloader: DataLoader
     ):
         pass
 
-    def on_task_end(
+    def on_module_end(
         self, engine: "TrackingEngine", task: str, detections: pd.DataFrame
     ):
         pass
 
-    def on_task_step_start(self, engine: "TrackingEngine", task: str, batch: Any):
+    def on_module_step_start(self, engine: "TrackingEngine", task: str, batch: Any):
         pass
 
-    def on_task_step_end(
+    def on_module_step_end(
         self, engine: "TrackingEngine", task: str, batch: Any, detections: pd.DataFrame
     ):
         pass
