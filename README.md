@@ -62,7 +62,7 @@ Here is an overview of the important TrackLab classes:
 - **[Callback](pbtrack/callbacks/callback.py)**: Implement this class to add a callback that is triggered at a specific point during the tracking process, e.g. when task/dataset/video processing starts/ends.
   - Example: [VisualizationEngine](pbtrack/core/visualization_engine.py): Implements "on_video_loop_end" to save each video tracking results as a .mp4 or a list of .jpg. 
 - **[Evaluator](pbtrack/core/evaluator.py)**: Implement this class to add a new evaluation metric, such as MOTA, HOTA, or any other (non-tracking related) metrics. 
-  - Example: [SoccerNetMOTEvaluator](pbtrack/wrappers/eval/soccernet/soccernet_mot_evaluator.py): Evaluate performance of a tracker on the SoccerNet Tracking dataset using the official [evaluation library](https://github.com/SoccerNet/sn-tracking).
+  - Example: [SoccerNetMOTEvaluator](pbtrack/wrappers/eval/soccernet/soccernet_mot_evaluator.py): Evaluate performance of a tracker on the SoccerNet Tracking dataset using the official [SoccerNet evaluation library](https://github.com/SoccerNet/sn-tracking).
 
 ### Execution Flow Overview
 Here is an overview of what happen when you run TrackLab:
