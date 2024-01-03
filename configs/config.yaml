@@ -37,7 +37,7 @@ model_dir: "${project_dir}/pretrained_models"
 # Machine configuration
 num_cores: 4
 use_wandb: False
-use_rich: False
+use_rich: True
 
 # Flags
 test_tracking: True
