@@ -118,7 +118,7 @@ TODO Describe TrackLab + Hydra configuration system
 Here is an overview of the important TrackLab classes:
 - **[TrackingDataset](pbtrack/datastruct/tracking_dataset.py)**: Abstract class to be instantiated when adding a new dataset. The `TrackingDataset` contains one `TrackingSet` for each split of the dataset (train, val, test, etc).
   - Example: [SoccerNetMOT](pbtrack/wrappers/datasets/soccernet/soccernet_mot.py). The [SoccerNet Tracking](https://github.com/SoccerNet/sn-tracking) dataset.
-- **[TrackingSet](pbtrack/datastruct/tracking_dataset.py)**: A tracking set contains three [Panda](https://pandas.pydata.org/) dataframes:
+- **[TrackingSet](pbtrack/datastruct/tracking_dataset.py)**: A tracking set contains three [Pandas](https://pandas.pydata.org/) dataframes:
   1. `video_metadatas`: contains one row of information per video (e.g. fps, width, height, etc).
   2. `image_metadatas`: contains one row of information per image (e.g. frame_id, video_id, etc).
   3. `detections_gt`: contains one row of information per ground truth detection (e.g. frame_id, video_id, bbox_ltwh, track_id, etc).
@@ -131,11 +131,11 @@ Here is an overview of the important TrackLab classes:
 - **[VideoLevelModule](pbtrack/pipeline/videolevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on all frames simultaneously. Can be used to implement offline tracking strategies, tracklet level voting mechanisms, etc. 
   - Example: [VotingTrackletJerseyNumber](pbtrack/wrappers/jn_detector/voting_tracklet_jn_api.py). To perform majority voting within each tracklet and compute a consistent tracklet level jersey number. Update the "jersey_number" column within `detections_pred`.
 - **[ImageLevelModule](pbtrack/pipeline/imagelevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates operates on a single frame. Can be used to implement online tracking strategies, pose/segmentation/bbox detectors, etc.
-  - Example 1: [YOLOv8](pbtrack/wrappers/detect_multiple/yolov8_api.py). To perform object detection on each image with [YOLOv8](https://github.com/ultralytics/ultralytics). Create a new row (i.e. detection) within `detections_pred`.
+  - Example 1: [YOLOv8](pbtrack/wrappers/detect_multiple/yolov8_api.py). To perform object detection on each image with [YOLOv8](https://github.com/ultralytics/ultralytics). Creates a new row (i.e. detection) within `detections_pred`.
   - Example 2: [StrongSORT](pbtrack/wrappers/track/strong_sort_api.py). To perform online tracking with [StrongSORT](https://github.com/dyhBUPT/StrongSORT). Creates a new "track_id" column for each detection within `detections_pred`. 
 - **[DetectionLevelModule](pbtrack/pipeline/detectionlevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on a single detection. Can be used to implement pose estimation for top-down strategies, re-identification, attributes recognition, etc. 
-  - Example 1: [EasyOCR](pbtrack/wrappers/jn_detector/easyocr_api.py). To perform jersey number recognition on each detection with [EasyOCR](https://github.com/JaidedAI/EasyOCR). Create a new "jersey_number" column within `detections_pred`.
-  - Example 2: [BPBReId](pbtrack/wrappers/reid/bpbreid_api.py). To perform person re-identification on each detection with [BPBReID](https://github.com/VlSomers/bpbreid). Create a new "embedding" column within `detections_pred`.
+  - Example 1: [EasyOCR](pbtrack/wrappers/jn_detector/easyocr_api.py). To perform jersey number recognition on each detection with [EasyOCR](https://github.com/JaidedAI/EasyOCR). Creates a new "jersey_number" column within `detections_pred`.
+  - Example 2: [BPBReId](pbtrack/wrappers/reid/bpbreid_api.py). To perform person re-identification on each detection with [BPBReID](https://github.com/VlSomers/bpbreid). Creates a new "embedding" column within `detections_pred`.
 - **[Callback](pbtrack/callbacks/callback.py)**: Implement this class to add a callback that is triggered at a specific point during the tracking process, e.g. when dataset/video/module processing starts/ends.
   - Example: [VisualizationEngine](pbtrack/core/visualization_engine.py). Implements "on_video_loop_end" to save each video tracking results as a .mp4 or a list of .jpg. 
 - **[Evaluator](pbtrack/core/evaluator.py)**: Implement this class to add a new evaluation metric, such as MOTA, HOTA, or any other (non-tracking related) metrics. 
