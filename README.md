@@ -71,7 +71,7 @@ You might need to redo this if you update the repository, and some dependencies 
 
 ### External dependencies
 
-- Get the **SoccerNet Tracking** dataset [here](https://github.com/SoccerNet/sn-tracking).
+- Get the **SoccerNet Tracking** dataset [here](https://github.com/SoccerNet/sn-tracking), rename the root folder as "SoccerNetMOT" and put it under the global dataset directory (specified under the `data_dir` config as explained below). Otherwise, you can modify the `dataset_path` config in [soccernet_mot.yaml](configs/dataset/soccernet_mot.yaml) with your custom SoccerNet dataset directory.
 - Download the pretrained model weights [here](https://drive.google.com/drive/folders/1MmDkSHWJ1S-V9YcLMkFOjm3zo65UELjJ?usp=drive_link) and put the "pretrained_models" directory under the main project directory (i.e. "/path/to/tracklab/pretrained_models").
 
 ### Setup
