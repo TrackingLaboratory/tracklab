@@ -12,13 +12,13 @@ from skimage.transform import resize
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from pbtrack.datastruct import EngineDatapipe
-from pbtrack.datastruct import TrackingDataset
+from tracklab.datastruct import EngineDatapipe
+from tracklab.datastruct import TrackingDataset
 # FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
-from pbtrack.utils.coordinates import rescale_keypoints
+from tracklab.utils.coordinates import rescale_keypoints
 
-from pbtrack.utils.cv2 import overlay_heatmap
-import pbtrack
+from tracklab.utils.cv2 import overlay_heatmap
+import tracklab
 
 from torchreid.data import ImageDataset
 from torchreid.utils.imagetools import (

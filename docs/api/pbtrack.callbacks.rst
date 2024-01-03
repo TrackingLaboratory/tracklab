@@ -1,7 +1,7 @@
-pbtrack.callbacks package
+tracklab.callbacks package
 =========================
 
-.. automodule:: pbtrack.callbacks
+.. automodule:: tracklab.callbacks
    :members:
    :undoc-members:
    :show-inheritance:
@@ -9,50 +9,50 @@ pbtrack.callbacks package
 Submodules
 ----------
 
-pbtrack.callbacks.callback module
+tracklab.callbacks.callback module
 ---------------------------------
 
-.. automodule:: pbtrack.callbacks.callback
+.. automodule:: tracklab.callbacks.callback
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.callbacks.evaluate module
+tracklab.callbacks.evaluate module
 ---------------------------------
 
-.. automodule:: pbtrack.callbacks.evaluate
+.. automodule:: tracklab.callbacks.evaluate
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.callbacks.handle\_regions module
+tracklab.callbacks.handle\_regions module
 ----------------------------------------
 
-.. automodule:: pbtrack.callbacks.handle_regions
+.. automodule:: tracklab.callbacks.handle_regions
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.callbacks.profiler module
+tracklab.callbacks.profiler module
 ---------------------------------
 
-.. automodule:: pbtrack.callbacks.profiler
+.. automodule:: tracklab.callbacks.profiler
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.callbacks.progress module
+tracklab.callbacks.progress module
 ---------------------------------
 
-.. automodule:: pbtrack.callbacks.progress
+.. automodule:: tracklab.callbacks.progress
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.callbacks.wandb module
+tracklab.callbacks.wandb module
 ------------------------------
 
-.. automodule:: pbtrack.callbacks.wandb
+.. automodule:: tracklab.callbacks.wandb
    :members:
    :undoc-members:
    :show-inheritance:

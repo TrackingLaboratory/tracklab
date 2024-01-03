@@ -27,7 +27,7 @@ Welcome to TrackLab's documentation!
    :maxdepth: 0
    :caption: Api Documentation
 
-   api/pbtrack
+   api/tracklab
 
 .. toctree::
    :maxdepth: 0

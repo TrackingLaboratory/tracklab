@@ -3,12 +3,12 @@ import torch
 import pandas as pd
 
 from typing import Any
-from pbtrack.pipeline.imagelevel_module import ImageLevelModule
+from tracklab.pipeline.imagelevel_module import ImageLevelModule
 
 os.environ["YOLO_VERBOSE"] = "False"
 from ultralytics import YOLO
 
-from pbtrack.utils.coordinates import ltrb_to_ltwh
+from tracklab.utils.coordinates import ltrb_to_ltwh
 
 import logging
 

@@ -6,17 +6,17 @@ from omegaconf import OmegaConf
 from yacs.config import CfgNode as CN
 from .bpbreid_dataset import ReidDataset
 # FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
-from pbtrack.utils.coordinates import rescale_keypoints
-from pbtrack.utils.collate import default_collate
+from tracklab.utils.coordinates import rescale_keypoints
+from tracklab.utils.collate import default_collate
 
 from torchreid.scripts.main import build_config, build_torchreid_model_engine
 from torchreid.tools.feature_extractor import FeatureExtractor
 from torchreid.utils.imagetools import (
     build_gaussian_heatmaps,
 )
-from pbtrack.utils.collate import Unbatchable
+from tracklab.utils.collate import Unbatchable
 
-import pbtrack
+import tracklab
 from pathlib import Path
 
 

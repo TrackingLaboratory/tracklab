@@ -9,8 +9,8 @@ from omegaconf.listconfig import ListConfig
 import openpifpaf
 
 
-from pbtrack.pipeline.imagelevel_module import ImageLevelModule
-from pbtrack.utils.coordinates import sanitize_keypoints, generate_bbox_from_keypoints
+from tracklab.pipeline.imagelevel_module import ImageLevelModule
+from tracklab.utils.coordinates import sanitize_keypoints, generate_bbox_from_keypoints
 
 import logging
 
@@ -53,7 +53,7 @@ class OpenPifPaf(ImageLevelModule):
         if cfg.predict.checkpoint:
             old_argv = sys.argv
             sys.argv = self._hydra_to_argv(cfg.predict)
-            pbtrack_cli()
+            tracklab_cli()
             predictor = openpifpaf.Predictor()
             sys.argv = old_argv
 
@@ -112,7 +112,7 @@ class OpenPifPaf(ImageLevelModule):
         log.info(f"Starting training of the detection model")
         self.cfg.predict.checkpoint = openpifpaf.train.main()
         sys.argv = self._hydra_to_argv(self.cfg.predict)
-        openpifpaf.predict.pbtrack_cli()
+        openpifpaf.predict.tracklab_cli()
         predictor = openpifpaf.Predictor()
         sys.argv = old_argv
 
@@ -142,7 +142,7 @@ class OpenPifPaf(ImageLevelModule):
 
 from openpifpaf import decoder, logger, network, show, visualizer
 
-def pbtrack_cli(): # for pbtrack integration
+def tracklab_cli(): # for tracklab integration
     parser = argparse.ArgumentParser(
         prog='python3 -m openpifpaf.predict',
         usage='%(prog)s [options] images',

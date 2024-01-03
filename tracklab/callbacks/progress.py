@@ -5,8 +5,8 @@ from typing import Any, Optional
 from rich.progress import Progress
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from pbtrack.callbacks import Callback
-from pbtrack.engine import TrackingEngine
+from tracklab.callbacks import Callback
+from tracklab.engine import TrackingEngine
 
 log = logging.getLogger(__name__)
 

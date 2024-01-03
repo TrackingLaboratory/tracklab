@@ -1,7 +1,7 @@
-pbtrack.wrappers.datasets package
+tracklab.wrappers.datasets package
 =================================
 
-.. automodule:: pbtrack.wrappers.datasets
+.. automodule:: tracklab.wrappers.datasets
    :members:
    :undoc-members:
    :show-inheritance:
@@ -12,33 +12,33 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   pbtrack.wrappers.datasets.mot
-   pbtrack.wrappers.datasets.posetrack
-   pbtrack.wrappers.datasets.soccernet
+   tracklab.wrappers.datasets.mot
+   tracklab.wrappers.datasets.posetrack
+   tracklab.wrappers.datasets.soccernet
 
 Submodules
 ----------
 
-pbtrack.wrappers.datasets.external\_video module
+tracklab.wrappers.datasets.external\_video module
 ------------------------------------------------
 
-.. automodule:: pbtrack.wrappers.datasets.external_video
+.. automodule:: tracklab.wrappers.datasets.external_video
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.wrappers.datasets.jrdb\_pose module
+tracklab.wrappers.datasets.jrdb\_pose module
 -------------------------------------------
 
-.. automodule:: pbtrack.wrappers.datasets.jrdb_pose
+.. automodule:: tracklab.wrappers.datasets.jrdb_pose
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.wrappers.datasets.jta module
+tracklab.wrappers.datasets.jta module
 ------------------------------------
 
-.. automodule:: pbtrack.wrappers.datasets.jta
+.. automodule:: tracklab.wrappers.datasets.jta
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,4 +1,4 @@
-_target_: pbtrack.wrappers.TopDownMMPose
+_target_: tracklab.wrappers.TopDownMMPose
 config_name: topdown_heatmap_hrnet_w32_posetrack18_256x192 # total : 83.0
 #config_name: topdown_heatmap_hrnet_w32_posetrack18_384x288 # total : 83.6
 #config_name: topdown_heatmap_hrnet_w48_posetrack18_256x192 # total : 84.4

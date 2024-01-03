@@ -3,8 +3,8 @@ from typing import Any
 
 import pandas as pd
 
-from pbtrack.datastruct import EngineDatapipe
-from pbtrack.pipeline import Module
+from tracklab.datastruct import EngineDatapipe
+from tracklab.pipeline import Module
 
 from torch.utils.data.dataloader import default_collate, DataLoader
 

@@ -1,4 +1,4 @@
-_target_: pbtrack.core.VisualizationEngine
+_target_: tracklab.core.VisualizationEngine
 
 cfg:
   save_images: False

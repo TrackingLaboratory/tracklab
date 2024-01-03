@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from rich.progress import track
 
-from pbtrack.datastruct import TrackingDataset, TrackingSet
+from tracklab.datastruct import TrackingDataset, TrackingSet
 from posetrack21_mot.motmetrics.distances import iou_matrix
 from posetrack21_mot.motmetrics.lap import linear_sum_assignment
 

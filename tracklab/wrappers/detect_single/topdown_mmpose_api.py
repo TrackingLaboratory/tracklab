@@ -15,8 +15,8 @@ from mmpose.apis import init_pose_model
 from mmpose.datasets.dataset_info import DatasetInfo
 from mmpose.datasets.pipelines import Compose
 
-from pbtrack.pipeline import ImageLevelModule
-from pbtrack.utils.openmmlab import get_checkpoint
+from tracklab.pipeline import ImageLevelModule
+from tracklab.utils.openmmlab import get_checkpoint
 
 import logging
 

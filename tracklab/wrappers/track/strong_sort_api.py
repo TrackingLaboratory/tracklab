@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from pbtrack.pipeline import ImageLevelModule
-from pbtrack.utils.coordinates import ltrb_to_ltwh
+from tracklab.pipeline import ImageLevelModule
+from tracklab.utils.coordinates import ltrb_to_ltwh
 import strong_sort.strong_sort as strong_sort
 
 import logging
@@ -41,10 +41,10 @@ class StrongSORT(ImageLevelModule):
         ltrb = detection.bbox.ltrb()
         conf = detection.bbox.conf()
         cls = detection.category_id
-        pbtrack_id = detection.name
+        tracklab_id = detection.name
         return {
             "input": np.array(
-                [ltrb[0], ltrb[1], ltrb[2], ltrb[3], conf, cls, pbtrack_id]
+                [ltrb[0], ltrb[1], ltrb[2], ltrb[3], conf, cls, tracklab_id]
             ),
         }
 
@@ -54,7 +54,7 @@ class StrongSORT(ImageLevelModule):
             if self.prev_frame is not None:
                 self.model.tracker.camera_update(self.prev_frame, image)
             self.prev_frame = image
-        inputs = batch["input"]  # Nx7 [l,t,r,b,conf,class,pbtrack_id]
+        inputs = batch["input"]  # Nx7 [l,t,r,b,conf,class,tracklab_id]
         inputs = inputs[inputs[:, 4] > self.cfg.min_confidence]
         results = self.model.update(inputs, image)
         results = np.asarray(results)  # N'x9 [l,t,r,b,track_id,class,conf,queue,idx]

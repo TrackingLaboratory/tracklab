@@ -3,9 +3,9 @@
 # import pandas as pd
 # from mmpose.datasets import Compose
 #
-# from pbtrack.pipeline import ImageLevelModule
-# from pbtrack.utils.coordinates import ltrb_to_ltwh
-# from pbtrack.utils.openmmlab import get_checkpoint
+# from tracklab.pipeline import ImageLevelModule
+# from tracklab.utils.coordinates import ltrb_to_ltwh
+# from tracklab.utils.openmmlab import get_checkpoint
 #
 # import mmcv
 # from mmengine.dataset.utils import default_collate as collate

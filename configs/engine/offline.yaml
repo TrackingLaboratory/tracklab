@@ -1,10 +1,10 @@
-_target_: pbtrack.engine.OfflineTrackingEngine
+_target_: tracklab.engine.OfflineTrackingEngine
 
 num_workers: ${num_cores}
 callbacks:
   progress:
-    _target_: pbtrack.callbacks.Progressbar
+    _target_: tracklab.callbacks.Progressbar
   ignored_regions:
-    _target_: pbtrack.callbacks.IgnoredRegions
+    _target_: tracklab.callbacks.IgnoredRegions
     max_intersection: 0.9
   vis: ${visualization}

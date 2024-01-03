@@ -1,7 +1,7 @@
-pbtrack package
+tracklab package
 ===============
 
-.. automodule:: pbtrack
+.. automodule:: tracklab
    :members:
    :undoc-members:
    :show-inheritance:
@@ -12,22 +12,22 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   pbtrack.callbacks
-   pbtrack.core
-   pbtrack.datastruct
-   pbtrack.engine
-   pbtrack.loggers
-   pbtrack.pipeline
-   pbtrack.utils
-   pbtrack.wrappers
+   tracklab.callbacks
+   tracklab.core
+   tracklab.datastruct
+   tracklab.engine
+   tracklab.loggers
+   tracklab.pipeline
+   tracklab.utils
+   tracklab.wrappers
 
 Submodules
 ----------
 
-pbtrack.main module
+tracklab.main module
 -------------------
 
-.. automodule:: pbtrack.main
+.. automodule:: tracklab.main
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,5 +1,5 @@
 import pandas as pd
-from pbtrack.utils.coordinates import *
+from tracklab.utils.coordinates import *
 
 
 @pd.api.extensions.register_dataframe_accessor("bbox")

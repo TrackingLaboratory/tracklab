@@ -69,7 +69,7 @@ def init(cfg):
 
                 new_cfg[key] = new_subdict
 
-        wandb.init(project=cfg["experiment_name"], entity="pbtrack", config=new_cfg)
+        wandb.init(project=cfg["experiment_name"], entity="tracklab", config=new_cfg)
 
 
 def log(res_dict, name, video_dict=None):

@@ -1,5 +1,5 @@
 
-_target_: pbtrack.wrappers.YOLOv8
+_target_: tracklab.wrappers.YOLOv8
 batch_size: 4
 cfg:
   # models available :

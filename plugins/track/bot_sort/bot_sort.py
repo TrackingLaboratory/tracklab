@@ -15,7 +15,7 @@ from ultralytics.yolo.utils.ops import xyxy2xywh, xywh2xyxy
 class STrack(BaseTrack):
     shared_kalman = KalmanFilter()
 
-    def __init__(self, tlwh, score, cls, feat=None, feat_history=50, pbtrack_id=None):
+    def __init__(self, tlwh, score, cls, feat=None, feat_history=50, tracklab_id=None):
 
         # wait activate
         self._tlwh = np.asarray(tlwh, dtype=np.float32)
@@ -37,7 +37,7 @@ class STrack(BaseTrack):
         self.features = deque([], maxlen=feat_history)
         self.alpha = 0.9
 
-        self.pbtrack_id = pbtrack_id
+        self.tracklab_id = tracklab_id
 
     def update_features(self, feat):
         feat /= np.linalg.norm(feat)
@@ -137,7 +137,7 @@ class STrack(BaseTrack):
 
         self.update_cls(new_track.cls, new_track.score)
 
-        self.pbtrack_id = new_track.pbtrack_id
+        self.tracklab_id = new_track.tracklab_id
 
     def update(self, new_track, frame_id):
         """
@@ -163,7 +163,7 @@ class STrack(BaseTrack):
         self.score = new_track.score
         self.update_cls(new_track.cls, new_track.score)
 
-        self.pbtrack_id = new_track.pbtrack_id
+        self.tracklab_id = new_track.tracklab_id
 
     @property
     def tlwh(self):
@@ -283,12 +283,12 @@ class BoTSORT(object):
         xywh = xyxy2xywh(xyxys.numpy())
         confs = output_results[:, 4]
         clss = output_results[:, 5]
-        pbtrack_ids = output_results[:, 6]
+        tracklab_ids = output_results[:, 6]
         
         classes = clss.numpy()
         xyxys = xyxys.numpy()
         confs = confs.numpy()
-        pbtrack_ids = pbtrack_ids.numpy()
+        tracklab_ids = tracklab_ids.numpy()
 
         remain_inds = confs > self.track_high_thresh
         inds_low = confs > 0.1
@@ -305,8 +305,8 @@ class BoTSORT(object):
         classes_keep = classes[remain_inds]
         clss_second = classes[inds_second]
 
-        pbtrack_ids_keep = pbtrack_ids[remain_inds]
-        pbtrack_ids_second = pbtrack_ids[inds_second]
+        tracklab_ids_keep = tracklab_ids[remain_inds]
+        tracklab_ids_second = tracklab_ids[inds_second]
 
         self.height, self.width = img.shape[:2]
 
@@ -317,8 +317,8 @@ class BoTSORT(object):
         if len(dets) > 0:
             '''Detections'''
             
-            detections = [STrack(xyxy, s, c, f.cpu().numpy(), pbtrack_id=id) for
-                              (xyxy, s, c, f, id) in zip(dets, scores_keep, classes_keep, features_keep, pbtrack_ids_keep)]
+            detections = [STrack(xyxy, s, c, f.cpu().numpy(), tracklab_id=id) for
+                              (xyxy, s, c, f, id) in zip(dets, scores_keep, classes_keep, features_keep, tracklab_ids_keep)]
         else:
             detections = []
 
@@ -394,8 +394,8 @@ class BoTSORT(object):
         # association the untrack to the low score detections
         if len(dets_second) > 0:
             '''Detections'''
-            detections_second = [STrack(STrack.tlbr_to_tlwh(tlbr), s, c, pbtrack_id=id) for
-                (tlbr, s, c, id) in zip(dets_second, scores_second, clss_second, pbtrack_ids_second)]
+            detections_second = [STrack(STrack.tlbr_to_tlwh(tlbr), s, c, tracklab_id=id) for
+                (tlbr, s, c, id) in zip(dets_second, scores_second, clss_second, tracklab_ids_second)]
         else:
             detections_second = []
 
@@ -479,7 +479,7 @@ class BoTSORT(object):
             output.append(tid)
             output.append(t.cls)
             output.append(t.score)
-            output.append(t.pbtrack_id)
+            output.append(t.tracklab_id)
             outputs.append(output)
 
         return outputs

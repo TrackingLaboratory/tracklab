@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 from tabulate import tabulate
 
-from pbtrack.core import Evaluator as EvaluatorBase
-from pbtrack.utils import wandb
+from tracklab.core import Evaluator as EvaluatorBase
+from tracklab.utils import wandb
 
 from collections import OrderedDict
 import motmetrics as mm

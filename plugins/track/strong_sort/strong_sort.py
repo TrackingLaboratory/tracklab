@@ -43,12 +43,12 @@ class StrongSORT(object):
         xyxys = dets[:, 0:4]
         confs = dets[:, 4]
         clss = dets[:, 5]
-        pbtrack_ids = dets[:, 6]
+        tracklab_ids = dets[:, 6]
         
         classes = clss.numpy()
         xywhs = xyxy2xywh(xyxys.numpy())
         confs = confs.numpy()
-        pbtrack_ids = pbtrack_ids.numpy()
+        tracklab_ids = tracklab_ids.numpy()
         self.height, self.width = ori_img.shape[:2]
         
         # generate detections
@@ -63,7 +63,7 @@ class StrongSORT(object):
 
         # update tracker
         self.tracker.predict()
-        self.tracker.update(detections, classes, confs, pbtrack_ids)
+        self.tracker.update(detections, classes, confs, tracklab_ids)
 
         # output bbox identities
         outputs = []
@@ -78,8 +78,8 @@ class StrongSORT(object):
             class_id = track.class_id
             conf = track.conf
             queue = track.q
-            pbtrack_id = track.pbtrack_id
-            outputs.append(np.array([x1, y1, x2, y2, track_id, class_id, conf, queue, pbtrack_id], dtype=object))
+            tracklab_id = track.tracklab_id
+            outputs.append(np.array([x1, y1, x2, y2, track_id, class_id, conf, queue, tracklab_id], dtype=object))
         if len(outputs) > 0:
             outputs = np.stack(outputs, axis=0)
         return outputs

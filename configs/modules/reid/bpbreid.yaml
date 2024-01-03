@@ -1,4 +1,4 @@
-_target_: pbtrack.wrappers.BPBReId
+_target_: tracklab.wrappers.BPBReId
 
 defaults:
   - dataset: default

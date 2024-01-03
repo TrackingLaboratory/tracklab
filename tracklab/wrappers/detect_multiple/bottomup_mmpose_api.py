@@ -10,9 +10,9 @@ from mmpose.core.post_processing import oks_nms
 from mmpose.datasets.dataset_info import DatasetInfo
 from mmpose.datasets.pipelines import Compose
 
-from pbtrack.utils.openmmlab import get_checkpoint
-from pbtrack.utils.coordinates import sanitize_keypoints, generate_bbox_from_keypoints
-from pbtrack.pipeline import ImageLevelModule
+from tracklab.utils.openmmlab import get_checkpoint
+from tracklab.utils.coordinates import sanitize_keypoints, generate_bbox_from_keypoints
+from tracklab.pipeline import ImageLevelModule
 import logging
 
 log = logging.getLogger(__name__)

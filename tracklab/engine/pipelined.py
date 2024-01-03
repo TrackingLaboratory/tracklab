@@ -1,6 +1,6 @@
 import pandas as pd
 
-from pbtrack.engine import TrackingEngine
+from tracklab.engine import TrackingEngine
 
 
 class PipelinedTrackingEngine(TrackingEngine):

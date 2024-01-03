@@ -4,7 +4,7 @@ import pandas as pd
 import bpbreid_strong_sort.strong_sort as strong_sort
 import logging
 
-from pbtrack.pipeline import ImageLevelModule
+from tracklab.pipeline import ImageLevelModule
 
 log = logging.getLogger(__name__)
 

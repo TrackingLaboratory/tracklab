@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from pathlib import Path
-from pbtrack.datastruct import TrackingDataset, TrackingSet
+from tracklab.datastruct import TrackingDataset, TrackingSet
 
 
 class SoccerNetMOT(TrackingDataset):

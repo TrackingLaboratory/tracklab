@@ -4,7 +4,7 @@ version = "1.1.0"
 description = ""
 authors = ["Vladimir Somers <vladimir.somers@uclouvain.be>", "Victor Joos <victor.joos@uclouvain.be>", "Baptiste Standaert <baptiste.standaert@uclouvain.be>"]
 readme = "README.md"
-packages = [{include = "pbtrack"}]
+packages = [{include = "tracklab"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -48,7 +48,7 @@ url = "https://download.openmmlab.com/mmcv/dist/cu118/torch2.1.0"
 priority = "explicit"
 
 [tool.poetry.scripts]
-tracklab = 'pbtrack.main:main'
+tracklab = 'tracklab.main:main'
 
 [build-system]
 requires = ["poetry-core"]

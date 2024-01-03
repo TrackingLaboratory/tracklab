@@ -1,7 +1,7 @@
-pbtrack.datastruct package
+tracklab.datastruct package
 ==========================
 
-.. automodule:: pbtrack.datastruct
+.. automodule:: tracklab.datastruct
    :members:
    :undoc-members:
    :show-inheritance:
@@ -9,26 +9,26 @@ pbtrack.datastruct package
 Submodules
 ----------
 
-pbtrack.datastruct.datapipe module
+tracklab.datastruct.datapipe module
 ----------------------------------
 
-.. automodule:: pbtrack.datastruct.datapipe
+.. automodule:: tracklab.datastruct.datapipe
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.datastruct.tracker\_state module
+tracklab.datastruct.tracker\_state module
 ----------------------------------------
 
-.. automodule:: pbtrack.datastruct.tracker_state
+.. automodule:: tracklab.datastruct.tracker_state
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.datastruct.tracking\_dataset module
+tracklab.datastruct.tracking\_dataset module
 -------------------------------------------
 
-.. automodule:: pbtrack.datastruct.tracking_dataset
+.. automodule:: tracklab.datastruct.tracking_dataset
    :members:
    :undoc-members:
    :show-inheritance:

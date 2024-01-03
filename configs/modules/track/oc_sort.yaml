@@ -1,4 +1,4 @@
-_target_: pbtrack.wrappers.OCSORT
+_target_: tracklab.wrappers.OCSORT
 
 cfg:
   min_confidence: 0.4

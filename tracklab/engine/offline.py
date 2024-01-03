@@ -1,7 +1,7 @@
 import logging
 
-from pbtrack.engine import TrackingEngine
-from pbtrack.utils.cv2 import cv2_load_image
+from tracklab.engine import TrackingEngine
+from tracklab.utils.cv2 import cv2_load_image
 
 log = logging.getLogger(__name__)
 

@@ -5,7 +5,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 
 if TYPE_CHECKING:
-    from pbtrack.engine import TrackingEngine
+    from tracklab.engine import TrackingEngine
 
 
 class Callback:

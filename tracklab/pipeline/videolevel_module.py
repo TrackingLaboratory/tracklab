@@ -3,12 +3,12 @@ from typing import Any
 
 import pandas as pd
 
-from pbtrack.datastruct import EngineDatapipe
-from pbtrack.pipeline import Module
+from tracklab.datastruct import EngineDatapipe
+from tracklab.pipeline import Module
 
 from torch.utils.data.dataloader import default_collate, DataLoader
 
-from pbtrack.utils.cv2 import cv2_load_image
+from tracklab.utils.cv2 import cv2_load_image
 
 
 class VideoLevelModule(Module):

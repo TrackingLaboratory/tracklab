@@ -3,13 +3,13 @@ import torch
 import numpy as np
 import pandas as pd
 
-from pbtrack.pipeline.imagelevel_module import ImageLevelModule
+from tracklab.pipeline.imagelevel_module import ImageLevelModule
 
 os.environ["YOLO_VERBOSE"] = "False"
 from ultralytics import YOLO
 
-from pbtrack.utils.cv2 import cv2_load_image
-from pbtrack.utils.coordinates import ltrb_to_ltwh
+from tracklab.utils.cv2 import cv2_load_image
+from tracklab.utils.coordinates import ltrb_to_ltwh
 
 import logging
 

@@ -1,4 +1,4 @@
-_target_: pbtrack.wrappers.detect_multiple.openpifpaf_api.OpenPifPaf
+_target_: tracklab.wrappers.detect_multiple.openpifpaf_api.OpenPifPaf
 batch_size: 4
 cfg:
   predict:

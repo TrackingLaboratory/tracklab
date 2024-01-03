@@ -1,4 +1,4 @@
-_target_: pbtrack.wrappers.PoseTrack21Evaluator
+_target_: tracklab.wrappers.PoseTrack21Evaluator
 
 # Support 4 metrics:
 # 1. Pose Estimation mAP

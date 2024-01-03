@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 import pandas as pd
 
-from pbtrack.callbacks import Callback
-from pbtrack.engine import TrackingEngine
+from tracklab.callbacks import Callback
+from tracklab.engine import TrackingEngine
 
 
 class IgnoredRegions(Callback):

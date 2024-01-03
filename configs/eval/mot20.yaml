@@ -1,4 +1,4 @@
-_target_: pbtrack.wrappers.MOT20Evaluator
+_target_: tracklab.wrappers.MOT20Evaluator
 
 test_set: "train"
 

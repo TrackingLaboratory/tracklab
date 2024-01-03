@@ -1,7 +1,7 @@
-pbtrack
+tracklab
 =======
 
 .. toctree::
    :maxdepth: 4
 
-   pbtrack
+   tracklab

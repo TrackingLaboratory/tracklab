@@ -61,7 +61,7 @@ class KalmanBoxTracker(object):
     """
     count = 0
 
-    def __init__(self, bbox, cls, delta_t=3, orig=False, pbtrack_id=None):
+    def __init__(self, bbox, cls, delta_t=3, orig=False, tracklab_id=None):
         """
         Initialises a tracker using initial bounding box.
 
@@ -105,9 +105,9 @@ class KalmanBoxTracker(object):
         self.velocity = None
         self.delta_t = delta_t
 
-        self.pbtrack_id = pbtrack_id
+        self.tracklab_id = tracklab_id
 
-    def update(self, bbox, cls, pbtrack_id=None):
+    def update(self, bbox, cls, tracklab_id=None):
         """
         Updates the state vector with observed bbox.
         """
@@ -145,8 +145,8 @@ class KalmanBoxTracker(object):
         else:
             self.kf.update(bbox)
 
-        if pbtrack_id is not None:
-            self.pbtrack_id = pbtrack_id
+        if tracklab_id is not None:
+            self.tracklab_id = tracklab_id
 
     def predict(self):
         """
@@ -215,14 +215,14 @@ class OCSort(object):
         xyxys = dets[:, 0:4]
         confs = dets[:, 4]
         clss = dets[:, 5]
-        pbtrack_ids = dets[:, 6]
+        tracklab_ids = dets[:, 6]
         
         classes = clss.numpy()
         xyxys = xyxys.numpy()
         confs = confs.numpy()
-        pbtrack_ids = pbtrack_ids.numpy()
+        tracklab_ids = tracklab_ids.numpy()
 
-        output_results = np.column_stack((xyxys, confs, classes, pbtrack_ids))
+        output_results = np.column_stack((xyxys, confs, classes, tracklab_ids))
         
         inds_low = confs > 0.1
         inds_high = confs < self.det_thresh
@@ -311,7 +311,7 @@ class OCSort(object):
 
         # create and initialise new trackers for unmatched detections
         for i in unmatched_dets:
-            trk = KalmanBoxTracker(dets[i, :5], dets[i, 5], delta_t=self.delta_t, pbtrack_id=dets[i, 6])
+            trk = KalmanBoxTracker(dets[i, :5], dets[i, 5], delta_t=self.delta_t, tracklab_id=dets[i, 6])
             self.trackers.append(trk)
         i = len(self.trackers)
         for trk in reversed(self.trackers):
@@ -325,7 +325,7 @@ class OCSort(object):
                 d = trk.last_observation[:4]
             if (trk.time_since_update < 1) and (trk.hit_streak >= self.min_hits or self.frame_count <= self.min_hits):
                 # +1 as MOT benchmark requires positive
-                ret.append(np.concatenate((d, [trk.id+1], [trk.cls], [trk.conf], [trk.pbtrack_id])).reshape(1, -1))
+                ret.append(np.concatenate((d, [trk.id+1], [trk.cls], [trk.conf], [trk.tracklab_id])).reshape(1, -1))
             i -= 1
             # remove dead tracklet
             if(trk.time_since_update > self.max_age):

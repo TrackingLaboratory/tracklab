@@ -2,8 +2,8 @@ import torch
 import numpy as np
 import pandas as pd
 
-from pbtrack.pipeline import ImageLevelModule
-from pbtrack.utils.coordinates import ltrb_to_ltwh
+from tracklab.pipeline import ImageLevelModule
+from tracklab.utils.coordinates import ltrb_to_ltwh
 import oc_sort.ocsort as ocsort
 
 import logging
@@ -38,9 +38,9 @@ class OCSORT(ImageLevelModule):
             ltrb = detection.bbox.ltrb()
             conf = detection.bbox.conf()
             cls = detection.category_id
-            pbtrack_id = detection.name
+            tracklab_id = detection.name
             processed_detections.append(
-                np.array([*ltrb, conf, cls, pbtrack_id])
+                np.array([*ltrb, conf, cls, tracklab_id])
             )
         return {
             "input": np.stack(processed_detections),
@@ -50,7 +50,7 @@ class OCSORT(ImageLevelModule):
     def process(self, batch, detections: pd.DataFrame, metadatas: pd.DataFrame):
         if len(detections) == 0:
             return []
-        inputs = batch["input"][0]  # Nx7 [l,t,r,b,conf,class,pbtrack_id]
+        inputs = batch["input"][0]  # Nx7 [l,t,r,b,conf,class,tracklab_id]
         inputs = inputs[inputs[:, 4] > self.cfg.min_confidence]
         results = self.model.update(inputs, None)
         results = np.asarray(results)  # N'x8 [l,t,r,b,track_id,class,conf,idx]

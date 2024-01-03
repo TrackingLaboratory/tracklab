@@ -6,11 +6,11 @@ import torch
 import requests
 import numpy as np
 from tqdm import tqdm
-from pbtrack.utils.cv2 import cv2_load_image, crop_bbox_ltwh
-from pbtrack.utils.easyocr import bbox_easyocr_to_image_ltwh
+from tracklab.utils.cv2 import cv2_load_image, crop_bbox_ltwh
+from tracklab.utils.easyocr import bbox_easyocr_to_image_ltwh
 
-from pbtrack.pipeline.videolevel_module import VideoLevelModule
-from pbtrack.utils.openmmlab import get_checkpoint
+from tracklab.pipeline.videolevel_module import VideoLevelModule
+from tracklab.utils.openmmlab import get_checkpoint
 
 from collections import Counter
 

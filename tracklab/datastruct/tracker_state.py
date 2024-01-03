@@ -8,8 +8,8 @@ from contextlib import AbstractContextManager
 from os.path import abspath
 from pathlib import Path
 
-from pbtrack.datastruct.tracking_dataset import TrackingSet
-from pbtrack.utils.coordinates import generate_bbox_from_keypoints, ltrb_to_ltwh
+from tracklab.datastruct.tracking_dataset import TrackingSet
+from tracklab.utils.coordinates import generate_bbox_from_keypoints, ltrb_to_ltwh
 
 import logging
 

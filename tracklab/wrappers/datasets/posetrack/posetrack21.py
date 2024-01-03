@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from pbtrack.datastruct import TrackingDataset, TrackingSet
+from tracklab.datastruct import TrackingDataset, TrackingSet
 
 
 class PoseTrack21(TrackingDataset):
@@ -45,7 +45,7 @@ class PoseTrack21(TrackingDataset):
 def load_tracking_set(anns_path, dataset_path, posetrack_version=21):
     # Load annotations into Pandas dataframes
     video_metadatas, image_metadatas, detections_gt = load_annotations(anns_path)
-    # Fix formatting of dataframes to be compatible with pbtrack
+    # Fix formatting of dataframes to be compatible with tracklab
     video_metadatas, image_metadatas, detections_gt = fix_formatting(
         video_metadatas, image_metadatas, detections_gt, dataset_path, posetrack_version
     )

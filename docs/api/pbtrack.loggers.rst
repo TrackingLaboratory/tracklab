@@ -1,7 +1,7 @@
-pbtrack.loggers package
+tracklab.loggers package
 =======================
 
-.. automodule:: pbtrack.loggers
+.. automodule:: tracklab.loggers
    :members:
    :undoc-members:
    :show-inheritance:

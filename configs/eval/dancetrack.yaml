@@ -1,4 +1,4 @@
-_target_: pbtrack.wrappers.DanceTrackEvaluator
+_target_: tracklab.wrappers.DanceTrackEvaluator
 
 test_set: "val"
 

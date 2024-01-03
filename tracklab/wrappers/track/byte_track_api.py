@@ -2,8 +2,8 @@ import torch
 import numpy as np
 import pandas as pd
 
-from pbtrack.pipeline import ImageLevelModule
-from pbtrack.utils.coordinates import ltrb_to_ltwh
+from tracklab.pipeline import ImageLevelModule
+from tracklab.utils.coordinates import ltrb_to_ltwh
 import byte_track.byte_tracker as byte_tracker
 
 import logging
@@ -33,16 +33,16 @@ class ByteTrack(ImageLevelModule):
         ltrb = detection.bbox.ltrb()
         conf = detection.bbox.conf()
         cls = detection.category_id
-        pbtrack_id = detection.name
+        tracklab_id = detection.name
         return {
             "input": np.array(
-                [ltrb[0], ltrb[1], ltrb[2], ltrb[3], conf, cls, pbtrack_id]
+                [ltrb[0], ltrb[1], ltrb[2], ltrb[3], conf, cls, tracklab_id]
             ),
         }
 
     @torch.no_grad()
     def process(self, batch, image, detections: pd.DataFrame):
-        inputs = batch["input"]  # Nx7 [l,t,r,b,conf,class,pbtrack_id]
+        inputs = batch["input"]  # Nx7 [l,t,r,b,conf,class,tracklab_id]
         inputs = inputs[inputs[:, 4] > self.cfg.min_confidence]
         results = self.model.update(inputs, None)
         results = np.asarray(results)  # N'x8 [l,t,r,b,track_id,class,conf,idx]

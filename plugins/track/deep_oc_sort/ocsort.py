@@ -100,7 +100,7 @@ class KalmanBoxTracker(object):
 
     count = 0
 
-    def __init__(self, bbox, cls, delta_t=3, orig=False, emb=None, alpha=0, new_kf=False, pbtrack_id=None):
+    def __init__(self, bbox, cls, delta_t=3, orig=False, emb=None, alpha=0, new_kf=False, tracklab_id=None):
         """
         Initialises a tracker using initial bounding box.
 
@@ -200,9 +200,9 @@ class KalmanBoxTracker(object):
 
         self.frozen = False
 
-        self.pbtrack_id = pbtrack_id
+        self.tracklab_id = tracklab_id
 
-    def update(self, bbox, cls, pbtrack_id=None):
+    def update(self, bbox, cls, tracklab_id=None):
         """
         Updates the state vector with observed bbox.
         """
@@ -242,8 +242,8 @@ class KalmanBoxTracker(object):
             self.kf.update(bbox)
             self.frozen = True
 
-        if pbtrack_id is not None:
-            self.pbtrack_id = pbtrack_id
+        if tracklab_id is not None:
+            self.tracklab_id = tracklab_id
 
     def update_emb(self, emb, alpha=0.9):
         self.emb = alpha * self.emb + (1 - alpha) * emb
@@ -382,12 +382,12 @@ class OCSort(object):
         xyxys = dets[:, 0:4]
         scores = dets[:, 4]
         clss = dets[:, 5]
-        pbtrack_ids = dets[:, 6]
+        tracklab_ids = dets[:, 6]
         
         classes = clss.numpy()
         xyxys = xyxys.numpy()
         scores = scores.numpy()
-        pbtrack_ids = pbtrack_ids.numpy()
+        tracklab_ids = tracklab_ids.numpy()
         
         dets = dets.numpy()
         remain_inds = scores > self.det_thresh
@@ -509,7 +509,7 @@ class OCSort(object):
         for i in unmatched_dets:
             trk = KalmanBoxTracker(
                 dets[i, :5], dets[i, 5], delta_t=self.delta_t, emb=dets_embs[i], alpha=dets_alpha[i], new_kf=not self.new_kf_off,
-                pbtrack_id=dets[i, 6]
+                tracklab_id=dets[i, 6]
             )
             self.trackers.append(trk)
         i = len(self.trackers)
@@ -524,7 +524,7 @@ class OCSort(object):
                 d = trk.last_observation[:4]
             if (trk.time_since_update < 1) and (trk.hit_streak >= self.min_hits or self.frame_count <= self.min_hits):
                 # +1 as MOT benchmark requires positive
-                ret.append(np.concatenate((d, [trk.id + 1], [trk.cls], [trk.conf], [trk.pbtrack_id])).reshape(1, -1))
+                ret.append(np.concatenate((d, [trk.id + 1], [trk.cls], [trk.conf], [trk.tracklab_id])).reshape(1, -1))
             i -= 1
             # remove dead tracklet
             if trk.time_since_update > self.max_age:

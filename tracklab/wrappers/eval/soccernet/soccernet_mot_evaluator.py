@@ -3,8 +3,8 @@ import pandas as pd
 import motmetrics as mm
 import logging
 
-from pbtrack.core import Evaluator as EvaluatorBase
-from pbtrack.utils import wandb
+from tracklab.core import Evaluator as EvaluatorBase
+from tracklab.utils import wandb
 from collections import OrderedDict
 from motmetrics.apps.evaluateTracking import compare_dataframes
 

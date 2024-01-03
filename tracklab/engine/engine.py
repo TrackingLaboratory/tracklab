@@ -8,12 +8,12 @@ from lightning.fabric import Fabric
 
 from abc import abstractmethod, ABC
 
-from pbtrack.pipeline import Pipeline
+from tracklab.pipeline import Pipeline
 
 if TYPE_CHECKING:
-    from pbtrack.callbacks import Callback
+    from tracklab.callbacks import Callback
 
-from pbtrack.datastruct import TrackerState
+from tracklab.datastruct import TrackerState
 
 
 def merge_dataframes(main_df, appended_piece):

@@ -1,4 +1,4 @@
-_target_: pbtrack.wrappers.SoccerNetMOTEvaluator
+_target_: tracklab.wrappers.SoccerNetMOTEvaluator
 
 test_set: "val"  # TODO ?
 

@@ -1,4 +1,4 @@
-from pbtrack.main import main
+from tracklab.main import main
 
 
 if __name__ == "__main__":

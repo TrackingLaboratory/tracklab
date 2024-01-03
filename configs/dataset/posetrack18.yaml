@@ -1,7 +1,7 @@
 defaults:
   - default
 
-_target_: pbtrack.wrappers.PoseTrack18
+_target_: tracklab.wrappers.PoseTrack18
 
 dataset_path: ${data_dir}/PoseTrack18
 annotation_path: ${data_dir}/PoseTrack18

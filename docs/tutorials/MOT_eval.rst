@@ -1,7 +1,7 @@
 New evaluator integration
 =========================
 
-The evaluator must extend the abstract class :class:`Evaluator<pbtrack.core.evaluator.Evaluator>` which is described in `core/evaluator.py`.
+The evaluator must extend the abstract class :class:`Evaluator<tracklab.core.evaluator.Evaluator>` which is described in `core/evaluator.py`.
 Specifically, the function `run(tracker_state)` must be implemented for the evaluation to be done.
 
 ## `EvaluatorBase` extension

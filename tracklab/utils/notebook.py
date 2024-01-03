@@ -11,7 +11,7 @@ from hydra import initialize_config_dir as init_hydra, compose
 from hydra.utils import instantiate
 from hydra.core.utils import configure_log
 
-from pbtrack.datastruct import TrackerState
+from tracklab.datastruct import TrackerState
 
 TrackEngine = namedtuple(
     "TrackEngine", ["cfg", "engine", "state", "evaluator", "dataset"]
@@ -31,7 +31,7 @@ def load_from_overrides(overrides=[]) -> TrackEngine:
         import os
         import sys
         sys.path.append(os.getcwd()+"/..")
-        from pbtrack.utils import load_from_overrides
+        from tracklab.utils import load_from_overrides
 
         load_from_overrides(["train_detect=false"])
 

@@ -1,7 +1,7 @@
-pbtrack.wrappers.datasets.mot package
+tracklab.wrappers.datasets.mot package
 =====================================
 
-.. automodule:: pbtrack.wrappers.datasets.mot
+.. automodule:: tracklab.wrappers.datasets.mot
    :members:
    :undoc-members:
    :show-inheritance:
@@ -9,18 +9,18 @@ pbtrack.wrappers.datasets.mot package
 Submodules
 ----------
 
-pbtrack.wrappers.datasets.mot.mot17 module
+tracklab.wrappers.datasets.mot.mot17 module
 ------------------------------------------
 
-.. automodule:: pbtrack.wrappers.datasets.mot.mot17
+.. automodule:: tracklab.wrappers.datasets.mot.mot17
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.wrappers.datasets.mot.mot20 module
+tracklab.wrappers.datasets.mot.mot20 module
 ------------------------------------------
 
-.. automodule:: pbtrack.wrappers.datasets.mot.mot20
+.. automodule:: tracklab.wrappers.datasets.mot.mot20
    :members:
    :undoc-members:
    :show-inheritance:

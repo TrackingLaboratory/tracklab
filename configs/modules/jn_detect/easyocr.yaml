@@ -1,4 +1,4 @@
-_target_: pbtrack.wrappers.EasyOCR
+_target_: tracklab.wrappers.EasyOCR
 cfg:
   text_threshold: 0.5
   link_threshold: 0.3

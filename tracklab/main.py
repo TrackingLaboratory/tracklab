@@ -5,12 +5,12 @@ import hydra
 import warnings
 import logging
 
-from pbtrack.utils import monkeypatch_hydra  # needed to avoid complex hydra stacktraces when errors occur in "instantiate(...)"
+from tracklab.utils import monkeypatch_hydra  # needed to avoid complex hydra stacktraces when errors occur in "instantiate(...)"
 from hydra.utils import instantiate
 from omegaconf import OmegaConf
-from pbtrack.datastruct import TrackerState
-from pbtrack.pipeline import Pipeline
-from pbtrack.utils import wandb
+from tracklab.datastruct import TrackerState
+from tracklab.pipeline import Pipeline
+from tracklab.utils import wandb
 
 
 os.environ["HYDRA_FULL_ERROR"] = "1"
@@ -28,10 +28,11 @@ def main(cfg):
     evaluator = instantiate(cfg.eval)
 
     modules = []
-    for name in cfg.pipeline:
-        module = cfg.modules[name]
-        inst_module = instantiate(module, device=device, tracking_dataset=tracking_dataset)
-        modules.append(inst_module)
+    if cfg.pipeline is not None:
+        for name in cfg.pipeline:
+            module = cfg.modules[name]
+            inst_module = instantiate(module, device=device, tracking_dataset=tracking_dataset)
+            modules.append(inst_module)
 
     pipeline = Pipeline(models=modules)
 

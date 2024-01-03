@@ -1,6 +1,6 @@
-from pbtrack.core import Evaluator
-from pbtrack.callbacks import Callback
-from pbtrack.engine import TrackingEngine
+from tracklab.core import Evaluator
+from tracklab.callbacks import Callback
+from tracklab.engine import TrackingEngine
 
 import logging
 

@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 from tabulate import tabulate
 
-from pbtrack.core import Evaluator as EvaluatorBase
-from pbtrack.utils import wandb
+from tracklab.core import Evaluator as EvaluatorBase
+from tracklab.utils import wandb
 
 import posetrack21
 import posetrack21_mot

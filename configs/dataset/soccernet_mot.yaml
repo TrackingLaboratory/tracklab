@@ -1,7 +1,7 @@
 defaults:
   - default
 
-_target_: pbtrack.wrappers.SoccerNetMOT
+_target_: tracklab.wrappers.SoccerNetMOT
 
 dataset_path: ${data_dir}/SoccerNetMOT
 annotation_path: ${data_dir}/SoccerNetMOT

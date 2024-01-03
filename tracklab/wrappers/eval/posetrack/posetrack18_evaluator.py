@@ -2,8 +2,8 @@ import os
 import numpy as np
 from tabulate import tabulate
 
-from pbtrack.core import Evaluator as EvaluatorBase
-from pbtrack.utils import wandb
+from tracklab.core import Evaluator as EvaluatorBase
+from tracklab.utils import wandb
 
 from poseval.eval_helpers import (
     load_data_dir,

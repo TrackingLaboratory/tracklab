@@ -2,7 +2,7 @@ import glob
 import cv2
 
 from pathlib import Path
-from pbtrack.datastruct import (
+from tracklab.datastruct import (
     TrackingDataset,
     TrackingSet,
 )

@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from pbtrack.datastruct import TrackerState
-from pbtrack.callbacks import Callback
-from pbtrack.utils.cv2 import (
+from tracklab.datastruct import TrackerState
+from tracklab.callbacks import Callback
+from tracklab.utils.cv2 import (
     draw_text,
     draw_bbox,
     draw_bpbreid_heatmaps,
@@ -17,7 +17,7 @@ from pbtrack.utils.cv2 import (
 )
 
 # FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
-from pbtrack.utils.coordinates import (
+from tracklab.utils.coordinates import (
     clip_bbox_ltrb_to_img_dim,
     round_bbox_coordinates,
     bbox_ltwh2ltrb,

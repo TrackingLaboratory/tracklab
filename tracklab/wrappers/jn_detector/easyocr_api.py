@@ -3,8 +3,8 @@ import torch
 import easyocr
 import logging
 
-from pbtrack.utils.collate import default_collate, Unbatchable
-from pbtrack.pipeline.detectionlevel_module import DetectionLevelModule
+from tracklab.utils.collate import default_collate, Unbatchable
+from tracklab.pipeline.detectionlevel_module import DetectionLevelModule
 
 
 log = logging.getLogger(__name__)

@@ -1,4 +1,4 @@
-_target_: pbtrack.wrappers.PoseTrack18Evaluator
+_target_: tracklab.wrappers.PoseTrack18Evaluator
 
 test_set: "val"
 
