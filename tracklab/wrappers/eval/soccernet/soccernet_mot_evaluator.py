@@ -101,17 +101,18 @@ class SoccerNetMOTEvaluator(EvaluatorBase):  # TODO replace with generic MOT eva
             right_on="image_id",
         )
         len_before_drop = len(df)
+        required_columns = [
+            "track_id",
+            bbox_column,
+        ]
         df.dropna(
-            subset=[
-                "track_id",
-                bbox_column,
-            ],
+            subset=required_columns,
             how="any",
             inplace=True,
         )
         if len_before_drop != len(df):
             log.warning(
-                "Dropped {} rows with NA values".format(len_before_drop - len(df))
+                "Dropped {} rows with NA values for one of these columns: {}".format(len_before_drop - len(df), required_columns)
             )
         df["track_id"] = df["track_id"].astype(int)
         df["bb_left"] = df[bbox_column].apply(lambda x: x[0])
