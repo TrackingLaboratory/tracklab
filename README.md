@@ -67,16 +67,16 @@ Here is an overview of the important TrackLab classes:
 ### Execution Flow Overview
 Here is an overview of what happen when you run TrackLab:
 [tracklab/main.py](tracklab/main.py) is the main entry point and receives the complete Hydra's configuration as input. 
-[tracklab/main.py](tracklab/main.py) is usually called via the following command through the root [main.py](main.py) file: python main.py.
+[tracklab/main.py](tracklab/main.py) is usually called via the following command through the root [main.py](main.py) file: `python main.py`.
 Within [tracklab/main.py](tracklab/main.py), all modules are first instantiated.
-Training any tracking module (e.g. re-identification model) on the tracking training set is supported by calling the "train" method of the corresponding module.
-Tracking is then performed on the validation or test set (depending on the configuration) via the TrackingEngine run() function.
+Then training any tracking module (e.g. the re-identification model) on the tracking training set is supported by calling the "train" method of the corresponding module.
+Tracking is then performed on the validation or test set (depending on the configuration) via the TrackingEngine.run() function.
 For each video in the evaluated set, the TrackingEngine calls the "run" method of each module (e.g. detector, re-identifier, tracker, ...) sequentially.
-The TrackingEngine is respnsible for batching the input data (e.g. images, detections, ...) before calling the "run" method of each module with the correct input data.
+The TrackingEngine is responsible for batching the input data (e.g. images, detections, ...) before calling the "run" method of each module with the correct input data.
 After a module has been called with a batch of input data, the TrackingEngine then updates the TrackerState object with the module outputs.
 At the end of the tracking process, the TrackerState object contains the tracking results of each video.
-Visualization (e.g. .mp4 results videos) are generated during the TrackingEngine.run() call, after a video has been tracked and before the next video is processed.
-Evaluation is performed via the evaluator.run() function once the TrackingEngine.run() call is completed, i.e. after all videos have been processed.
+Visualizations (e.g. .mp4 results videos) are generated during the TrackingEngine.run() call, after a video has been tracked and before the next video is processed.
+Finally, evaluation is performed via the evaluator.run() function once the TrackingEngine.run() call is completed, i.e. after all videos have been processed.
 
 
 ## Documentation
