@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
 
 
-@hydra.main(version_base=None, config_path="../configs", config_name="config")
+@hydra.main(version_base=None, config_path="pkg://pbtrack.configs", config_name="config")
 def main(cfg):
     device = init_environment(cfg)
 
