@@ -1,7 +1,7 @@
-pbtrack.core package
+tracklab.core package
 ====================
 
-.. automodule:: pbtrack.core
+.. automodule:: tracklab.core
    :members:
    :undoc-members:
    :show-inheritance:
@@ -9,18 +9,18 @@ pbtrack.core package
 Submodules
 ----------
 
-pbtrack.core.evaluator module
+tracklab.core.evaluator module
 -----------------------------
 
-.. automodule:: pbtrack.core.evaluator
+.. automodule:: tracklab.core.evaluator
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.core.visualization\_engine module
+tracklab.core.visualization\_engine module
 -----------------------------------------
 
-.. automodule:: pbtrack.core.visualization_engine
+.. automodule:: tracklab.core.visualization_engine
    :members:
    :undoc-members:
    :show-inheritance:

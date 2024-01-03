@@ -32,54 +32,6 @@ Here's what makes TrackLab different from other existing tracking frameworks:
   - multi-person pose estimation
   - person re-identification
 
-
-## Framework overview
-### Hydra Configuration
-TODO Describe TrackLab + Hydra configuration system 
-
-### Architecture Overview
-Important TrackLab classes include:
-- **[TrackerState](pbtrack/datastruct/tracker_state.py)**: Core class that contains all the information about the current state of the tracker. All modules update the tracker_state sequentially. The TrackState contains one TrackingSet for each split of the dataset (train, val, test, etc).
-- **[TrackingSet]()**: A tracking set contains four [Panda](https://pandas.pydata.org/) dataframes:
-  - video_metadatas: contains one row of information per video (e.g. fps, width, height, etc)
-  - image_metadatas: contains one row of information per image (e.g. frame_id, video_id, etc)
-  - detections_gt: contains one row of information per ground truth detection (e.g. frame_id, video_id, bbox_ltwh, track_id, etc)
-  - detections_pred: contains one row of information per predicted detection (e.g. frame_id, video_id, bbox_ltwh, track_id, reid embedding, etc)
-- **[TrackingDataset](pbtrack/datastruct/tracking_dataset.py)**: 
-  - Example: [SoccerNetMOT](pbtrack/wrappers/datasets/soccernet/soccernet_mot.py): The [SoccerNet Tracking](https://github.com/SoccerNet/sn-tracking) dataset
-- **[TrackingEngine](pbtrack/engine/engine.py)**: This class is responsible for executing the entire tracking pipeline on the dataset. It loops over all videos of the dataset and calls all modules defined in the pipeline sequentially. The exact execution order (e.g. online/offline/...) is defined by the TrackingEngine subclass.
-  - Example: **[OfflineTrackingEngine](pbtrack/engine/offline.py)**: The offline tracking engine performs tracking one module after another to speed up inference by leveraging large batch sizes and maximum GPU utilization. For instance, YoloV8 is first applied on an entire video by batching multiple images, then the re-identification model is applied on all detections of the video with large detections batches, etc. 
-- **[Pipeline](pbtrack/pipeline/module.py)**: Define the order in which modules are executed by the TrackingEngine. If a tracker_state is loaded from disk, modules that should not be executed again should be removed.
-  - Example: [bbox_detector, reid, track, jn_detect, jn_tracklet]
-- **[VideoLevelModule](pbtrack/pipeline/videolevel_module.py)**: TODO
-  - Example: [VotingTrackletJerseyNumber](pbtrack/wrappers/jn_detector/voting_tracklet_jn_api.py): To perform majority voting within each tracklet and compute a consistent tracklet level jersey number. Update the "jersey_number" column within detections_pred.
-- **[ImageLevelModule](pbtrack/pipeline/imagelevel_module.py)**: TODO
-  - Example 1: [YOLOv8](pbtrack/wrappers/detect_multiple/yolov8_api.py): To perform object detection on each image with [YOLOv8](https://github.com/ultralytics/ultralytics). Create a new row (i.e. detection) within detections_pred.
-  - Example 2: [StrongSORT](pbtrack/wrappers/track/strong_sort_api.py): To perform online tracking with [StrongSORT](https://github.com/dyhBUPT/StrongSORT). Creates a new "track_id" column for each detection within detections_pred. 
-- **[DetectionLevelModule](pbtrack/pipeline/detectionlevel_module.py)**: TODO 
-  - Example 1: [EasyOCR](pbtrack/wrappers/jn_detector/easyocr_api.py): To perform jersey number recognition on each detection with [EasyOCR](https://github.com/JaidedAI/EasyOCR). Create a new "jersey_number" column within detections_pred.
-  - Example 2: [BPBReId](pbtrack/wrappers/reid/bpbreid_api.py): To perform person re-identification on each detection with [BPBReID](https://github.com/VlSomers/bpbreid). Create a new "embedding" column within detections_pred.
-- **[Callback](pbtrack/callbacks/callback.py)**: Implement this class to add a callback to be called at a specific point during the tracking process, e.g. when task/dataset/video processing starts/ends.
-  - Example: [VisualizationEngine](pbtrack/core/visualization_engine.py): Implements "on_video_loop_end" to save each video tracking results as a .mp4 or a list of .jpg. 
-- **[Evaluator](pbtrack/core/evaluator.py)**: Implement this class to add a new evaluation metric, such as MOTA, HOTA, or any other (non-tracking related) metrics. 
-  - Example: [SoccerNetMOTEvaluator](pbtrack/wrappers/eval/soccernet/soccernet_mot_evaluator.py): Evaluate performance of a tracker on the SoccerNet Tracking dataset using the official [evaluation library](https://github.com/SoccerNet/sn-tracking).
-- **[]()**:
-
-### Execution Flow Overview
-Here is an overview of what happen when you run TrackLab:
-[tracklab/main.py](tracklab/main.py) is the main entry point and receives the complete Hydra's configuration as input. 
-[tracklab/main.py](tracklab/main.py) is usually called via the following command through the root [main.py](main.py) file: python main.py.
-Within [tracklab/main.py](tracklab/main.py), all modules are first instantiated.
-Training any tracking module (e.g. re-identification model) on the tracking training set is supported by calling the "train" method of the corresponding module.
-Tracking is then performed on the validation or test set (depending on the configuration) via the TrackingEngine run() function.
-For each video in the evaluated set, the TrackingEngine calls the "run" method of each module (e.g. detector, re-identifier, tracker, ...) sequentially.
-The TrackingEngine is respnsible for batching the input data (e.g. images, detections, ...) before calling the "run" method of each module with the correct input data.
-After a module has been called with a batch of input data, the TrackingEngine then updates the TrackerState object with the module outputs.
-At the end of the tracking process, the TrackerState object contains the tracking results of each video.
-Visualization (e.g. .mp4 results videos) are generated during the TrackingEngine.run() call, after a video has been tracked and before the next video is processed.
-Evaluation is performed via the evaluator.run() function once the TrackingEngine.run() call is completed, i.e. after all videos have been processed.
-
-
 ## Documentation
 You can find the documentation in the docs/ folder. After installing, you can run `make html` inside this folder
 to get an html version of the documentation.
@@ -119,7 +71,7 @@ You might need to redo this if you update the repository, and some dependencies 
 
 ### External dependencies
 
-- Get the **SoccerNet Tracking** dataset [here](https://github.com/SoccerNet/sn-tracking).
+- Get the **SoccerNet Tracking** dataset [here](https://github.com/SoccerNet/sn-tracking), rename the root folder as "SoccerNetMOT" and put it under the global dataset directory (specified under the `data_dir` config as explained below). Otherwise, you can modify the `dataset_path` config in [soccernet_mot.yaml](configs/dataset/soccernet_mot.yaml) with your custom SoccerNet dataset directory.
 - Download the pretrained model weights [here](https://drive.google.com/drive/folders/1MmDkSHWJ1S-V9YcLMkFOjm3zo65UELjJ?usp=drive_link) and put the "pretrained_models" directory under the main project directory (i.e. "/path/to/tracklab/pretrained_models").
 
 ### Setup
@@ -156,3 +108,50 @@ tracklab --help
 
 The first section contains the configuration groups, while the second section
 shows all the possible options you can modify.
+
+
+## Framework overview
+### Hydra Configuration
+TODO Describe TrackLab + Hydra configuration system 
+
+### Architecture Overview
+Here is an overview of the important TrackLab classes:
+- **[TrackingDataset](tracklab/datastruct/tracking_dataset.py)**: Abstract class to be instantiated when adding a new dataset. The `TrackingDataset` contains one `TrackingSet` for each split of the dataset (train, val, test, etc).
+  - Example: [SoccerNetMOT](tracklab/wrappers/datasets/soccernet/soccernet_mot.py). The [SoccerNet Tracking](https://github.com/SoccerNet/sn-tracking) dataset.
+- **[TrackingSet](tracklab/datastruct/tracking_dataset.py)**: A tracking set contains three [Pandas](https://pandas.pydata.org/) dataframes:
+  1. `video_metadatas`: contains one row of information per video (e.g. fps, width, height, etc).
+  2. `image_metadatas`: contains one row of information per image (e.g. frame_id, video_id, etc).
+  3. `detections_gt`: contains one row of information per ground truth detection (e.g. frame_id, video_id, bbox_ltwh, track_id, etc).
+- **[TrackerState](tracklab/datastruct/tracker_state.py)**: Core class that contains all the information about the current state of the tracker. All modules in the tracking pipeline update the tracker_state sequentially. The tracker_state contains one key dataframe:
+  1. `detections_pred`: contains one row of information per predicted detection (e.g. frame_id, video_id, bbox_ltwh, track_id, reid embedding, etc).
+- **[TrackingEngine](tracklab/engine/engine.py)**: This class is responsible for executing the entire tracking pipeline on the dataset. It loops over all videos of the dataset and calls all modules defined in the pipeline sequentially. The exact execution order (e.g. online/offline/...) is defined by the TrackingEngine subclass.
+  - Example: **[OfflineTrackingEngine](tracklab/engine/offline.py)**. The offline tracking engine performs tracking one module after another to speed up inference by leveraging large batch sizes and maximum GPU utilization. For instance, YoloV8 is first applied on an entire video by batching multiple images, then the re-identification model is applied on all detections in the video, etc. 
+- **[Pipeline](tracklab/pipeline/module.py)**: Define the order in which modules are executed by the TrackingEngine. If a tracker_state is loaded from disk, modules that should not be executed again must be removed.
+  - Example: [bbox_detector, reid, track, jn_detect, jn_tracklet]
+- **[VideoLevelModule](tracklab/pipeline/videolevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on all frames simultaneously. Can be used to implement offline tracking strategies, tracklet level voting mechanisms, etc. 
+  - Example: [VotingTrackletJerseyNumber](tracklab/wrappers/jn_detector/voting_tracklet_jn_api.py). To perform majority voting within each tracklet and compute a consistent tracklet level jersey number. Update the "jersey_number" column within `detections_pred`.
+- **[ImageLevelModule](tracklab/pipeline/imagelevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates operates on a single frame. Can be used to implement online tracking strategies, pose/segmentation/bbox detectors, etc.
+  - Example 1: [YOLOv8](tracklab/wrappers/detect_multiple/yolov8_api.py). To perform object detection on each image with [YOLOv8](https://github.com/ultralytics/ultralytics). Creates a new row (i.e. detection) within `detections_pred`.
+  - Example 2: [StrongSORT](tracklab/wrappers/track/strong_sort_api.py). To perform online tracking with [StrongSORT](https://github.com/dyhBUPT/StrongSORT). Creates a new "track_id" column for each detection within `detections_pred`. 
+- **[DetectionLevelModule](tracklab/pipeline/detectionlevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on a single detection. Can be used to implement pose estimation for top-down strategies, re-identification, attributes recognition, etc. 
+  - Example 1: [EasyOCR](tracklab/wrappers/jn_detector/easyocr_api.py). To perform jersey number recognition on each detection with [EasyOCR](https://github.com/JaidedAI/EasyOCR). Creates a new "jersey_number" column within `detections_pred`.
+  - Example 2: [BPBReId](tracklab/wrappers/reid/bpbreid_api.py). To perform person re-identification on each detection with [BPBReID](https://github.com/VlSomers/bpbreid). Creates a new "embedding" column within `detections_pred`.
+- **[Callback](tracklab/callbacks/callback.py)**: Implement this class to add a callback that is triggered at a specific point during the tracking process, e.g. when dataset/video/module processing starts/ends.
+  - Example: [VisualizationEngine](tracklab/core/visualization_engine.py). Implements "on_video_loop_end" to save each video tracking results as a .mp4 or a list of .jpg. 
+- **[Evaluator](tracklab/core/evaluator.py)**: Implement this class to add a new evaluation metric, such as MOTA, HOTA, or any other (non-tracking related) metrics. 
+  - Example: [SoccerNetMOTEvaluator](tracklab/wrappers/eval/soccernet/soccernet_mot_evaluator.py). Evaluate performance of a tracker on the SoccerNet Tracking dataset using the official [SoccerNet evaluation library](https://github.com/SoccerNet/sn-tracking).
+
+### Execution Flow Overview
+Here is an overview of what happen when you run TrackLab:
+[tracklab/main.py](tracklab/main.py) is the main entry point and receives the complete Hydra's configuration as input. 
+[tracklab/main.py](tracklab/main.py) is usually called via the following command through the root [main.py](main.py) file: `python main.py`.
+Within [tracklab/main.py](tracklab/main.py), all modules are first instantiated.
+Then training any tracking module (e.g. the re-identification model) on the tracking training set is supported by calling the "train" method of the corresponding module.
+Tracking is then performed on the validation or test set (depending on the configuration) via the TrackingEngine.run() function.
+For each video in the evaluated set, the TrackingEngine calls the "run" method of each module (e.g. detector, re-identifier, tracker, ...) sequentially.
+The TrackingEngine is responsible for batching the input data (e.g. images, detections, ...) before calling the "run" method of each module with the correct input data.
+After a module has been called with a batch of input data, the TrackingEngine then updates the TrackerState object with the module outputs.
+At the end of the tracking process, the TrackerState object contains the tracking results of each video.
+Visualizations (e.g. .mp4 results videos) are generated during the TrackingEngine.run() call, after a video has been tracked and before the next video is processed.
+Finally, evaluation is performed via the evaluator.run() function once the TrackingEngine.run() call is completed, i.e. after all videos have been processed.
+

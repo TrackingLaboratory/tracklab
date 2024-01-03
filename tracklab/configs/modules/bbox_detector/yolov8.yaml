@@ -1,0 +1,11 @@
+
+_target_: tracklab.wrappers.YOLOv8
+batch_size: 4
+cfg:
+  # models available :
+  # yolov8n.pt, yolov8s.pt, yolov8m.pt, yolov8l.pt, yolov8x.pt, yolov8x6.pt
+  # yolov5nu.pt, yolov5su.pt, yolov5mu.pt, yolov5lu.pt, yolov5xu.pt, yolov5x6u.pt
+  # those models will be downloaded automatically if not found in the path
+  path_to_checkpoint: "${model_dir}/yolo/yolov8x6.pt"
+
+  min_confidence: 0.4

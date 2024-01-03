@@ -5,19 +5,19 @@ This tutorial aims to integrate a new pose detector in the framework.
 [Yolov8](https://docs.ultralytics.com/tasks/pose/) proposes a pose detector 
 which takes as input an image and provides as output the positions of the 
 detected joints and the bounding boxes. To do this, we will start by extending 
-the abstract class :class:`ImageLevelModule<pbtrack.pipeline.imagelevel_module.ImageLevelModule>`.
+the abstract class :class:`ImageLevelModule<tracklab.pipeline.imagelevel_module.ImageLevelModule>`.
 
 .. note ::
 
  The first thing we need to do is determine at what level we want to run the module :
 
-  * :class:`VideoLevelModule<pbtrack.pipeline.videolevel_module.VideoLevelModule>` : You get all the detections from a video at once.
-  * :class:`ImageLevelModule<pbtrack.pipeline.imagelevel_module.ImageLevelModule>` : You get all the detections from a single image.
-  * :class:`DetectionLevelModule<pbtrack.pipeline.detectionlevel_module.DetectionLevelModule>` : You get the information of a single detection
+  * :class:`VideoLevelModule<tracklab.pipeline.videolevel_module.VideoLevelModule>` : You get all the detections from a video at once.
+  * :class:`ImageLevelModule<tracklab.pipeline.imagelevel_module.ImageLevelModule>` : You get all the detections from a single image.
+  * :class:`DetectionLevelModule<tracklab.pipeline.detectionlevel_module.DetectionLevelModule>` : You get the information of a single detection
 
 `ImageLevelModule` extension
 ----------------------------
-The abstract class :class:`ImageLevelModule<pbtrack.pipeline.imagelevel_module.ImageLevelModule>` is defined in the file `pipeline/imagelevel_module.py`.
+The abstract class :class:`ImageLevelModule<tracklab.pipeline.imagelevel_module.ImageLevelModule>` is defined in the file `pipeline/imagelevel_module.py`.
 It allows to define a common interface for the different detectors and the 
 automation of the aggregation of the results in the pipeline.
 

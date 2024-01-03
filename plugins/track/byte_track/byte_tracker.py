@@ -9,7 +9,7 @@ from .basetrack import BaseTrack, TrackState
 
 class STrack(BaseTrack):
     shared_kalman = KalmanFilter()
-    def __init__(self, tlwh, score, cls, pbtrack_id=None):
+    def __init__(self, tlwh, score, cls, tracklab_id=None):
 
         # wait activate
         self._tlwh = np.asarray(tlwh, dtype=np.float32)
@@ -21,7 +21,7 @@ class STrack(BaseTrack):
         self.tracklet_len = 0
         self.cls = cls
 
-        self.pbtrack_id = pbtrack_id
+        self.tracklab_id = tracklab_id
 
     def predict(self):
         mean_state = self.mean.copy()
@@ -69,7 +69,7 @@ class STrack(BaseTrack):
         self.score = new_track.score
         self.cls = new_track.cls
 
-        self.pbtrack_id = new_track.pbtrack_id
+        self.tracklab_id = new_track.tracklab_id
 
     def update(self, new_track, frame_id):
         """
@@ -91,7 +91,7 @@ class STrack(BaseTrack):
 
         self.score = new_track.score
 
-        self.pbtrack_id = new_track.pbtrack_id
+        self.tracklab_id = new_track.tracklab_id
 
     @property
     # @jit(nopython=True)
@@ -175,12 +175,12 @@ class BYTETracker(object):
         xywh = xyxy2xywh(xyxys.numpy())
         confs = dets[:, 4]
         clss = dets[:, 5]
-        pbtrack_ids = dets[:, 6]
+        tracklab_ids = dets[:, 6]
         
         classes = clss.numpy()
         xyxys = xyxys.numpy()
         confs = confs.numpy()
-        pbtrack_ids = pbtrack_ids.numpy()
+        tracklab_ids = tracklab_ids.numpy()
 
         remain_inds = confs > self.track_thresh
         inds_low = confs > 0.1
@@ -197,14 +197,14 @@ class BYTETracker(object):
         clss_keep = classes[remain_inds]
         clss_second = classes[inds_second]
 
-        pbtrack_ids_keep = pbtrack_ids[remain_inds]
-        pbtrack_ids_second = pbtrack_ids[inds_second]
+        tracklab_ids_keep = tracklab_ids[remain_inds]
+        tracklab_ids_second = tracklab_ids[inds_second]
         
 
         if len(dets) > 0:
             '''Detections'''
-            detections = [STrack(xyxy, s, c, pbtrack_id=id) for
-                (xyxy, s, c, id) in zip(dets, scores_keep, clss_keep, pbtrack_ids_keep)]
+            detections = [STrack(xyxy, s, c, tracklab_id=id) for
+                (xyxy, s, c, id) in zip(dets, scores_keep, clss_keep, tracklab_ids_keep)]
         else:
             detections = []
 
@@ -240,8 +240,8 @@ class BYTETracker(object):
         # association the untrack to the low score detections
         if len(dets_second) > 0:
             '''Detections'''
-            detections_second = [STrack(xywh, s, c, pbtrack_id=id)
-                                 for (xywh, s, c, id) in zip(dets_second, scores_second, clss_second, pbtrack_ids_second)]
+            detections_second = [STrack(xywh, s, c, tracklab_id=id)
+                                 for (xywh, s, c, id) in zip(dets_second, scores_second, clss_second, tracklab_ids_second)]
         else:
             detections_second = []
         r_tracked_stracks = [strack_pool[i] for i in u_track if strack_pool[i].state == TrackState.Tracked]
@@ -314,7 +314,7 @@ class BYTETracker(object):
             output.append(tid)
             output.append(t.cls)
             output.append(t.score)
-            output.append(t.pbtrack_id)
+            output.append(t.tracklab_id)
             outputs.append(output)
 
         return outputs

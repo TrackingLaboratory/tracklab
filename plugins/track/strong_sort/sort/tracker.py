@@ -77,7 +77,7 @@ class Tracker:
                 bbox = t.to_tlwh()
                 t.update_kf(detection.to_xyah_ext(bbox))
 
-    def update(self, detections, classes, confidences, pbtrack_ids):
+    def update(self, detections, classes, confidences, tracklab_ids):
         """Perform measurement update and track management.
 
         Parameters
@@ -93,7 +93,7 @@ class Tracker:
         # Update track set.
         for track_idx, detection_idx in matches:
             self.tracks[track_idx].update(
-                detections[detection_idx], classes[detection_idx], confidences[detection_idx], pbtrack_ids[detection_idx])
+                detections[detection_idx], classes[detection_idx], confidences[detection_idx], tracklab_ids[detection_idx])
         for track_idx in unmatched_tracks:
             self.tracks[track_idx].mark_missed()
             if self.max_unmatched_preds != 0 and self.tracks[track_idx].updates_wo_assignment < self.tracks[track_idx].max_num_updates_wo_assignment:
@@ -101,7 +101,7 @@ class Tracker:
                 self.tracks[track_idx].update_kf(detection.to_xyah_ext(bbox))
         for detection_idx in unmatched_detections:
             self._initiate_track(detections[detection_idx], classes[detection_idx].item(), confidences[detection_idx].item(),
-                                 pbtrack_ids[detection_idx].item())
+                                 tracklab_ids[detection_idx].item())
         self.tracks = [t for t in self.tracks if not t.is_deleted()]
 
         # Update distance metric.
@@ -186,8 +186,8 @@ class Tracker:
         unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
         return matches, unmatched_tracks, unmatched_detections
 
-    def _initiate_track(self, detection, class_id, conf, pbtrack_id=None):
+    def _initiate_track(self, detection, class_id, conf, tracklab_id=None):
         self.tracks.append(Track(
             detection.to_xyah(), self._next_id, class_id, conf, self.n_init, self.max_age, self.ema_alpha,
-            detection.feature, pbtrack_id=pbtrack_id))
+            detection.feature, tracklab_id=tracklab_id))
         self._next_id += 1

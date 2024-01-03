@@ -68,7 +68,7 @@ class Track:
     """
 
     def __init__(self, detection, track_id, class_id, conf, n_init, max_age, ema_alpha,
-                 feature=None, pbtrack_id=None):
+                 feature=None, tracklab_id=None):
         self.track_id = track_id
         self.class_id = int(class_id)
         self.hits = 1
@@ -94,7 +94,7 @@ class Track:
         # Initializing trajectory queue
         self.q = deque(maxlen=25)
 
-        self.pbtrack_id = pbtrack_id
+        self.tracklab_id = tracklab_id
 
     def to_tlwh(self):
         """Get current position in bounding box format `(top left x, top left y,
@@ -269,7 +269,7 @@ class Track:
         y_c = int((tlbr[1] + tlbr[3]) / 2)
         self.q.append(('predupdate', (x_c, y_c)))
 
-    def update(self, detection, class_id, conf, pbtrack_id=None):
+    def update(self, detection, class_id, conf, tracklab_id=None):
         """Perform Kalman filter measurement update step and update the feature
         cache.
         Parameters
@@ -297,8 +297,8 @@ class Track:
         y_c = int((tlbr[1] + tlbr[3]) / 2)
         self.q.append(('observationupdate', (x_c, y_c)))
 
-        if pbtrack_id is not None:
-            self.pbtrack_id = pbtrack_id
+        if tracklab_id is not None:
+            self.tracklab_id = tracklab_id
 
     def mark_missed(self):
         """Mark this track as missed (no association at the current time step).

@@ -1,6 +1,0 @@
-defaults:
-  - default
-
-_target_: pbtrack.wrappers.ExternalVideo
-
-video_path: "/path/to/video.mp4"

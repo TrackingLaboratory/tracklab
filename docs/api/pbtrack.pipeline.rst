@@ -1,7 +1,7 @@
-pbtrack.pipeline package
+tracklab.pipeline package
 ========================
 
-.. automodule:: pbtrack.pipeline
+.. automodule:: tracklab.pipeline
    :members:
    :undoc-members:
    :show-inheritance:
@@ -9,42 +9,42 @@ pbtrack.pipeline package
 Submodules
 ----------
 
-pbtrack.pipeline.datasetlevel\_module module
+tracklab.pipeline.datasetlevel\_module module
 --------------------------------------------
 
-.. automodule:: pbtrack.pipeline.datasetlevel_module
+.. automodule:: tracklab.pipeline.datasetlevel_module
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.pipeline.detectionlevel\_module module
+tracklab.pipeline.detectionlevel\_module module
 ----------------------------------------------
 
-.. automodule:: pbtrack.pipeline.detectionlevel_module
+.. automodule:: tracklab.pipeline.detectionlevel_module
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.pipeline.imagelevel\_module module
+tracklab.pipeline.imagelevel\_module module
 ------------------------------------------
 
-.. automodule:: pbtrack.pipeline.imagelevel_module
+.. automodule:: tracklab.pipeline.imagelevel_module
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.pipeline.module module
+tracklab.pipeline.module module
 ------------------------------
 
-.. automodule:: pbtrack.pipeline.module
+.. automodule:: tracklab.pipeline.module
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.pipeline.videolevel\_module module
+tracklab.pipeline.videolevel\_module module
 ------------------------------------------
 
-.. automodule:: pbtrack.pipeline.videolevel_module
+.. automodule:: tracklab.pipeline.videolevel_module
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,7 +1,7 @@
-pbtrack.wrappers.eval package
+tracklab.wrappers.eval package
 =============================
 
-.. automodule:: pbtrack.wrappers.eval
+.. automodule:: tracklab.wrappers.eval
    :members:
    :undoc-members:
    :show-inheritance:
@@ -12,6 +12,6 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   pbtrack.wrappers.eval.mot
-   pbtrack.wrappers.eval.posetrack
-   pbtrack.wrappers.eval.soccernet
+   tracklab.wrappers.eval.mot
+   tracklab.wrappers.eval.posetrack
+   tracklab.wrappers.eval.soccernet

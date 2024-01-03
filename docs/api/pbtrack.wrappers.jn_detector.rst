@@ -1,7 +1,7 @@
-pbtrack.wrappers.jn\_detector package
+tracklab.wrappers.jn\_detector package
 =====================================
 
-.. automodule:: pbtrack.wrappers.jn_detector
+.. automodule:: tracklab.wrappers.jn_detector
    :members:
    :undoc-members:
    :show-inheritance:
@@ -9,10 +9,10 @@ pbtrack.wrappers.jn\_detector package
 Submodules
 ----------
 
-pbtrack.wrappers.jn\_detector.easyocr\_api module
+tracklab.wrappers.jn\_detector.easyocr\_api module
 -------------------------------------------------
 
-.. automodule:: pbtrack.wrappers.jn_detector.easyocr_api
+.. automodule:: tracklab.wrappers.jn_detector.easyocr_api
    :members:
    :undoc-members:
    :show-inheritance:

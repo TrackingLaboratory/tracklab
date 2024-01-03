@@ -1,7 +1,7 @@
-pbtrack.utils package
+tracklab.utils package
 =====================
 
-.. automodule:: pbtrack.utils
+.. automodule:: tracklab.utils
    :members:
    :undoc-members:
    :show-inheritance:
@@ -9,82 +9,82 @@ pbtrack.utils package
 Submodules
 ----------
 
-pbtrack.utils.collate module
+tracklab.utils.collate module
 ----------------------------
 
-.. automodule:: pbtrack.utils.collate
+.. automodule:: tracklab.utils.collate
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.utils.coordinates module
+tracklab.utils.coordinates module
 --------------------------------
 
-.. automodule:: pbtrack.utils.coordinates
+.. automodule:: tracklab.utils.coordinates
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.utils.cv2 module
+tracklab.utils.cv2 module
 ------------------------
 
-.. automodule:: pbtrack.utils.cv2
+.. automodule:: tracklab.utils.cv2
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.utils.easyocr module
+tracklab.utils.easyocr module
 ----------------------------
 
-.. automodule:: pbtrack.utils.easyocr
+.. automodule:: tracklab.utils.easyocr
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.utils.instantiate module
+tracklab.utils.instantiate module
 --------------------------------
 
-.. automodule:: pbtrack.utils.instantiate
+.. automodule:: tracklab.utils.instantiate
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.utils.monkeypatch\_hydra module
+tracklab.utils.monkeypatch\_hydra module
 ---------------------------------------
 
-.. automodule:: pbtrack.utils.monkeypatch_hydra
+.. automodule:: tracklab.utils.monkeypatch_hydra
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.utils.notebook module
+tracklab.utils.notebook module
 -----------------------------
 
-.. automodule:: pbtrack.utils.notebook
+.. automodule:: tracklab.utils.notebook
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.utils.openmmlab module
+tracklab.utils.openmmlab module
 ------------------------------
 
-.. automodule:: pbtrack.utils.openmmlab
+.. automodule:: tracklab.utils.openmmlab
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.utils.progressbar module
+tracklab.utils.progressbar module
 --------------------------------
 
-.. automodule:: pbtrack.utils.progressbar
+.. automodule:: tracklab.utils.progressbar
    :members:
    :undoc-members:
    :show-inheritance:
 
-pbtrack.utils.wandb module
+tracklab.utils.wandb module
 --------------------------
 
-.. automodule:: pbtrack.utils.wandb
+.. automodule:: tracklab.utils.wandb
    :members:
    :undoc-members:
    :show-inheritance:

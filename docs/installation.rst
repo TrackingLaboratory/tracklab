@@ -19,8 +19,8 @@ Create and activate a new environment with conda
 
 .. code:: bash
 
-   conda create -n pbtrack pip python=3.10 pytorch==1.13.0 torchvision==0.14.0 pytorch-cuda=11.7 -c pytorch -c nvidia -y
-   conda activate pbtrack
+   conda create -n tracklab pip python=3.10 pytorch==1.13.0 torchvision==0.14.0 pytorch-cuda=11.7 -c pytorch -c nvidia -y
+   conda activate tracklab
 
 You might need to change your torch installation depending on your
 hardware. Please check on `Pytorch

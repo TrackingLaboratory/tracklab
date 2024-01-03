@@ -14,8 +14,8 @@ class Detection(object):
         Detector confidence score.
     feature : array_like
         A feature vector that describes the object contained in this image.
-    pbtrack_id: int
-        The id of the tracklet in the pbtrack
+    tracklab_id: int
+        The id of the tracklet in the tracklab
 
     Attributes
     ----------
@@ -25,8 +25,8 @@ class Detection(object):
         Detector confidence score.
     feature : ndarray | NoneType
         A feature vector that describes the object contained in this image.
-    pbtrack_id: int
-        The id of the tracklet in the pbtrack
+    tracklab_id: int
+        The id of the tracklet in the tracklab
 
     """
 

@@ -1,7 +1,7 @@
-pbtrack.wrappers.datasets.soccernet package
+tracklab.wrappers.datasets.soccernet package
 ===========================================
 
-.. automodule:: pbtrack.wrappers.datasets.soccernet
+.. automodule:: tracklab.wrappers.datasets.soccernet
    :members:
    :undoc-members:
    :show-inheritance:
@@ -9,10 +9,10 @@ pbtrack.wrappers.datasets.soccernet package
 Submodules
 ----------
 
-pbtrack.wrappers.datasets.soccernet.soccernet\_mot module
+tracklab.wrappers.datasets.soccernet.soccernet\_mot module
 ---------------------------------------------------------
 
-.. automodule:: pbtrack.wrappers.datasets.soccernet.soccernet_mot
+.. automodule:: tracklab.wrappers.datasets.soccernet.soccernet_mot
    :members:
    :undoc-members:
    :show-inheritance:

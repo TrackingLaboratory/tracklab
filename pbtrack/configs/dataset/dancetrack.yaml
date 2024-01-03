@@ -1,6 +1,0 @@
-defaults:
-  - default
-
-_target_: pbtrack.wrappers.DanceTrack
-
-dataset_path: ${data_dir}/DanceTrack

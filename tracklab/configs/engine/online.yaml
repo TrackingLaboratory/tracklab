@@ -1,0 +1,6 @@
+_target_: tracklab.OnlineTrackingEngine
+
+detect_multi_batchsize: 8
+detect_single_batchsize: 32
+reid_batchsize: 32
+num_workers: ${num_cores}

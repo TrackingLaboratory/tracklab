@@ -1,7 +1,7 @@
-pbtrack.wrappers.detect\_single package
+tracklab.wrappers.detect\_single package
 =======================================
 
-.. automodule:: pbtrack.wrappers.detect_single
+.. automodule:: tracklab.wrappers.detect_single
    :members:
    :undoc-members:
    :show-inheritance:
@@ -9,10 +9,10 @@ pbtrack.wrappers.detect\_single package
 Submodules
 ----------
 
-pbtrack.wrappers.detect\_single.topdown\_mmpose\_api module
+tracklab.wrappers.detect\_single.topdown\_mmpose\_api module
 -----------------------------------------------------------
 
-.. automodule:: pbtrack.wrappers.detect_single.topdown_mmpose_api
+.. automodule:: tracklab.wrappers.detect_single.topdown_mmpose_api
    :members:
    :undoc-members:
    :show-inheritance:

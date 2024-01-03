@@ -1,0 +1,14 @@
+_target_: tracklab.wrappers.OCSORT
+
+cfg:
+  min_confidence: 0.4
+
+  hyperparams:
+    asso_func: giou  # default = iou
+    delta_t: 1  # default = 3
+    det_thresh: 0
+    inertia: 0.3941737016672115  # default = 0.2
+    iou_threshold: 0.22136877277096445  # default = 0.3
+    max_age: 50  # default = 30
+    min_hits: 1  # default = 3
+    use_byte: false  # default = false

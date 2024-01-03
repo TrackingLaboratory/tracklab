@@ -1,0 +1,62 @@
+_target_: tracklab.wrappers.detect_multiple.openpifpaf_api.OpenPifPaf
+batch_size: 4
+cfg:
+  predict:
+    checkpoint: "shufflenetv2k30"
+    long-edge: 501                              # rescale the long side of the image (aspect ratio maintained)
+    quiet: null                                 # only show warning messages
+    dense-connections: null                     # use denser associations
+    seed-threshold: 0.2                         # filter seeds by score (default: 0.5)
+    instance-threshold: 0.15                    # filter instances by score (default: 0.15)
+    decoder-workers: ${num_cores}               # number of workers for decoder (default: 0)
+    ### CifCaf decoders:
+#    cif-th: 0.3                                 # cif threshold (default: 0.3)
+#    caf-th: 0.3                                 # caf threshold (default: 0.3)
+    ### CifCaf decoder:
+#    force-complete-pose: null                   # force to output every pose and keypoints (?)
+#    force-complete-caf-th: 0.001                # CAF threshold for force complete. Set to -1 to deactivate. (default: 0.001)
+#    nms-before-force-complete: null            # run an additional NMS before completing poses (default: False)
+#    keypoint-threshold: 0.15                    # filter keypoints by score (default: 0.15)
+#    keypoint-threshold-rel: 0.5                 # filter keypoint connections by relative score (default: 0.5)
+
+
+  bbox:
+    extension_factor: [ 0.1, 0.03, 0.1 ]  # [top, bottom, right&left]
+
+  train:
+    output: "${hydra:run.dir}/openpifpaf"
+    checkpoint: "shufflenetv2k30"
+    posetrack2021-with-dense: null
+
+    lr: 0.0001
+    epochs: 225
+    momentum: 0.95
+    clip-grad-value: 10.0
+    encoder-suppress-invisible: null
+    lr-decay: [210, 215, 220]
+    lr-decay-epochs: 5
+    weight-decay: 0.000001
+    batch-size: 8
+    loader-workers: ${num_cores}
+
+    dataset: "posetrack2021-cocokp"
+    dataset-weight: [1, 1]
+    stride-apply: 2
+
+    posetrack2021-upsample: 2
+    posetrack2021-orientation-invariant: 0.1
+    posetrack2021-blur: 0.1
+    posetrack2021-square-edge: 513
+    posetrack2021-train-annotations: "${dataset.dataset_path}/posetrack_data/train/*.json"
+    posetrack2021-val-annotations: "${dataset.dataset_path}/posetrack_data/val/*.json"
+    posetrack2021-data-root: "${dataset.dataset_path}"
+    
+    cocokp-upsample: 2
+    cocokp-orientation-invariant: 0.1
+    cocokp-blur: 0.1
+    cocokp-square-edge: 513
+    cocokp-train-annotations: "${data_dir}/COCO/annotations/person_keypoints_train2017.json"
+    cocokp-val-annotations: "${data_dir}/COCO/annotations/person_keypoints_val2017.json"
+    cocokp-train-image-dir: "${data_dir}/COCO/train2017"
+    cocokp-val-image-dir: "${data_dir}/COCO/val2017"
+

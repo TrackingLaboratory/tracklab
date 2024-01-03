@@ -1,7 +1,7 @@
-pbtrack.wrappers package
+tracklab.wrappers package
 ========================
 
-.. automodule:: pbtrack.wrappers
+.. automodule:: tracklab.wrappers
    :members:
    :undoc-members:
    :show-inheritance:
@@ -12,10 +12,10 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   pbtrack.wrappers.datasets
-   pbtrack.wrappers.detect_multiple
-   pbtrack.wrappers.detect_single
-   pbtrack.wrappers.eval
-   pbtrack.wrappers.jn_detector
-   pbtrack.wrappers.reid
-   pbtrack.wrappers.track
+   tracklab.wrappers.datasets
+   tracklab.wrappers.detect_multiple
+   tracklab.wrappers.detect_single
+   tracklab.wrappers.eval
+   tracklab.wrappers.jn_detector
+   tracklab.wrappers.reid
+   tracklab.wrappers.track

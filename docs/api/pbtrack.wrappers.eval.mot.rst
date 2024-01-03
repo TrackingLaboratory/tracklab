@@ -1,7 +1,7 @@
-pbtrack.wrappers.eval.mot package
+tracklab.wrappers.eval.mot package
 =================================
 
-.. automodule:: pbtrack.wrappers.eval.mot
+.. automodule:: tracklab.wrappers.eval.mot
    :members:
    :undoc-members:
    :show-inheritance:
@@ -9,10 +9,10 @@ pbtrack.wrappers.eval.mot package
 Submodules
 ----------
 
-pbtrack.wrappers.eval.mot.mot20\_evaluator module
+tracklab.wrappers.eval.mot.mot20\_evaluator module
 -------------------------------------------------
 
-.. automodule:: pbtrack.wrappers.eval.mot.mot20_evaluator
+.. automodule:: tracklab.wrappers.eval.mot.mot20_evaluator
    :members:
    :undoc-members:
    :show-inheritance:
