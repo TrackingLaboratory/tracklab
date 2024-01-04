@@ -1,1 +1,1 @@
-from .topdown_mmpose_api import TopDownMMPose
+# from .topdown_mmpose_api import TopDownMMPose

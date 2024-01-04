@@ -29,12 +29,12 @@ class VotingTrackletJerseyNumber(VideoLevelModule):
     def __init__(self, cfg, device, tracking_dataset=None):
         pass
 
-    def select_best_jersey_number(self, jursey_numbers, jn_confidences):
+    def select_best_jersey_number(self, jersey_numbers, jn_confidences):
         
         confidence_sum = {}
         
         # Iterate through the predictions to calculate the total confidence for each jersey number
-        for jn, conf in zip(jursey_numbers, jn_confidences):
+        for jn, conf in zip(jersey_numbers, jn_confidences):
             if jn not in confidence_sum:
                 confidence_sum[jn] = 0
             confidence_sum[jn] += conf
@@ -51,9 +51,9 @@ class VotingTrackletJerseyNumber(VideoLevelModule):
         detections["jn_tracklet"] = [np.nan] * len(detections)
         for track_id in detections.track_id.unique():
             tracklet = detections[detections.track_id == track_id]
-            jursey_numbers = tracklet.jursey_number
+            jersey_numbers = tracklet.jersey_number
             jn_confidences = tracklet.jn_confidence
-            tracklet_jn = [self.select_best_jersey_number(jursey_numbers, jn_confidences)] * len(tracklet)            
+            tracklet_jn = [self.select_best_jersey_number(jersey_numbers, jn_confidences)] * len(tracklet)            
             detections.loc[tracklet.index, "jn_tracklet"] = tracklet_jn
             
         return detections
