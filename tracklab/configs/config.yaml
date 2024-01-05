@@ -14,8 +14,6 @@ defaults:
   - modules/pose_bottomup: openpifpaf
   - modules/reid: bpbreid
   - modules/track: oc_sort
-  - modules/jn_detect: mmocr
-  - modules/jn_tracklet: voting
 
 # Pipeline definition :
 # - Defines the order in which the modules will be called
@@ -25,8 +23,6 @@ pipeline:
   - bbox_detector
   - reid
   - track
-  - jn_detect
-  - jn_tracklet
 
 # Experiment name
 experiment_name: "tracklab"
