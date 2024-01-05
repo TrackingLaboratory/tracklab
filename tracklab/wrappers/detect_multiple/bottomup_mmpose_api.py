@@ -4,11 +4,10 @@ import numpy as np
 import pandas as pd
 
 import mmcv
-from mmcv.parallel import collate, scatter
-from mmpose.apis import init_pose_model
-from mmpose.core.post_processing import oks_nms
-from mmpose.datasets.dataset_info import DatasetInfo
-from mmpose.datasets.pipelines import Compose
+# from mmpose.apis import init_pose_model
+# from mmpose.core.post_processing import oks_nms
+# from mmpose.datasets.dataset_info import DatasetInfo
+# from mmpose.datasets.pipelines import Compose
 
 from tracklab.utils.openmmlab import get_checkpoint
 from tracklab.utils.coordinates import sanitize_keypoints, generate_bbox_from_keypoints
@@ -16,7 +15,7 @@ from tracklab.pipeline import ImageLevelModule
 import logging
 
 log = logging.getLogger(__name__)
-mmcv.collect_env()
+# mmcv.collect_env()
 
 
 def mmpose_collate(batch):
