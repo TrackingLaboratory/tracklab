@@ -89,6 +89,8 @@ To launch TrackLab with the default configuration defined in [configs/config.yam
 ```bash
 tracklab
 ```
+This command will create a directory called `outputs` which will have a `${experiment_name}/yyyy-mm-dd/hh-mm-ss/` structure.
+All the output files (logs, models, visualization, ...) from a run will be put inside this directory.
 
 If you want to override some configuration parameters, e.g. to use another detection module or dataset, you can do so by modifying the corresponding parameters directly in the .yaml files under configs/.
 ```bash
