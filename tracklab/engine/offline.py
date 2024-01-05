@@ -13,7 +13,7 @@ class OfflineTrackingEngine(TrackingEngine):
                 model.reset()
 
         imgs_meta = self.img_metadatas[self.img_metadatas.video_id == video_id]
-        images = {idx: cv2_load_image(fn) for idx, fn in imgs_meta["file_path"].items()}
+        image_filepaths = {idx: fn for idx, fn in imgs_meta["file_path"].items()}
         detections = tracker_state.load()
         model_names = self.module_names
         # print('in offline.py, model_names: ', model_names)
@@ -21,7 +21,7 @@ class OfflineTrackingEngine(TrackingEngine):
             if self.models[model_name].level == "video":
                 detections = self.models[model_name].process(detections, imgs_meta)
                 continue
-            self.datapipes[model_name].update(images, imgs_meta, detections)
+            self.datapipes[model_name].update(image_filepaths, imgs_meta, detections)
             self.callback(
                 "on_module_start",
                 task=model_name,
