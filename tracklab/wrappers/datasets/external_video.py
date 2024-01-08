@@ -2,6 +2,9 @@ import glob
 import cv2
 
 from pathlib import Path
+
+import pandas as pd
+
 from tracklab.datastruct import (
     TrackingDataset,
     TrackingSet,
@@ -47,38 +50,58 @@ class ExternalVideo(TrackingDataset):
 
     annotations_dir = "posetrack_data"
 
-    def __init__(self, video_path: str, dataset_path, *args, **kwargs):
+    def __init__(self, dataset_path: str, video_path: str, *args, **kwargs):
+        # if video_path.startswith("http"):
+        #     with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
+        #         info_dict = ydl.extract_info(video_path, download=False)
+        #     for f in reversed(info_dict.get("formats", [])):
+        #         good_size = (f.get('width') or 0) >= 1920 or (
+        #                     f.get('height') or 0) >= 1080
+        #         if good_size and f['vcodec'] != 'none' and f['acodec'] == 'none' and f[
+        #             'ext'] == 'mp4':
+        #             video_path = f.get('url')
+        #             break
         self.video_path = Path(video_path)
         video_name = self.video_path.stem
         assert self.video_path.exists(), "Video does not exist ('{}')".format(
             self.video_path
         )
-        tmp_video_folder = write_video_images_to_disk(self.video_path)
-        img_paths = glob.glob(str(tmp_video_folder / "*.jpg"))
-        img_paths.sort()
-        nframes = len(img_paths)
+
+        nframes = self.get_frame_count(self.video_path)
         video_id = 0
-        image_metadata = ImageMetadatas(
+        image_metadata = pd.DataFrame(
             [
                 {
                     "id": i,
-                    "name": Path(img_path).stem,
+                    "name": f"{video_name}_{i}",
                     "frame": i,
                     "nframes": nframes,
                     "video_id": video_id,
-                    "file_path": img_path,
+                    "file_path": f"vid://{self.video_path}:{i}",
                 }
-                for i, img_path in enumerate(img_paths)
+                for i in range(nframes)
             ]
         )
 
-        video_metadata = VideoMetadatas([{"id": video_id, "name": video_name}])
+        video_metadata = pd.DataFrame([{"id": video_name, "name": video_name}])
 
-        test_set = TrackingSet(
-            "test",
+        val_set = TrackingSet(
             video_metadata,
             image_metadata,
             None,
         )
 
-        super().__init__(dataset_path, None, None, test_set, *args, **kwargs)
+        super().__init__(dataset_path, None, val_set, None, *args, **kwargs)
+
+    @staticmethod
+    def get_frame_count(video_path):
+        cap = cv2.VideoCapture(str(video_path))
+        frames = 0
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            frames += 1
+        cap.release()
+        return frames
+

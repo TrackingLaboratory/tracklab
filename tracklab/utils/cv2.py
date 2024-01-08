@@ -28,9 +28,39 @@ posetrack_human_skeleton = [
 ]
 
 
+class VideoReader:
+    def __init__(self):
+        self.filename = None
+        self.cap = None  # cv2.VideoCapture(filename)
+
+    def set_filename(self, filename):
+        self.filename = filename
+        if self.cap is not None:
+            self.cap.release()
+        self.cap = cv2.VideoCapture(self.filename)
+        assert self.cap.isOpened(), "Error opening video stream or file"
+
+    def __getitem__(self, idx):
+        assert self.filename is not None, "You should first set the filename"
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, idx-1)
+        ret, image = self.cap.read()
+        assert ret, "Read past the end of the video file"
+        return image
+
+
+video_reader = VideoReader()
+
 @lru_cache(maxsize=32)
 def cv2_load_image(file_path):
-    image = cv2.imread(str(file_path))
+    file_path = str(file_path)
+    if file_path.startswith("vid://"):
+        file_path = file_path.removeprefix("vid://")
+        video_file, frame_id = file_path.split(":")
+        if video_reader.filename != video_file:
+            video_reader.set_filename(video_file)
+        image = video_reader[int(frame_id)]
+    else:
+        image = cv2.imread(str(file_path))
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
 
