@@ -38,6 +38,7 @@ mmocr = "^1.0.1"
 mmpose = "^1.2.0"
 trackeval = {git = "https://github.com/TrackingLaboratory/TrackEval.git"}
 yt-dlp = "^2023.12.30"
+gdown = "^4.7.1"
 
 [tool.poetry.scripts]
 tracklab = 'tracklab.main:main'
