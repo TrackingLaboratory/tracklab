@@ -4,6 +4,7 @@ import cv2
 from pathlib import Path
 
 import pandas as pd
+import yt_dlp
 
 from tracklab.datastruct import (
     TrackingDataset,
@@ -51,16 +52,11 @@ class ExternalVideo(TrackingDataset):
     annotations_dir = "posetrack_data"
 
     def __init__(self, dataset_path: str, video_path: str, *args, **kwargs):
-        # if video_path.startswith("http"):
-        #     with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
-        #         info_dict = ydl.extract_info(video_path, download=False)
-        #     for f in reversed(info_dict.get("formats", [])):
-        #         good_size = (f.get('width') or 0) >= 1920 or (
-        #                     f.get('height') or 0) >= 1080
-        #         if good_size and f['vcodec'] != 'none' and f['acodec'] == 'none' and f[
-        #             'ext'] == 'mp4':
-        #             video_path = f.get('url')
-        #             break
+        if video_path.startswith("http"):
+            yt_params = {"noplaylist": True, "restrictfilenames": True}
+            with yt_dlp.YoutubeDL(yt_params) as ydl:
+                info_dict = ydl.extract_info(video_path)
+                video_path = ydl.prepare_filename(info_dict)
         self.video_path = Path(video_path)
         video_name = self.video_path.stem
         assert self.video_path.exists(), "Video does not exist ('{}')".format(
