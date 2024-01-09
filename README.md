@@ -64,7 +64,10 @@ Get into your repo and install the requirements with :
 
 ```bash
 pip install -e .
-mim install mmcv-full
+# mim install mmcv-full
+mim install mmcv
+mim install mmdet
+mim install mmocr
 ```
 
 You might need to redo this if you update the repository, and some dependencies changed.
