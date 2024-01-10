@@ -1,10 +1,13 @@
 import glob
+import mimetypes
+
 import cv2
 
 from pathlib import Path
 
 import pandas as pd
 import yt_dlp
+from tqdm import tqdm
 
 from tracklab.datastruct import (
     TrackingDataset,
@@ -62,24 +65,51 @@ class ExternalVideo(TrackingDataset):
         assert self.video_path.exists(), "Video does not exist ('{}')".format(
             self.video_path
         )
+        if self.video_path.is_dir():
+            image_metadata = []
+            video_metadata = []
+            video_names = []
+            for i, video_path in enumerate(tqdm(list(self.video_path.iterdir()))):
+                if not mimetypes.guess_type(video_path)[0].startswith('video'):
+                    continue
+                nframes = self.get_frame_count(video_path)
+                video_id = i
+                video_name = video_path.stem
+                image_metadata.extend(
+                    [
+                        {
+                            "id": j+1000*i,
+                            "name": f"{video_name}_{j}",
+                            "frame": j,
+                            "nframes": nframes,
+                            "video_id": video_id,
+                            "file_path": f"vid://{video_path}:{j}",
+                        }
+                        for j in range(nframes)
+                    ]
+                )
+                video_names.append(video_id)
+                video_metadata.append({"id": video_name, "name": video_name})
+            image_metadata = pd.DataFrame(image_metadata)
+            video_metadata = pd.DataFrame(video_metadata, index=video_names)
+        else:
+            nframes = self.get_frame_count(self.video_path)
+            video_id = 0
+            image_metadata = pd.DataFrame(
+                [
+                    {
+                        "id": i,
+                        "name": f"{video_name}_{i}",
+                        "frame": i,
+                        "nframes": nframes,
+                        "video_id": video_id,
+                        "file_path": f"vid://{self.video_path}:{i}",
+                    }
+                    for i in range(nframes)
+                ]
+            )
 
-        nframes = self.get_frame_count(self.video_path)
-        video_id = 0
-        image_metadata = pd.DataFrame(
-            [
-                {
-                    "id": i,
-                    "name": f"{video_name}_{i}",
-                    "frame": i,
-                    "nframes": nframes,
-                    "video_id": video_id,
-                    "file_path": f"vid://{self.video_path}:{i}",
-                }
-                for i in range(nframes)
-            ]
-        )
-
-        video_metadata = pd.DataFrame([{"id": video_name, "name": video_name}])
+            video_metadata = pd.DataFrame([{"id": video_name, "name": video_name}])
 
         val_set = TrackingSet(
             video_metadata,
