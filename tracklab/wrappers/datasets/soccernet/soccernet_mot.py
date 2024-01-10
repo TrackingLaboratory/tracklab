@@ -24,11 +24,11 @@ def read_ini_file(file_path):
 
 
 def read_motchallenge_formatted_file(file_path):
-    columns = ['image_id', 'track_id', 'left', 'top', 'width', 'height', 'confidence', 'class', 'visibility', 'unused']
+    columns = ['image_id', 'track_id', 'left', 'top', 'width', 'height', 'bbox_conf', 'class', 'visibility', 'unused']
     df = pd.read_csv(file_path, header=None, names=columns)
     df['bbox_ltwh'] = df.apply(lambda row: [row['left'], row['top'], row['width'], row['height']], axis=1)
     df['person_id'] = df['track_id']  # Create person_id column with the same content as track_id
-    return df[['image_id', 'track_id', 'person_id', 'bbox_ltwh', 'class', 'visibility']]
+    return df[['image_id', 'track_id', 'person_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility']]
 
 
 def load_set(dataset_path):
@@ -37,6 +37,7 @@ def load_set(dataset_path):
     detections_list = []
     categories_list = []
 
+    image_counter = 0
     for video_folder in sorted(os.listdir(dataset_path)):  # Sort videos by name
         video_folder_path = os.path.join(dataset_path, video_folder)
         if os.path.isdir(video_folder_path):
@@ -51,16 +52,18 @@ def load_set(dataset_path):
             # Read ground truth detections
             gt_path = os.path.join(video_folder_path, 'gt', 'gt.txt')
             detections_df = read_motchallenge_formatted_file(gt_path)
+            detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
             detections_df['video_id'] = len(video_metadatas_list) + 1
             detections_list.append(detections_df)
 
             # Append video metadata
+            nframes = int(seqinfo_data.get('seqLength', 0))
             video_metadata = {
                 'id': len(video_metadatas_list) + 1,
                 'name': gameinfo_data.get('name', ''),
-                'nframes': int(seqinfo_data.get('seqLength', 0)),
+                'nframes': nframes,
                 'frame_rate': int(seqinfo_data.get('frameRate', 0)),
-                'seq_length': int(seqinfo_data.get('seqLength', 0)),
+                'seq_length': nframes,
                 'im_width': int(seqinfo_data.get('imWidth', 0)),
                 'im_height': int(seqinfo_data.get('imHeight', 0)),
                 'game_id': int(gameinfo_data.get('gameID', 0)),
@@ -94,13 +97,14 @@ def load_set(dataset_path):
             # Append image metadata
             img_folder_path = os.path.join(video_folder_path, 'img1')
             img_metadata_df = pd.DataFrame({
-                'frame': [i for i in range(1, int(seqinfo_data.get('seqLength', 0)) + 1)],
-                # 'id': [f'{len(video_metadatas_list)}_{i}' for i in range(1, int(seqinfo_data.get('seqLength', 0)) + 1)],
+                'frame': [i for i in range(0, nframes)],
+                'id': [image_counter + i for i in range(0, nframes)],
                 'video_id': len(video_metadatas_list),
                 'file_path': [os.path.join(img_folder_path, f'{i:06d}.jpg') for i in
-                              range(1, int(seqinfo_data.get('seqLength', 0)) + 1)],
+                              range(1, nframes + 1)],
 
             })
+            image_counter += nframes
             image_metadata_list.append(img_metadata_df)
 
     # Add categories for goalkeepers
@@ -122,21 +126,23 @@ def load_set(dataset_path):
     image_metadata = pd.concat(image_metadata_list, ignore_index=True)
     detections = pd.concat(detections_list, ignore_index=True)
 
-    # Set 'id' column as the index   in the detections and image dataframe
+    # Set 'id' column as the index in the detections and image dataframe
     detections['id'] = detections.index
-    image_metadata['id'] = image_metadata.index
 
     detections.set_index("id", drop=True, inplace=True)
     image_metadata.set_index("id", drop=True, inplace=True)
     video_metadata.set_index("id", drop=True, inplace=True)
+
+    # Add is_labeled column to image_metadata
+    image_metadata['is_labeled'] = True
 
     # Reorder columns in dataframes
     video_metadata = video_metadata[
         ['name', 'nframes', 'frame_rate', 'seq_length', 'im_width', 'im_height', 'game_id', 'action_position',
          'action_class', 'visibility', 'clip_start', 'game_time_start', 'clip_stop', 'game_time_stop', 'num_tracklets',
          'half_period_start', 'half_period_stop', 'categories']]
-    image_metadata = image_metadata[['video_id', 'frame', 'file_path']]
-    detections = detections[['image_id', 'video_id', 'track_id', 'person_id', 'bbox_ltwh', 'class', 'visibility']]
+    image_metadata = image_metadata[['video_id', 'frame', 'file_path', 'is_labeled']]
+    detections = detections[['image_id', 'video_id', 'track_id', 'person_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility']]
 
     return TrackingSet(
         video_metadata,

@@ -35,6 +35,7 @@ torchreid = {git = "https://github.com/victorjoos/bpbreid.git"}
 openpifpaf = "^0.13.11"
 easyocr = "^1.7.1"
 soccernet = "^0.1.53"
+trackeval = {git = "https://github.com/TrackingLaboratory/TrackEval.git"}
 
 [[tool.poetry.source]]
 name = "pytorch"

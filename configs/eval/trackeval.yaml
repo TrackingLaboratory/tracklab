@@ -1,0 +1,20 @@
+_target_: tracklab.wrappers.TrackEvalEvaluator
+
+
+test_set: "val"  # TODO should be dataset config?
+
+cfg:
+  bbox_column_for_eval: "bbox_ltwh"  # which bbox column to use for evaluation: {"bbox_ltwh", "track_bbox_kf_ltwh", ...}
+  print_by_video: False
+
+  pred_folder: "eval/pred"
+  gt_folder: "eval/gt"
+  results_folder: "eval/results"
+
+  use_parallel: True
+  num_parallel_cores: ${num_cores}
+
+  dataset_path: ${dataset.dataset_path}
+  use_ignore_regions: True
+  ignore_iou_thres: 0.1
+  vis_threshold: 0.1
