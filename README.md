@@ -52,7 +52,7 @@ cd tracklab
 #### Create and activate a new environment
 
 ```bash
-conda create -n tracklab pip python=3.10 pytorch==1.13.0 torchvision==0.14.0 pytorch-cuda=11.7 -c pytorch -c nvidia -y
+conda create -n tracklab pip python=3.10 pytorch==1.13.1 torchvision==0.14.1 pytorch-cuda=11.7 -c pytorch -c nvidia -y
 conda activate tracklab
 ```
 
@@ -64,7 +64,10 @@ Get into your repo and install the requirements with :
 
 ```bash
 pip install -e .
-mim install mmcv-full
+# mim install mmcv-full
+mim install mmcv
+mim install mmdet
+mim install mmocr
 ```
 
 You might need to redo this if you update the repository, and some dependencies changed.

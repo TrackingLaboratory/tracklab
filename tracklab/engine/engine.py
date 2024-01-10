@@ -143,7 +143,7 @@ class TrackingEngine(ABC):
 
     def default_step(self, batch: Any, task: str, detections: pd.DataFrame, **kwargs):
         model = self.models[task]
-        self.callback(f"on_task_step_start", task=task, batch=batch)
+        self.callback(f"on_module_step_start", task=task, batch=batch)
         idxs, batch = batch
         idxs = idxs.cpu() if isinstance(idxs, torch.Tensor) else idxs
         if model.level == "image":
@@ -168,6 +168,6 @@ class TrackingEngine(ABC):
             )
         detections = merge_dataframes(detections, batch_detections)
         self.callback(
-            f"on_task_step_end", task=task, batch=batch, detections=detections
+            f"on_module_step_end", task=task, batch=batch, detections=detections
         )
         return detections

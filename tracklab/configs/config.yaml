@@ -21,17 +21,17 @@ defaults:
 # - Defines the order in which the modules will be called
 # - If loading a tracking state from disk, remove modules whose outputs are already provided in the loaded state
 pipeline:
-#  - bbox_detector
-#  - reid
-#  - track
-#  - jn_detect
-#  - jn_tracklet
+  - bbox_detector
+  - reid
+  - track
+  - jn_detect
+  - jn_tracklet
 
 # Experiment name
 experiment_name: "tracklab"
 
 # Path definitions
-data_dir: "???"
+data_dir: "${project_dir}/data"
 model_dir: "${project_dir}/pretrained_models"
 
 # Machine configuration

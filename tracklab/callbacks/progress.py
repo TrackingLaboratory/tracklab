@@ -40,7 +40,7 @@ class Progressbar(Callback):
         self.pbar.update()
         self.pbar.refresh()
 
-    def on_task_start(self, engine: TrackingEngine, task: str, dataloader: DataLoader):
+    def on_module_start(self, engine: TrackingEngine, task: str, dataloader: DataLoader):
         desc = task.replace("_", " ").capitalize()
         if hasattr(engine.models[task], "process_video"):
             length = len(engine.img_metadatas[engine.img_metadatas.video_id == self.video_id])
@@ -50,12 +50,12 @@ class Progressbar(Callback):
             total=length, desc=desc, leave=False, position=1
         )
 
-    def on_task_step_end(
+    def on_module_step_end(
         self, engine: TrackingEngine, task: str, batch: Any, detections: pd.DataFrame
     ):
         self.task_pbars[task].update()
 
-    def on_task_end(self, engine: TrackingEngine, task: str, detections: pd.DataFrame):
+    def on_module_end(self, engine: TrackingEngine, task: str, detections: pd.DataFrame):
         self.task_pbars[task].close()
 
 
@@ -87,7 +87,7 @@ class RichProgressbar(Progressbar):
     ):
         self.pbar.update(self.tasks["main"], advance=1, refresh=True)
 
-    def on_task_start(self, engine: TrackingEngine, task: str, dataloader: DataLoader):
+    def on_module_start(self, engine: TrackingEngine, task: str, dataloader: DataLoader):
         desc = task.replace("_", " ").capitalize()
         if hasattr(engine.models[task], "process_video"):
             length = len(engine.img_metadatas[engine.img_metadatas.video_id == self.video_id])
@@ -95,11 +95,11 @@ class RichProgressbar(Progressbar):
             length = len(dataloader)
         self.tasks[task] = self.pbar.add_task(desc, total=length)
 
-    def on_task_step_end(
+    def on_module_step_end(
         self, engine: TrackingEngine, task: str, batch: Any, detections: pd.DataFrame
     ):
         self.pbar.update(self.tasks[task], advance=1)
 
-    def on_task_end(self, engine: TrackingEngine, task: str, detections: pd.DataFrame):
+    def on_module_end(self, engine: TrackingEngine, task: str, detections: pd.DataFrame):
         self.pbar.stop_task(self.tasks[task])
         self.pbar.remove_task(self.tasks[task])

@@ -23,13 +23,13 @@ class OfflineTrackingEngine(TrackingEngine):
                 continue
             self.datapipes[model_name].update(images, imgs_meta, detections)
             self.callback(
-                "on_task_start",
+                "on_module_start",
                 task=model_name,
                 dataloader=self.dataloaders[model_name],
             )
             for batch in self.dataloaders[model_name]:
                 detections = self.default_step(batch, model_name, detections)
-            self.callback("on_task_end", task=model_name, detections=detections)
+            self.callback("on_module_end", task=model_name, detections=detections)
             if detections.empty:
                 return detections
         return detections

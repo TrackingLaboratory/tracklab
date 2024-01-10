@@ -373,10 +373,10 @@ class VisualizationEngine(Callback):
                 color_bg=(255, 255, 255),
             )
             
-        # display jursey number
+        # display jersey number
         if (
             is_prediction
-            and self.cfg.prediction.display_jursey_number
+            and self.cfg.prediction.display_jersey_number
             and hasattr(detection, "jn_tracklet")
         ):
             if not pd.isna(detection.jn_tracklet):
