@@ -1,6 +1,6 @@
 _target_: tracklab.wrappers.SoccerNetMOTEvaluator
 
-test_set: "val"  # TODO ?
+eval_set: "val"  # TODO ?
 
 cfg:
   eval_mot: True

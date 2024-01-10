@@ -19,18 +19,17 @@ class TrackEvalEvaluator(EvaluatorBase):
     Evaluator using the TrackEval library (https://github.com/JonathonLuiten/TrackEval).
     Save on disk the tracking predictions and ground truth in MOT Challenge format and run the evaluation by calling TrackEval.
     """
-    def __init__(self, cfg, *args, **kwargs):
+    def __init__(self, cfg, eval_set, *args, **kwargs):
+        self.eval_set = eval_set
         self.cfg = cfg
 
     def run(self, tracker_state):
         log.info("Starting evaluation using TrackEval library (https://github.com/JonathonLuiten/TrackEval)")
 
-        seqs = list(tracker_state.video_metadatas.name)
-        split = 'test'
         dataset_name = 'SNMOT'
 
         # save predictions in MOT Challenge format
-        pred_save_path = Path(self.cfg.pred_folder) / f"{dataset_name}-{split}" / "tracklab"
+        pred_save_path = Path(self.cfg.dataset.trackers_folder) / f"{dataset_name}-{self.eval_set}" / "tracklab"
         save_in_mot_challenge_format(tracker_state.detections_pred,
                                      tracker_state.image_metadatas,
                                      tracker_state.video_metadatas,
@@ -40,34 +39,35 @@ class TrackEvalEvaluator(EvaluatorBase):
         log.info("Tracking predictions saved in MOT Challenge format in {}".format(pred_save_path))
 
         if len(tracker_state.detections_gt) == 0:
-            log.info(f"Stopping evaluation because the current split ({split}) has no ground truth detections.")
+            log.info(
+                f"Stopping evaluation because the current split ({self.eval_set}) has no ground truth detections.")
             return
 
         # save ground truth in MOT Challenge format
         save_in_mot_challenge_format(tracker_state.detections_gt,
                                      tracker_state.image_metadatas,
                                      tracker_state.video_metadatas,
-                                     Path(self.cfg.gt_folder) / f"{dataset_name}-{split}",
+                                     Path(self.cfg.dataset.gt_folder) / f"{dataset_name}-{self.eval_set}",
                                      self.cfg.bbox_column_for_eval)
 
         log.info("Tracking ground truth saved in MOT Challenge format in {}".format(pred_save_path))
 
         eval_config = trackeval.Evaluator.get_default_eval_config()
-        eval_config['USE_PARALLEL'] = False
-        eval_config['NUM_PARALLEL_CORES'] = 8
-        eval_config['BREAK_ON_ERROR'] = True  # Raises exception and exits with error
-        eval_config['PRINT_RESULTS'] = True
-        eval_config['PRINT_ONLY_COMBINED'] = True
-        eval_config['PRINT_CONFIG'] = False
-        eval_config['TIME_PROGRESS'] = False
-        eval_config['DISPLAY_LESS_PROGRESS'] = False
-        eval_config['OUTPUT_SUMMARY'] = True
-        eval_config['OUTPUT_EMPTY_CLASSES'] = True  # If False, summary files are not output for classes with no detections
-        eval_config['OUTPUT_DETAILED'] = True
-        eval_config['PLOT_CURVES'] = True
+        eval_config['USE_PARALLEL'] = self.cfg.eval.use_parallel
+        eval_config['NUM_PARALLEL_CORES'] = self.cfg.eval.num_parallel_cores
+        eval_config['BREAK_ON_ERROR'] = self.cfg.eval.break_on_error  # Raises exception and exits with error
+        eval_config['PRINT_RESULTS'] = self.cfg.eval.print_results
+        eval_config['PRINT_ONLY_COMBINED'] = self.cfg.eval.print_only_combined
+        eval_config['PRINT_CONFIG'] = self.cfg.eval.print_config
+        eval_config['TIME_PROGRESS'] = self.cfg.eval.time_progress
+        eval_config['DISPLAY_LESS_PROGRESS'] = self.cfg.eval.display_less_progress
+        eval_config['OUTPUT_SUMMARY'] = self.cfg.eval.output_summary
+        eval_config['OUTPUT_EMPTY_CLASSES'] = self.cfg.eval.output_empty_classes  # If False, summary files are not output for classes with no detections
+        eval_config['OUTPUT_DETAILED'] = self.cfg.eval.output_detailed
+        eval_config['PLOT_CURVES'] = self.cfg.eval.plot_curves
 
         dataset_config = trackeval.datasets.MotChallenge2DBox.get_default_dataset_config()
-        metrics_config = {'METRICS': ['HOTA', 'CLEAR', 'Identity'], 'PRINT_CONFIG': False, 'THRESHOLD': 0.5}
+        metrics_config = {'METRICS': self.cfg.metrics, 'PRINT_CONFIG': False, 'THRESHOLD': 0.5}
         # config = {**default_eval_config, **default_dataset_config, **default_metrics_config}  # Merge default configs
         #
         # eval_config = {k: v for k, v in config.items() if k in default_eval_config.keys()}
@@ -75,20 +75,20 @@ class TrackEvalEvaluator(EvaluatorBase):
         # metrics_config = {k: v for k, v in config.items() if k in default_metrics_config.keys()}
 
         dataset_config['BENCHMARK'] = dataset_name
-        dataset_config['GT_FOLDER'] = self.cfg.gt_folder  # Location of GT data
-        dataset_config['GT_LOC_FORMAT'] = '{gt_folder}/{seq}.txt'  # '{gt_folder}/{seq}/gt/gt.txt'
-        dataset_config['TRACKERS_FOLDER'] = self.cfg.pred_folder  # Trackers location
-        dataset_config['TRACKER_SUB_FOLDER'] = ''  # Tracker files are in TRACKER_FOLDER/tracker_name/TRACKER_SUB_FOLDER
-        dataset_config['OUTPUT_FOLDER'] = self.cfg.results_folder # Where to save eval results (if None, same as TRACKERS_FOLDER)
-        dataset_config['OUTPUT_SUB_FOLDER'] = ''  # Output files are saved in OUTPUT_FOLDER/tracker_name/OUTPUT_SUB_FOLDER
+        dataset_config['GT_FOLDER'] = self.cfg.dataset.gt_folder  # Location of GT data
+        dataset_config['GT_LOC_FORMAT'] = self.cfg.dataset.gt_loc_format  # '{gt_folder}/{seq}/gt/gt.txt'
+        dataset_config['TRACKERS_FOLDER'] = self.cfg.dataset.trackers_folder  # Trackers location
+        dataset_config['TRACKER_SUB_FOLDER'] = self.cfg.dataset.tracker_sub_folder  # Tracker files are in TRACKER_FOLDER/tracker_name/TRACKER_SUB_FOLDER
+        dataset_config['OUTPUT_FOLDER'] = self.cfg.dataset.output_folder # Where to save eval results (if None, same as TRACKERS_FOLDER)
+        dataset_config['OUTPUT_SUB_FOLDER'] = self.cfg.dataset.output_sub_folder  # Output files are saved in OUTPUT_FOLDER/tracker_name/OUTPUT_SUB_FOLDER
         dataset_config['SEQ_INFO'] = tracker_state.video_metadatas.set_index('name')['nframes'].to_dict()
         # dataset_config['TRACKERS_TO_EVAL'] = None  # Filenames of trackers to eval (if None, all in folder)
         dataset_config['CLASSES_TO_EVAL'] = ['pedestrian']  # Valid: ['pedestrian']
-        dataset_config['SPLIT_TO_EVAL'] = split  # Valid: 'train', 'test', 'all'
+        dataset_config['SPLIT_TO_EVAL'] = self.cfg.dataset.split_to_eval  # Valid: 'train', 'test', 'all'
         # dataset_config['INPUT_AS_ZIP'] = False  # Whether tracker input files are zipped
-        dataset_config['PRINT_CONFIG'] = False  # Whether to print current config
-        dataset_config['DO_PREPROC'] = False  # Whether to perform preprocessing (never done for MOT15)  # TODO ???
-        dataset_config['TRACKER_DISPLAY_NAMES'] = None  # Names of trackers to display, if None: TRACKERS_TO_EVAL
+        dataset_config['PRINT_CONFIG'] = self.cfg.dataset.print_config  # Whether to print current config
+        dataset_config['DO_PREPROC'] = self.cfg.dataset.do_preproc  # Whether to perform preprocessing (never done for MOT15)  # TODO ???
+        dataset_config['TRACKER_DISPLAY_NAMES'] = self.cfg.dataset.tracker_display_names  # Names of trackers to display, if None: TRACKERS_TO_EVAL
         # dataset_config['SEQMAP_FOLDER'] = None  # Where seqmaps are found (if None, GT_FOLDER/seqmaps)
         # dataset_config['SEQMAP_FILE'] = None  # Directly specify seqmap file (if none use seqmap_folder/benchmark-split_to_eval)
         # dataset_config['SKIP_SPLIT_FOL'] = False  # If False, data is in GT_FOLDER/BENCHMARK-SPLIT_TO_EVAL/ and in

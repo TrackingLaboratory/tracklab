@@ -1,6 +1,6 @@
 _target_: tracklab.wrappers.PoseTrack18Evaluator
 
-test_set: "val"
+eval_set: "val"
 
 cfg:
   eval_pose_estimation: True
