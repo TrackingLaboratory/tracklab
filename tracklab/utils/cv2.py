@@ -42,8 +42,10 @@ class VideoReader:
 
     def __getitem__(self, idx):
         assert self.filename is not None, "You should first set the filename"
-        self.cap.set(cv2.CAP_PROP_POS_FRAMES, idx-1)
-        ret, image = self.cap.read()
+        cap = cv2.VideoCapture(self.filename)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, idx-1)
+        ret, image = cap.read()
+        cap.release()
         assert ret, "Read past the end of the video file"
         return image
 
