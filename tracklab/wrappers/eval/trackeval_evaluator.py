@@ -5,10 +5,10 @@ import numpy as np
 import pandas as pd
 import logging
 import trackeval
+import wandb
 
 from tabulate import tabulate
 from tracklab.core import Evaluator as EvaluatorBase
-from tracklab.utils import wandb
 
 
 log = logging.getLogger(__name__)
@@ -68,11 +68,6 @@ class TrackEvalEvaluator(EvaluatorBase):
 
         dataset_config = trackeval.datasets.MotChallenge2DBox.get_default_dataset_config()
         metrics_config = {'METRICS': self.cfg.metrics, 'PRINT_CONFIG': False, 'THRESHOLD': 0.5}
-        # config = {**default_eval_config, **default_dataset_config, **default_metrics_config}  # Merge default configs
-        #
-        # eval_config = {k: v for k, v in config.items() if k in default_eval_config.keys()}
-        # dataset_config = {k: v for k, v in config.items() if k in default_dataset_config.keys()}
-        # metrics_config = {k: v for k, v in config.items() if k in default_metrics_config.keys()}
 
         dataset_config['BENCHMARK'] = dataset_name
         dataset_config['GT_FOLDER'] = self.cfg.dataset.gt_folder  # Location of GT data
@@ -82,20 +77,18 @@ class TrackEvalEvaluator(EvaluatorBase):
         dataset_config['OUTPUT_FOLDER'] = self.cfg.dataset.output_folder # Where to save eval results (if None, same as TRACKERS_FOLDER)
         dataset_config['OUTPUT_SUB_FOLDER'] = self.cfg.dataset.output_sub_folder  # Output files are saved in OUTPUT_FOLDER/tracker_name/OUTPUT_SUB_FOLDER
         dataset_config['SEQ_INFO'] = tracker_state.video_metadatas.set_index('name')['nframes'].to_dict()
-        # dataset_config['TRACKERS_TO_EVAL'] = None  # Filenames of trackers to eval (if None, all in folder)
         dataset_config['CLASSES_TO_EVAL'] = ['pedestrian']  # Valid: ['pedestrian']
         dataset_config['SPLIT_TO_EVAL'] = self.cfg.dataset.split_to_eval  # Valid: 'train', 'test', 'all'
-        # dataset_config['INPUT_AS_ZIP'] = False  # Whether tracker input files are zipped
         dataset_config['PRINT_CONFIG'] = self.cfg.dataset.print_config  # Whether to print current config
         dataset_config['DO_PREPROC'] = self.cfg.dataset.do_preproc  # Whether to perform preprocessing (never done for MOT15)  # TODO ???
         dataset_config['TRACKER_DISPLAY_NAMES'] = self.cfg.dataset.tracker_display_names  # Names of trackers to display, if None: TRACKERS_TO_EVAL
-        # dataset_config['SEQMAP_FOLDER'] = None  # Where seqmaps are found (if None, GT_FOLDER/seqmaps)
-        # dataset_config['SEQMAP_FILE'] = None  # Directly specify seqmap file (if none use seqmap_folder/benchmark-split_to_eval)
-        # dataset_config['SKIP_SPLIT_FOL'] = False  # If False, data is in GT_FOLDER/BENCHMARK-SPLIT_TO_EVAL/ and in
 
         # Run code
         evaluator = trackeval.Evaluator(eval_config)
-        dataset_list = [trackeval.datasets.MotChallenge2DBox(dataset_config)]
+        dataset = trackeval.datasets.MotChallenge2DBox(dataset_config)
+        dataset.should_classes_combine = True
+        dataset.should_classes_combine = False
+        dataset_list = [dataset]
         metrics_list = []
         for metric in [trackeval.metrics.HOTA, trackeval.metrics.CLEAR, trackeval.metrics.Identity,
                        trackeval.metrics.VACE]:
@@ -104,60 +97,9 @@ class TrackEvalEvaluator(EvaluatorBase):
         if len(metrics_list) == 0:
             raise Exception('No metrics selected for evaluation')
         output_res, output_msg = evaluator.evaluate(dataset_list, metrics_list)
-        # results = output_res['MotChallenge2DBox']['tracklab']
-        # combined_results = results.pop('COMBINED_SEQ')['pedestrian']
-        # wandb.log(output_res, "PoseTrack21/bbox/HOTA", res_by_video)
-
-        # evaluator = posetrack21.api.get_api(
-        #     pred_folder=self.cfg.pred_folder,
-        #     gt_folder=self.cfg.gt_folder,
-        #     eval_type="posetrack_mot",
-        #     use_parallel=self.cfg.use_parallel,
-        #     num_parallel_cores=max(1, self.cfg.num_parallel_cores),
-        #     SEQS=seqs,
-        # )
-        # res_combined, res_by_video = evaluator.eval()
-        # res_combined['MotChallenge2DBox']['tracklab']['COMBINED_SEQ']['pedestrian']['HOTA']
-        # _print_results(
-        #     res_combined['MotChallenge2DBox']['tracklab']['COMBINED_SEQ']['pedestrian'],
-        #     res_by_video,
-        #     100,
-        #     title="MOT - bbox HOTA",
-        #     print_by_video=self.cfg.print_by_video,
-        # )
-        # wandb.log(res_combined, "PoseTrack21/bbox/HOTA", res_by_video)
-
-        # # MOTA
-        # dataset = posetrack21_mot.PTWrapper(
-        #     self.cfg.gt_folder,
-        #     self.cfg.dataset_path,
-        #     seqs,
-        #     vis_threshold=self.cfg.vis_threshold,
-        # )
-        # mot_accums = []
-        # for seq in dataset:
-        #     results = seq.load_results(os.path.join(pred_folder, "results"))
-        #     mot_accums.append(
-        #         posetrack21_mot.get_mot_accum(
-        #             results,
-        #             seq,
-        #             use_ignore_regions=self.cfg.use_ignore_regions,
-        #             ignore_iou_thres=self.cfg.ignore_iou_thres,
-        #         )
-        #     )
-        # if mot_accums:
-        #     log.info("MOT - bbox MOTA")
-        #     str_summary, summary = posetrack21_mot.evaluate_mot_accums(
-        #         mot_accums,
-        #         [str(s) for s in dataset if not s.no_gt],
-        #         generate_overall=True,
-        #     )
-        #     results_mot_bbox = summary.to_dict(orient="index")
-        #     wandb.log(
-        #         results_mot_bbox["OVERALL"],
-        #         "PoseTrack21/bbox/MOTA",
-        #         results_mot_bbox,
-        #     )
+        results = output_res['MotChallenge2DBox']['tracklab']
+        combined_results = results.pop('SUMMARIES')
+        wandb.log(combined_results)
 
 
 def save_in_mot_challenge_format(detections, image_metadatas, video_metadatas, save_folder, bbox_column_for_eval="bbox_ltwh"):
