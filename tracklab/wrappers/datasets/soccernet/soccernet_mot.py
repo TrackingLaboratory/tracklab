@@ -164,9 +164,8 @@ def load_set(dataset_path):
             image_metadata_list.append(img_metadata_df)
 
     categories_list = [{'id': i + 1, 'name': category, 'supercategory': 'person'} for i, category in
-                       enumerate(categories_list)]
+                       enumerate(sorted(set(categories_list)))]
 
-            
     # Assign the categories to the video metadata  # TODO at dataset level?
     for video_metadata in video_metadatas_list:
         video_metadata['categories'] = categories_list
