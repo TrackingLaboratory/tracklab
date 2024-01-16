@@ -54,6 +54,7 @@ def load_set(dataset_path):
             detections_df = read_motchallenge_formatted_file(gt_path)
             detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
             detections_df['video_id'] = len(video_metadatas_list) + 1
+            detections_df['visibility'] = 1
             detections_list.append(detections_df)
 
             # Append video metadata
@@ -83,13 +84,68 @@ def load_set(dataset_path):
             }
 
             # Extract categories from trackletID entries
+            tracklet_attributes = {}
             for i in range(1, int(gameinfo_data.get('num_tracklets', 0)) + 1):
                 tracklet_entry = gameinfo_data.get(f'trackletID_{i}', '')
-                category, position = tracklet_entry.split(';')
-                class_name = f"{category.strip().replace(' ', '_')}_{position.replace(' ', '_')}"  # fixme class name is not unique accross videos
-                categories_list.append({'supercategory': 'person', 'id': i, 'name': class_name})
+                role, additional_info = tracklet_entry.split(';')
+                role = role.strip().replace(' ', '_')
+                additional_info = additional_info.replace(' ', '_')
+                if "goalkeeper" in role:
+                    if "left" in role:
+                        team = "left"
+                    elif "right" in role:
+                        team = "right"
+                    else:
+                        raise ValueError(f"Unknown team for role {role}")
+                    role = "goalkeeper"
+                    jersey_number = int(additional_info) if additional_info.isdigit() else None
+                    position = None
+                    category = f"{role}_{team}_{jersey_number}" if jersey_number is not None else f"{role}_{team}"
+                elif "player" in role:
+                    if "left" in role:
+                        team = "left"
+                    elif "right" in role:
+                        team = "right"
+                    else:
+                        raise ValueError(f"Unknown team for role {role}")
+                    role = "player"
+                    jersey_number = int(additional_info) if additional_info.isdigit() else None
+                    position = None
+                    category = f"{role}_{team}_{jersey_number}" if jersey_number is not None else f"{role}_{team}"
+                elif "referee" in role:
+                    team = None
+                    role = "referee"
+                    jersey_number = None
+                    position = additional_info
+                    category = f"{role}_{additional_info}"
+                elif "ball" in role:
+                    team = None
+                    role = "ball"
+                    jersey_number = None
+                    position = None
+                    category = f"{role}_{additional_info}"
+                else:
+                    assert "other" in role
+                    team = None
+                    role = "other"
+                    jersey_number = None
+                    position = None
+                    category = f"{role}_{additional_info}"
 
-            video_metadata['categories'] = categories_list  # Add categories to the video metadata
+                tracklet_attributes[i] = {
+                    "team": team,
+                    "role": role,
+                    "jersey_number": jersey_number,
+                    "category": category,
+                    "position": position,
+                }
+
+                categories_list.append(category)
+
+            # Assign the attributes to the detections
+            for t_id, t_attributes in tracklet_attributes.items():
+                for attribute in t_attributes.keys():
+                    detections_df.loc[detections_df['track_id'] == t_id, attribute] = t_attributes[attribute]
 
             # Append video metadata
             video_metadatas_list.append(video_metadata)
@@ -107,24 +163,21 @@ def load_set(dataset_path):
             image_counter += nframes
             image_metadata_list.append(img_metadata_df)
 
-    # Add categories for goalkeepers
-    categories_list.append({'supercategory': 'person', 'id': len(categories_list) + 1, 'name': 'goalkeeper_team_left'})
-    categories_list.append({'supercategory': 'person', 'id': len(categories_list) + 1, 'name': 'goalkeeper_team_right'})
+    categories_list = [{'id': i + 1, 'name': category, 'supercategory': 'person'} for i, category in
+                       enumerate(sorted(set(categories_list)))]
 
-    # Convert list to a set to remove duplicates
-    categories_set = list({category['name']: category for category in categories_list}.values())
-
-    # Sort the list by 'id' for consistent ordering
-    categories_set = sorted(categories_set, key=lambda x: x['id'])
-
-    # Assign the categories to the video metadata
+    # Assign the categories to the video metadata  # TODO at dataset level?
     for video_metadata in video_metadatas_list:
-        video_metadata['categories'] = categories_set
+        video_metadata['categories'] = categories_list
 
     # Concatenate dataframes
     video_metadata = pd.DataFrame(video_metadatas_list)
     image_metadata = pd.concat(image_metadata_list, ignore_index=True)
     detections = pd.concat(detections_list, ignore_index=True)
+
+    # Add category id to detections
+    category_to_id = {category['name']: category['id'] for category in categories_list}
+    detections['category_id'] = detections['category'].apply(lambda x: category_to_id[x])
 
     # Set 'id' column as the index in the detections and image dataframe
     detections['id'] = detections.index
@@ -137,12 +190,18 @@ def load_set(dataset_path):
     image_metadata['is_labeled'] = True
 
     # Reorder columns in dataframes
-    video_metadata = video_metadata[
-        ['name', 'nframes', 'frame_rate', 'seq_length', 'im_width', 'im_height', 'game_id', 'action_position',
-         'action_class', 'visibility', 'clip_start', 'game_time_start', 'clip_stop', 'game_time_stop', 'num_tracklets',
-         'half_period_start', 'half_period_stop', 'categories']]
-    image_metadata = image_metadata[['video_id', 'frame', 'file_path', 'is_labeled']]
-    detections = detections[['image_id', 'video_id', 'track_id', 'person_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility']]
+    video_metadata_columns = ['name', 'nframes', 'frame_rate', 'seq_length', 'im_width', 'im_height', 'game_id', 'action_position',
+                   'action_class', 'visibility', 'clip_start', 'game_time_start', 'clip_stop', 'game_time_stop',
+                   'num_tracklets',
+                   'half_period_start', 'half_period_stop', 'categories']
+    video_metadata_columns.extend(set(video_metadata.columns) - set(video_metadata_columns))
+    video_metadata = video_metadata[video_metadata_columns]
+    image_metadata_columns = ['video_id', 'frame', 'file_path', 'is_labeled']
+    image_metadata_columns.extend(set(image_metadata.columns) - set(image_metadata_columns))
+    image_metadata = image_metadata[image_metadata_columns]
+    detections_column_ordered = ['image_id', 'video_id', 'track_id', 'person_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility']
+    detections_column_ordered.extend(set(detections.columns) - set(detections_column_ordered))
+    detections = detections[detections_column_ordered]
 
     return TrackingSet(
         video_metadata,
