@@ -59,6 +59,7 @@ class BPBReId(DetectionLevelModule):
         save_path,
         job_id,
         use_keypoints_visibility_scores_for_reid,
+        training_enabled,
         batch_size,
     ):
         super().__init__(batch_size)
@@ -92,7 +93,7 @@ class BPBReId(DetectionLevelModule):
         self.cfg = build_config(config=self.cfg)
         self.test_embeddings = self.cfg.model.bpbreid.test_embeddings
         # Register the PoseTrack21ReID dataset to Torchreid that will be instantiated when building Torchreid engine.
-        self.training_enabled = not self.cfg.test.evaluate
+        self.training_enabled = training_enabled
         self.feature_extractor = None
         self.model = None
         self.coco_transform = masks_preprocess_transforms[

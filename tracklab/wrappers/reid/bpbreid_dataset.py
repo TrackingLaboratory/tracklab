@@ -86,7 +86,7 @@ class ReidDataset(ImageDataset):
         # Init
         self.tracking_dataset = tracking_dataset
         self.reid_config = reid_config
-        self.pose_model = pose_model
+        self.pose_model = pose_model  #  can be used to generate pseudo labels for the reid dataset
         self.dataset_path = Path(self.tracking_dataset.dataset_path)
         self.masks_dir = masks_dir
         self.pose_datapipe = EngineDatapipe(self.pose_model)
@@ -94,7 +94,7 @@ class ReidDataset(ImageDataset):
             dataset=self.pose_datapipe,
             batch_size=128,
             num_workers=0,  # FIXME issue with higher
-            collate_fn=type(self.pose_model).collate_fn,
+            collate_fn=type(self.pose_model).collate_fn if self.pose_model else None,
             persistent_workers=False,
         )
         self.eval_metric = self.reid_config.eval_metric
@@ -128,12 +128,14 @@ class ReidDataset(ImageDataset):
         self.build_reid_set(
             tracking_dataset.train_set,
             self.reid_config,
+            "train",
             is_test_set=False,
         )
 
         self.build_reid_set(
             tracking_dataset.val_set,
             self.reid_config,
+            "val",
             is_test_set=True,
         )
 
@@ -150,7 +152,7 @@ class ReidDataset(ImageDataset):
 
         super().__init__(train, query, gallery, **kwargs)
 
-    def build_reid_set(self, tracking_set, reid_config, is_test_set):
+    def build_reid_set(self, tracking_set, reid_config, split, is_test_set):
         """
         Build ReID metadata for a given MOT dataset split.
         Only a subset of all MOT groundtruth detections is used for ReID.
@@ -159,9 +161,8 @@ class ReidDataset(ImageDataset):
         If the config is changed and more detections are selected, the image crops and masks are generated only for
         these new detections.
         """
-        split = tracking_set.split
         image_metadatas = tracking_set.image_metadatas
-        detections = tracking_set.detections
+        detections = tracking_set.detections_gt
         fig_size = reid_config.fig_size
         mask_size = reid_config.mask_size
         max_crop_size = reid_config.max_crop_size
@@ -341,7 +342,7 @@ class ReidDataset(ImageDataset):
             for (video_id, image_id), dets_from_img in grp_gt_dets:
                 img_metadata = metadatas_df[metadatas_df.id == image_id].iloc[0]
                 img = cv2.imread(img_metadata.file_path)
-                for det_metadata in dets_from_img.itertuples():
+                for index, det_metadata in dets_from_img.iterrows():
                     # crop and resize bbox from image
                     l, t, w, h = det_metadata.bbox.ltwh(
                         image_shape=(img.shape[1], img.shape[0]), rounded=True
@@ -355,17 +356,17 @@ class ReidDataset(ImageDataset):
                     filename = "{}_{}_{}{}".format(
                         pid, video_id, img_metadata.id, self.img_ext
                     )
-                    rel_filepath = Path(video_id, filename)
+                    rel_filepath = Path(str(video_id), filename)
                     abs_filepath = Path(save_path, rel_filepath)
                     abs_filepath.parent.mkdir(parents=True, exist_ok=True)
                     cv2.imwrite(str(abs_filepath), img_crop)
 
                     # save image crop metadata
-                    gt_dets.at[det_metadata.Index, "reid_crop_path"] = str(abs_filepath)
-                    gt_dets.at[det_metadata.Index, "reid_crop_width"] = img_crop.shape[
+                    gt_dets.at[det_metadata.id, "reid_crop_path"] = str(abs_filepath)
+                    gt_dets.at[det_metadata.id, "reid_crop_width"] = img_crop.shape[
                         0
                     ]
-                    gt_dets.at[det_metadata.Index, "reid_crop_height"] = img_crop.shape[
+                    gt_dets.at[det_metadata.id, "reid_crop_height"] = img_crop.shape[
                         1
                     ]
                     pbar.update(1)
@@ -438,7 +439,7 @@ class ReidDataset(ImageDataset):
                     )
 
                 # loop on detections in frame
-                for det_metadata in dets_from_img.itertuples():
+                for index, det_metadata in dets_from_img.iterrows():
                     if mode == "gaussian_keypoints":
                         # compute human parsing heatmaps as gaussian on each visible keypoint
                         img_crop = cv2.imread(det_metadata.reid_crop_path)
@@ -462,7 +463,7 @@ class ReidDataset(ImageDataset):
                             (w, h),
                             (mask_w, mask_h),
                         )
-                        masks_gt_crop = build_gaussian_body_part_heatmaps(
+                        masks_gt_crop = build_gaussian_body_part_heatmaps(  # FIXME
                             keypoints_xyc, mask_w, mask_h
                         )
                     elif mode == "pose_on_img_crops":
@@ -510,7 +511,7 @@ class ReidDataset(ImageDataset):
                     cv2.imwrite(str(figure_filepath), img_with_heatmap)
 
                     # record human parsing metadata for later json dump
-                    gt_dets.at[det_metadata.Index, "masks_path"] = str(abs_filepath)
+                    gt_dets.at[det_metadata.id, "masks_path"] = str(abs_filepath)
                     pbar.update(1)
 
         log.info(
