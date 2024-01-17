@@ -8,7 +8,6 @@ import wandb
 from pathlib import Path
 from tabulate import tabulate
 from tracklab.core import Evaluator as EvaluatorBase
-from tracklab.wrappers.eval.soccernet.soccernet_2D_box import SoccerNet2DBox
 
 log = logging.getLogger(__name__)
 
@@ -18,17 +17,18 @@ class TrackEvalEvaluator(EvaluatorBase):
     Evaluator using the TrackEval library (https://github.com/JonathonLuiten/TrackEval).
     Save on disk the tracking predictions and ground truth in MOT Challenge format and run the evaluation by calling TrackEval.
     """
-    def __init__(self, cfg, eval_set, *args, **kwargs):
+    def __init__(self, cfg, eval_set, trackeval_dataset_class, *args, **kwargs):
         self.eval_set = eval_set
         self.cfg = cfg
+        self.trackeval_dataset_class = getattr(trackeval.datasets, trackeval_dataset_class)  # FIXME move elsewhere?
 
     def run(self, tracker_state):
         log.info("Starting evaluation using TrackEval library (https://github.com/JonathonLuiten/TrackEval)")
 
-        dataset_name = 'SNMOT'
+        tracker_name = 'tracklab'
 
         # save predictions in MOT Challenge format
-        pred_save_path = Path(self.cfg.dataset.trackers_folder) / f"{dataset_name}-{self.eval_set}" / "tracklab"
+        pred_save_path = Path(self.cfg.dataset.TRACKERS_FOLDER) / f"{self.trackeval_dataset_class.__name__}-{self.eval_set}" / tracker_name
         save_in_mot_challenge_format(tracker_state.detections_pred,
                                      tracker_state.image_metadatas,
                                      tracker_state.video_metadatas,
@@ -42,71 +42,43 @@ class TrackEvalEvaluator(EvaluatorBase):
                 f"Stopping evaluation because the current split ({self.eval_set}) has no ground truth detections.")
             return
 
-        # save ground truth in MOT Challenge format
+        # save ground truth in MOT Challenge format  # FIXME remove
         save_in_mot_challenge_format(tracker_state.detections_gt,
                                      tracker_state.image_metadatas,
                                      tracker_state.video_metadatas,
-                                     Path(self.cfg.dataset.gt_folder) / f"{dataset_name}-{self.eval_set}",
+                                     Path(self.cfg.dataset.GT_FOLDER) / f"{self.trackeval_dataset_class.__name__}-{self.eval_set}",
                                      self.cfg.bbox_column_for_eval)
 
         log.info("Tracking ground truth saved in MOT Challenge format in {}".format(pred_save_path))
 
-        eval_config = trackeval.Evaluator.get_default_eval_config()
-        eval_config['USE_PARALLEL'] = self.cfg.eval.use_parallel
-        eval_config['NUM_PARALLEL_CORES'] = self.cfg.eval.num_parallel_cores
-        eval_config['BREAK_ON_ERROR'] = self.cfg.eval.break_on_error  # Raises exception and exits with error
-        eval_config['PRINT_RESULTS'] = self.cfg.eval.print_results
-        eval_config['PRINT_ONLY_COMBINED'] = self.cfg.eval.print_only_combined
-        eval_config['PRINT_CONFIG'] = self.cfg.eval.print_config
-        eval_config['TIME_PROGRESS'] = self.cfg.eval.time_progress
-        eval_config['DISPLAY_LESS_PROGRESS'] = self.cfg.eval.display_less_progress
-        eval_config['OUTPUT_SUMMARY'] = self.cfg.eval.output_summary
-        eval_config['OUTPUT_EMPTY_CLASSES'] = self.cfg.eval.output_empty_classes  # If False, summary files are not output for classes with no detections
-        eval_config['OUTPUT_DETAILED'] = self.cfg.eval.output_detailed
-        eval_config['PLOT_CURVES'] = self.cfg.eval.plot_curves
-
-        dataset_config = SoccerNet2DBox.get_default_dataset_config()
-        metrics_config = {'METRICS': self.cfg.metrics, 'PRINT_CONFIG': False, 'THRESHOLD': 0.5}
-
-        dataset_config['BENCHMARK'] = dataset_name
-        dataset_config['GT_FOLDER'] = self.cfg.dataset.gt_folder  # Location of GT data
-        dataset_config['GT_LOC_FORMAT'] = self.cfg.dataset.gt_loc_format  # '{gt_folder}/{seq}/gt/gt.txt'
-        dataset_config['TRACKERS_FOLDER'] = self.cfg.dataset.trackers_folder  # Trackers location
-        dataset_config['TRACKER_SUB_FOLDER'] = self.cfg.dataset.tracker_sub_folder  # Tracker files are in TRACKER_FOLDER/tracker_name/TRACKER_SUB_FOLDER
-        dataset_config['OUTPUT_FOLDER'] = self.cfg.dataset.output_folder # Where to save eval results (if None, same as TRACKERS_FOLDER)
-        dataset_config['OUTPUT_SUB_FOLDER'] = self.cfg.dataset.output_sub_folder  # Output files are saved in OUTPUT_FOLDER/tracker_name/OUTPUT_SUB_FOLDER
+        # Build dataset
+        dataset_config = self.trackeval_dataset_class.get_default_dataset_config()
         dataset_config['SEQ_INFO'] = tracker_state.video_metadatas.set_index('name')['nframes'].to_dict()
-        dataset_config['CLASSES_TO_EVAL'] = ['pedestrian']  # Valid: ['pedestrian']  # TODO
-        dataset_config['SPLIT_TO_EVAL'] = self.cfg.dataset.split_to_eval  # Valid: 'train', 'test', 'all'
-        dataset_config['PRINT_CONFIG'] = self.cfg.dataset.print_config  # Whether to print current config
-        dataset_config['DO_PREPROC'] = self.cfg.dataset.do_preproc  # Whether to perform preprocessing (never done for MOT15)  # TODO ???
-        dataset_config['TRACKER_DISPLAY_NAMES'] = self.cfg.dataset.tracker_display_names  # Names of trackers to display, if None: TRACKERS_TO_EVAL
+        for key, value in self.cfg.dataset.items():
+            dataset_config[key] = value
+        dataset = self.trackeval_dataset_class(dataset_config)
 
-        # Run code
-        evaluator = trackeval.Evaluator(eval_config)
-        dataset = SoccerNet2DBox(dataset_config)
-        # TODO before moving this to soccernet trackeval class, make sure static class creation will work, i.e. empty classes are not processed and do not slow down process
-        classes_to_id = {category["name"]: category["id"]+14 for category in tracker_state.video_metadatas.categories.iloc[0]}
-        classes_to_id.update({'pedestrian': 1, 'person_on_vehicle': 2, 'car': 3, 'bicycle': 4, 'motorbike': 5,
-                                       'non_mot_vehicle': 6, 'static_person': 7, 'distractor': 8, 'occluder': 9,
-                                       'occluder_on_ground': 10, 'occluder_full': 11, 'reflection': 12, 'crowd': 13})
-        dataset.valid_classes = classes_to_id.keys()
-        dataset.class_list = classes_to_id.keys()
-        dataset.class_name_to_class_id = classes_to_id
-
-        dataset.valid_class_numbers = list(dataset.class_name_to_class_id.values())
-        dataset.should_classes_combine = True  # FIXME
-        dataset.use_super_categories = False
-        dataset_list = [dataset]
+        # Build metrics
+        metrics_config = {'METRICS': set(self.cfg.metrics), 'PRINT_CONFIG': False, 'THRESHOLD': 0.5}
         metrics_list = []
-        for metric in [trackeval.metrics.HOTA, trackeval.metrics.CLEAR, trackeval.metrics.Identity,
-                       trackeval.metrics.VACE]:
-            if metric.get_name() in metrics_config['METRICS']:
+        for metric_name in self.cfg.metrics:
+            try:
+                metric = getattr(trackeval.metrics, metric_name)
                 metrics_list.append(metric(metrics_config))
-        if len(metrics_list) == 0:
-            raise Exception('No metrics selected for evaluation')
-        output_res, output_msg = evaluator.evaluate(dataset_list, metrics_list)
-        results = output_res['SoccerNet2DBox']['tracklab']
+            except AttributeError:
+                log.warning(f'Skipping evaluation for unknown metric: {metric_name}')
+
+        # Build evaluator
+        eval_config = trackeval.Evaluator.get_default_eval_config()
+        for key, value in self.cfg.eval.items():
+            eval_config[key] = value
+        evaluator = trackeval.Evaluator(eval_config)
+
+        # Run evaluation
+        output_res, output_msg = evaluator.evaluate([dataset], metrics_list)
+        
+        # Log results
+        results = output_res[dataset.get_name()][tracker_name]
         combined_results = results.pop('SUMMARIES')
         wandb.log(combined_results)
 
