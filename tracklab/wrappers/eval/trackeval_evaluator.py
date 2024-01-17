@@ -27,7 +27,7 @@ class TrackEvalEvaluator(EvaluatorBase):
 
         tracker_name = 'tracklab'
 
-        # save predictions in MOT Challenge format
+        # Save predictions in MOT Challenge format (.txt)
         pred_save_path = Path(self.cfg.dataset.TRACKERS_FOLDER) / f"{self.trackeval_dataset_class.__name__}-{self.eval_set}" / tracker_name
         save_in_mot_challenge_format(tracker_state.detections_pred,
                                      tracker_state.image_metadatas,
@@ -42,7 +42,7 @@ class TrackEvalEvaluator(EvaluatorBase):
                 f"Stopping evaluation because the current split ({self.eval_set}) has no ground truth detections.")
             return
 
-        # save ground truth in MOT Challenge format  # FIXME remove
+        # Save ground truth in MOT Challenge format (.txt)  # FIXME remove
         save_in_mot_challenge_format(tracker_state.detections_gt,
                                      tracker_state.image_metadatas,
                                      tracker_state.video_metadatas,
