@@ -17,10 +17,11 @@ class TrackEvalEvaluator(EvaluatorBase):
     Evaluator using the TrackEval library (https://github.com/JonathonLuiten/TrackEval).
     Save on disk the tracking predictions and ground truth in MOT Challenge format and run the evaluation by calling TrackEval.
     """
-    def __init__(self, cfg, eval_set, trackeval_dataset_class, *args, **kwargs):
-        self.eval_set = eval_set
+    def __init__(self, cfg, eval_set, trackeval_dataset_class, show_progressbar, *args, **kwargs):
         self.cfg = cfg
+        self.eval_set = eval_set
         self.trackeval_dataset_class = getattr(trackeval.datasets, trackeval_dataset_class)
+        self.show_progressbar = show_progressbar
 
     def run(self, tracker_state):
         log.info("Starting evaluation using TrackEval library (https://github.com/JonathonLuiten/TrackEval)")
@@ -76,7 +77,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         evaluator = trackeval.Evaluator(eval_config)
 
         # Run evaluation
-        output_res, output_msg = evaluator.evaluate([dataset], metrics_list)
+        output_res, output_msg = evaluator.evaluate([dataset], metrics_list, show_progressbar=self.show_progressbar)
         
         # Log results
         results = output_res[dataset.get_name()][tracker_name]
