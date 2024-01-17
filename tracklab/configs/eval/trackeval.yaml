@@ -17,7 +17,7 @@ cfg:
     PRINT_RESULTS: True
     PRINT_ONLY_COMBINED: True
     PRINT_CONFIG: False
-    TIME_PROGRESS: True
+    TIME_PROGRESS: False
     DISPLAY_LESS_PROGRESS: False
     OUTPUT_SUMMARY: True
     OUTPUT_EMPTY_CLASSES: True  # If False, summary files are not output for classes with no detections
