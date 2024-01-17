@@ -9,7 +9,7 @@ defaults:
   - eval: soccernet_mot
   - engine: offline
   - state: save
-  - visualization: save_videos
+  - visualization: no_vis #save_videos
   - modules/bbox_detector: yolov8
   - modules/pose_bottomup: openpifpaf
   - modules/reid: bpbreid
@@ -22,10 +22,11 @@ defaults:
 # - If loading a tracking state from disk, remove modules whose outputs are already provided in the loaded state
 pipeline:
   - bbox_detector
+  - pose_bottomup
   - reid
-  - track
-  - jn_detect
-  - jn_tracklet
+  #- track
+  #- jn_detect
+  #- jn_tracklet
 
 # Experiment name
 experiment_name: "tracklab"
@@ -40,7 +41,8 @@ use_wandb: False
 use_rich: True
 
 # Flags
-test_tracking: True
+#test_tracking: True
+test_tracking: False
 print_config: True
 
 # configure Hydra to use the current working directory

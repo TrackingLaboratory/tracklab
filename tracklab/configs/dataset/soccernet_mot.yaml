@@ -3,5 +3,8 @@ defaults:
 
 _target_: tracklab.wrappers.SoccerNetMOT
 
-dataset_path: ${data_dir}/SoccerNetMOT
-annotation_path: ${data_dir}/SoccerNetMOT
+dataset_path: '/home/user01/Amir/Tracking/SoccerNet'
+annotation_path: '/home/user01/Amir/Tracking/SoccerNet'
+
+#dataset_path: ${data_dir}/SoccerNetMOT
+#annotation_path: ${data_dir}/SoccerNetMOT
