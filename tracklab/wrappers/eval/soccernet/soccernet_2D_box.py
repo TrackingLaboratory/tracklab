@@ -57,8 +57,8 @@ class SoccerNet2DBox(_BaseDataset):
             split_fol = ''
         self.gt_fol = os.path.join(self.config['GT_FOLDER'], split_fol)
         self.tracker_fol = os.path.join(self.config['TRACKERS_FOLDER'], split_fol)
-        self.should_classes_combine = False
-        self.use_super_categories = False
+        self.should_classes_combine = True
+        self.use_super_categories = True  # Create supercategories for players, referee, goalkeeper, ball, other
         self.data_is_zipped = self.config['INPUT_AS_ZIP']
         self.do_preproc = self.config['DO_PREPROC']
 
@@ -313,24 +313,17 @@ class SoccerNet2DBox(_BaseDataset):
                 and unique track ids. It also relabels gt and tracker ids to be contiguous and checks that ids are
                 unique within each timestep.
 
-        MOT Challenge:
-            In MOT Challenge, the 4 preproc steps are as follow:
-                1) There is only one class (pedestrian) to be evaluated, but all other classes are used for preproc.
-                2) Predictions are matched against all gt boxes (regardless of class), those matching with distractor
-                    objects are removed.
-                3) There is no crowd ignore regions.
-                4) All gt dets except pedestrian are removed, also removes pedestrian gt dets marked with zero_marked.
+        BDD100K:
+            In BDD100K, the 4 preproc steps are as follow:
+                1) There are eight classes (pedestrian, rider, car, bus, truck, train, motorcycle, bicycle)
+                    which are evaluated separately.
+                2) For BDD100K there is no removal of matched tracker dets.
+                3) Crowd ignore regions are used to remove unmatched detections.
+                4) No removal of gt dets.
         """
-        # Check that input data has unique ids
-        self._check_unique_ids(raw_data)
-
-        distractor_class_names = ['person_on_vehicle', 'static_person', 'distractor', 'reflection']  # FIXME
-        if self.benchmark == 'MOT20':   # FIXME
-            distractor_class_names.append('non_mot_vehicle')
-        distractor_classes = [self.class_name_to_class_id[x] for x in distractor_class_names]
         cls_id = self.class_name_to_class_id[cls]
 
-        data_keys = ['gt_ids', 'tracker_ids', 'gt_dets', 'tracker_dets', 'tracker_confidences', 'similarity_scores']
+        data_keys = ['gt_ids', 'tracker_ids', 'gt_dets', 'tracker_dets', 'similarity_scores']
         data = {key: [None] * raw_data['num_timesteps'] for key in data_keys}
         unique_gt_ids = []
         unique_tracker_ids = []
@@ -338,66 +331,45 @@ class SoccerNet2DBox(_BaseDataset):
         num_tracker_dets = 0
         for t in range(raw_data['num_timesteps']):
 
-            # Get all data
-            gt_ids = raw_data['gt_ids'][t]
-            gt_dets = raw_data['gt_dets'][t]
-            gt_classes = raw_data['gt_classes'][t]
-            gt_zero_marked = raw_data['gt_extras'][t]['zero_marked']
-            tracker_ids = raw_data['tracker_ids'][t]
-            tracker_dets = raw_data['tracker_dets'][t]
-            tracker_classes = raw_data['tracker_classes'][t]
-            tracker_confidences = raw_data['tracker_confidences'][t]
-            similarity_scores = raw_data['similarity_scores'][t]
+            # Only extract relevant dets for this class for preproc and eval (cls)
+            gt_class_mask = np.atleast_1d(raw_data['gt_classes'][t] == cls_id)
+            gt_class_mask = gt_class_mask.astype(bool)
+            gt_ids = raw_data['gt_ids'][t][gt_class_mask]
+            gt_dets = raw_data['gt_dets'][t][gt_class_mask]
 
-            # Evaluation is ONLY valid for pedestrian class
-            if len(tracker_classes) > 0 and np.max(tracker_classes) > 1:  # FIXME
-                raise TrackEvalException(
-                    'Evaluation is only valid for pedestrian class. Non pedestrian class (%i) found in sequence %s at '
-                    'timestep %i.' % (np.max(tracker_classes), raw_data['seq'], t))
+            tracker_class_mask = np.atleast_1d(raw_data['tracker_classes'][t] == cls_id)
+            tracker_class_mask = tracker_class_mask.astype(bool)
+            tracker_ids = raw_data['tracker_ids'][t][tracker_class_mask]
+            tracker_dets = raw_data['tracker_dets'][t][tracker_class_mask]
+            similarity_scores = raw_data['similarity_scores'][t][gt_class_mask, :][:, tracker_class_mask]
 
-            # Match tracker and gt dets (with hungarian algorithm) and remove tracker dets which match with gt dets
-            # which are labeled as belonging to a distractor class.
-            to_remove_tracker = np.array([], int)
-            if self.do_preproc and self.benchmark != 'MOT15' and gt_ids.shape[0] > 0 and tracker_ids.shape[0] > 0:  # FIXME
-
-                # Check all classes are valid:
-                invalid_classes = np.setdiff1d(np.unique(gt_classes), self.valid_class_numbers)
-                if len(invalid_classes) > 0:
-                    print(' '.join([str(x) for x in invalid_classes]))
-                    raise(TrackEvalException('Attempting to evaluate using invalid gt classes. '
-                                             'This warning only triggers if preprocessing is performed, '
-                                             'e.g. not for MOT15 or where prepropressing is explicitly disabled. '
-                                             'Please either check your gt data, or disable preprocessing. '
-                                             'The following invalid classes were found in timestep ' + str(t) + ': ' +
-                                             ' '.join([str(x) for x in invalid_classes])))
-
+            # Match tracker and gt dets (with hungarian algorithm)
+            unmatched_indices = np.arange(tracker_ids.shape[0])
+            if gt_ids.shape[0] > 0 and tracker_ids.shape[0] > 0:
                 matching_scores = similarity_scores.copy()
                 matching_scores[matching_scores < 0.5 - np.finfo('float').eps] = 0
                 match_rows, match_cols = linear_sum_assignment(-matching_scores)
                 actually_matched_mask = matching_scores[match_rows, match_cols] > 0 + np.finfo('float').eps
-                match_rows = match_rows[actually_matched_mask]
                 match_cols = match_cols[actually_matched_mask]
+                unmatched_indices = np.delete(unmatched_indices, match_cols, axis=0)
 
-                is_distractor_class = np.isin(gt_classes[match_rows], distractor_classes)
-                to_remove_tracker = match_cols[is_distractor_class]
+            # For unmatched tracker dets, remove those that are greater than 50% within a crowd ignore region.
+            unmatched_tracker_dets = tracker_dets[unmatched_indices, :]
+            crowd_ignore_regions = raw_data['gt_crowd_ignore_regions'][t]
+            intersection_with_ignore_region = self._calculate_box_ious(unmatched_tracker_dets, crowd_ignore_regions,
+                                                                       box_format='x0y0x1y1', do_ioa=True)
+            is_within_crowd_ignore_region = np.any(intersection_with_ignore_region > 0.5 + np.finfo('float').eps,
+                                                   axis=1)
 
-            # Apply preprocessing to remove all unwanted tracker dets.  # FIXME
+            # Apply preprocessing to remove unwanted tracker dets.
+            to_remove_tracker = unmatched_indices[is_within_crowd_ignore_region]
             data['tracker_ids'][t] = np.delete(tracker_ids, to_remove_tracker, axis=0)
             data['tracker_dets'][t] = np.delete(tracker_dets, to_remove_tracker, axis=0)
-            data['tracker_confidences'][t] = np.delete(tracker_confidences, to_remove_tracker, axis=0)
             similarity_scores = np.delete(similarity_scores, to_remove_tracker, axis=1)
 
-            # Remove gt detections marked as to remove (zero marked), and also remove gt detections not in pedestrian
-            # class (not applicable for MOT15)
-            if self.do_preproc and self.benchmark != 'MOT15':
-                gt_to_keep_mask = (np.not_equal(gt_zero_marked, 0)) & \
-                                  (np.equal(gt_classes, cls_id))
-            else:
-                # There are no classes for MOT15
-                gt_to_keep_mask = np.not_equal(gt_zero_marked, 0)
-            data['gt_ids'][t] = gt_ids[gt_to_keep_mask]
-            data['gt_dets'][t] = gt_dets[gt_to_keep_mask, :]
-            data['similarity_scores'][t] = similarity_scores[gt_to_keep_mask]
+            data['gt_ids'][t] = gt_ids
+            data['gt_dets'][t] = gt_dets
+            data['similarity_scores'][t] = similarity_scores
 
             unique_gt_ids += list(np.unique(data['gt_ids'][t]))
             unique_tracker_ids += list(np.unique(data['tracker_ids'][t]))
@@ -426,13 +398,988 @@ class SoccerNet2DBox(_BaseDataset):
         data['num_tracker_ids'] = len(unique_tracker_ids)
         data['num_gt_ids'] = len(unique_gt_ids)
         data['num_timesteps'] = raw_data['num_timesteps']
-        data['seq'] = raw_data['seq']
 
-        # Ensure again that ids are unique per timestep after preproc.
-        self._check_unique_ids(data, after_preproc=True)
+        # Ensure that ids are unique per timestep.
+        self._check_unique_ids(data)
 
         return data
 
     def _calculate_similarities(self, gt_dets_t, tracker_dets_t):
         similarity_scores = self._calculate_box_ious(gt_dets_t, tracker_dets_t, box_format='xywh')
         return similarity_scores
+
+train_classes = [
+  {
+    "id": 1,
+    "name": "ball_1",
+    "supercategory": "person"
+  },
+  {
+    "id": 2,
+    "name": "ball_2",
+    "supercategory": "person"
+  },
+  {
+    "id": 3,
+    "name": "ball_none",
+    "supercategory": "person"
+  },
+  {
+    "id": 4,
+    "name": "goalkeeper_left",
+    "supercategory": "person"
+  },
+  {
+    "id": 5,
+    "name": "goalkeeper_left_1",
+    "supercategory": "person"
+  },
+  {
+    "id": 6,
+    "name": "goalkeeper_left_18",
+    "supercategory": "person"
+  },
+  {
+    "id": 7,
+    "name": "goalkeeper_right",
+    "supercategory": "person"
+  },
+  {
+    "id": 8,
+    "name": "goalkeeper_right_1",
+    "supercategory": "person"
+  },
+  {
+    "id": 9,
+    "name": "goalkeeper_right_18",
+    "supercategory": "person"
+  },
+  {
+    "id": 10,
+    "name": "goalkeeper_right_2",
+    "supercategory": "person"
+  },
+  {
+    "id": 11,
+    "name": "other_1",
+    "supercategory": "person"
+  },
+  {
+    "id": 12,
+    "name": "other_2",
+    "supercategory": "person"
+  },
+  {
+    "id": 13,
+    "name": "other_3",
+    "supercategory": "person"
+  },
+  {
+    "id": 14,
+    "name": "player_left",
+    "supercategory": "person"
+  },
+  {
+    "id": 15,
+    "name": "player_left_10",
+    "supercategory": "person"
+  },
+  {
+    "id": 16,
+    "name": "player_left_11",
+    "supercategory": "person"
+  },
+  {
+    "id": 17,
+    "name": "player_left_13",
+    "supercategory": "person"
+  },
+  {
+    "id": 18,
+    "name": "player_left_14",
+    "supercategory": "person"
+  },
+  {
+    "id": 19,
+    "name": "player_left_15",
+    "supercategory": "person"
+  },
+  {
+    "id": 20,
+    "name": "player_left_16",
+    "supercategory": "person"
+  },
+  {
+    "id": 21,
+    "name": "player_left_17",
+    "supercategory": "person"
+  },
+  {
+    "id": 22,
+    "name": "player_left_20",
+    "supercategory": "person"
+  },
+  {
+    "id": 23,
+    "name": "player_left_21",
+    "supercategory": "person"
+  },
+  {
+    "id": 24,
+    "name": "player_left_22",
+    "supercategory": "person"
+  },
+  {
+    "id": 25,
+    "name": "player_left_23",
+    "supercategory": "person"
+  },
+  {
+    "id": 26,
+    "name": "player_left_24",
+    "supercategory": "person"
+  },
+  {
+    "id": 27,
+    "name": "player_left_25",
+    "supercategory": "person"
+  },
+  {
+    "id": 28,
+    "name": "player_left_26",
+    "supercategory": "person"
+  },
+  {
+    "id": 29,
+    "name": "player_left_27",
+    "supercategory": "person"
+  },
+  {
+    "id": 30,
+    "name": "player_left_28",
+    "supercategory": "person"
+  },
+  {
+    "id": 31,
+    "name": "player_left_29",
+    "supercategory": "person"
+  },
+  {
+    "id": 32,
+    "name": "player_left_3",
+    "supercategory": "person"
+  },
+  {
+    "id": 33,
+    "name": "player_left_30",
+    "supercategory": "person"
+  },
+  {
+    "id": 34,
+    "name": "player_left_31",
+    "supercategory": "person"
+  },
+  {
+    "id": 35,
+    "name": "player_left_32",
+    "supercategory": "person"
+  },
+  {
+    "id": 36,
+    "name": "player_left_33",
+    "supercategory": "person"
+  },
+  {
+    "id": 37,
+    "name": "player_left_34",
+    "supercategory": "person"
+  },
+  {
+    "id": 38,
+    "name": "player_left_35",
+    "supercategory": "person"
+  },
+  {
+    "id": 39,
+    "name": "player_left_36",
+    "supercategory": "person"
+  },
+  {
+    "id": 40,
+    "name": "player_left_4",
+    "supercategory": "person"
+  },
+  {
+    "id": 41,
+    "name": "player_left_40",
+    "supercategory": "person"
+  },
+  {
+    "id": 42,
+    "name": "player_left_44",
+    "supercategory": "person"
+  },
+  {
+    "id": 43,
+    "name": "player_left_5",
+    "supercategory": "person"
+  },
+  {
+    "id": 44,
+    "name": "player_left_50",
+    "supercategory": "person"
+  },
+  {
+    "id": 45,
+    "name": "player_left_55",
+    "supercategory": "person"
+  },
+  {
+    "id": 46,
+    "name": "player_left_56",
+    "supercategory": "person"
+  },
+  {
+    "id": 47,
+    "name": "player_left_6",
+    "supercategory": "person"
+  },
+  {
+    "id": 48,
+    "name": "player_left_62",
+    "supercategory": "person"
+  },
+  {
+    "id": 49,
+    "name": "player_left_7",
+    "supercategory": "person"
+  },
+  {
+    "id": 50,
+    "name": "player_left_8",
+    "supercategory": "person"
+  },
+  {
+    "id": 51,
+    "name": "player_left_9",
+    "supercategory": "person"
+  },
+  {
+    "id": 52,
+    "name": "player_left_93",
+    "supercategory": "person"
+  },
+  {
+    "id": 53,
+    "name": "player_right",
+    "supercategory": "person"
+  },
+  {
+    "id": 54,
+    "name": "player_right_10",
+    "supercategory": "person"
+  },
+  {
+    "id": 55,
+    "name": "player_right_11",
+    "supercategory": "person"
+  },
+  {
+    "id": 56,
+    "name": "player_right_14",
+    "supercategory": "person"
+  },
+  {
+    "id": 57,
+    "name": "player_right_15",
+    "supercategory": "person"
+  },
+  {
+    "id": 58,
+    "name": "player_right_16",
+    "supercategory": "person"
+  },
+  {
+    "id": 59,
+    "name": "player_right_17",
+    "supercategory": "person"
+  },
+  {
+    "id": 60,
+    "name": "player_right_19",
+    "supercategory": "person"
+  },
+  {
+    "id": 61,
+    "name": "player_right_20",
+    "supercategory": "person"
+  },
+  {
+    "id": 62,
+    "name": "player_right_21",
+    "supercategory": "person"
+  },
+  {
+    "id": 63,
+    "name": "player_right_22",
+    "supercategory": "person"
+  },
+  {
+    "id": 64,
+    "name": "player_right_23",
+    "supercategory": "person"
+  },
+  {
+    "id": 65,
+    "name": "player_right_24",
+    "supercategory": "person"
+  },
+  {
+    "id": 66,
+    "name": "player_right_25",
+    "supercategory": "person"
+  },
+  {
+    "id": 67,
+    "name": "player_right_26",
+    "supercategory": "person"
+  },
+  {
+    "id": 68,
+    "name": "player_right_27",
+    "supercategory": "person"
+  },
+  {
+    "id": 69,
+    "name": "player_right_28",
+    "supercategory": "person"
+  },
+  {
+    "id": 70,
+    "name": "player_right_29",
+    "supercategory": "person"
+  },
+  {
+    "id": 71,
+    "name": "player_right_3",
+    "supercategory": "person"
+  },
+  {
+    "id": 72,
+    "name": "player_right_30",
+    "supercategory": "person"
+  },
+  {
+    "id": 73,
+    "name": "player_right_31",
+    "supercategory": "person"
+  },
+  {
+    "id": 74,
+    "name": "player_right_33",
+    "supercategory": "person"
+  },
+  {
+    "id": 75,
+    "name": "player_right_34",
+    "supercategory": "person"
+  },
+  {
+    "id": 76,
+    "name": "player_right_35",
+    "supercategory": "person"
+  },
+  {
+    "id": 77,
+    "name": "player_right_36",
+    "supercategory": "person"
+  },
+  {
+    "id": 78,
+    "name": "player_right_38",
+    "supercategory": "person"
+  },
+  {
+    "id": 79,
+    "name": "player_right_4",
+    "supercategory": "person"
+  },
+  {
+    "id": 80,
+    "name": "player_right_40",
+    "supercategory": "person"
+  },
+  {
+    "id": 81,
+    "name": "player_right_44",
+    "supercategory": "person"
+  },
+  {
+    "id": 82,
+    "name": "player_right_5",
+    "supercategory": "person"
+  },
+  {
+    "id": 83,
+    "name": "player_right_50",
+    "supercategory": "person"
+  },
+  {
+    "id": 84,
+    "name": "player_right_55",
+    "supercategory": "person"
+  },
+  {
+    "id": 85,
+    "name": "player_right_6",
+    "supercategory": "person"
+  },
+  {
+    "id": 86,
+    "name": "player_right_62",
+    "supercategory": "person"
+  },
+  {
+    "id": 87,
+    "name": "player_right_7",
+    "supercategory": "person"
+  },
+  {
+    "id": 88,
+    "name": "player_right_75",
+    "supercategory": "person"
+  },
+  {
+    "id": 89,
+    "name": "player_right_8",
+    "supercategory": "person"
+  },
+  {
+    "id": 90,
+    "name": "player_right_9",
+    "supercategory": "person"
+  },
+  {
+    "id": 91,
+    "name": "referee_main",
+    "supercategory": "person"
+  },
+  {
+    "id": 92,
+    "name": "referee_side_bottom",
+    "supercategory": "person"
+  },
+  {
+    "id": 93,
+    "name": "referee_side_top",
+    "supercategory": "person"
+  }
+]
+
+val_classes = [
+  {
+    "id": 1,
+    "name": "ball_1",
+    "supercategory": "person"
+  },
+  {
+    "id": 2,
+    "name": "ball_2",
+    "supercategory": "person"
+  },
+  {
+    "id": 3,
+    "name": "ball_3",
+    "supercategory": "person"
+  },
+  {
+    "id": 4,
+    "name": "ball_none",
+    "supercategory": "person"
+  },
+  {
+    "id": 5,
+    "name": "goalkeeper_left",
+    "supercategory": "person"
+  },
+  {
+    "id": 6,
+    "name": "goalkeeper_left_1",
+    "supercategory": "person"
+  },
+  {
+    "id": 7,
+    "name": "goalkeeper_left_25",
+    "supercategory": "person"
+  },
+  {
+    "id": 8,
+    "name": "goalkeeper_left_30",
+    "supercategory": "person"
+  },
+  {
+    "id": 9,
+    "name": "goalkeeper_left_32",
+    "supercategory": "person"
+  },
+  {
+    "id": 10,
+    "name": "goalkeeper_right",
+    "supercategory": "person"
+  },
+  {
+    "id": 11,
+    "name": "goalkeeper_right_1",
+    "supercategory": "person"
+  },
+  {
+    "id": 12,
+    "name": "goalkeeper_right_18",
+    "supercategory": "person"
+  },
+  {
+    "id": 13,
+    "name": "goalkeeper_right_30",
+    "supercategory": "person"
+  },
+  {
+    "id": 14,
+    "name": "goalkeeper_right_32",
+    "supercategory": "person"
+  },
+  {
+    "id": 15,
+    "name": "other_1",
+    "supercategory": "person"
+  },
+  {
+    "id": 16,
+    "name": "other_2",
+    "supercategory": "person"
+  },
+  {
+    "id": 17,
+    "name": "other_3",
+    "supercategory": "person"
+  },
+  {
+    "id": 18,
+    "name": "other_4",
+    "supercategory": "person"
+  },
+  {
+    "id": 19,
+    "name": "player_left",
+    "supercategory": "person"
+  },
+  {
+    "id": 20,
+    "name": "player_left_10",
+    "supercategory": "person"
+  },
+  {
+    "id": 21,
+    "name": "player_left_11",
+    "supercategory": "person"
+  },
+  {
+    "id": 22,
+    "name": "player_left_12",
+    "supercategory": "person"
+  },
+  {
+    "id": 23,
+    "name": "player_left_14",
+    "supercategory": "person"
+  },
+  {
+    "id": 24,
+    "name": "player_left_15",
+    "supercategory": "person"
+  },
+  {
+    "id": 25,
+    "name": "player_left_16",
+    "supercategory": "person"
+  },
+  {
+    "id": 26,
+    "name": "player_left_17",
+    "supercategory": "person"
+  },
+  {
+    "id": 27,
+    "name": "player_left_2",
+    "supercategory": "person"
+  },
+  {
+    "id": 28,
+    "name": "player_left_20",
+    "supercategory": "person"
+  },
+  {
+    "id": 29,
+    "name": "player_left_22",
+    "supercategory": "person"
+  },
+  {
+    "id": 30,
+    "name": "player_left_23",
+    "supercategory": "person"
+  },
+  {
+    "id": 31,
+    "name": "player_left_24",
+    "supercategory": "person"
+  },
+  {
+    "id": 32,
+    "name": "player_left_25",
+    "supercategory": "person"
+  },
+  {
+    "id": 33,
+    "name": "player_left_26",
+    "supercategory": "person"
+  },
+  {
+    "id": 34,
+    "name": "player_left_27",
+    "supercategory": "person"
+  },
+  {
+    "id": 35,
+    "name": "player_left_3",
+    "supercategory": "person"
+  },
+  {
+    "id": 36,
+    "name": "player_left_30",
+    "supercategory": "person"
+  },
+  {
+    "id": 37,
+    "name": "player_left_31",
+    "supercategory": "person"
+  },
+  {
+    "id": 38,
+    "name": "player_left_33",
+    "supercategory": "person"
+  },
+  {
+    "id": 39,
+    "name": "player_left_34",
+    "supercategory": "person"
+  },
+  {
+    "id": 40,
+    "name": "player_left_36",
+    "supercategory": "person"
+  },
+  {
+    "id": 41,
+    "name": "player_left_4",
+    "supercategory": "person"
+  },
+  {
+    "id": 42,
+    "name": "player_left_43",
+    "supercategory": "person"
+  },
+  {
+    "id": 43,
+    "name": "player_left_44",
+    "supercategory": "person"
+  },
+  {
+    "id": 44,
+    "name": "player_left_5",
+    "supercategory": "person"
+  },
+  {
+    "id": 45,
+    "name": "player_left_50",
+    "supercategory": "person"
+  },
+  {
+    "id": 46,
+    "name": "player_left_55",
+    "supercategory": "person"
+  },
+  {
+    "id": 47,
+    "name": "player_left_56",
+    "supercategory": "person"
+  },
+  {
+    "id": 48,
+    "name": "player_left_59",
+    "supercategory": "person"
+  },
+  {
+    "id": 49,
+    "name": "player_left_60",
+    "supercategory": "person"
+  },
+  {
+    "id": 50,
+    "name": "player_left_62",
+    "supercategory": "person"
+  },
+  {
+    "id": 51,
+    "name": "player_left_69",
+    "supercategory": "person"
+  },
+  {
+    "id": 52,
+    "name": "player_left_7",
+    "supercategory": "person"
+  },
+  {
+    "id": 53,
+    "name": "player_left_8",
+    "supercategory": "person"
+  },
+  {
+    "id": 54,
+    "name": "player_left_9",
+    "supercategory": "person"
+  },
+  {
+    "id": 55,
+    "name": "player_left_93",
+    "supercategory": "person"
+  },
+  {
+    "id": 56,
+    "name": "player_left_99",
+    "supercategory": "person"
+  },
+  {
+    "id": 57,
+    "name": "player_right",
+    "supercategory": "person"
+  },
+  {
+    "id": 58,
+    "name": "player_right_10",
+    "supercategory": "person"
+  },
+  {
+    "id": 59,
+    "name": "player_right_11",
+    "supercategory": "person"
+  },
+  {
+    "id": 60,
+    "name": "player_right_14",
+    "supercategory": "person"
+  },
+  {
+    "id": 61,
+    "name": "player_right_15",
+    "supercategory": "person"
+  },
+  {
+    "id": 62,
+    "name": "player_right_16",
+    "supercategory": "person"
+  },
+  {
+    "id": 63,
+    "name": "player_right_17",
+    "supercategory": "person"
+  },
+  {
+    "id": 64,
+    "name": "player_right_2",
+    "supercategory": "person"
+  },
+  {
+    "id": 65,
+    "name": "player_right_20",
+    "supercategory": "person"
+  },
+  {
+    "id": 66,
+    "name": "player_right_21",
+    "supercategory": "person"
+  },
+  {
+    "id": 67,
+    "name": "player_right_22",
+    "supercategory": "person"
+  },
+  {
+    "id": 68,
+    "name": "player_right_23",
+    "supercategory": "person"
+  },
+  {
+    "id": 69,
+    "name": "player_right_24",
+    "supercategory": "person"
+  },
+  {
+    "id": 70,
+    "name": "player_right_25",
+    "supercategory": "person"
+  },
+  {
+    "id": 71,
+    "name": "player_right_26",
+    "supercategory": "person"
+  },
+  {
+    "id": 72,
+    "name": "player_right_27",
+    "supercategory": "person"
+  },
+  {
+    "id": 73,
+    "name": "player_right_29",
+    "supercategory": "person"
+  },
+  {
+    "id": 74,
+    "name": "player_right_3",
+    "supercategory": "person"
+  },
+  {
+    "id": 75,
+    "name": "player_right_30",
+    "supercategory": "person"
+  },
+  {
+    "id": 76,
+    "name": "player_right_31",
+    "supercategory": "person"
+  },
+  {
+    "id": 77,
+    "name": "player_right_33",
+    "supercategory": "person"
+  },
+  {
+    "id": 78,
+    "name": "player_right_34",
+    "supercategory": "person"
+  },
+  {
+    "id": 79,
+    "name": "player_right_36",
+    "supercategory": "person"
+  },
+  {
+    "id": 80,
+    "name": "player_right_38",
+    "supercategory": "person"
+  },
+  {
+    "id": 81,
+    "name": "player_right_4",
+    "supercategory": "person"
+  },
+  {
+    "id": 82,
+    "name": "player_right_43",
+    "supercategory": "person"
+  },
+  {
+    "id": 83,
+    "name": "player_right_44",
+    "supercategory": "person"
+  },
+  {
+    "id": 84,
+    "name": "player_right_45",
+    "supercategory": "person"
+  },
+  {
+    "id": 85,
+    "name": "player_right_5",
+    "supercategory": "person"
+  },
+  {
+    "id": 86,
+    "name": "player_right_50",
+    "supercategory": "person"
+  },
+  {
+    "id": 87,
+    "name": "player_right_53",
+    "supercategory": "person"
+  },
+  {
+    "id": 88,
+    "name": "player_right_55",
+    "supercategory": "person"
+  },
+  {
+    "id": 89,
+    "name": "player_right_56",
+    "supercategory": "person"
+  },
+  {
+    "id": 90,
+    "name": "player_right_59",
+    "supercategory": "person"
+  },
+  {
+    "id": 91,
+    "name": "player_right_6",
+    "supercategory": "person"
+  },
+  {
+    "id": 92,
+    "name": "player_right_62",
+    "supercategory": "person"
+  },
+  {
+    "id": 93,
+    "name": "player_right_7",
+    "supercategory": "person"
+  },
+  {
+    "id": 94,
+    "name": "player_right_76",
+    "supercategory": "person"
+  },
+  {
+    "id": 95,
+    "name": "player_right_78",
+    "supercategory": "person"
+  },
+  {
+    "id": 96,
+    "name": "player_right_8",
+    "supercategory": "person"
+  },
+  {
+    "id": 97,
+    "name": "player_right_9",
+    "supercategory": "person"
+  },
+  {
+    "id": 98,
+    "name": "player_right_93",
+    "supercategory": "person"
+  },
+  {
+    "id": 99,
+    "name": "referee_main",
+    "supercategory": "person"
+  },
+  {
+    "id": 100,
+    "name": "referee_side_bottom",
+    "supercategory": "person"
+  },
+  {
+    "id": 101,
+    "name": "referee_side_top",
+    "supercategory": "person"
+  }
+]

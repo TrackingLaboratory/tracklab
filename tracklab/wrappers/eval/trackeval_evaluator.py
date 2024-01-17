@@ -1,15 +1,14 @@
 import os
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import logging
 import trackeval
 import wandb
 
+from pathlib import Path
 from tabulate import tabulate
 from tracklab.core import Evaluator as EvaluatorBase
-
+from tracklab.wrappers.eval.soccernet.soccernet_2D_box import SoccerNet2DBox
 
 log = logging.getLogger(__name__)
 
@@ -66,7 +65,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         eval_config['OUTPUT_DETAILED'] = self.cfg.eval.output_detailed
         eval_config['PLOT_CURVES'] = self.cfg.eval.plot_curves
 
-        dataset_config = trackeval.datasets.MotChallenge2DBox.get_default_dataset_config()
+        dataset_config = SoccerNet2DBox.get_default_dataset_config()
         metrics_config = {'METRICS': self.cfg.metrics, 'PRINT_CONFIG': False, 'THRESHOLD': 0.5}
 
         dataset_config['BENCHMARK'] = dataset_name
@@ -77,7 +76,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         dataset_config['OUTPUT_FOLDER'] = self.cfg.dataset.output_folder # Where to save eval results (if None, same as TRACKERS_FOLDER)
         dataset_config['OUTPUT_SUB_FOLDER'] = self.cfg.dataset.output_sub_folder  # Output files are saved in OUTPUT_FOLDER/tracker_name/OUTPUT_SUB_FOLDER
         dataset_config['SEQ_INFO'] = tracker_state.video_metadatas.set_index('name')['nframes'].to_dict()
-        dataset_config['CLASSES_TO_EVAL'] = ['pedestrian']  # Valid: ['pedestrian']
+        dataset_config['CLASSES_TO_EVAL'] = ['pedestrian']  # Valid: ['pedestrian']  # TODO
         dataset_config['SPLIT_TO_EVAL'] = self.cfg.dataset.split_to_eval  # Valid: 'train', 'test', 'all'
         dataset_config['PRINT_CONFIG'] = self.cfg.dataset.print_config  # Whether to print current config
         dataset_config['DO_PREPROC'] = self.cfg.dataset.do_preproc  # Whether to perform preprocessing (never done for MOT15)  # TODO ???
@@ -85,9 +84,19 @@ class TrackEvalEvaluator(EvaluatorBase):
 
         # Run code
         evaluator = trackeval.Evaluator(eval_config)
-        dataset = trackeval.datasets.MotChallenge2DBox(dataset_config)
-        dataset.should_classes_combine = True
-        dataset.should_classes_combine = False
+        dataset = SoccerNet2DBox(dataset_config)
+        # TODO before moving this to soccernet trackeval class, make sure static class creation will work, i.e. empty classes are not processed and do not slow down process
+        classes_to_id = {category["name"]: category["id"]+14 for category in tracker_state.video_metadatas.categories.iloc[0]}
+        classes_to_id.update({'pedestrian': 1, 'person_on_vehicle': 2, 'car': 3, 'bicycle': 4, 'motorbike': 5,
+                                       'non_mot_vehicle': 6, 'static_person': 7, 'distractor': 8, 'occluder': 9,
+                                       'occluder_on_ground': 10, 'occluder_full': 11, 'reflection': 12, 'crowd': 13})
+        dataset.valid_classes = classes_to_id.keys()
+        dataset.class_list = classes_to_id.keys()
+        dataset.class_name_to_class_id = classes_to_id
+
+        dataset.valid_class_numbers = list(dataset.class_name_to_class_id.values())
+        dataset.should_classes_combine = True  # FIXME
+        dataset.use_super_categories = False
         dataset_list = [dataset]
         metrics_list = []
         for metric in [trackeval.metrics.HOTA, trackeval.metrics.CLEAR, trackeval.metrics.Identity,
@@ -97,7 +106,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         if len(metrics_list) == 0:
             raise Exception('No metrics selected for evaluation')
         output_res, output_msg = evaluator.evaluate(dataset_list, metrics_list)
-        results = output_res['MotChallenge2DBox']['tracklab']
+        results = output_res['SoccerNet2DBox']['tracklab']
         combined_results = results.pop('SUMMARIES')
         wandb.log(combined_results)
 
@@ -126,7 +135,7 @@ def save_in_mot_challenge_format(detections, image_metadatas, video_metadatas, s
                     "bb_width",
                     "bb_height",
                     "bbox_conf",
-                    "x",
+                    "category_id",
                     "y",
                     "z",
                 ]
@@ -140,17 +149,6 @@ def save_in_mot_challenge_format(detections, image_metadatas, video_metadatas, s
 
 
 def _mot_encoding(detections, image_metadatas, video_metadatas, bbox_column):
-
-    # image_metadatas = (
-    #     tracker_state.image_metadatas.merge(
-    #         tracker_state.video_metadatas["name"],
-    #         left_on="video_id",
-    #         right_on="id",
-    #     )
-    #     .set_index(tracker_state.image_metadatas.index)
-    #     .rename(columns={"name": "video_name"})
-    # )
-
     detections = detections.copy()
     image_metadatas["id"] = image_metadatas.index
     df = pd.merge(
@@ -170,10 +168,7 @@ def _mot_encoding(detections, image_metadatas, video_metadatas, bbox_column):
         how="any",
         inplace=True,
     )
-    # drop detections that are in ignored regions
-    # df = df[df.ignored == False]
-    # df = self.check_if_tracklet(df)
-    # df = df[df.is_tracklet == True]
+
     if len_before_drop != len(df):
         log.warning(
             "Dropped {} rows with NA values".format(len_before_drop - len(df))
