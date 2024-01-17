@@ -51,9 +51,10 @@ class TrackEvalEvaluator(EvaluatorBase):
 
         log.info("Tracking ground truth saved in MOT Challenge format in {}".format(pred_save_path))
 
-        # Build dataset
+        # Build TrackEval dataset
         dataset_config = self.trackeval_dataset_class.get_default_dataset_config()
         dataset_config['SEQ_INFO'] = tracker_state.video_metadatas.set_index('name')['nframes'].to_dict()
+        dataset_config['BENCHMARK'] = self.trackeval_dataset_class.__name__  # required for trackeval.datasets.MotChallenge2DBox
         for key, value in self.cfg.dataset.items():
             dataset_config[key] = value
         dataset = self.trackeval_dataset_class(dataset_config)
