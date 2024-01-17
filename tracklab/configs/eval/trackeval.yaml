@@ -2,7 +2,7 @@ _target_: tracklab.wrappers.TrackEvalEvaluator
 
 
 eval_set: "val"  # TODO should be dataset config?
-trackeval_dataset_class: SoccerNetGS
+trackeval_dataset_class: ${..dataset.trackeval_dataset_class}  # TrackEval dataset class to use for evaluation, e.g. "MotChallenge2DBox", as defined in the library package "trackeval.datasets". To be defined in the corresponding dataset config.
 
 cfg:
   bbox_column_for_eval: "bbox_ltwh"  # which bbox column to use for evaluation: {"bbox_ltwh", "track_bbox_kf_ltwh", ...}

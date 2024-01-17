@@ -20,7 +20,7 @@ class TrackEvalEvaluator(EvaluatorBase):
     def __init__(self, cfg, eval_set, trackeval_dataset_class, *args, **kwargs):
         self.eval_set = eval_set
         self.cfg = cfg
-        self.trackeval_dataset_class = getattr(trackeval.datasets, trackeval_dataset_class)  # FIXME move elsewhere?
+        self.trackeval_dataset_class = getattr(trackeval.datasets, trackeval_dataset_class)
 
     def run(self, tracker_state):
         log.info("Starting evaluation using TrackEval library (https://github.com/JonathonLuiten/TrackEval)")

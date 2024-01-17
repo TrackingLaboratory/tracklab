@@ -4,3 +4,4 @@ defaults:
 _target_: tracklab.wrappers.DanceTrack
 
 dataset_path: ${data_dir}/DanceTrack
+trackeval_dataset_class: MotChallenge2DBox
