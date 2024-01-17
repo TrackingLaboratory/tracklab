@@ -1,3 +1,4 @@
+import logging
 import os
 import numpy as np
 import pandas as pd
@@ -5,16 +6,19 @@ import pandas as pd
 from pathlib import Path
 from tracklab.datastruct import TrackingDataset, TrackingSet
 
+log = logging.getLogger(__name__)
+
 
 class SoccerNetMOT(TrackingDataset):
     def __init__(self, dataset_path: str, *args, **kwargs):
         self.dataset_path = Path(dataset_path)
         assert self.dataset_path.exists(), f"'{self.dataset_path}' directory does not exist. Please check the path or download the dataset following the instructions here: https://github.com/SoccerNet/sn-tracking"
 
-        train_set = load_set(self.dataset_path / "train")
-        test_set = load_set(self.dataset_path / "test")
+        log.info(f"Loading SoccerNet MOT dataset from {self.dataset_path} ...")
+        train_set = load_set(self.dataset_path / "train")  # 57 videos
+        test_set = load_set(self.dataset_path / "test")  # 49 videos
         # challenge_set = load_set(self.dataset_path / "challenge")
-        challenge_set = None
+        challenge_set = None  #  58 videos
 
         super().__init__(dataset_path, train_set, test_set, challenge_set, *args, **kwargs)
 
