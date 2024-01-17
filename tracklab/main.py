@@ -39,8 +39,7 @@ def main(cfg):
     # Train tracking modules
     for module in modules:
         if module.training_enabled:
-            # module.train()
-            raise NotImplementedError("Module training is not implemented yet.")
+            module.train()
 
     # Test tracking
     if cfg.test_tracking:
