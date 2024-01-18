@@ -20,6 +20,7 @@ defaults:
 # Pipeline definition :
 # - Defines the order in which the modules will be called
 # - If loading a tracking state from disk, remove modules whose outputs are already provided in the loaded state
+# Use 'pipeline: []' for an empty pipeline
 pipeline:
   - bbox_detector
   - reid

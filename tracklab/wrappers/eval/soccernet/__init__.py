@@ -1,1 +1,0 @@
-from .soccernet_mot_evaluator import SoccerNetMOTEvaluator

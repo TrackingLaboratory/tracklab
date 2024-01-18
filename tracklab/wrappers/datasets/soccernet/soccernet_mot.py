@@ -1,7 +1,12 @@
+import logging
 import os
+import numpy as np
 import pandas as pd
+
 from pathlib import Path
 from tracklab.datastruct import TrackingDataset, TrackingSet
+
+log = logging.getLogger(__name__)
 
 
 class SoccerNetMOT(TrackingDataset):
@@ -9,12 +14,13 @@ class SoccerNetMOT(TrackingDataset):
         self.dataset_path = Path(dataset_path)
         assert self.dataset_path.exists(), f"'{self.dataset_path}' directory does not exist. Please check the path or download the dataset following the instructions here: https://github.com/SoccerNet/sn-tracking"
 
-        train_set = load_set(self.dataset_path / "train")
-        val_set = load_set(self.dataset_path / "test")
-        # test_set = load_set(self.dataset_path / "challenge")
-        test_set = None
+        log.info(f"Loading SoccerNet MOT dataset from {self.dataset_path} ...")
+        train_set = load_set(self.dataset_path / "train")  # 57 videos
+        test_set = load_set(self.dataset_path / "test")  # 49 videos
+        # challenge_set = load_set(self.dataset_path / "challenge")
+        challenge_set = None  #  58 videos
 
-        super().__init__(dataset_path, train_set, val_set, test_set, *args, **kwargs)
+        super().__init__(dataset_path, train_set, test_set, challenge_set, *args, **kwargs)
 
 
 def read_ini_file(file_path):
@@ -26,7 +32,7 @@ def read_ini_file(file_path):
 def read_motchallenge_formatted_file(file_path):
     columns = ['image_id', 'track_id', 'left', 'top', 'width', 'height', 'bbox_conf', 'class', 'visibility', 'unused']
     df = pd.read_csv(file_path, header=None, names=columns)
-    df['bbox_ltwh'] = df.apply(lambda row: [row['left'], row['top'], row['width'], row['height']], axis=1)
+    df['bbox_ltwh'] = df.apply(lambda row: np.array([row['left'], row['top'], row['width'], row['height']]), axis=1)
     df['person_id'] = df['track_id']  # Create person_id column with the same content as track_id
     return df[['image_id', 'track_id', 'person_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility']]
 
@@ -182,9 +188,9 @@ def load_set(dataset_path):
     # Set 'id' column as the index in the detections and image dataframe
     detections['id'] = detections.index
 
-    detections.set_index("id", drop=True, inplace=True)
-    image_metadata.set_index("id", drop=True, inplace=True)
-    video_metadata.set_index("id", drop=True, inplace=True)
+    detections.set_index("id", drop=False, inplace=True)
+    image_metadata.set_index("id", drop=False, inplace=True)
+    video_metadata.set_index("id", drop=False, inplace=True)
 
     # Add is_labeled column to image_metadata
     image_metadata['is_labeled'] = True
