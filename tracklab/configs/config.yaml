@@ -5,7 +5,7 @@
 # the first element in the file.
 defaults:
   - _self_
-  - dataset: soccernet_mot
+  - dataset: soccernet_game_state
   - eval: trackeval
   - engine: offline
   - state: no_save

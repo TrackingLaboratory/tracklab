@@ -1,0 +1,8 @@
+defaults:
+  - default
+
+_target_: tracklab.wrappers.SoccerNetGameState
+
+dataset_path: ${data_dir}/SoccerNetGAMESTATE
+annotation_path: ${data_dir}/SoccerNetGAMESTATE
+  

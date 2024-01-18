@@ -16,7 +16,6 @@ class OfflineTrackingEngine(TrackingEngine):
         images = {idx: cv2_load_image(fn) for idx, fn in imgs_meta["file_path"].items()}
         detections = tracker_state.load()
         model_names = self.module_names
-        # print('in offline.py, model_names: ', model_names)
         for model_name in model_names:
             if self.models[model_name].level == "video":
                 detections = self.models[model_name].process(detections, imgs_meta)
