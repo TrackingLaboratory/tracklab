@@ -11,29 +11,12 @@ class SoccerNetGameState(TrackingDataset):
         self.dataset_path = Path(dataset_path)
         assert self.dataset_path.exists(), f"'{self.dataset_path}' directory does not exist. Please check the path or download the dataset following the instructions here: https://github.com/SoccerNet/sn-game-state"
 
-        train_set = load_set(self.dataset_path / "validation")
+        train_set = load_set(self.dataset_path / "train")
         val_set = load_set(self.dataset_path / "validation")
         # test_set = load_set(self.dataset_path / "challenge")
         test_set = None
 
         super().__init__(dataset_path, train_set, val_set, test_set, *args, **kwargs)
-
-
-def read_ini_file(file_path):
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-    return dict(line.strip().split('=') for line in lines[1:])
-
-
-def read_motchallenge_formatted_file(file_path):
-    columns = ['image_id', 'track_id', 'left', 'top', 'width', 'height', 'bbox_conf', 'class', 'visibility', 'unused']
-    df = pd.read_csv(file_path, header=None, names=columns)
-    df['bbox_ltwh'] = df.apply(lambda row: [row['left'], row['top'], row['width'], row['height']], axis=1)
-    df['person_id'] = df['track_id']  # Create person_id column with the same content as track_id
-    return df[['image_id', 'track_id', 'person_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility']]
-
-def row_to_bbox(row):
-    return xywh_to_ltwh([row['bbox_image']['x_center'], row['bbox_image']['y_center'], row['bbox_image']['w'], row['bbox_image']['h']])
 
 def extract_category(attributes):
     if attributes['role'] == 'goalkeeper':
@@ -84,6 +67,7 @@ def dict_to_df_detections(annotation_dict, categories_list):
     df['position'] = None # df.apply(lambda row: row['attributes']['position'], axis=1)         for now there is no position in the json file
     df['category'] = df.apply(lambda row: extract_category(row['attributes']), axis=1)
     df['person_id'] = df['track_id']  # Create person_id column with the same content as track_id
+    df['image_id'] = df['image_id'].astype(int)
     columns = ['id', 'image_id', 'track_id', 'person_id', 'bbox_ltwh', 'bbox_pitch', 'team', 'role', 'jersey_number', 'position', 'category']
     df = df[columns]
     
@@ -103,7 +87,7 @@ def load_set(dataset_path):
     detections_list = []
     categories_list = []
 
-    # image_counter = 0
+    image_counter = 0
     for video_folder in sorted(os.listdir(dataset_path)):  # Sort videos by name
         video_folder_path = os.path.join(dataset_path, video_folder)
         if os.path.isdir(video_folder_path):
@@ -117,7 +101,7 @@ def load_set(dataset_path):
             categories_data = gamestate_data['categories']
             
             detections_df, annotations_pitch_camera, video_level_categories = dict_to_df_detections(annotations_data, categories_data)
-            
+            # detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
             detections_df['video_id'] = len(video_metadatas_list) + 1
             detections_df['visibility'] = 1
             detections_list.append(detections_df)
@@ -132,19 +116,19 @@ def load_set(dataset_path):
                 'seq_length': nframes,
                 'im_width': int(images_data[0].get('width', 0)),
                 'im_height': int(images_data[0].get('height', 0)),
-                'game_id': int(info_data.get('gameID', 0)),         # TODO not found in json file
-                'action_position': int(info_data.get('actionPosition', 0)), # TODO not found in json file
-                'action_class': info_data.get('actionClass', ''),       # TODO not found in json file
-                'visibility': info_data.get('visibility', ''),          # TODO not found in json file
-                'clip_start': int(info_data.get('clipStart', 0)),       # TODO not found in json file
-                'game_time_start': info_data.get('gameTimeStart', '').split(' - ')[1],  # TODO not found in json file
+                'game_id': int(info_data.get('gameID', 0)),         
+                'action_position': int(info_data.get('actionPosition', 0)), 
+                'action_class': info_data.get('actionClass', ''),       
+                'visibility': info_data.get('visibility', ''),          
+                'clip_start': int(info_data.get('clipStart', 0)),       
+                'game_time_start': info_data.get('gameTimeStart', '').split(' - ')[1],  
                 # Remove the half period index
-                'game_time_stop': info_data.get('gameTimeStop', '').split(' - ')[1],  # Remove the half period index # TODO not found in json file
-                'clip_stop': int(info_data.get('clipStop', 0)),     # TODO not found in json file
+                'game_time_stop': info_data.get('gameTimeStop', '').split(' - ')[1],  # Remove the half period index 
+                'clip_stop': int(info_data.get('clipStop', 0)),     
                 'num_tracklets': int(info_data.get('num_tracklets', 0)),
-                'half_period_start': int(info_data.get('gameTimeStart', '').split(' - ')[0]),   # TODO not found in json file
+                'half_period_start': int(info_data.get('gameTimeStart', '').split(' - ')[0]),   
                 # Add the half period start column
-                'half_period_stop': int(info_data.get('gameTimeStop', '').split(' - ')[0]),    # TODO not found in json file
+                'half_period_stop': int(info_data.get('gameTimeStop', '').split(' - ')[0]),    
                 # Add the half period stop column
             }
             
@@ -157,14 +141,15 @@ def load_set(dataset_path):
             img_folder_path = os.path.join(video_folder_path, info_data.get('im_dir', 'img1'))
             img_metadata_df = pd.DataFrame({
                 'frame': [i for i in range(0, nframes)],
-                'id': [i['image_id'] for i in images_data],
+                'id': [int(i['image_id']) for i in images_data],
+                # 'id': [image_counter + i for i in range(0, nframes)],
                 'video_id': len(video_metadatas_list),
                 'file_path': [os.path.join(img_folder_path, i['file_name']) for i in
                               images_data],
                 'is_labeled': [i['is_labeled'] for i in images_data]
 
             })
-            # image_counter += nframes
+            image_counter += nframes
             image_metadata_list.append(img_metadata_df)
 
     categories_list = [{'id': i + 1, 'name': category, 'supercategory': 'person'} for i, category in
@@ -190,8 +175,6 @@ def load_set(dataset_path):
     image_metadata.set_index("id", drop=True, inplace=True)
     video_metadata.set_index("id", drop=True, inplace=True)
 
-    # # Add is_labeled column to image_metadata
-    # image_metadata['is_labeled'] = True
 
     # Reorder columns in dataframes
     video_metadata_columns = ['name', 'nframes', 'frame_rate', 'seq_length', 'im_width', 'im_height', 'game_id', 'action_position',
