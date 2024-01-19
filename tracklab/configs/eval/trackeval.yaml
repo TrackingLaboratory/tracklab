@@ -2,34 +2,36 @@ _target_: tracklab.wrappers.TrackEvalEvaluator
 
 
 eval_set: "val"  # TODO should be dataset config?
+trackeval_dataset_class: ${..dataset.trackeval_dataset_class}  # TrackEval dataset class to use for evaluation, e.g. "MotChallenge2DBox", as defined in the library package "trackeval.datasets". To be defined in the corresponding dataset config.
+show_progressbar: True  # Show progressbar during evaluation
 
 cfg:
   bbox_column_for_eval: "bbox_ltwh"  # which bbox column to use for evaluation: {"bbox_ltwh", "track_bbox_kf_ltwh", ...}
-  eval:  # mapped to trackeval/eval.py
-    use_parallel: False
-    num_parallel_cores: ${num_cores}
-    break_on_error: True  # Raises exception and exits with error
-    print_results: True
-    print_only_combined: True
-    print_config: False
-    time_progress: False
-    display_less_progress: False
-    output_summary: True
-    output_empty_classes: True  # If False, summary files are not output for classes with no detections
-    output_detailed: True
-    plot_curves: True
-  metrics:
+  metrics:  # List of performance metrics to compute as listed in "trackeval.metrics"
     - "HOTA"
     - "CLEAR"
     - "Identity"
+  eval:  # mapped to trackeval/eval.py
+    USE_PARALLEL: False  # TODO try
+    NUM_PARALLEL_CORES: ${num_cores}
+    BREAK_ON_ERROR: True  # Raises exception and exits with error
+    PRINT_RESULTS: True
+    PRINT_ONLY_COMBINED: True
+    PRINT_CONFIG: False
+    TIME_PROGRESS: False
+    DISPLAY_LESS_PROGRESS: False
+    OUTPUT_SUMMARY: True
+    OUTPUT_EMPTY_CLASSES: True  # If False, summary files are not output for classes with no detections
+    OUTPUT_DETAILED: True
+    PLOT_CURVES: True
   dataset:  # mapped to trackeval/datasets/mot_challenge_2d_box.py
-    gt_folder: "eval/gt" # Location of GT data
-    gt_loc_format: '{gt_folder}/{seq}.txt' # '{gt_folder}/{seq}/gt/gt.txt'
-    trackers_folder: 'eval/pred' # Trackers location
-    tracker_sub_folder: '' # Tracker files are in TRACKER_FOLDER/tracker_name/TRACKER_SUB_FOLDER
-    output_folder: "eval/results" # Where to save eval results (if None, same as TRACKERS_FOLDER)
-    output_sub_folder: '' # Output files are saved in OUTPUT_FOLDER/tracker_name/OUTPUT_SUB_FOLDER
-    split_to_eval: ${...eval_set}
-    print_config: False
-    do_preproc: False
-    tracker_display_names: null
+    GT_FOLDER: "eval/gt" # Location of GT data
+    GT_LOC_FORMAT: '{gt_folder}/{seq}.txt' # '{gt_folder}/{seq}/gt/gt.txt'
+    TRACKERS_FOLDER: 'eval/pred' # Trackers location
+    TRACKER_SUB_FOLDER: '' # Tracker files are in TRACKER_FOLDER/tracker_name/TRACKER_SUB_FOLDER
+    OUTPUT_FOLDER: "eval/results" # Where to save eval results (if None, same as TRACKERS_FOLDER)
+    OUTPUT_SUB_FOLDER: '' # Output files are saved in OUTPUT_FOLDER/tracker_name/OUTPUT_SUB_FOLDER
+    SPLIT_TO_EVAL: ${...eval_set}
+    PRINT_CONFIG: False
+    DO_PREPROC: False
+    TRACKER_DISPLAY_NAMES: null

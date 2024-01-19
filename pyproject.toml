@@ -24,7 +24,8 @@ myst-parser = "^2.0"
 filterpy = "^1.4.5"
 torch = {version = "1.13.1", source = "pytorch"}
 torchvision = {version = "0.14.1", source = "pytorch"}
-mmdet = "^3.2.0"
+mmdet = "~3.1.0"
+mmocr = "^1.0.1"
 chumpy = "0.66"
 mmpose = {git = "https://github.com/PbTrack/mmpose", rev = "pbtrack", develop = true}
 lap = {git = "https://github.com/PbTrack/lap"}
