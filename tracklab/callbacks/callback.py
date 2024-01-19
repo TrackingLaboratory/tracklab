@@ -35,6 +35,25 @@ class Callback:
     ):
         pass
 
+    def on_image_loop_start(
+        self,
+        engine: "TrackingEngine",
+        image_metadata: pd.Series,
+        image_idx: int,
+        index: int,
+    ):
+        pass
+
+    def on_image_loop_end(
+        self,
+        engine: "TrackingEngine",
+        image_metadata: pd.Series,
+        image,
+        image_idx: int,
+        detections: pd.DataFrame,
+    ):
+        pass
+
     def on_module_start(
         self, engine: "TrackingEngine", task: str, dataloader: DataLoader
     ):

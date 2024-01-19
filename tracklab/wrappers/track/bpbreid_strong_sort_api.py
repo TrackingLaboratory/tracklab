@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import torch
 import numpy as np
 import pandas as pd
@@ -29,9 +31,10 @@ class BPBReIDStrongSORT(ImageLevelModule):
         "state",
     ]
 
-    def __init__(self, cfg, device, batch_size):
-        super().__init__(cfg, device, batch_size)
+    def __init__(self, cfg, device, batch_size=None, **kwargs):
+        super().__init__(batch_size=1)
         self.cfg = cfg
+        self.device = device
         self.reset()
 
     def reset(self):
@@ -69,27 +72,22 @@ class BPBReIDStrongSORT(ImageLevelModule):
             self.prev_frame = next_frame
 
     @torch.no_grad()
-    def preprocess(self, detection: pd.Series, metadata: pd.Series):
-        bbox_ltwh = detection.bbox_ltwh
-        if hasattr(detection, "bbox_conf"):
-            score = detection.bbox.conf()
+    def preprocess(self, image, detections: pd.DataFrame, metadata: pd.Series):
+        if hasattr(detections, "bbox_conf"):
+            score = detections.bbox.conf()
         else:
-            score = detection.keypoints_conf
-        reid_features = detection.embeddings  # .flatten()
-        visibility_score = detection.visibility_scores
-        id = detection.name
-        classes = np.array(0)
-        keypoints = detection.keypoints_xyc
-        return (
-            id,
-            bbox_ltwh,
-            reid_features,
-            visibility_score,
-            score,
-            classes,
-            metadata.frame,
-            keypoints,
+            score = detections.keypoints_conf
+        input_tuple = (
+            detections.index.to_numpy(),
+            np.stack(detections.bbox_ltwh),
+            np.stack(detections.embeddings),
+            np.stack(detections.visibility_scores),
+            np.stack(score),
+            np.zeros(len(detections.index)),
+            np.ones(len(detections.index)) * metadata.frame,
+            np.stack(detections.keypoints_xyc),
         )
+        return input_tuple
 
     @torch.no_grad()
     def process(self, batch, image, detections: pd.DataFrame):
