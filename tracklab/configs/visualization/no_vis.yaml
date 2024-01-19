@@ -3,6 +3,7 @@ _target_: tracklab.core.VisualizationEngine
 cfg:
   save_images: False
   save_videos: False
+  show_online: False
 
   process_n_videos: 0                      # -1 to process all videos
   process_n_frames_by_video: 0             # -1 to process all the frames

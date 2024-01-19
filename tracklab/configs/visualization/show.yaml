@@ -2,8 +2,8 @@ _target_: tracklab.core.VisualizationEngine
 
 cfg:
   save_images: False
-  save_videos: True
-  show_online: False
+  save_videos: False
+  show_online: True
 
   process_n_videos: -1                      # Amount of video to visualize, -1 to process all videos
   process_n_frames_by_video: -1             # Amount of images to visualize per video, -1 to process all the frames
@@ -12,8 +12,8 @@ cfg:
 
   prediction:
     draw_bbox: True
-    draw_keypoints: False
-    draw_skeleton: False
+    draw_keypoints: True
+    draw_skeleton: True
     draw_unmatched: False
     display_jersey_number: True
     print_id: True
