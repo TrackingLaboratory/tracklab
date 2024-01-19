@@ -96,9 +96,6 @@ class BPBReId(DetectionLevelModule):
         self.training_enabled = training_enabled
         self.feature_extractor = None
         self.model = None
-        self.coco_transform = masks_preprocess_transforms[
-            self.cfg.model.bpbreid.masks.preprocess
-        ]()
 
     @torch.no_grad()
     def preprocess(

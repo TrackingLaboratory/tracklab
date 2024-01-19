@@ -35,7 +35,7 @@ class EngineDatapipe(Dataset):
             return sample
         elif self.model.level == "image":
             metadata = self.img_metadatas.iloc[idx]
-            if len(self.detections) > 0:
+            if self.detections is not None and len(self.detections) > 0:
                 detections = self.detections[self.detections.image_id == metadata.name]
             else:
                 detections = self.detections

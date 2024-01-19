@@ -580,7 +580,7 @@ class ReidDataset(ImageDataset):
         for df in dataframes:
             df = df.copy()  # to avoid SettingWithCopyWarning
             # use video id as camera id: camid is used at inference to filter out gallery samples given a query sample
-            df["camid"] = df["video_id"]
+            df["camid"] = df["image_id"]  # FIXME use 'video_id' and 'mot_inter_intra_video'
             df["img_path"] = df["reid_crop_path"]
             # remove bbox_head as it is not available for each sample
             # df to list of dict
