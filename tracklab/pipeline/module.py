@@ -77,6 +77,9 @@ class Pipeline:
     def __getitem__(self, item: int):
         return self.models[item]
 
+    def is_empty(self):
+        return len(self.models) == 0
+
 
 class Skip(Module):
     def __init__(self, **kwargs):
