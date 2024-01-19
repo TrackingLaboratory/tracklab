@@ -4892,6 +4892,25 @@ type = "directory"
 url = "plugins/track"
 
 [[package]]
+name = "trackeval"
+version = "1.0.dev1"
+description = "Code for evaluating object tracking"
+optional = false
+python-versions = "*"
+files = []
+develop = true
+
+[package.dependencies]
+numpy = "*"
+scipy = "*"
+
+[package.source]
+type = "git"
+url = "https://github.com/TrackingLaboratory/TrackEval.git"
+reference = "HEAD"
+resolved_reference = "3631212605aa5afad2c759c8cbceb9e96af6ca87"
+
+[[package]]
 name = "typing-extensions"
 version = "4.9.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -5326,4 +5345,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "54df2a61cb172e2f6efed9b1ee818a86b00084f45837809d4208839c29ee9ae5"
+content-hash = "1da00d25cb0ca0c1ebd74f63df8fae8ecbf295286faa4de3c85818f618c380c5"
