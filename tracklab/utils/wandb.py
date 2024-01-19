@@ -53,23 +53,7 @@ def init(cfg):
     use_wandb = cfg.use_wandb
     if use_wandb:
         cfg = OmegaConf.to_container(cfg, resolve=True)
-        new_cfg = {}
-        for key, values in keep_dict.items():
-            subdict = cfg[key]
-            subdict = normalize_subdict(subdict)
-            if values is True:
-                new_cfg[key] = subdict
-            else:
-                new_subdict = {}
-                for value in values + ["target"]:
-                    if value in subdict:
-                        new_subdict[value] = subdict[value]
-                        if value == "target":
-                            new_subdict[value] = new_subdict[value].split(".")[-1]
-
-                new_cfg[key] = new_subdict
-
-        wandb.init(project=cfg["experiment_name"], entity="tracklab", config=new_cfg)
+        wandb.init(project=cfg["experiment_name"], config=cfg)
 
 
 def log(res_dict, name, video_dict=None):

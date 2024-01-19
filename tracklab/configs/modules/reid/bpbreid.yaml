@@ -7,6 +7,7 @@ batch_size: 64
 job_id: "${oc.env:SLURM_JOBID,0}" # TODO
 save_path: reid
 use_keypoints_visibility_scores_for_reid: False
+training_enabled: False
 cfg:
   project:
     name: "PbTrack"
@@ -18,7 +19,7 @@ cfg:
       use_wandb: False
   data:
     #root: "${data_dir}/reid"
-    root: "/home/user01/Amir/Tracking/SoccerNet/reid"
+    root: "/home/user01/Amir/Tracking/SoccerNet/reid2"
     type: "image"
     sources: ["SoccerNet"]
     targets: ["SoccerNet"]

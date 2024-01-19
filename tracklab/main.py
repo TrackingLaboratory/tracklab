@@ -44,10 +44,10 @@ def main(cfg):
 
     # Test tracking
     if cfg.test_tracking:
-        log.info(f"Starting tracking operation on {cfg.eval.test_set} set.")
+        log.info(f"Starting tracking operation on {cfg.eval.eval_set} set.")
 
         # Init tracker state and tracking engine
-        tracking_set = getattr(tracking_dataset, cfg.eval.test_set + "_set")
+        tracking_set = getattr(tracking_dataset, cfg.eval.eval_set + "_set")
         tracker_state = TrackerState(tracking_set, modules=pipeline, **cfg.state)
         tracking_engine = instantiate(
             cfg.engine,

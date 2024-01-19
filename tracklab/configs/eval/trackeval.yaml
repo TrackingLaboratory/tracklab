@@ -1,0 +1,35 @@
+_target_: tracklab.wrappers.TrackEvalEvaluator
+
+
+eval_set: "val"  # TODO should be dataset config?
+
+cfg:
+  bbox_column_for_eval: "bbox_ltwh"  # which bbox column to use for evaluation: {"bbox_ltwh", "track_bbox_kf_ltwh", ...}
+  eval:  # mapped to trackeval/eval.py
+    use_parallel: False
+    num_parallel_cores: ${num_cores}
+    break_on_error: True  # Raises exception and exits with error
+    print_results: True
+    print_only_combined: True
+    print_config: False
+    time_progress: False
+    display_less_progress: False
+    output_summary: True
+    output_empty_classes: True  # If False, summary files are not output for classes with no detections
+    output_detailed: True
+    plot_curves: True
+  metrics:
+    - "HOTA"
+    - "CLEAR"
+    - "Identity"
+  dataset:  # mapped to trackeval/datasets/mot_challenge_2d_box.py
+    gt_folder: "eval/gt" # Location of GT data
+    gt_loc_format: '{gt_folder}/{seq}.txt' # '{gt_folder}/{seq}/gt/gt.txt'
+    trackers_folder: 'eval/pred' # Trackers location
+    tracker_sub_folder: '' # Tracker files are in TRACKER_FOLDER/tracker_name/TRACKER_SUB_FOLDER
+    output_folder: "eval/results" # Where to save eval results (if None, same as TRACKERS_FOLDER)
+    output_sub_folder: '' # Output files are saved in OUTPUT_FOLDER/tracker_name/OUTPUT_SUB_FOLDER
+    split_to_eval: ${...eval_set}
+    print_config: False
+    do_preproc: False
+    tracker_display_names: null

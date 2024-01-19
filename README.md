@@ -64,7 +64,10 @@ Get into your repo and install the requirements with :
 
 ```bash
 pip install -e .
-mim install mmcv-full
+# mim install mmcv-full
+mim install mmcv
+mim install mmdet
+mim install mmocr
 ```
 
 You might need to redo this if you update the repository, and some dependencies changed.
@@ -155,3 +158,23 @@ At the end of the tracking process, the TrackerState object contains the trackin
 Visualizations (e.g. .mp4 results videos) are generated during the TrackingEngine.run() call, after a video has been tracked and before the next video is processed.
 Finally, evaluation is performed via the evaluator.run() function once the TrackingEngine.run() call is completed, i.e. after all videos have been processed.
 
+## Tutorials
+### Dump and load the tracker state to save computation time
+When developing a new module, it is often useful to dump the tracker state to disk to save computation time and avoid running the other modules several times.
+Here is how to do it:
+1. First, save the tracker state by using the corresponding configuration in the config.yaml file:
+```
+defaults:
+    - state: save
+    ...
+```
+2. Run Tracklab. The tracker state will be saved in the experiment folder as a .pcklz file.
+3. Then modify "tracklab/configs/state/load.yaml" to specify the path to the tracker state file that has just been created (`load_file: "..."` config).
+4. Then change config.yaml to load the tracker state by using the corresponding configuration in the config.yaml file:
+```
+defaults:
+    - state: load
+    ...
+```
+5. In config.yaml, remove from the pipeline all modules that should not be executed again. For instance, if you want to use the detections and reid embeddings from the saved tracker state, remove the "bbox_detector" and "reid" modules from the pipeline. Use `pipeline: []` if no module should be run again.
+6. Run Tracklab again.
