@@ -1,0 +1,12 @@
+_target_: tracklab.engine.VideoOnlineTrackingEngine
+
+filename: "/home/vjoosdeterb/Downloads/ilids/AVSS_AB_EVAL_divx.avi"
+target_fps: 1
+num_workers: ${num_cores}
+callbacks:
+#  progress:
+#    _target_: tracklab.callbacks.Progressbar
+  ignored_regions:
+    _target_: tracklab.callbacks.IgnoredRegions
+    max_intersection: 0.9
+  vis: ${visualization}
