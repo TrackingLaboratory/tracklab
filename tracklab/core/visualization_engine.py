@@ -1,3 +1,5 @@
+import platform
+
 import cv2
 import numpy as np
 import pandas as pd
@@ -60,6 +62,48 @@ class VisualizationEngine(Callback):
         self.save_dir = Path("visualization")
         self.processed_video_counter = 0
         self.process = None
+        self.video_name = None
+        self.windows = []
+
+    def on_image_loop_end(
+        self,
+        engine: "TrackingEngine",
+        image_metadata: pd.Series,
+        image,
+        image_idx: int,
+        detections: pd.DataFrame,
+    ):
+        if self.cfg.show_online:
+            tracker_state = engine.tracker_state
+            if tracker_state.detections_gt is not None:
+                ground_truths = tracker_state.detections_gt[
+                    tracker_state.detections_gt.image_id == image_metadata.name
+                ]
+            else:
+                ground_truths = None
+            if len(detections) == 0:
+                image = image
+            else:
+                detections = detections[detections.image_id == image_metadata.name]
+                image = self.draw_frame(image_metadata,
+                                        detections, ground_truths, "inf", image=image)
+            if platform.system() == "Linux" and self.video_name not in self.windows:
+                self.windows.append(self.video_name)
+                cv2.namedWindow(str(self.video_name),
+                                cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)  # allow window resize (Linux)
+                cv2.resizeWindow(str(self.video_name), image.shape[1], image.shape[0])
+            cv2.imshow(str(self.video_name), image)
+            cv2.waitKey(1)
+
+    def on_video_loop_start(
+        self,
+        engine: "TrackingEngine",
+        video_metadata: pd.Series,  # FIXME keep ?
+        # image_metadatas: pd.DataFrame,  # FIXME add ?
+        video_idx: int,
+        index: int,  # FIXME change name ?
+    ):
+        self.video_name = video_metadata.name
 
     def on_video_loop_end(self, engine, video_metadata, video_idx, detections):
         if self.cfg.save_videos or self.cfg.save_images:
@@ -103,11 +147,25 @@ class VisualizationEngine(Callback):
     def _process_frame(
         self, image_metadata, detections_pred, ground_truths, video_name, nframes
     ):
-        # load image
-        patch = cv2_load_image(image_metadata.file_path)
-        # if self.cfg.resize is not None:
-        #     raise NotImplementedError("Resize is not fully yet, bbox/keypoints need to be resized to...")
-        #     patch = cv2.resize(patch, self.cfg.resize, interpolation=cv2.INTER_CUBIC)
+        patch = self.draw_frame(image_metadata, detections_pred, ground_truths, nframes)
+        # save files
+        if self.cfg.save_images:
+            filepath = (
+                self.save_dir
+                / "images"
+                / str(video_name)
+                / Path(image_metadata.file_path).name
+            )
+            filepath.parent.mkdir(parents=True, exist_ok=True)
+            assert cv2.imwrite(str(filepath), patch)
+        if self.cfg.save_videos:
+            self._update_video(patch, video_name)
+
+    def draw_frame(self, image_metadata, detections_pred, ground_truths, nframes, image=None):
+        if image is not None:
+            patch = image
+        else:
+            patch = cv2_load_image(image_metadata.file_path)
 
         # print count of frame
         print_count_frame(patch, image_metadata.frame, nframes)
@@ -127,19 +185,7 @@ class VisualizationEngine(Callback):
 
         # postprocess image
         patch = final_patch(patch)
-
-        # save files
-        if self.cfg.save_images:
-            filepath = (
-                self.save_dir
-                / "images"
-                / str(video_name)
-                / Path(image_metadata.file_path).name
-            )
-            filepath.parent.mkdir(parents=True, exist_ok=True)
-            assert cv2.imwrite(str(filepath), patch)
-        if self.cfg.save_videos:
-            self._update_video(patch, video_name)
+        return patch
 
     def _draw_detection(self, patch, detection, is_prediction):
         is_matched = pd.notna(detection.track_id)
