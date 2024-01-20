@@ -30,7 +30,7 @@ lap = {git = "https://github.com/PbTrack/lap"}
 track-bench-track = {path = "plugins/track", develop = true}
 mmengine = "^0.10.1"
 timm = "^0.9.12"
-torchreid = {git = "https://github.com/victorjoos/bpbreid.git"}
+torchreid = {git = "https://github.com/VlSomers/prtreid"}
 openpifpaf = "^0.13.11"
 easyocr = "^1.7.1"
 soccernet = "^0.1.53"
