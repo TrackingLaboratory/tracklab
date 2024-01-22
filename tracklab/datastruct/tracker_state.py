@@ -26,9 +26,9 @@ class TrackerState(AbstractContextManager):
             load_from_groundtruth=False,
             compression=zipfile.ZIP_STORED,
             bbox_format=None,
-            modules=None,
+            pipeline=None,
     ):
-        modules = modules or {}
+        self.pipeline = pipeline or {}
         self.video_metadatas = tracking_set.video_metadatas
         self.image_metadatas = tracking_set.image_metadatas
         self.detections_gt = tracking_set.detections_gt
@@ -54,7 +54,7 @@ class TrackerState(AbstractContextManager):
         self.input_columns = set()
         self.output_columns = set()
         self.forget_columns = []
-        for module in modules:
+        for module in self.pipeline:
             self.input_columns |= (set(module.input_columns) - self.output_columns)
             self.output_columns |= set(module.output_columns)
             self.forget_columns += getattr(module, "forget_columns", [])
@@ -80,7 +80,10 @@ class TrackerState(AbstractContextManager):
         # FIXME only work for topdown -> handle bottomup
         # We consider here that detect_multi detects the bbox
         # and that detect_single detects the keypoints
-        self.detections_pred = self.detections_gt.copy()[load_columns]
+        if self.pipeline.is_empty():
+            self.detections_pred = self.detections_gt.copy()  # load all columns if pipeline is empty
+        else:
+            self.detections_pred = self.detections_gt.copy()[load_columns]
 
     def load_detections_pred_from_json(self, json_file):
         anns_path = Path(json_file)
@@ -218,10 +221,11 @@ class TrackerState(AbstractContextManager):
                         'utf-8')
                     fp.write(summary_bytes)
             with self.zf["save"].open(f"{self.video_id}.pkl", "w") as fp:
-                detections_pred = self.detections_pred[
-                    self.detections_pred.video_id == self.video_id
-                    ]
-                pickle.dump(detections_pred, fp, protocol=pickle.DEFAULT_PROTOCOL)
+                if not self.detections_pred.empty:
+                    detections_pred = self.detections_pred[
+                        self.detections_pred.video_id == self.video_id
+                        ]
+                    pickle.dump(detections_pred, fp, protocol=pickle.DEFAULT_PROTOCOL)
         else:
             log.info(f"{self.video_id} already exists in {self.save_file} file")
 

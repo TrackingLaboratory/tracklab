@@ -27,6 +27,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         log.info("Starting evaluation using TrackEval library (https://github.com/JonathonLuiten/TrackEval)")
 
         tracker_name = 'tracklab'
+        save_classes = self.trackeval_dataset_class.__name__ != 'MotChallenge2DBox'
 
         # Save predictions in MOT Challenge format (.txt)
         pred_save_path = Path(self.cfg.dataset.TRACKERS_FOLDER) / f"{self.trackeval_dataset_class.__name__}-{self.eval_set}" / tracker_name
@@ -34,7 +35,9 @@ class TrackEvalEvaluator(EvaluatorBase):
                                      tracker_state.image_metadatas,
                                      tracker_state.video_metadatas,
                                      pred_save_path,
-                                     self.cfg.bbox_column_for_eval)
+                                     self.cfg.bbox_column_for_eval,
+                                     save_classes,  # do not use classes for MOTChallenge2DBox
+                                     )
 
         log.info("Tracking predictions saved in MOT Challenge format in {}".format(pred_save_path))
 
@@ -43,12 +46,14 @@ class TrackEvalEvaluator(EvaluatorBase):
                 f"Stopping evaluation because the current split ({self.eval_set}) has no ground truth detections.")
             return
 
-        # Save ground truth in MOT Challenge format (.txt)  # FIXME remove
+        # Save ground truth in MOT Challenge format (.txt)
         save_in_mot_challenge_format(tracker_state.detections_gt,
                                      tracker_state.image_metadatas,
                                      tracker_state.video_metadatas,
                                      Path(self.cfg.dataset.GT_FOLDER) / f"{self.trackeval_dataset_class.__name__}-{self.eval_set}",
-                                     self.cfg.bbox_column_for_eval)
+                                     self.cfg.bbox_column_for_eval,
+                                     save_classes,  # do not use classes for MOTChallenge2DBox
+                                     )
 
         log.info("Tracking ground truth saved in MOT Challenge format in {}".format(pred_save_path))
 
@@ -85,7 +90,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         wandb.log(combined_results)
 
 
-def save_in_mot_challenge_format(detections, image_metadatas, video_metadatas, save_folder, bbox_column_for_eval="bbox_ltwh"):
+def save_in_mot_challenge_format(detections, image_metadatas, video_metadatas, save_folder, bbox_column_for_eval="bbox_ltwh", save_classes=False):
     mot_df = _mot_encoding(detections, image_metadatas, video_metadatas, bbox_column_for_eval)
 
     save_path = os.path.join(save_folder)
@@ -100,6 +105,7 @@ def save_in_mot_challenge_format(detections, image_metadatas, video_metadatas, s
             file_df["frame"] = file_df["frame"] + 1  # MOT Challenge format starts at 1
         if not file_df.empty:
             file_df.sort_values(by="frame", inplace=True)
+            clazz = "category_id" if save_classes else "x"
             file_df[
                 [
                     "frame",
@@ -109,7 +115,7 @@ def save_in_mot_challenge_format(detections, image_metadatas, video_metadatas, s
                     "bb_width",
                     "bb_height",
                     "bbox_conf",
-                    "category_id",
+                    clazz,
                     "y",
                     "z",
                 ]

@@ -58,7 +58,7 @@ cfg:
       masks:
         type: "disk"
         dir: "${.....dataset.masks_mode}" # relative import, with a lot of indirection
-        preprocess: "cc6"
+        preprocess: "id"
 
   loss:
     name: 'part_based'

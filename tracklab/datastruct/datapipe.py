@@ -1,17 +1,18 @@
 from torch.utils.data import Dataset
+from tracklab.utils.cv2 import cv2_load_image
 
 
 class EngineDatapipe(Dataset):
     def __init__(self, model) -> None:
         self.model = model
-        self.images = None
+        self.image_filepaths = None
         self.img_metadatas = None
         self.detections = None
 
-    def update(self, images: dict, img_metadatas, detections):
+    def update(self, image_filepaths: dict, img_metadatas, detections):
         del self.img_metadatas
         del self.detections
-        self.images = images
+        self.image_filepaths = image_filepaths
         self.img_metadatas = img_metadatas
         self.detections = detections
 
@@ -27,7 +28,7 @@ class EngineDatapipe(Dataset):
         if self.model.level == "detection":
             detection = self.detections.iloc[idx]
             metadata = self.img_metadatas.loc[detection.image_id]
-            image = self.images[metadata.name]
+            image = cv2_load_image(self.image_filepaths[metadata.name])
             sample = (
                 detection.name,
                 self.model.preprocess(image=image, detection=detection, metadata=metadata),
@@ -35,11 +36,11 @@ class EngineDatapipe(Dataset):
             return sample
         elif self.model.level == "image":
             metadata = self.img_metadatas.iloc[idx]
-            if len(self.detections) > 0:
+            if self.detections is not None and len(self.detections) > 0:
                 detections = self.detections[self.detections.image_id == metadata.name]
             else:
                 detections = self.detections
-            image = self.images[metadata.name]
+            image = cv2_load_image(self.image_filepaths[metadata.name])
             sample = (self.img_metadatas.index[idx], self.model.preprocess(
                 image=image, detections=detections, metadata=metadata))
             return sample
