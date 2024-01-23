@@ -55,6 +55,7 @@ def extract_category(attributes):
     
 def dict_to_df_detections(annotation_dict, categories_list):
     df = pd.DataFrame.from_dict(annotation_dict)
+    df['image_id'] = df['image_id'].astype(int)
 
     annotations_pitch_camera = df.loc[df['supercategory'] != 'object']   # remove the rows with non-human categories
     
@@ -67,7 +68,7 @@ def dict_to_df_detections(annotation_dict, categories_list):
     df['position'] = None # df.apply(lambda row: row['attributes']['position'], axis=1)         for now there is no position in the json file
     df['category'] = df.apply(lambda row: extract_category(row['attributes']), axis=1)
     df['person_id'] = df['track_id']  # Create person_id column with the same content as track_id
-    df['image_id'] = df['image_id'].astype(int)
+    
     columns = ['id', 'image_id', 'track_id', 'person_id', 'bbox_ltwh', 'bbox_pitch', 'team', 'role', 'jersey_number', 'position', 'category']
     df = df[columns]
     
@@ -84,6 +85,7 @@ def read_json_file(file_path):
 def load_set(dataset_path):
     video_metadatas_list = []
     image_metadata_list = []
+    annotations_pitch_camera_list = []
     detections_list = []
     categories_list = []
 
@@ -100,7 +102,7 @@ def load_set(dataset_path):
             annotations_data = gamestate_data['annotations']
             categories_data = gamestate_data['categories']
             
-            detections_df, annotations_pitch_camera, video_level_categories = dict_to_df_detections(annotations_data, categories_data)
+            detections_df, annotation_pitch_camera_df, video_level_categories = dict_to_df_detections(annotations_data, categories_data)
             # detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
             detections_df['video_id'] = len(video_metadatas_list) + 1
             detections_df['visibility'] = 1
@@ -136,6 +138,8 @@ def load_set(dataset_path):
 
             # Append video metadata
             video_metadatas_list.append(video_metadata)
+            
+            
 
             # Append image metadata
             img_folder_path = os.path.join(video_folder_path, info_data.get('im_dir', 'img1'))
@@ -146,11 +150,19 @@ def load_set(dataset_path):
                 'video_id': len(video_metadatas_list),
                 'file_path': [os.path.join(img_folder_path, i['file_name']) for i in
                               images_data],
-                'is_labeled': [i['is_labeled'] for i in images_data]
-
+                'is_labeled': [i['is_labeled'] for i in images_data],
             })
+            # extract the camera parameters
+            video_camera_df = annotation_pitch_camera_df.loc[annotation_pitch_camera_df['supercategory'] == 'camera']
+            columns = ['image_id', 'parameters', 'relative_mean_reproj', 'accuracy@5']
+            video_camera_df = video_camera_df[columns]
+            # add camera parameters to the image metadata
+            img_metadata_df = pd.DataFrame.merge(img_metadata_df, video_camera_df, left_on='id', right_on='image_id')
+            img_metadata_df = img_metadata_df.drop(columns=['image_id'])
+            
             image_counter += nframes
             image_metadata_list.append(img_metadata_df)
+            annotations_pitch_camera_list.append(annotation_pitch_camera_df)
 
     categories_list = [{'id': i + 1, 'name': category, 'supercategory': 'person'} for i, category in
                        enumerate(sorted(set(categories_list)))]
@@ -163,6 +175,7 @@ def load_set(dataset_path):
     video_metadata = pd.DataFrame(video_metadatas_list)
     image_metadata = pd.concat(image_metadata_list, ignore_index=True)
     detections = pd.concat(detections_list, ignore_index=True)
+    pitch_camera = pd.concat(annotations_pitch_camera_list, ignore_index=True)
 
     # Add category id to detections
     category_to_id = {category['name']: category['id'] for category in categories_list}
