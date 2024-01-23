@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tracklab"
-version = "1.1.0"
+version = "1.1.2"
 description = ""
 authors = ["Vladimir Somers <vladimir.somers@uclouvain.be>", "Victor Joos <victor.joos@uclouvain.be>", "Baptiste Standaert <baptiste.standaert@uclouvain.be>"]
 readme = "README.md"
@@ -22,32 +22,24 @@ sphinx = "^7.2"
 sphinx_rtd_theme = "^2.0"
 myst-parser = "^2.0"
 filterpy = "^1.4.5"
-torch = {version = "1.13.1", source = "pytorch"}
-torchvision = {version = "0.14.1", source = "pytorch"}
+torch = "1.13.1"
+torchvision = "0.14.1"
 mmdet = "~3.1.0"
-mmocr = "^1.0.1"
 chumpy = "0.66"
-mmpose = {git = "https://github.com/PbTrack/mmpose", rev = "pbtrack", develop = true}
 lap = {git = "https://github.com/PbTrack/lap"}
 track-bench-track = {path = "plugins/track", develop = true}
 mmengine = "^0.10.1"
 timm = "^0.9.12"
-torchreid = {git = "https://github.com/victorjoos/bpbreid.git"}
+#torchreid = {git = "https://github.com/VlSomers/prtreid", branch="amir-dev"}
+torchreid = {path = "/home/user01/Amir/TrackLab/bpbreid-victor"}
 openpifpaf = "^0.13.11"
 easyocr = "^1.7.1"
 soccernet = "^0.1.53"
-trackeval = {git = "https://github.com/TrackingLaboratory/TrackEval.git"}
-
-[[tool.poetry.source]]
-name = "pytorch"
-url = "https://download.pytorch.org/whl/cu117"
-priority = "explicit"
-
-
-[[tool.poetry.source]]
-name = "openmmlab"
-url = "https://download.openmmlab.com/mmcv/dist/cu118/torch2.1.0"
-priority = "explicit"
+mmocr = "^1.0.1"
+mmpose = "^1.2.0"
+trackeval = {git = "https://github.com/TrackingLaboratory/TrackEval.git", develop= true}
+yt-dlp = "^2023.12.30"
+gdown = "^4.7.1"
 
 [tool.poetry.scripts]
 tracklab = 'tracklab.main:main'

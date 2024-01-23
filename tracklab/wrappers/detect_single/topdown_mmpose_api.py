@@ -10,10 +10,11 @@ from mim.utils import get_installed_path
 from tqdm import tqdm
 
 import mmcv
-from mmcv.parallel import collate, scatter
-from mmpose.apis import init_pose_model
-from mmpose.datasets.dataset_info import DatasetInfo
-from mmpose.datasets.pipelines import Compose
+# from mmcv.parallel import collate, scatter
+from mmpose.apis import init_model
+# from mmpose.datasets.dataset_info import DatasetInfo
+from mmengine.dataset import Compose
+
 
 from tracklab.pipeline import ImageLevelModule
 from tracklab.utils.openmmlab import get_checkpoint
@@ -21,7 +22,6 @@ from tracklab.utils.openmmlab import get_checkpoint
 import logging
 
 log = logging.getLogger(__name__)
-mmcv.collect_env()
 
 
 def mmpose_collate(batch):
@@ -42,7 +42,7 @@ class TopDownMMPose(ImageLevelModule):
         package_path = Path(get_installed_path("mmpose"))
         path_to_config = package_path / ".mim" / model_df.config.item()
         get_checkpoint(path_to_checkpoint, download_url)
-        self.model = init_pose_model(str(path_to_config), path_to_checkpoint, device)
+        self.model = init_model(str(path_to_config), path_to_checkpoint, device)
         self.vis_kp_threshold = vis_kp_threshold
         self.min_num_vis_kp = min_num_vis_kp
         self.dataset_info = DatasetInfo(self.model.cfg.dataset_info)

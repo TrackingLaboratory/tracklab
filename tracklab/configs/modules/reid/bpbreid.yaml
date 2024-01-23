@@ -19,7 +19,7 @@ cfg:
       use_wandb: False
   data:
     #root: "${data_dir}/reid"
-    root: "/home/user01/Amir/Tracking/SoccerNet/reid2"
+    root: "/home/user01/Amir/TrackLab/SoccerNet/reid"
     type: "image"
     sources: ["SoccerNet"]
     targets: ["SoccerNet"]
@@ -61,7 +61,7 @@ cfg:
       masks:
         type: "disk"
         dir: "${.....dataset.masks_mode}" # relative import, with a lot of indirection
-        preprocess: "cc6"
+        preprocess: "id"
 
   loss:
     name: 'part_based'

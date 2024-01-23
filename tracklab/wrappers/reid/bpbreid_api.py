@@ -1,3 +1,4 @@
+import gdown
 import numpy as np
 import pandas as pd
 import torch
@@ -84,7 +85,9 @@ class BPBReId(DetectionLevelModule):
             tracking_dataset.nickname,
         )
         self.cfg = CN(OmegaConf.to_container(cfg, resolve=True))
-
+        self.download_models(load_weights=self.cfg.model.load_weights,
+                             pretrained_path=self.cfg.model.bpbreid.hrnet_pretrained_path,
+                             backbone=self.cfg.model.bpbreid.backbone)
         # set parts information (number of parts K and each part name),
         # depending on the original loaded masks size or the transformation applied:
         self.cfg.data.save_dir = save_path
@@ -96,10 +99,16 @@ class BPBReId(DetectionLevelModule):
         self.training_enabled = training_enabled
         self.feature_extractor = None
         self.model = None
-        self.coco_transform = masks_preprocess_transforms[
-            self.cfg.model.bpbreid.masks.preprocess
-        ]()
 
+    def download_models(self, load_weights, pretrained_path, backbone):
+        if Path(load_weights).stem == "bpbreid_market1501_hrnet32_10642":
+            md5 = "e79262f17e7486ece33eebe198c07841"
+            gdown.cached_download(id="1m8FgfgQXf_i7zVEblvis1HLV6yHGdX7p", path=load_weights, md5=md5)
+        if backbone == "hrnet32":
+            md5 = "58ea12b0420aa3adaa2f74114c9f9721"
+            path = Path(pretrained_path) / "hrnetv2_w32_imagenet_pretrained.pth"
+            gdown.cached_download(id="1-gmeQ_n7NuyADiNK8EygHGDRV-HUesEZ", path=path,
+                                  md5=md5)
     @torch.no_grad()
     def preprocess(
         self, image, detection: pd.Series, metadata: pd.Series
@@ -152,9 +161,14 @@ class BPBReId(DetectionLevelModule):
         reid_result = self.feature_extractor(
             im_crops, external_parts_masks=external_parts_masks
         )
-        embeddings, visibility_scores, body_masks, _ = extract_test_embeddings(
+        embeddings, visibility_scores, body_masks, _, role_cls_scores = extract_test_embeddings(
             reid_result, self.test_embeddings
         )
+        
+        role_scores_ = []
+        role_scores_.append(role_cls_scores['foreg'].cpu() if role_cls_scores is not None else None)
+        role_scores_ = torch.cat(role_scores_, 0) if role_scores_[0] is not None else None
+        roles = [torch.argmax(i).item() for i in role_scores_]
 
         embeddings = embeddings.cpu().detach().numpy()
         visibility_scores = visibility_scores.cpu().detach().numpy()
@@ -174,6 +188,7 @@ class BPBReId(DetectionLevelModule):
                 "embeddings": list(embeddings),
                 "visibility_scores": list(visibility_scores),
                 "body_masks": list(body_masks),
+                "roles": roles,
             },
             index=detections.index,
         )

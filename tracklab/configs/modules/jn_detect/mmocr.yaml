@@ -1,3 +1,2 @@
 _target_: tracklab.wrappers.MMOCR
-cfg:
-  batch_size: 32
+batch_size: 32

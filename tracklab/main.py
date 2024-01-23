@@ -47,7 +47,7 @@ def main(cfg):
 
         # Init tracker state and tracking engine
         tracking_set = getattr(tracking_dataset, cfg.eval.eval_set + "_set")
-        tracker_state = TrackerState(tracking_set, modules=pipeline, **cfg.state)
+        tracker_state = TrackerState(tracking_set, pipeline=pipeline, **cfg.state)
         tracking_engine = instantiate(
             cfg.engine,
             modules=pipeline,
