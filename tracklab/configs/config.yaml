@@ -16,6 +16,7 @@ defaults:
   - modules/track: oc_sort
   - modules/jn_detect: mmocr
   - modules/jn_tracklet: voting
+  - modules/role: voting
 
 # Pipeline definition :
 # - Defines the order in which the modules will be called
@@ -25,6 +26,7 @@ pipeline:
   - bbox_detector
   - reid
   - track
+  - role
   #- jn_detect
   #- jn_tracklet
 
