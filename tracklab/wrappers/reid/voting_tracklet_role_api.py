@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 class VotingTrackletRole(VideoLevelModule):
     
-    input_columns = ["track_id", "role"]
+    input_columns = ["track_id", "roles"]
     output_columns = ["role_tracklet"]
     
     def __init__(self, cfg, device, tracking_dataset=None):
@@ -28,6 +28,6 @@ class VotingTrackletRole(VideoLevelModule):
             tracklet = detections[detections.track_id == track_id]
             roles = tracklet.roles
             tracklet_role = [select_highest_voted_att(roles)] * len(tracklet)            
-            detections.loc[tracklet.index, "role_tracklet"] = tracklet_role
+            detections.loc[tracklet.index, "role_tracklet"] = [int(i) for i in tracklet_role]
             
         return detections

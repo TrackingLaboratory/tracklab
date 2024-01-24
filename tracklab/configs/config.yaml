@@ -17,6 +17,7 @@ defaults:
   - modules/jn_detect: mmocr
   - modules/jn_tracklet: voting
   - modules/role: voting
+  - modules/team: team_labeling
 
 # Pipeline definition :
 # - Defines the order in which the modules will be called
@@ -27,6 +28,7 @@ pipeline:
   - reid
   - track
   - role
+  - team
   #- jn_detect
   #- jn_tracklet
 
