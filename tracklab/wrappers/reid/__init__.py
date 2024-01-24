@@ -1,3 +1,4 @@
 from .bpbreid_api import BPBReId
 from .voting_tracklet_role_api import VotingTrackletRole
 from .tracklet_team_labeling_api import TrackletTeamLabeling
+from .tracklet_side_labeling_api import TrackletSideLabeling

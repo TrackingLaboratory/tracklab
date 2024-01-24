@@ -18,6 +18,7 @@ defaults:
   - modules/jn_tracklet: voting
   - modules/role: voting
   - modules/team: team_labeling
+  - modules/team_side: side_labeling
 
 # Pipeline definition :
 # - Defines the order in which the modules will be called
@@ -29,6 +30,7 @@ pipeline:
   - track
   - role
   - team
+  - team_side
   #- jn_detect
   #- jn_tracklet
 

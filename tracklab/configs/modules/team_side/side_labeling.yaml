@@ -1,0 +1,2 @@
+_target_: tracklab.wrappers.TrackletSideLabeling
+cfg: null
