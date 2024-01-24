@@ -1,6 +1,9 @@
 dataset_path: ${data_dir}  # FIXME needed for detector and reid instantiate(), even if not used when using external video
+
 nvid: 1                                    # "-1" to process all the videos
 nframes: 3                                 # "-1" to process all the frames for each video. evaluation is disabled if nframes != -1
+trackeval_dataset_class: MotChallenge2DBox  # SoccerNetGS MotChallenge2DBox
+
 
 vids_dict:                                  # video names to use for each train/val/test set
   train: []

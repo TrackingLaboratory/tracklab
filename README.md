@@ -64,14 +64,14 @@ Get into your repo and install the requirements with :
 
 ```bash
 pip install -e .
-mim install mmcv
+mim install mmcv==2.0.1
 ```
 
 You might need to redo this if you update the repository, and some dependencies changed.
 
 ### External dependencies
 
-- Get the **SoccerNet Tracking** dataset [here](https://github.com/SoccerNet/sn-tracking), rename the root folder as "SoccerNetMOT" and put it under the global dataset directory (specified under the `data_dir` config as explained below). Otherwise, you can modify the `dataset_path` config in [soccernet_mot.yaml](configs/dataset/soccernet_mot.yaml) with your custom SoccerNet dataset directory.
+- Get the **SoccerNet Tracking** dataset [here](https://github.com/SoccerNet/sn-tracking), rename the root folder as "SoccerNetMOT" and put it under the global dataset directory (specified under the `data_dir` config as explained below). Otherwise, you can modify the `dataset_path` config in [soccernet_mot.yaml](tracklab/configs/dataset/soccernet_mot.yaml) with your custom SoccerNet dataset directory.
 - Download the pretrained model weights [here](https://drive.google.com/drive/folders/1MmDkSHWJ1S-V9YcLMkFOjm3zo65UELjJ?usp=drive_link) and put the "pretrained_models" directory under the main project directory (i.e. "/path/to/tracklab/pretrained_models").
 
 ### Setup
@@ -81,11 +81,11 @@ You will need to set up some variables before running the code :
 1. In configs/config.yaml :
    - `data_dir`: the directory where you will store the different datasets (must be an absolute path !)
    - All the parameters under the "Machine configuration" header
-2. In the corresponding modules (configs/modules/.../....yaml) :
+2. In the corresponding modules (tracklab/configs/modules/.../....yaml) :
    - The `batch_size`
    - You might want to change the model hyperparameters
 
-To launch TrackLab with the default configuration defined in [configs/config.yaml](configs/config.yaml), simply run: 
+To launch TrackLab with the default configuration defined in [configs/config.yaml](tracklab/configs/config.yaml), simply run: 
 ```bash
 tracklab
 ```
