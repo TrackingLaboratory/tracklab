@@ -10,6 +10,7 @@ class TrackingSet:
     video_metadatas: pd.DataFrame
     image_metadatas: pd.DataFrame
     detections_gt: pd.DataFrame
+    image_gt: pd.DataFrame = pd.DataFrame(columns=["video_id"])
 
 
 class TrackingDataset(ABC):
@@ -68,12 +69,16 @@ class TrackingDataset(ABC):
         tiny_image_metadatas = tracking_set.image_metadatas[
             tracking_set.image_metadatas.video_id.isin(videos_to_keep)
         ]
+        tiny_image_gt = tracking_set.image_gt[
+            tracking_set.image_gt.video_id.isin(videos_to_keep)
+        ]
 
         # keep only images from first nframes
         if nframes > 0:
             tiny_image_metadatas = tiny_image_metadatas.groupby("video_id").head(
                 nframes
             )
+            tiny_image_gt = tiny_image_gt.groupby("video_id").head(nframes)
 
         # filter detections:
         tiny_detections = None
@@ -89,4 +94,5 @@ class TrackingDataset(ABC):
             tiny_video_metadatas,
             tiny_image_metadatas,
             tiny_detections,
+            tiny_image_gt,
         )

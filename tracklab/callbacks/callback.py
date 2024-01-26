@@ -32,6 +32,7 @@ class Callback:
         # image_metadatas: pd.DataFrame,  # FIXME add ?
         video_idx: int,
         detections: pd.DataFrame,
+        image_pred: pd.DataFrame,
     ):
         pass
 

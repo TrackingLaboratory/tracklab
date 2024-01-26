@@ -16,6 +16,9 @@ defaults:
   - modules/track: oc_sort
   - modules/jn_detect: mmocr
   - modules/jn_tracklet: voting
+  - modules/pitch: baseline
+  - modules/calibration: baseline
+  - _self_
 
 # Pipeline definition :
 # - Defines the order in which the modules will be called
@@ -25,6 +28,8 @@ pipeline:
   - bbox_detector
   - reid
   - track
+  - pitch
+  - calibration
   - jn_detect
   - jn_tracklet
 
@@ -42,7 +47,7 @@ use_rich: True
 
 # Flags
 test_tracking: True
-print_config: True
+print_config: False
 
 # configure Hydra to use the current working directory
 # and set up the output directory according to experiment_name

@@ -105,7 +105,7 @@ class VisualizationEngine(Callback):
     ):
         self.video_name = video_metadata.name
 
-    def on_video_loop_end(self, engine, video_metadata, video_idx, detections):
+    def on_video_loop_end(self, engine, video_metadata, video_idx, detections, image_pred):
         if self.cfg.save_videos or self.cfg.save_images:
             if (
                 self.processed_video_counter < self.cfg.process_n_videos

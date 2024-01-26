@@ -31,6 +31,8 @@ class TrackerState(AbstractContextManager):
         self.pipeline = pipeline or {}
         self.video_metadatas = tracking_set.video_metadatas
         self.image_metadatas = tracking_set.image_metadatas
+        self.image_gt = tracking_set.image_gt
+        self.image_pred = None
         self.detections_gt = tracking_set.detections_gt
         self.detections_pred = None
 
@@ -82,8 +84,10 @@ class TrackerState(AbstractContextManager):
         # and that detect_single detects the keypoints
         if self.pipeline.is_empty():
             self.detections_pred = self.detections_gt.copy()  # load all columns if pipeline is empty
+            self.image_pred = self.image_gt.copy()
         else:
             self.detections_pred = self.detections_gt.copy()[load_columns]
+            self.image_pred = self.image_gt.copy()
 
     def load_detections_pred_from_json(self, json_file):
         anns_path = Path(json_file)
@@ -188,13 +192,15 @@ class TrackerState(AbstractContextManager):
             video_metadata: pd.Series,
             video_idx: int,
             detections: pd.DataFrame,
+            image_pred: pd.DataFrame,
     ):
-        self.update(detections)
+        self.update(detections, image_pred)
         self.save()
 
-    def update(self, detections: pd.DataFrame):
+    def update(self, detections: pd.DataFrame, image_metadata):
         if self.detections_pred is None:
             self.detections_pred = detections
+            self.image_pred = image_metadata
         else:
             self.detections_pred = self.detections_pred[
                 ~(self.detections_pred["video_id"] == self.video_id)
@@ -202,6 +208,13 @@ class TrackerState(AbstractContextManager):
             self.detections_pred = pd.concat(
                 [self.detections_pred, detections]
             )  # TODO UPDATE should update existing rows or append if new rows
+            # updating image metadata
+            self.image_pred = self.image_pred[
+                ~(self.image_pred["video_id"] == self.video_id)
+            ]
+            self.image_pred = pd.concat(
+                [self.image_pred, image_metadata]
+            )
 
     def save(self):
         """
@@ -220,12 +233,18 @@ class TrackerState(AbstractContextManager):
                     summary_bytes = json.dumps(summary, ensure_ascii=False, indent=4).encode(
                         'utf-8')
                     fp.write(summary_bytes)
-            with self.zf["save"].open(f"{self.video_id}.pkl", "w") as fp:
-                if not self.detections_pred.empty:
+            if not self.detections_pred.empty:
+                with self.zf["save"].open(f"{self.video_id}.pkl", "w") as fp:
                     detections_pred = self.detections_pred[
                         self.detections_pred.video_id == self.video_id
                         ]
                     pickle.dump(detections_pred, fp, protocol=pickle.DEFAULT_PROTOCOL)
+            if not self.image_pred.empty:
+                with self.zf["save"].open(f"{self.video_id}_image.pkl", "w") as fp:
+                    image_pred = self.image_pred[
+                        self.image_pred.video_id == self.video_id
+                    ]
+                    pickle.dump(image_pred, fp, protocol=pickle.DEFAULT_PROTOCOL)
         else:
             log.info(f"{self.video_id} already exists in {self.save_file} file")
 
@@ -243,16 +262,21 @@ class TrackerState(AbstractContextManager):
         if self.load_from_groundtruth:
             return self.detections_pred[self.detections_pred.video_id == self.video_id]
         if self.load_file is None:
-            return pd.DataFrame()
+            return pd.DataFrame(), self.image_metadatas[self.image_metadatas.video_id == self.video_id]
 
         if f"{self.video_id}.pkl" in self.zf["load"].namelist():
             with self.zf["load"].open(f"{self.video_id}.pkl", "r") as fp:
                 video_detections = pickle.load(fp)
-                self.update(video_detections)
-                return video_detections[self.load_columns]
         else:
-            log.info(f"{self.video_id} not in pklz file")
-            return pd.DataFrame()
+            log.info(f"{self.video_id} detections not in pklz file.")
+            video_detections = pd.DataFrame()
+        if f"{self.video_id}_image.pkl" in self.zf["load"].namelist():
+            with self.zf["load"].open(f"{self.video_id}_image.pkl", "r") as fp_image:
+                video_image_pred = pickle.load(fp_image)
+        else:
+            video_image_pred = pd.DataFrame()
+        self.update(video_detections, video_image_pred)
+        return video_detections, video_image_pred
 
     def __exit__(self, exc_type, exc_value, traceback):
         """

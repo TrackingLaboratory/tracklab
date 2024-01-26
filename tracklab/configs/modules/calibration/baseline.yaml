@@ -1,0 +1,4 @@
+_target_: tracklab.wrappers.calibration.baseline.BaselineCalibration
+resolution_width: 640
+resolution_height: 360
+batch_size: 1
