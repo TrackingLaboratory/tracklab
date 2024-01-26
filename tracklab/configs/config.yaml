@@ -29,7 +29,7 @@ pipeline:
   - track
   - pitch
   - calibration
-  - jersery_number_detect
+  - jersey_number_detect
   - tracklet_agg
 
 # Experiment name
