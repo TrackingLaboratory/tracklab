@@ -11,7 +11,7 @@ from sn_calibration_baseline.detect_extremities import SegmentationNetwork, \
 from tracklab.pipeline import ImageLevelModule
 
 
-class BaselineCalibration(ImageLevelModule):
+class BaselinePitch(ImageLevelModule):
     input_columns = []
     output_columns = []
 
