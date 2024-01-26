@@ -6,6 +6,7 @@ import pandas as pd
 from sn_calibration_baseline.baseline_cameras import (normalization_transform,
                                                       estimate_homography_from_line_correspondences,
                                                       Camera)
+from sn_calibration_baseline.camera import unproject_image_point
 from sn_calibration_baseline.soccerpitch import SoccerPitch
 from tracklab.pipeline import ImageLevelModule
 
@@ -104,8 +105,26 @@ class BaselineCalibration(ImageLevelModule):
 
         if success:
             camera_predictions = cam.to_json_parameters()
+            detections["bbox_pitch"] = detections.bbox.ltrb().apply(get_bbox_pitch(homography))
         else:
             camera_predictions = {}
-        return pd.DataFrame(), pd.DataFrame([
+            detections["bbox_pitch"] = None
+        return detections[["bbox_pitch"]], pd.DataFrame([
             pd.Series({"parameters": camera_predictions}, name=metadatas.iloc[0].name)
         ])
+
+def get_bbox_pitch(homography):
+    def _get_bbox(bbox_ltrb):
+        l, t, r, b = bbox_ltrb
+        bl = [b, l, 0]
+        br = [b, r, 0]
+        bm = [b, l+(r-l)/2, 0]
+        pbl_x, pbl_y, _ = unproject_image_point(homography, bl)
+        pbr_x, pbr_y, _ = unproject_image_point(homography, br)
+        pbm_x, pbm_y, _ = unproject_image_point(homography, bm)
+        return {
+            "x_bottom_left": pbl_x, "y_bottom_left": pbl_y,
+            "x_bottom_right": pbr_x, "y_bottom_right": pbr_y,
+            "x_bottom_middle": pbm_x, "y_bottom_middle": pbm_y,
+        }
+    return _get_bbox
