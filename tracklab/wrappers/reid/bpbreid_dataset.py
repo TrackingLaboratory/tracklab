@@ -212,17 +212,20 @@ class ReidDataset(ImageDataset):
         )
 
         # Save human parsing pseudo ground truth and related metadata. Apply only on sampled detections
-        self.save_reid_masks_crops(
-            detections,
-            reid_mask_path,
-            reid_fig_path,
-            split,
-            masks_anns_filepath,
-            image_metadatas,
-            fig_size,
-            mask_size,
-            mode=masks_mode,
-        )
+        if self.reid_config.enable_human_parsing_labels:
+            self.save_reid_masks_crops(
+                detections,
+                reid_mask_path,
+                reid_fig_path,
+                split,
+                masks_anns_filepath,
+                image_metadatas,
+                fig_size,
+                mask_size,
+                mode=masks_mode,
+            )
+        else:
+            detections["masks_path"] = ''
 
         # Add 0-based pid column (for Torchreid compatibility) to sampled detections
         self.ad_pid_column(detections)

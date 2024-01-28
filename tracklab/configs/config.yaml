@@ -27,10 +27,10 @@ defaults:
 pipeline:
   - bbox_detector
   - reid
-  - track
-  - role
-  - team
-  - team_side
+  #- track
+  #- role
+  #- team
+  #- team_side
   #- jn_detect
   #- jn_tracklet
 
@@ -47,8 +47,8 @@ use_wandb: False
 use_rich: True
 
 # Flags
-test_tracking: True
-#test_tracking: False
+#test_tracking: True
+test_tracking: False
 print_config: True
 
 # configure Hydra to use the current working directory
