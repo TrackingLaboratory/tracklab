@@ -4,7 +4,7 @@
 # to create the final config file. This item *must* be
 # the first element in the file.
 defaults:
-  - dataset: soccernet_game_state
+  - dataset: soccernet_gs
   - eval: trackeval
   - engine: offline
   - state: no_save
