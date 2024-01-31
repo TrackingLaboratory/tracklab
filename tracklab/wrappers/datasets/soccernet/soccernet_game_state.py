@@ -91,7 +91,7 @@ def load_set(dataset_path):
 
     image_counter = 0
     person_counter = 0
-    for video_folder in tqdm(sorted(os.listdir(dataset_path))[:1], desc=f"Loading SoccerNetGS '{split}' set videos"):
+    for video_folder in tqdm(sorted(os.listdir(dataset_path)), desc=f"Loading SoccerNetGS '{split}' set videos"):
 
         video_folder_path = os.path.join(dataset_path, video_folder)
         if os.path.isdir(video_folder_path):
