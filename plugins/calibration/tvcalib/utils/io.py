@@ -29,7 +29,7 @@ def detach_dict(x_dict):
     with torch.no_grad():
         for k in x_dict.keys():
             if isinstance(x_dict[k], torch.Tensor):
-                x_dict[k] = x_dict[k].detach().cpu()
+                x_dict[k] = x_dict[k].detach().cpu().numpy().astype(float)
             elif isinstance(x_dict[k], dict):
                 x_dict[k] = detach_dict(x_dict[k])
     return x_dict

@@ -33,7 +33,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         tracker_name = 'tracklab'
         save_classes = self.trackeval_dataset_class.__name__ != 'MotChallenge2DBox'
 
-        # Save predictions in MOT Challenge format (.txt)
+        # Save predictions
         pred_save_path = Path(self.cfg.dataset.TRACKERS_FOLDER) / f"{self.trackeval_dataset_class.__name__}-{self.eval_set}" / tracker_name
         save_functions[self.trackeval_dataset_name](
             tracker_state.detections_pred,
@@ -42,9 +42,11 @@ class TrackEvalEvaluator(EvaluatorBase):
             pred_save_path,
             self.cfg.bbox_column_for_eval,
             save_classes,  # do not use classes for MOTChallenge2DBox
+            is_ground_truth=False,
         )
 
-        log.info("Tracking predictions saved in MOT Challenge format in {}".format(pred_save_path))
+        log.info(
+            f"Tracking predictions saved in {self.trackeval_dataset_name} format in {pred_save_path}")
 
         if len(tracker_state.detections_gt) == 0:
             log.info(
@@ -59,9 +61,11 @@ class TrackEvalEvaluator(EvaluatorBase):
             Path(self.cfg.dataset.GT_FOLDER) / f"{self.trackeval_dataset_name}-{self.eval_set}",
             self.cfg.bbox_column_for_eval,
             save_classes,
+            is_ground_truth=True
         )
 
-        log.info("Tracking ground truth saved in MOT Challenge format in {}".format(pred_save_path))
+        log.info(
+            f"Tracking ground truth saved in {self.trackeval_dataset_name} format in {pred_save_path}")
 
         # Build TrackEval dataset
         dataset_config = self.trackeval_dataset_class.get_default_dataset_config()
@@ -89,7 +93,7 @@ class TrackEvalEvaluator(EvaluatorBase):
 
         # Run evaluation
         output_res, output_msg = evaluator.evaluate([dataset], metrics_list, show_progressbar=self.show_progressbar)
-        
+
         # Log results
         results = output_res[dataset.get_name()][tracker_name]
         combined_results = results.pop('SUMMARIES')
@@ -101,7 +105,11 @@ def save_in_soccernet_format(detections: pd.DataFrame,
                              video_metadatas: pd.DataFrame,
                              save_folder: str,
                              bbox_column_for_eval="bbox_ltwh",
-                             save_classes=False):
+                             save_classes=False,
+                             is_ground_truth=False,
+                             ):
+    if is_ground_truth:
+        return
     save_path = Path(save_folder)
     save_path.mkdir(parents=True, exist_ok=True)
     detections = soccernet_encoding(detections.copy(), supercategory="object")
@@ -155,8 +163,9 @@ def soccernet_encoding(dataframe: pd.DataFrame, supercategory):
     return dataframe
 
 
-
-def save_in_mot_challenge_format(detections, image_metadatas, video_metadatas, save_folder, bbox_column_for_eval="bbox_ltwh", save_classes=False):
+def save_in_mot_challenge_format(detections, image_metadatas, video_metadatas,
+                                 save_folder, bbox_column_for_eval="bbox_ltwh",
+                                 save_classes=False, is_ground_truth=False):
     mot_df = _mot_encoding(detections, image_metadatas, video_metadatas, bbox_column_for_eval)
 
     save_path = os.path.join(save_folder)
