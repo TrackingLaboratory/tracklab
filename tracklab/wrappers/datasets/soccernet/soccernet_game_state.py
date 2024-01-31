@@ -56,7 +56,6 @@ def extract_category(attributes):
     
 def dict_to_df_detections(annotation_dict, categories_list):
     df = pd.DataFrame.from_dict(annotation_dict)
-    df['image_id'] = df['image_id']
 
     annotations_pitch_camera = df.loc[df['supercategory'] != 'object']   # remove the rows with non-human categories
     
@@ -68,9 +67,8 @@ def dict_to_df_detections(annotation_dict, categories_list):
     df['jersey_number'] = df.apply(lambda row: row['attributes']['jersey'], axis=1)
     df['position'] = None # df.apply(lambda row: row['attributes']['position'], axis=1)         for now there is no position in the json file
     df['category'] = df.apply(lambda row: extract_category(row['attributes']), axis=1)
-    df['person_id'] = df['track_id']  # Create person_id column with the same content as track_id
-    
-    columns = ['id', 'image_id', 'track_id', 'person_id', 'bbox_ltwh', 'bbox_pitch', 'team', 'role', 'jersey_number', 'position', 'category']
+
+    columns = ['id', 'image_id', 'track_id', 'bbox_ltwh', 'bbox_pitch', 'team', 'role', 'jersey_number', 'position', 'category']
     df = df[columns]
     
     video_level_categories = list(df['category'].unique())
@@ -92,6 +90,7 @@ def load_set(dataset_path):
     split = os.path.basename(dataset_path)  # Get the split name from the dataset path
 
     image_counter = 0
+    person_counter = 0
     for video_folder in tqdm(sorted(os.listdir(dataset_path))[:1], desc=f"Loading SoccerNetGS '{split}' set videos"):
 
         video_folder_path = os.path.join(dataset_path, video_folder)
@@ -107,6 +106,7 @@ def load_set(dataset_path):
             video_id = info_data.get("id", str(len(video_metadatas_list)+1))
 
             detections_df, annotation_pitch_camera_df, video_level_categories = dict_to_df_detections(annotations_data, categories_data)
+            detections_df['person_id'] = detections_df['track_id'] - 1 + person_counter
             # detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
             detections_df['video_id'] = video_id
             detections_df['visibility'] = 1
@@ -161,6 +161,7 @@ def load_set(dataset_path):
             # img_metadata_df = img_metadata_df.drop(columns=['image_id'])
 
             image_counter += nframes
+            person_counter += len(detections_df['track_id'].unique())
             image_metadata_list.append(img_metadata_df)
             annotation_pitch_camera_df["video_id"] = video_id
             annotations_pitch_camera_list.append(annotation_pitch_camera_df)
@@ -192,9 +193,9 @@ def load_set(dataset_path):
     # Set 'id' column as the index in the detections and image dataframe
     detections['id'] = detections.index
 
-    detections.set_index("id", drop=True, inplace=True)
-    image_metadata.set_index("id", drop=True, inplace=True)
-    video_metadata.set_index("id", drop=True, inplace=True)
+    detections.set_index("id", drop=False, inplace=True)
+    image_metadata.set_index("id", drop=False, inplace=True)
+    video_metadata.set_index("id", drop=False, inplace=True)
 
 
     # Reorder columns in dataframes
