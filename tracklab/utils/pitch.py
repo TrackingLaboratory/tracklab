@@ -71,7 +71,11 @@ def draw_radar_view(patch, detections, scale, delta=32, group="gt", pitch_image=
         y_middle = np.clip(detection[bbox_name]["y_bottom_middle"], -10000, 10000)
         cat = None
         if "jersey_number" in detection and detection.jersey_number is not None:
-            cat = f"{detection.jersey_number:02}"
+            if isinstance(detection.jersey_number, float) and np.isnan(detection.jersey_number):
+                cat = None
+            else:
+                cat = f"{detection.jersey_number:02}"
+
         elif "role" in detection:
             if detection.role == "goalkeeper":
                 cat = "GK"
