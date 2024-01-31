@@ -23,7 +23,7 @@ class SoccerPitch:
         'Circle left',
         'Circle right',
         'Goal left crossbar',
-        'Goal left post left ',
+        'Goal left post left',
         'Goal left post right',
         'Goal right crossbar',
         'Goal right post left',
@@ -87,6 +87,7 @@ class SoccerPitch:
         'Circle right': (0, 255, 255),
         'Goal left crossbar': (255, 255, 200),
         'Goal left post left ': (165, 255, 0),
+        'Goal left post left': (165, 255, 0),
         'Goal left post right': (155, 119, 45),
         'Goal right crossbar': (86, 32, 139),
         'Goal right post left': (196, 120, 153),
@@ -302,7 +303,7 @@ class SoccerPitch:
 
         self.line_extremities["Goal left crossbar"] = (self.point_dict["L_GOAL_TR_POST"],
                                                        self.point_dict["L_GOAL_TL_POST"])
-        self.line_extremities["Goal left post left "] = (self.point_dict["L_GOAL_TL_POST"],
+        self.line_extremities["Goal left post left"] = (self.point_dict["L_GOAL_TL_POST"],
                                                          self.point_dict["L_GOAL_BL_POST"])
         self.line_extremities["Goal left post right"] = (self.point_dict["L_GOAL_TR_POST"],
                                                          self.point_dict["L_GOAL_BR_POST"])
@@ -358,7 +359,7 @@ class SoccerPitch:
 
         self.line_extremities_keys["Goal left crossbar"] = ("L_GOAL_TR_POST",
                                                             "L_GOAL_TL_POST")
-        self.line_extremities_keys["Goal left post left "] = ("L_GOAL_TL_POST",
+        self.line_extremities_keys["Goal left post left"] = ("L_GOAL_TL_POST",
                                                               "L_GOAL_BL_POST")
         self.line_extremities_keys["Goal left post right"] = ("L_GOAL_TR_POST",
                                                               "L_GOAL_BR_POST")

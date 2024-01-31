@@ -101,16 +101,16 @@ def load_set(dataset_path):
             images_data = gamestate_data['images']
             annotations_data = gamestate_data['annotations']
             categories_data = gamestate_data['categories']
+            video_id = info_data.get("id", str(len(video_metadatas_list)+1))
 
             detections_df, annotation_pitch_camera_df, video_level_categories = dict_to_df_detections(annotations_data, categories_data)
             # detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
-            detections_df['video_id'] = len(video_metadatas_list) + 1
+            detections_df['video_id'] = video_id
             detections_df['visibility'] = 1
             detections_list.append(detections_df)
 
             # Append video metadata
             nframes = int(info_data.get('seq_length', 0))
-            video_id = info_data.get("id", str(len(video_metadatas_list)+1))
             video_metadata = {
                 'id': video_id,
                 'name': info_data.get('name', ''),
