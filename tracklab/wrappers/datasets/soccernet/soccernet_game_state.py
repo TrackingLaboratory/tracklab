@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import json
 from pathlib import Path
+from tqdm import tqdm
 from tracklab.datastruct import TrackingDataset, TrackingSet
 from tracklab.utils import xywh_to_ltwh
 
@@ -88,9 +89,11 @@ def load_set(dataset_path):
     annotations_pitch_camera_list = []
     detections_list = []
     categories_list = []
+    split = os.path.basename(dataset_path)  # Get the split name from the dataset path
 
     image_counter = 0
-    for video_folder in sorted(os.listdir(dataset_path)):  # Sort videos by name
+    for video_folder in tqdm(sorted(os.listdir(dataset_path))[:1], desc=f"Loading SoccerNetGS '{split}' set videos"):
+
         video_folder_path = os.path.join(dataset_path, video_folder)
         if os.path.isdir(video_folder_path):
             # Read the gamestate.json file
@@ -207,6 +210,8 @@ def load_set(dataset_path):
     detections_column_ordered = ['image_id', 'video_id', 'track_id', 'person_id', 'bbox_ltwh', 'visibility']
     detections_column_ordered.extend(set(detections.columns) - set(detections_column_ordered))
     detections = detections[detections_column_ordered]
+    detections['bbox_conf'] = 1
+
     return TrackingSet(
         video_metadata,
         image_metadata,
