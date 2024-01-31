@@ -1,3 +1,4 @@
+import logging
 import os
 import pandas as pd
 import json
@@ -6,18 +7,25 @@ from tqdm import tqdm
 from tracklab.datastruct import TrackingDataset, TrackingSet
 from tracklab.utils import xywh_to_ltwh
 
+log = logging.getLogger(__name__)
+
 
 class SoccerNetGameState(TrackingDataset):
-    def __init__(self, dataset_path: str, *args, **kwargs):
+    def __init__(self,
+                 dataset_path: str,
+                 nvid: int = -1,
+                 vids_dict: list = None,
+                 *args, **kwargs):
         self.dataset_path = Path(dataset_path)
         assert self.dataset_path.exists(), f"'{self.dataset_path}' directory does not exist. Please check the path or download the dataset following the instructions here: https://github.com/SoccerNet/sn-game-state"
 
-        train_set = load_set(self.dataset_path / "train")
-        val_set = load_set(self.dataset_path / "validation")
+        train_set = load_set(self.dataset_path / "train", nvid, vids_dict["train"])
+        val_set = load_set(self.dataset_path / "validation", nvid, vids_dict["val"])
         # test_set = load_set(self.dataset_path / "challenge")
         test_set = None
 
-        super().__init__(dataset_path, train_set, val_set, test_set, *args, **kwargs)
+        # We pass 'nvid=-1', 'vids_dict=None' because video subsampling is already done in the load_set function
+        super().__init__(dataset_path, train_set, val_set, test_set, nvid=-1, vids_dict=None, *args, **kwargs)
 
 def extract_category(attributes):
     if attributes['role'] == 'goalkeeper':
@@ -81,17 +89,29 @@ def read_json_file(file_path):
     return file_json
 
 
-def load_set(dataset_path):
+def load_set(dataset_path, nvid=-1, vids_filter_set=None):
     video_metadatas_list = []
     image_metadata_list = []
     annotations_pitch_camera_list = []
     detections_list = []
     categories_list = []
     split = os.path.basename(dataset_path)  # Get the split name from the dataset path
+    video_list = os.listdir(dataset_path)
+
+    if nvid > 0:
+        video_list = video_list[:nvid]
+
+    if vids_filter_set is not None and len(vids_filter_set) > 0:
+        missing_videos = set(vids_filter_set) - set(video_list)
+        if missing_videos:
+            log.warning(
+                f"Warning: The following videos provided in config 'dataset.vids_dict' do not exist in {split} set: {missing_videos}")
+
+        video_list = [video for video in video_list if video in vids_filter_set]
 
     image_counter = 0
     person_counter = 0
-    for video_folder in tqdm(sorted(os.listdir(dataset_path)), desc=f"Loading SoccerNetGS '{split}' set videos"):
+    for video_folder in tqdm(sorted(video_list), desc=f"Loading SoccerNetGS '{split}' set videos"):
 
         video_folder_path = os.path.join(dataset_path, video_folder)
         if os.path.isdir(video_folder_path):
