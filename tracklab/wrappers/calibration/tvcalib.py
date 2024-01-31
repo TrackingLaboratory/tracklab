@@ -103,56 +103,36 @@ class TVCalib(ImageLevelModule):
         return per_sample_output
 
     def process(self, batch: Any, detections: pd.DataFrame, metadatas: pd.DataFrame):
-        if True:
-            _batch_size = batch["lines__ndc_projected_selection_shuffled"].shape[0]
-            per_sample_loss, cam, _ = self.model.self_optim_batch(batch)
-            output_dict = detach_dict({**cam.get_parameters(_batch_size), **per_sample_loss})
-            for k in output_dict.keys():
-                output_dict[k] = [x for x in output_dict[k].squeeze(1)]
-            output_df = pd.DataFrame(output_dict)
-            output_detections = []
-            output_index = []
-            camera_predictions = []
-            homography = []
-            for idx, params in output_df.iterrows():
-                sn_cam = Camera(iwidth=self.image_width, iheight=self.image_height)
-                homography.append(params["homography"].numpy())
-                sn_cam.from_json_parameters(params.to_dict())
-                # sn_cam.set_camera(
-                #     pan=params.pan_degrees, tilt=params.tilt_degrees, roll=params.roll_degrees,
-                #     xfocal=params.x_focal_length, yfocal=params.y_focal_length,
-                #     principal_point=params.principal_point,
-                #     pos_x=params.position_meters[0], pos_y=params.position_meters[1],
-                #     pos_z=params.position_meters[2]
-                # )
-                camera_predictions.append(sn_cam.to_json_parameters())
-                image_detections = detections[detections.image_id == metadatas.iloc[idx].name]
-                image_detections["bbox_pitch"] = image_detections.bbox.ltrb().apply(get_bbox_pitch(sn_cam))
-                output_detections.extend(image_detections["bbox_pitch"])
-                output_index.extend(image_detections.index)
-            return pd.DataFrame({
-                "bbox_pitch": output_detections
-            },
-                index=output_index
-            ), pd.DataFrame({"parameters": camera_predictions, "homography": homography}, index=metadatas.index)
-        else:
-            output_detections = []
-            output_index = []
-            for idx, metadata in metadatas.iterrows():
-                image_detections = detections[
-                    detections.image_id == idx]
-                if isinstance(metadata["parameters"], dict):
-                    sn_cam = Camera(iwidth=self.image_width, iheight=self.image_height)
-                    sn_cam.from_json_parameters(metadata["parameters"])
-                    image_detections["bbox_pitch"] = image_detections.bbox.ltrb().apply(
-                        get_bbox_pitch(sn_cam))
-                else:
-                    image_detections["bbox_pitch"] = image_detections.bbox.ltrb().apply(
-                        get_bbox_pitch_homography(metadata["parameters"]))
-                output_detections.extend(image_detections["bbox_pitch"])
-                output_index.extend(image_detections.index)
-            return pd.DataFrame({"bbox_pitch": output_detections}, index=output_index)
-
+        _batch_size = batch["lines__ndc_projected_selection_shuffled"].shape[0]
+        per_sample_loss, cam, _ = self.model.self_optim_batch(batch)
+        output_dict = detach_dict({**cam.get_parameters(_batch_size), **per_sample_loss})
+        for k in output_dict.keys():
+            output_dict[k] = [x for x in output_dict[k].squeeze(1)]
+        output_df = pd.DataFrame(output_dict)
+        output_detections = []
+        output_index = []
+        camera_predictions = []
+        for idx, params in output_df.iterrows():
+            sn_cam = Camera(iwidth=self.image_width, iheight=self.image_height)
+            # homography.append(params["homography"].numpy())
+            sn_cam.from_json_parameters(params.to_dict())
+            # sn_cam.set_camera(
+            #     pan=params.pan_degrees, tilt=params.tilt_degrees, roll=params.roll_degrees,
+            #     xfocal=params.x_focal_length, yfocal=params.y_focal_length,
+            #     principal_point=params.principal_point,
+            #     pos_x=params.position_meters[0], pos_y=params.position_meters[1],
+            #     pos_z=params.position_meters[2]
+            # )
+            camera_predictions.append(sn_cam.to_json_parameters())
+            image_detections = detections[detections.image_id == metadatas.iloc[idx].name]
+            image_detections["bbox_pitch"] = image_detections.bbox.ltrb().apply(get_bbox_pitch(sn_cam))
+            output_detections.extend(image_detections["bbox_pitch"])
+            output_index.extend(image_detections.index)
+        return pd.DataFrame({
+            "bbox_pitch": output_detections
+        },
+            index=output_index
+        ), pd.DataFrame({"parameters": camera_predictions}, index=metadatas.index)
 
 
 def get_bbox_pitch(cam):

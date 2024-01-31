@@ -276,8 +276,13 @@ class TrackerState(AbstractContextManager):
         if f"{self.video_id}_image.pkl" in self.zf["load"].namelist():
             with self.zf["load"].open(f"{self.video_id}_image.pkl", "r") as fp_image:
                 video_image_pred = pickle.load(fp_image)
+                from tracklab.engine.engine import merge_dataframes
+                video_image_pred = merge_dataframes(
+                    video_image_pred,
+                    self.image_metadatas[self.image_metadatas.video_id == self.video_id]
+                )
         else:
-            video_image_pred = pd.DataFrame()
+            video_image_pred = self.image_metadatas[self.image_metadatas.video_id == self.video_id]
         self.update(video_detections, video_image_pred)
         return video_detections, video_image_pred
 
