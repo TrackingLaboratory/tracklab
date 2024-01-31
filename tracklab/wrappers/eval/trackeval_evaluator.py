@@ -1,4 +1,7 @@
+import json
 import os
+from math import isnan
+
 import numpy as np
 import pandas as pd
 import logging
@@ -20,6 +23,7 @@ class TrackEvalEvaluator(EvaluatorBase):
     def __init__(self, cfg, eval_set, trackeval_dataset_class, show_progressbar, *args, **kwargs):
         self.cfg = cfg
         self.eval_set = eval_set
+        self.trackeval_dataset_name = trackeval_dataset_class
         self.trackeval_dataset_class = getattr(trackeval.datasets, trackeval_dataset_class)
         self.show_progressbar = show_progressbar
 
@@ -31,13 +35,14 @@ class TrackEvalEvaluator(EvaluatorBase):
 
         # Save predictions in MOT Challenge format (.txt)
         pred_save_path = Path(self.cfg.dataset.TRACKERS_FOLDER) / f"{self.trackeval_dataset_class.__name__}-{self.eval_set}" / tracker_name
-        save_in_mot_challenge_format(tracker_state.detections_pred,
-                                     tracker_state.image_metadatas,
-                                     tracker_state.video_metadatas,
-                                     pred_save_path,
-                                     self.cfg.bbox_column_for_eval,
-                                     save_classes,  # do not use classes for MOTChallenge2DBox
-                                     )
+        save_functions[self.trackeval_dataset_name](
+            tracker_state.detections_pred,
+            tracker_state.image_pred,
+            tracker_state.video_metadatas,
+            pred_save_path,
+            self.cfg.bbox_column_for_eval,
+            save_classes,  # do not use classes for MOTChallenge2DBox
+        )
 
         log.info("Tracking predictions saved in MOT Challenge format in {}".format(pred_save_path))
 
@@ -47,13 +52,14 @@ class TrackEvalEvaluator(EvaluatorBase):
             return
 
         # Save ground truth in MOT Challenge format (.txt)
-        save_in_mot_challenge_format(tracker_state.detections_gt,
-                                     tracker_state.image_metadatas,
-                                     tracker_state.video_metadatas,
-                                     Path(self.cfg.dataset.GT_FOLDER) / f"{self.trackeval_dataset_class.__name__}-{self.eval_set}",
-                                     self.cfg.bbox_column_for_eval,
-                                     save_classes,  # do not use classes for MOTChallenge2DBox
-                                     )
+        save_functions[self.trackeval_dataset_name](
+            tracker_state.detections_gt,
+            tracker_state.image_gt,
+            tracker_state.video_metadatas,
+            Path(self.cfg.dataset.GT_FOLDER) / f"{self.trackeval_dataset_name}-{self.eval_set}",
+            self.cfg.bbox_column_for_eval,
+            save_classes,
+        )
 
         log.info("Tracking ground truth saved in MOT Challenge format in {}".format(pred_save_path))
 
@@ -88,6 +94,66 @@ class TrackEvalEvaluator(EvaluatorBase):
         results = output_res[dataset.get_name()][tracker_name]
         combined_results = results.pop('SUMMARIES')
         wandb.log(combined_results)
+
+
+def save_in_soccernet_format(detections: pd.DataFrame,
+                             image_metadatas: pd.DataFrame,
+                             video_metadatas: pd.DataFrame,
+                             save_folder: str,
+                             bbox_column_for_eval="bbox_ltwh",
+                             save_classes=False):
+    save_path = Path(save_folder)
+    save_path.mkdir(parents=True, exist_ok=True)
+    detections = soccernet_encoding(detections.copy(), supercategory="object")
+    camera_metadata = soccernet_encoding(image_metadatas.copy(), supercategory="camera")
+    pitch_metadata = soccernet_encoding(image_metadatas.copy(), supercategory="pitch")
+    predictions = pd.concat([detections, camera_metadata, pitch_metadata], ignore_index=True)
+    for id, video in video_metadatas.iterrows():
+        file_path = save_path / f"{video['name']}.json"
+        video_predictions_df = predictions[predictions["video_id"] == str(id)].copy()
+        if not video_predictions_df.empty:
+            video_predictions_df.sort_values(by="id", inplace=True)
+            video_predictions = [{k: v for k, v in m.items() if np.all(pd.notna(v))} for m in
+                                 video_predictions_df.to_dict(orient="records")]
+            with file_path.open("w") as fp:
+                json.dump({"predictions": video_predictions}, fp, indent=2)
+
+
+
+def soccernet_encoding(dataframe: pd.DataFrame, supercategory):
+    dataframe["supercategory"] = supercategory
+    dataframe = dataframe.map(lambda x: x.tolist() if isinstance(x, np.ndarray) else x)
+    dataframe = dataframe.replace({np.nan: None})
+    if supercategory == "object":
+        dataframe = dataframe.rename(columns={"bbox_ltwh": "bbox_image", "jersey_number": "jersey"})
+        dataframe["track_id"] = dataframe["track_id"]
+        dataframe["attributes"] = dataframe.apply(
+            lambda x: x[x.index.intersection(["role", "jersey", "team"])].to_dict(),
+            axis=1
+        )
+        dataframe["id"] = dataframe.index
+        dataframe = dataframe[dataframe.columns.intersection(
+            ["id", "image_id", "video_id", "track_id", "supercategory",
+             "category_id", "attributes", "bbox_image", "bbox_pitch"])]
+    elif supercategory == "camera":
+        dataframe["image_id"] = dataframe.index
+        dataframe["category_id"] = 6
+        dataframe["id"] = dataframe.index.map(lambda x: str(x) + "01")
+        dataframe = dataframe[dataframe.columns.intersection(
+            ["id", "image_id", "video_id", "supercategory", "category_id", "parameters",
+             "relative_mean_reproj", "accuracy@5"])
+        ]
+    elif supercategory == "pitch":
+        dataframe["image_id"] = dataframe.index
+        dataframe["category_id"] = 5
+        dataframe["id"] = dataframe.index.map(lambda x: str(x) + "00")
+        dataframe = dataframe[dataframe.columns.intersection(
+            ["id", "image_id", "video_id", "supercategory", "category_id", "lines"])]
+    dataframe["video_id"] = dataframe["video_id"].apply(str)
+    dataframe["image_id"] = dataframe["image_id"].apply(str)
+    dataframe["id"] = dataframe["id"].apply(str)
+    return dataframe
+
 
 
 def save_in_mot_challenge_format(detections, image_metadatas, video_metadatas, save_folder, bbox_column_for_eval="bbox_ltwh", save_classes=False):
@@ -202,3 +268,9 @@ def format_metric(metric_name, metric_value, scale_factor):
         return int(metric_value)
     else:
         return np.around(metric_value * scale_factor, 3)
+
+
+save_functions = {
+    "MotChallenge2DBox": save_in_mot_challenge_format,
+    "SoccerNetGS": save_in_soccernet_format,
+}

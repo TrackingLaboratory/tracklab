@@ -14,7 +14,7 @@ class OfflineTrackingEngine(TrackingEngine):
 
         detections, image_pred = tracker_state.load()
         if len(self.module_names) == 0:
-            return detections
+            return detections, image_pred
         image_filepaths = {idx: fn for idx, fn in image_pred["file_path"].items()}
         model_names = self.module_names
         for model_name in model_names:
