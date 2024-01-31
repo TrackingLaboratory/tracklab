@@ -212,17 +212,20 @@ class ReidDataset(ImageDataset):
         )
 
         # Save human parsing pseudo ground truth and related metadata. Apply only on sampled detections
-        self.save_reid_masks_crops(
-            detections,
-            reid_mask_path,
-            reid_fig_path,
-            split,
-            masks_anns_filepath,
-            image_metadatas,
-            fig_size,
-            mask_size,
-            mode=masks_mode,
-        )
+        if self.reid_config.enable_human_parsing_labels:
+            self.save_reid_masks_crops(
+                detections,
+                reid_mask_path,
+                reid_fig_path,
+                split,
+                masks_anns_filepath,
+                image_metadatas,
+                fig_size,
+                mask_size,
+                mode=masks_mode,
+            )
+        else:
+            detections["masks_path"] = ''
 
         # Add 0-based pid column (for Torchreid compatibility) to sampled detections
         self.ad_pid_column(detections)
@@ -580,7 +583,7 @@ class ReidDataset(ImageDataset):
         for df in dataframes:
             df = df.copy()  # to avoid SettingWithCopyWarning
             # use video id as camera id: camid is used at inference to filter out gallery samples given a query sample
-            df["camid"] = df["image_id"]  # FIXME use 'video_id' and 'mot_inter_intra_video'
+            df["camid"] = df["video_id"]  # FIXME use 'video_id' and 'mot_inter_intra_video'
             df["img_path"] = df["reid_crop_path"]
             # remove bbox_head as it is not available for each sample
             # df to list of dict
