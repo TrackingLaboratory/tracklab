@@ -210,6 +210,8 @@ def load_set(dataset_path):
     detections_column_ordered = ['image_id', 'video_id', 'track_id', 'person_id', 'bbox_ltwh', 'visibility']
     detections_column_ordered.extend(set(detections.columns) - set(detections_column_ordered))
     detections = detections[detections_column_ordered]
+    detections['bbox_conf'] = 1
+
     return TrackingSet(
         video_metadata,
         image_metadata,
