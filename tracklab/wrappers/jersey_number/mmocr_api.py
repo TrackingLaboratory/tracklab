@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 class MMOCR(DetectionLevelModule):
     
     input_columns = ["bbox_ltwh"]
-    output_columns = ["jersey_number", "jn_confidence"]
+    output_columns = ["jersey_number_detection", "jersey_number_confidence"]
     collate_fn = default_collate
     
     def __init__(self, batch_size, device, tracking_dataset=None):
@@ -79,8 +79,8 @@ class MMOCR(DetectionLevelModule):
 
     @torch.no_grad()
     def process(self, batch, detections: pd.DataFrame, metadatas: pd.DataFrame):
-        jersey_number = []
-        jn_confidence = []
+        jersey_number_detection = []
+        jersey_number_confidence = []
         images_np = [img.cpu().numpy() for img in batch['img']]
         del batch['img']
         # for img in batch['img']:
@@ -95,11 +95,11 @@ class MMOCR(DetectionLevelModule):
         predictions = self.run_mmocr_inference(images_np)
         for prediction in predictions:
             jn, conf = self.extract_jersey_numbers_from_ocr(prediction)
-            jersey_number.append(jn)
-            jn_confidence.append(conf)
+            jersey_number_detection.append(jn)
+            jersey_number_confidence.append(conf)
 
-        detections['jersey_number'] = jersey_number
-        detections['jn_confidence'] = jn_confidence
+        detections['jersey_number_detection'] = jersey_number_detection
+        detections['jersey_number_confidence'] = jersey_number_confidence
         
         return detections
     

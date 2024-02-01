@@ -112,12 +112,13 @@ class TrackingEngine(ABC):
                     video_idx=video_idx,
                     index=i,
                 )
-                detections = self.video_loop(tracker_state, video_metadata, video_idx)
+                detections, image_pred = self.video_loop(tracker_state, video_metadata, video_idx)
                 self.callback(
                     "on_video_loop_end",
                     video_metadata=video_metadata,
                     video_idx=video_idx,
                     detections=detections,
+                    image_pred=image_pred,
                 )
         self.callback("on_dataset_track_end")
 
@@ -141,13 +142,14 @@ class TrackingEngine(ABC):
         """
         pass
 
-    def default_step(self, batch: Any, task: str, detections: pd.DataFrame, **kwargs):
+    def default_step(self, batch: Any, task: str, detections: pd.DataFrame,
+                     image_pred: pd.DataFrame, **kwargs):
         model = self.models[task]
         self.callback(f"on_module_step_start", task=task, batch=batch)
         idxs, batch = batch
         idxs = idxs.cpu() if isinstance(idxs, torch.Tensor) else idxs
         if model.level == "image":
-            batch_metadatas = self.img_metadatas.loc[idxs]
+            batch_metadatas = image_pred.loc[list(idxs)]  # self.img_metadatas.loc[idxs]
             if len(detections) > 0:
                 batch_input_detections = detections.loc[
                     np.isin(detections.image_id, batch_metadatas.index)
@@ -160,14 +162,21 @@ class TrackingEngine(ABC):
                 batch_metadatas)
         else:
             batch_detections = detections.loc[idxs]
+            if not image_pred.empty:
+                batch_metadatas = image_pred.loc[np.isin(image_pred.index, batch_detections.image_id)]
+            else:
+                batch_metadatas = image_pred
             batch_detections = self.models[task].process(
                 batch=batch,
                 detections=batch_detections,
-                metadatas=None,
+                metadatas=batch_metadatas,
                 **kwargs,
             )
+        if isinstance(batch_detections, tuple):
+            batch_detections, batch_metadatas = batch_detections
+            image_pred = merge_dataframes(image_pred, batch_metadatas)
         detections = merge_dataframes(detections, batch_detections)
         self.callback(
             f"on_module_step_end", task=task, batch=batch, detections=detections
         )
-        return detections
+        return detections, image_pred

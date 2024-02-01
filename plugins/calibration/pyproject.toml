@@ -1,0 +1,12 @@
+[tool.poetry]
+name = "tracklab-calibration"
+version = "1.0.0"
+description = ""
+authors = ["Victor Joos <victor.joos@uclouvain.be>"]
+packages = [
+    {include = "sn_calibration_baseline"},
+]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

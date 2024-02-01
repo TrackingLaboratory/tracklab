@@ -583,7 +583,7 @@ class ReidDataset(ImageDataset):
         for df in dataframes:
             df = df.copy()  # to avoid SettingWithCopyWarning
             # use video id as camera id: camid is used at inference to filter out gallery samples given a query sample
-            df["camid"] = df["image_id"]  # FIXME use 'video_id' and 'mot_inter_intra_video'
+            df["camid"] = df["video_id"]  # FIXME use 'video_id' and 'mot_inter_intra_video'
             df["img_path"] = df["reid_crop_path"]
             # remove bbox_head as it is not available for each sample
             # df to list of dict
@@ -592,7 +592,7 @@ class ReidDataset(ImageDataset):
             # 'RuntimeError: torch.cat(): input types can't be cast to the desired output type Long' in collate.py
             # -> still has to be fixed
             data_list = sorted_df[
-                ["pid", "camid", "img_path", "masks_path", "visibility"]
+                ["pid", "camid", "img_path", "masks_path", "visibility", "role", "team"]
             ]
             data_list = data_list.to_dict("records")
             results.append(data_list)

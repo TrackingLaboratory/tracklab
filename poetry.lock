@@ -4816,9 +4816,9 @@ labels = ["detectron2 @ git+https://github.com/facebookresearch/detectron2.git",
 
 [package.source]
 type = "git"
-url = "https://github.com/victorjoos/bpbreid.git"
+url = "https://github.com/VlSomers/prtreid"
 reference = "HEAD"
-resolved_reference = "a8745ed7dc13f0219d9173303bbf7c06149a9a08"
+resolved_reference = "5204cae319923bf76d25a6e585d55ad207f93e35"
 
 [[package]]
 name = "torchvision"
@@ -4909,6 +4909,19 @@ type = "git"
 url = "https://github.com/TrackingLaboratory/TrackEval.git"
 reference = "HEAD"
 resolved_reference = "3631212605aa5afad2c759c8cbceb9e96af6ca87"
+
+[[package]]
+name = "tracklab-calibration"
+version = "1.0.0"
+description = ""
+optional = false
+python-versions = "*"
+files = []
+develop = true
+
+[package.source]
+type = "directory"
+url = "plugins/calibration"
 
 [[package]]
 name = "typing-extensions"
@@ -5345,4 +5358,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "1da00d25cb0ca0c1ebd74f63df8fae8ecbf295286faa4de3c85818f618c380c5"
+content-hash = "04eb3d6e2c25ffc2adb60a12764025e539522fe8f84085eba2cdd60f51227d1b"

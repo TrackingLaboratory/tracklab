@@ -105,7 +105,7 @@ class VisualizationEngine(Callback):
     ):
         self.video_name = video_metadata.name
 
-    def on_video_loop_end(self, engine, video_metadata, video_idx, detections):
+    def on_video_loop_end(self, engine, video_metadata, video_idx, detections, image_pred):
         if self.cfg.save_videos or self.cfg.save_images:
             if (
                 self.processed_video_counter < self.cfg.process_n_videos
@@ -423,15 +423,15 @@ class VisualizationEngine(Callback):
         if (
             is_prediction
             and self.cfg.prediction.display_jersey_number
-            and hasattr(detection, "jn_tracklet")
+            and hasattr(detection, "jersey_number")
         ):
-            if not pd.isna(detection.jn_tracklet):
+            if not pd.isna(detection.jersey_number):
                 l, t, r, b = detection.bbox.ltrb(
                     image_shape=(patch.shape[1], patch.shape[0]), rounded=True
                 )
                 draw_text(
                     patch,
-                    f"JN: {int(detection.jn_tracklet)}",
+                    f"JN: {int(detection.jersey_number)}",
                     (int((l + r)/2), int((t + b)/2)),
                     fontFace=self.cfg.text.font,
                     fontScale=self.cfg.text.scale,

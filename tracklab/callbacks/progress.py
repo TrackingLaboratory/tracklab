@@ -36,6 +36,7 @@ class Progressbar(Callback):
         video_metadata: pd.Series,
         video_idx: int,
         detections: pd.DataFrame,
+        image_pred: pd.DataFrame,
     ):
         self.pbar.update()
         self.pbar.refresh()
@@ -84,6 +85,7 @@ class RichProgressbar(Progressbar):
         video_metadata: pd.Series,
         video_idx: int,
         detections: pd.DataFrame,
+        image_pred: pd.DataFrame,
     ):
         self.pbar.update(self.tasks["main"], advance=1, refresh=True)
 

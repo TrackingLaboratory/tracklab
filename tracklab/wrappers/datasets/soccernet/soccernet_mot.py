@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from pathlib import Path
+from tqdm import tqdm
 from tracklab.datastruct import TrackingDataset, TrackingSet
 
 log = logging.getLogger(__name__)
@@ -33,8 +34,7 @@ def read_motchallenge_formatted_file(file_path):
     columns = ['image_id', 'track_id', 'left', 'top', 'width', 'height', 'bbox_conf', 'class', 'visibility', 'unused']
     df = pd.read_csv(file_path, header=None, names=columns)
     df['bbox_ltwh'] = df.apply(lambda row: np.array([row['left'], row['top'], row['width'], row['height']]), axis=1)
-    df['person_id'] = df['track_id']  # Create person_id column with the same content as track_id
-    return df[['image_id', 'track_id', 'person_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility']]
+    return df[['image_id', 'track_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility']]
 
 
 def load_set(dataset_path):
@@ -42,9 +42,11 @@ def load_set(dataset_path):
     image_metadata_list = []
     detections_list = []
     categories_list = []
+    split = os.path.basename(dataset_path)  # Get the split name from the dataset path
 
     image_counter = 0
-    for video_folder in sorted(os.listdir(dataset_path)):  # Sort videos by name
+    person_counter = 0
+    for video_folder in tqdm(sorted(os.listdir(dataset_path)), desc=f"Loading SoccerNetGS '{split}' set videos"):  # Sort videos by name
         video_folder_path = os.path.join(dataset_path, video_folder)
         if os.path.isdir(video_folder_path):
             # Read gameinfo.ini
@@ -58,6 +60,7 @@ def load_set(dataset_path):
             # Read ground truth detections
             gt_path = os.path.join(video_folder_path, 'gt', 'gt.txt')
             detections_df = read_motchallenge_formatted_file(gt_path)
+            detections_df['person_id'] = detections_df['track_id'] - 1 + person_counter
             detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
             detections_df['video_id'] = len(video_metadatas_list) + 1
             detections_df['visibility'] = 1
@@ -167,6 +170,7 @@ def load_set(dataset_path):
 
             })
             image_counter += nframes
+            person_counter += len(detections_df['track_id'].unique())
             image_metadata_list.append(img_metadata_df)
 
     categories_list = [{'id': i + 1, 'name': category, 'supercategory': 'person'} for i, category in

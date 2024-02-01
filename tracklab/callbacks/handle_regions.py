@@ -13,6 +13,7 @@ class IgnoredRegions(Callback):
         video_metadata: pd.Series,
         video_idx: int,
         detections: pd.DataFrame,
+        image_pred: pd.DataFrame,
     ):
         image_metadatas = engine.img_metadatas[
             engine.img_metadatas.video_id == video_idx
