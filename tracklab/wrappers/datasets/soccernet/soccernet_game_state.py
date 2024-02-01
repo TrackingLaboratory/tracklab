@@ -21,11 +21,17 @@ class SoccerNetGameState(TrackingDataset):
 
         train_set = load_set(self.dataset_path / "train", nvid, vids_dict["train"])
         val_set = load_set(self.dataset_path / "validation", nvid, vids_dict["val"])
-        # test_set = load_set(self.dataset_path / "challenge")
-        test_set = None
+        # challenge = load_set(self.dataset_path / "challenge")
+        challenge = None
+
+        sets = {
+            "train": train_set,
+            "val": val_set,
+            "challenge": challenge
+        }
 
         # We pass 'nvid=-1', 'vids_dict=None' because video subsampling is already done in the load_set function
-        super().__init__(dataset_path, train_set, val_set, test_set, nvid=-1, vids_dict=None, *args, **kwargs)
+        super().__init__(dataset_path, sets, nvid=-1, vids_dict=None, *args, **kwargs)
 
 def extract_category(attributes):
     if attributes['role'] == 'goalkeeper':
@@ -98,9 +104,6 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
     split = os.path.basename(dataset_path)  # Get the split name from the dataset path
     video_list = os.listdir(dataset_path)
 
-    if nvid > 0:
-        video_list = video_list[:nvid]
-
     if vids_filter_set is not None and len(vids_filter_set) > 0:
         missing_videos = set(vids_filter_set) - set(video_list)
         if missing_videos:
@@ -108,6 +111,9 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
                 f"Warning: The following videos provided in config 'dataset.vids_dict' do not exist in {split} set: {missing_videos}")
 
         video_list = [video for video in video_list if video in vids_filter_set]
+        
+    if nvid > 0:
+        video_list = video_list[:nvid]
 
     image_counter = 0
     person_counter = 0

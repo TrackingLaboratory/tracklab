@@ -11,7 +11,7 @@ cfg:
   print_by_video: True
 
   mot_trackers_folder: "eval/mot"
-  mot_gt_folder: ${dataset.dataset_path}/${eval.eval_set}
+  mot_gt_folder: ${dataset.dataset_path}/${dataset.eval_set}
 
   use_parallel: True
   num_parallel_cores: ${num_cores}

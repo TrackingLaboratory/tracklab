@@ -1,16 +1,14 @@
 import json
 import os
-from math import isnan
-
 import numpy as np
 import pandas as pd
 import logging
 import trackeval
-import wandb
 
 from pathlib import Path
 from tabulate import tabulate
 from tracklab.core import Evaluator as EvaluatorBase
+from tracklab.utils import wandb
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +35,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         pred_save_path = Path(self.cfg.dataset.TRACKERS_FOLDER) / f"{self.trackeval_dataset_class.__name__}-{self.eval_set}" / tracker_name
         save_functions[self.trackeval_dataset_name](
             tracker_state.detections_pred,
-            tracker_state.image_pred,
+            tracker_state.image_metadatas,
             tracker_state.video_metadatas,
             pred_save_path,
             self.cfg.bbox_column_for_eval,
@@ -56,7 +54,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         # Save ground truth in MOT Challenge format (.txt)
         save_functions[self.trackeval_dataset_name](
             tracker_state.detections_gt,
-            tracker_state.image_gt,
+            tracker_state.image_metadatas,
             tracker_state.video_metadatas,
             Path(self.cfg.dataset.GT_FOLDER) / f"{self.trackeval_dataset_name}-{self.eval_set}",
             self.cfg.bbox_column_for_eval,

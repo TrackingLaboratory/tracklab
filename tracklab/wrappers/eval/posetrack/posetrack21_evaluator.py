@@ -82,7 +82,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 title="Pose estimation - keypoints average precision",
                 print_by_video=self.cfg.print_by_video,
             )
-            wandb.log(res_combined, "PoseTrack21/kp/AP")
+            wandb.log_metric(res_combined, "PoseTrack21/kp/AP")
             res_combined = precmetrics2dict(preAll)
             self._print_results(
                 res_combined,
@@ -90,7 +90,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 title="Pose estimation - keypoints precision",
                 print_by_video=self.cfg.print_by_video,
             )
-            wandb.log(res_combined, "PoseTrack21/kp/precision")
+            wandb.log_metric(res_combined, "PoseTrack21/kp/precision")
             res_combined = recallmetrics2dict(recAll)
             self._print_results(
                 res_combined,
@@ -98,7 +98,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 title="Pose estimation - keypoints recall",
                 print_by_video=self.cfg.print_by_video,
             )
-            wandb.log(res_combined, "PoseTrack21/kp/recall")
+            wandb.log_metric(res_combined, "PoseTrack21/kp/recall")
 
         if self.cfg.eval_pose_tracking:
             annotations = self._annotations_tracking_eval(
@@ -129,7 +129,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 title="Pose tracking - keypoints HOTA",
                 print_by_video=self.cfg.print_by_video,
             )
-            wandb.log(res_combined, "PoseTrack21/kp/HOTA", res_by_video)
+            wandb.log_metric(res_combined, "PoseTrack21/kp/HOTA", res_by_video)
 
             argv = ["", self.cfg.posetrack_gt_folder, trackers_folder]
             gtFramesAll, prFramesAll = load_data_dir(argv, seqs)
@@ -153,7 +153,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 title="Pose tracking - keypoints MOTA",
                 print_by_video=self.cfg.print_by_video,
             )
-            wandb.log(res_combined, "PoseTrack21/kp/MOTA")
+            wandb.log_metric(res_combined, "PoseTrack21/kp/MOTA")
 
         if self.cfg.eval_reid_pose_tracking:
             annotations = self._annotations_reid_pose_tracking_eval(
@@ -182,7 +182,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 title="Pose tracking cross-video - keypoints HOTA",
                 print_by_video=self.cfg.print_by_video,
             )
-            wandb.log(res_combined, "PoseTrack21/kp/ReID", res_by_video)
+            wandb.log_metric(res_combined, "PoseTrack21/kp/ReID", res_by_video)
 
         if self.cfg.eval_mot:
             # Bounding box evaluation
@@ -199,7 +199,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
             log.info(
                 "MOT - bbox mAP\n" + tabulate([data], headers=headers, tablefmt="plain")
             )
-            wandb.log(bbox_map, "PoseTrack21/bbox/AP")
+            wandb.log_metric(bbox_map, "PoseTrack21/bbox/AP")
 
             # HOTA
             trackers_folder = self.cfg.mot_trackers_folder
@@ -223,7 +223,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                 title="MOT - bbox HOTA",
                 print_by_video=self.cfg.print_by_video,
             )
-            wandb.log(res_combined, "PoseTrack21/bbox/HOTA", res_by_video)
+            wandb.log_metric(res_combined, "PoseTrack21/bbox/HOTA", res_by_video)
 
             # MOTA
             dataset = posetrack21_mot.PTWrapper(
@@ -251,7 +251,7 @@ class PoseTrack21Evaluator(EvaluatorBase):
                     generate_overall=True,
                 )
                 results_mot_bbox = summary.to_dict(orient="index")
-                wandb.log(
+                wandb.log_metric(
                     results_mot_bbox["OVERALL"],
                     "PoseTrack21/bbox/MOTA",
                     results_mot_bbox,

@@ -18,7 +18,9 @@ class MOT20(TrackingDataset):
         val_set = None  # TODO
         test_set = load_test(self.dataset_path / "test")
 
-        super().__init__(dataset_path, train_set, val_set, test_set, *args, **kwargs)
+        sets = {"train": train_set, "val": val_set, "test": test_set}
+        
+        super().__init__(dataset_path, sets, *args, **kwargs)
 
 
 def load_train(dataset_path):
