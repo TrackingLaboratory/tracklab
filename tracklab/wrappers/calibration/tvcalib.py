@@ -1,4 +1,5 @@
 from functools import partial
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -10,6 +11,7 @@ from PIL import Image
 from sn_calibration_baseline.camera import Camera
 from sn_calibration_baseline.detect_extremities import generate_class_synthesis, join_points
 from tracklab.pipeline import ImageLevelModule
+from tracklab.utils.download import download_file
 from tvcalib.cam_distr.tv_main_center import get_cam_distr, get_dist_distr
 from tvcalib.inference import InferenceSegmentationModel, InferenceDatasetCalibration
 from torchvision.models.segmentation import deeplabv3_resnet101
@@ -29,6 +31,10 @@ class TVCalib_Segmentation(ImageLevelModule):
         self.model = deeplabv3_resnet101(
             num_classes=len(SoccerPitch.lines_classes) + 1, aux_loss=True
         )
+        if Path(checkpoint).name == "train_59.pt":
+            md5 = "c89ab863a12822b0e3a87cd6eebe7cae"
+            download_file("https://tib.eu/cloud/s/x68XnTcZmsY4Jpg/download/train_59.pt",
+                          checkpoint, md5)
         self.model.load_state_dict(torch.load(checkpoint)["model"], strict=False)
         self.model.to(self.device)
         self.model.eval()
