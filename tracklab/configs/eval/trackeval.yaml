@@ -6,6 +6,7 @@ trackeval_dataset_class: ${..dataset.trackeval_dataset_class}  # TrackEval datas
 show_progressbar: True  # Show progressbar during evaluation
 
 cfg:
+  save_gt: False
   bbox_column_for_eval: "bbox_ltwh"  # which bbox column to use for evaluation: {"bbox_ltwh", "track_bbox_kf_ltwh", ...}
   metrics:  # List of performance metrics to compute as listed in "trackeval.metrics"
     - "HOTA"

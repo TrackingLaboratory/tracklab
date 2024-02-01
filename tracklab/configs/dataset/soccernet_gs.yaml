@@ -6,4 +6,4 @@ _target_: tracklab.wrappers.SoccerNetGameState
 dataset_path: ${data_dir}/SoccerNetGS
 annotation_path: ${data_dir}/SoccerNetGS
 trackeval_dataset_class: SoccerNetGS  # SoccerNetGS MotChallenge2DBox
-eval_set: "val"
+eval_set: "validation"

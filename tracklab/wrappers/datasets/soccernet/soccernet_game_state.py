@@ -26,7 +26,7 @@ class SoccerNetGameState(TrackingDataset):
 
         sets = {
             "train": train_set,
-            "val": val_set,
+            "validation": val_set,
             "challenge": challenge
         }
 
@@ -81,6 +81,7 @@ def dict_to_df_detections(annotation_dict, categories_list):
     df['jersey_number'] = df.apply(lambda row: row['attributes']['jersey'], axis=1)
     df['position'] = None # df.apply(lambda row: row['attributes']['position'], axis=1)         for now there is no position in the json file
     df['category'] = df.apply(lambda row: extract_category(row['attributes']), axis=1)
+    df['track_id'] = df['track_id'].astype(int)
 
     columns = ['id', 'image_id', 'track_id', 'bbox_ltwh', 'bbox_pitch', 'team', 'role', 'jersey_number', 'position', 'category']
     df = df[columns]

@@ -1,9 +1,0 @@
-_target_: tracklab.wrappers.SoccerNetMOTEvaluator
-
-cfg:
-  eval_mot: True
-
-  bbox_column_for_eval: "bbox_ltwh"  # which bbox column to use for evaluation: {"bbox_ltwh", "track_bbox_kf_ltwh", ...}
-
-  mot_trackers_folder: "eval/soccernet"
-  mot_gt_folder: ${dataset.dataset_path}/test
