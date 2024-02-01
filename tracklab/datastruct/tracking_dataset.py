@@ -17,9 +17,7 @@ class TrackingDataset(ABC):
     def __init__(
         self,
         dataset_path: str,
-        train_set: TrackingSet,
-        val_set: TrackingSet,
-        test_set: TrackingSet,
+        sets: dict[str, TrackingSet],
         nvid: int = -1,
         nframes: int = -1,
         vids_dict: list = None,
@@ -27,25 +25,19 @@ class TrackingDataset(ABC):
         **kwargs
     ):
         self.dataset_path = Path(dataset_path)
-        self.train_set = train_set
-        self.val_set = val_set
-        self.test_set = test_set
+        self.sets = sets
+        self.train_set = None
+        self.val_set = None
+        self.test_set = None
 
-        if self.train_set is not None:
-            self.train_set = self._subsample(
-                self.train_set, nvid, nframes, getattr(vids_dict, "train", None)
-            )
-        if self.val_set is not None:
-            self.val_set = self._subsample(
-                self.val_set, nvid, nframes, getattr(vids_dict, "val", None)
-            )
-        if self.test_set is not None:
-            self.test_set = self._subsample(
-                self.test_set, nvid, nframes, getattr(vids_dict, "test", None)
-            )
+        sub_sampled_sets = {}
+        for set_name, split in self.sets.items():
+            vid_list = vids_dict[set_name] if vids_dict is not None and set_name in vids_dict else None
+            sub_sampled_sets[set_name] = self._subsample(split, nvid, nframes, vid_list)
+        self.sets = sub_sampled_sets
 
     def _subsample(self, tracking_set, nvid, nframes, vids_names):
-        if nvid < 1 and nframes < 1 and (vids_names is None or len(vids_names) == 0):
+        if nvid < 1 and nframes < 1 and (vids_names is None or len(vids_names) == 0) or tracking_set is None:
             return tracking_set
 
         # filter videos:

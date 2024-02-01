@@ -100,6 +100,9 @@ class ReidDataset(ImageDataset):
         self.eval_metric = self.reid_config.eval_metric
         self.multi_video_queries_only = self.reid_config.multi_video_queries_only
 
+        val_set = tracking_dataset.sets[self.reid_config.test.set_name]
+        train_set = tracking_dataset.sets[self.reid_config.train.set_name]
+
         assert (
             self.reid_config.train.max_samples_per_id
             >= self.reid_config.train.min_samples_per_id
@@ -126,21 +129,21 @@ class ReidDataset(ImageDataset):
 
         # Build ReID dataset from MOT dataset
         self.build_reid_set(
-            tracking_dataset.train_set,
+            train_set,
             self.reid_config,
             "train",
             is_test_set=False,
         )
 
         self.build_reid_set(
-            tracking_dataset.val_set,
+            val_set,
             self.reid_config,
             "val",
             is_test_set=True,
         )
 
-        train_gt_dets = tracking_dataset.train_set.detections_gt
-        val_gt_dets = tracking_dataset.val_set.detections_gt
+        train_gt_dets = train_set.detections_gt
+        val_gt_dets = val_set.detections_gt
 
         # Get train/query/gallery sets as torchreid list format
         train_df = train_gt_dets[train_gt_dets["split"] == "train"]

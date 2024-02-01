@@ -1,6 +1,5 @@
 _target_: tracklab.wrappers.MOT20Evaluator
 
-eval_set: "train"
 
 cfg:
   eval_mot: True

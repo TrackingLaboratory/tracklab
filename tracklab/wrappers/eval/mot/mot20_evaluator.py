@@ -85,7 +85,7 @@ class MOT20Evaluator(EvaluatorBase):
                 )
             )
             results_mot_bbox = summary.to_dict(orient="index")
-            wandb.log(
+            wandb.log_metric(
                 results_mot_bbox["OVERALL"],
                 "MOT20/bbox/MOTA",
                 results_mot_bbox,
