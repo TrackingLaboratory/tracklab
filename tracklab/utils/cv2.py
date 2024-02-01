@@ -305,6 +305,7 @@ def draw_text(
     lineType=cv2.LINE_AA,
     color_txt=(0, 0, 0),
     color_bg=None,
+    alpha_bg=1.0,
     alignH="l",  # l: left, c: center, r: right
     alignV="b",  # t: top, c: center, b: bottom
     darken=1.0,
@@ -344,9 +345,12 @@ def draw_text(
     if color_bg is not None:
         rect_w = text_w + padding
         rect_h = text_h + padding
-        cv2.rectangle(
-            img, rect_position, (txt_pos_x + rect_w, txt_pos_y - rect_h), color_bg, -1
-        )
+        x_start, x_stop = np.sort([rect_pos_x, txt_pos_x+rect_w])
+        y_start, y_stop = np.sort([rect_pos_y, txt_pos_y-rect_h])
+        crop = img[y_start:y_stop, x_start:x_stop]
+        bg = np.ones_like(crop) * np.array(color_bg, dtype=crop.dtype)
+        img[y_start:y_stop, x_start:x_stop] = (
+            cv2.addWeighted(crop, (1-alpha_bg), bg, alpha_bg, 0.0))
 
     cv2.putText(
         img,
