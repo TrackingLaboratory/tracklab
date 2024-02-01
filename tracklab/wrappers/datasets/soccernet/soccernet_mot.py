@@ -11,17 +11,21 @@ log = logging.getLogger(__name__)
 
 
 class SoccerNetMOT(TrackingDataset):
-    def __init__(self, dataset_path: str, *args, **kwargs):
+    def __init__(self,
+                 dataset_path: str,
+                 nvid: int = -1,
+                 vids_dict: list = None,
+                 *args, **kwargs):
         self.dataset_path = Path(dataset_path)
         assert self.dataset_path.exists(), f"'{self.dataset_path}' directory does not exist. Please check the path or download the dataset following the instructions here: https://github.com/SoccerNet/sn-tracking"
 
         log.info(f"Loading SoccerNet MOT dataset from {self.dataset_path} ...")
-        train_set = load_set(self.dataset_path / "train")  # 57 videos
-        test_set = load_set(self.dataset_path / "test")  # 49 videos
+        train_set = load_set(self.dataset_path / "train", nvid, vids_dict["train"])  # 57 videos
+        test_set = load_set(self.dataset_path / "test", nvid, vids_dict["val"])  # 49 videos
         # challenge_set = load_set(self.dataset_path / "challenge")
         challenge_set = None  #  58 videos
 
-        super().__init__(dataset_path, train_set, test_set, challenge_set, *args, **kwargs)
+        super().__init__(dataset_path, train_set, test_set, challenge_set, nvid=-1, vids_dict=None, *args, **kwargs)
 
 
 def read_ini_file(file_path):
@@ -37,16 +41,28 @@ def read_motchallenge_formatted_file(file_path):
     return df[['image_id', 'track_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility']]
 
 
-def load_set(dataset_path):
+def load_set(dataset_path, nvid=-1, vids_filter_set=None):
     video_metadatas_list = []
     image_metadata_list = []
     detections_list = []
     categories_list = []
     split = os.path.basename(dataset_path)  # Get the split name from the dataset path
+    video_list = os.listdir(dataset_path)
+
+    if nvid > 0:
+        video_list = video_list[:nvid]
+
+    if vids_filter_set is not None and len(vids_filter_set) > 0:
+        missing_videos = set(vids_filter_set) - set(video_list)
+        if missing_videos:
+            log.warning(
+                f"Warning: The following videos provided in config 'dataset.vids_dict' do not exist in {split} set: {missing_videos}")
+
+        video_list = [video for video in video_list if video in vids_filter_set]
 
     image_counter = 0
     person_counter = 0
-    for video_folder in tqdm(sorted(os.listdir(dataset_path)), desc=f"Loading SoccerNetMOT '{split}' set videos"):  # Sort videos by name
+    for video_folder in tqdm(sorted(video_list), desc=f"Loading SoccerNetGS '{split}' set videos"):  # Sort videos by name
         video_folder_path = os.path.join(dataset_path, video_folder)
         if os.path.isdir(video_folder_path):
             # Read gameinfo.ini
