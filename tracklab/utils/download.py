@@ -13,6 +13,8 @@ def download_file(url, local_filename, md5=None):
             else:
                 raise ValueError(f'MD5 checksum mismatch for file {local_filename}, '
                                  f'please re-download it from {url}')
+
+    Path(local_filename).parent.mkdir(exist_ok=True, parents=True)
     file_hash = hashlib.md5()
     with (requests.get(url, stream=True) as r):
         r.raise_for_status()
