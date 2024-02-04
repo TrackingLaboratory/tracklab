@@ -1,7 +1,7 @@
 ![TrackLab](docs/tracklab_banner.png)
 
-<p align="center"></p>
-TrackLab is an easy-to-use modular framework for multi-object pose/segmentation/bbox tracking that supports many tracking datasets and evaluation metrics.  
+TrackLab is an easy-to-use modular framework for multi-object pose/segmentation/bbox tracking that supports many tracking datasets and evaluation metrics.
+
 
 <p align="center">
   <img src="docs/assets/gifs/PoseTrack21_008827.gif" width="400" />
