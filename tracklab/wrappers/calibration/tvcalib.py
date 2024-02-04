@@ -23,8 +23,15 @@ from tvcalib.utils.objects_3d import SoccerPitchLineCircleSegments, \
 
 
 class TVCalib_Segmentation(ImageLevelModule):
-    input_columns = []
-    output_columns = []
+    input_columns = {
+        "image": [],
+        "detection": [],
+    }
+    output_columns = {
+        "image": ["lines"],
+        "detection": []
+    }
+
     def __init__(self, checkpoint, image_width, image_height, batch_size, device, **kwargs):
         super().__init__(batch_size)
         self.device = device
@@ -72,9 +79,17 @@ class TVCalib_Segmentation(ImageLevelModule):
         )
         return pd.DataFrame(), new_metadatas
 
+
 class TVCalib(ImageLevelModule):
-    input_columns = []
-    output_columns = ["bbox_pitch"]
+    input_columns = {
+        "image": ["lines"],
+        "detection": ["bbox_ltwh"],
+    }
+    output_columns = {
+        "image": ["parameters"],
+        "detection": ["bbox_pitch"],
+    }
+
     def __init__(self, image_width, image_height, lens_dist, optim_steps, batch_size, device, **kwargs):
         super().__init__(batch_size)
         self.image_width = image_width

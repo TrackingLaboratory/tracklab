@@ -49,6 +49,18 @@ class Module(metaclass=ABCMeta):
             if col not in dataframe.columns:
                 raise AttributeError(f"The output detection should contain {col}.")
 
+    def get_input_columns(self, level):
+        if isinstance(self.input_columns, list):
+            return self.input_columns if level == "detection" else []
+        elif isinstance(self.input_columns, dict):
+            return self.input_columns.get(level, [])
+
+    def get_output_columns(self, level):
+        if isinstance(self.output_columns, list):
+            return self.output_columns if level == "detection" else []
+        elif isinstance(self.output_columns, dict):
+            return self.output_columns.get(level, [])
+
 
 class Pipeline:
     def __init__(self, models: List[Module]):

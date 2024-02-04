@@ -2,6 +2,8 @@ import os
 import json
 import pickle
 import zipfile
+from collections import defaultdict
+
 import numpy as np
 import pandas as pd
 from contextlib import AbstractContextManager
@@ -53,17 +55,24 @@ class TrackerState(AbstractContextManager):
                         load_columns = set(dets.columns)
         else:
             load_columns = set()
-        self.input_columns = set()
-        self.output_columns = set()
-        self.forget_columns = []
+        self.input_columns = defaultdict(set)
+        self.output_columns = defaultdict(set)
+        self.forget_columns = defaultdict(list)
         for module in self.pipeline:
-            self.input_columns |= (set(module.input_columns) - self.output_columns)
-            self.output_columns |= set(module.output_columns)
-            self.forget_columns += getattr(module, "forget_columns", [])
+            for level in ["image", "detection"]:
+                self.input_columns[level] |= (set(module.get_input_columns(level)) - self.output_columns[level])
+                self.output_columns[level] |= set(module.get_output_columns(level))
+                self.forget_columns[level] += getattr(module, "forget_columns", [])
 
-        self.load_columns = list((load_columns - self.output_columns)
-                                 | self.input_columns
-                                 | {"image_id", "video_id"})
+        self.load_columns = {}
+        self.load_columns["detection"] = list(
+            (load_columns - self.output_columns["detection"])
+            | self.input_columns["detection"]
+            | {"image_id", "video_id"})
+        self.load_columns["image"] = list(
+            (load_columns - self.output_columns["image"])
+            | self.input_columns["image"]
+            | {"video_id", "file_path", "frame"})
         if self.load_file:
             log.info(f"Loading {self.load_columns} from {self.load_file}")
         self.zf = None
@@ -87,8 +96,8 @@ class TrackerState(AbstractContextManager):
             self.detections_pred = self.detections_gt.copy()  # load all columns if pipeline is empty
             self.image_pred = merge_dataframes(self.image_metadatas.copy(), self.image_gt.copy())
         else:
-            self.detections_pred = self.detections_gt.copy()  # [load_columns]
-            self.image_pred = merge_dataframes(self.image_metadatas.copy(), self.image_gt.copy())
+            self.detections_pred = self.detections_gt.copy()[load_columns["detection"]]
+            self.image_pred = merge_dataframes(self.image_metadatas.copy(), self.image_gt.copy())[load_columns["image"]]
 
     def load_detections_pred_from_json(self, json_file):
         anns_path = Path(json_file)
@@ -269,7 +278,7 @@ class TrackerState(AbstractContextManager):
 
         if f"{self.video_id}.pkl" in self.zf["load"].namelist():
             with self.zf["load"].open(f"{self.video_id}.pkl", "r") as fp:
-                video_detections = pickle.load(fp)
+                video_detections = pickle.load(fp)[self.load_columns["detection"]]
         else:
             log.info(f"{self.video_id} detections not in pklz file.")
             video_detections = pd.DataFrame()
@@ -280,7 +289,7 @@ class TrackerState(AbstractContextManager):
                 video_image_pred = merge_dataframes(
                     video_image_pred,
                     self.image_metadatas[self.image_metadatas.video_id == self.video_id]
-                )
+                )[self.load_columns["image"]]
         else:
             video_image_pred = self.image_metadatas[self.image_metadatas.video_id == self.video_id]
         self.update(video_detections, video_image_pred)
