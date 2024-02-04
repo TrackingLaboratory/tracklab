@@ -529,19 +529,19 @@ class VisualizationEngine(Callback):
             else:
                 color_id = cmap[int(detection.track_id) % len(cmap)]
             color_bbox = (
-                self.cfg.bbox[color_key] if self.cfg.bbox[color_key] is None else color_id
+                self.cfg.bbox[color_key] if self.cfg.bbox[color_key] is not None else color_id
             )
             color_text = (
-                self.cfg.text[color_key] if self.cfg.text[color_key] is None else color_id
+                self.cfg.text[color_key] if self.cfg.text[color_key] is not None else color_id
             )
             color_keypoint = (
                 self.cfg.keypoint[color_key]
-                if self.cfg.keypoint[color_key] is None
+                if self.cfg.keypoint[color_key] is not None
                 else color_id
             )
             color_skeleton = (
                 self.cfg.skeleton[color_key]
-                if self.cfg.skeleton[color_key] is None
+                if self.cfg.skeleton[color_key] is not None
                 else color_id
             )
         return color_bbox, color_text, color_keypoint, color_skeleton
