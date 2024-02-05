@@ -11,17 +11,21 @@ log = logging.getLogger(__name__)
 
 
 class SoccerNetMOT(TrackingDataset):
-    def __init__(self, dataset_path: str, *args, **kwargs):
+    def __init__(self,
+                 dataset_path: str,
+                 nvid: int = -1,
+                 vids_dict: list = None,
+                 *args, **kwargs):
         self.dataset_path = Path(dataset_path)
         assert self.dataset_path.exists(), f"'{self.dataset_path}' directory does not exist. Please check the path or download the dataset following the instructions here: https://github.com/SoccerNet/sn-tracking"
 
         log.info(f"Loading SoccerNet MOT dataset from {self.dataset_path} ...")
-        train_set = load_set(self.dataset_path / "train")  # 57 videos
-        test_set = load_set(self.dataset_path / "test")  # 49 videos
+        train_set = load_set(self.dataset_path / "train", nvid, vids_dict["train"])  # 57 videos
+        test_set = load_set(self.dataset_path / "test", nvid, vids_dict["val"])  # 49 videos
         # challenge_set = load_set(self.dataset_path / "challenge")
         challenge_set = None  #  58 videos
 
-        super().__init__(dataset_path, train_set, test_set, challenge_set, *args, **kwargs)
+        super().__init__(dataset_path, train_set, test_set, challenge_set, nvid=-1, vids_dict=None, *args, **kwargs)
 
 
 def read_ini_file(file_path):
@@ -37,16 +41,30 @@ def read_motchallenge_formatted_file(file_path):
     return df[['image_id', 'track_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility']]
 
 
-def load_set(dataset_path):
+def load_set(dataset_path, nvid=-1, vids_filter_set=None):
     video_metadatas_list = []
     image_metadata_list = []
     detections_list = []
     categories_list = []
     split = os.path.basename(dataset_path)  # Get the split name from the dataset path
 
+    video_list = os.listdir(dataset_path)
+
+    if nvid > 0:
+        video_list = video_list[:nvid]
+
+    if vids_filter_set is not None and len(vids_filter_set) > 0:
+        missing_videos = set(vids_filter_set) - set(video_list)
+        if missing_videos:
+            log.warning(
+                f"Warning: The following videos provided in config 'dataset.vids_dict' do not exist in {split} set: {missing_videos}")
+
+        video_list = [video for video in video_list if video in vids_filter_set]
+
     image_counter = 0
     person_counter = 0
-    for video_folder in tqdm(sorted(os.listdir(dataset_path)), desc=f"Loading SoccerNetGS '{split}' set videos"):  # Sort videos by name
+    for video_folder in tqdm(sorted(video_list), desc=f"Loading SoccerNetGS '{split}' set videos"):  # Sort videos by name
+
         video_folder_path = os.path.join(dataset_path, video_folder)
         if os.path.isdir(video_folder_path):
             # Read gameinfo.ini
@@ -99,44 +117,47 @@ def load_set(dataset_path):
                 role, additional_info = tracklet_entry.split(';')
                 role = role.strip().replace(' ', '_')
                 additional_info = additional_info.replace(' ', '_')
+                
+                ######### player:0,  goalkeeper:1,  refree:2,  other:3,  ball:4 ########
+                ######### left:0,  right:1 ####################################
                 if "goalkeeper" in role:
                     if "left" in role:
-                        team = "left"
+                        team = 0
                     elif "right" in role:
-                        team = "right"
+                        team = 1
                     else:
                         raise ValueError(f"Unknown team for role {role}")
-                    role = "goalkeeper"
+                    role = 1
                     jersey_number = int(additional_info) if additional_info.isdigit() else None
                     position = None
                     category = f"{role}_{team}_{jersey_number}" if jersey_number is not None else f"{role}_{team}"
                 elif "player" in role:
                     if "left" in role:
-                        team = "left"
+                        team = 0
                     elif "right" in role:
-                        team = "right"
+                        team = 1
                     else:
                         raise ValueError(f"Unknown team for role {role}")
-                    role = "player"
+                    role = 0
                     jersey_number = int(additional_info) if additional_info.isdigit() else None
                     position = None
                     category = f"{role}_{team}_{jersey_number}" if jersey_number is not None else f"{role}_{team}"
                 elif "referee" in role:
-                    team = None
-                    role = "referee"
+                    team = -1
+                    role = 2
                     jersey_number = None
                     position = additional_info
                     category = f"{role}_{additional_info}"
                 elif "ball" in role:
                     team = None
-                    role = "ball"
+                    role = 4
                     jersey_number = None
                     position = None
                     category = f"{role}_{additional_info}"
                 else:
                     assert "other" in role
-                    team = None
-                    role = "other"
+                    team = -1
+                    role = 3
                     jersey_number = None
                     position = None
                     category = f"{role}_{additional_info}"
@@ -147,6 +168,7 @@ def load_set(dataset_path):
                     "jersey_number": jersey_number,
                     "category": category,
                     "position": position,
+                    "game_id": video_metadata["game_id"]
                 }
 
                 categories_list.append(category)
@@ -212,6 +234,8 @@ def load_set(dataset_path):
     detections_column_ordered = ['image_id', 'video_id', 'track_id', 'person_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility']
     detections_column_ordered.extend(set(detections.columns) - set(detections_column_ordered))
     detections = detections[detections_column_ordered]
+    
+    detections = detections.drop(detections[detections['role'] == 4].index)
 
     return TrackingSet(
         video_metadata,

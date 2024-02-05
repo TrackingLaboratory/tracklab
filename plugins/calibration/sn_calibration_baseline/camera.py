@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import cv2 as cv
 import numpy as np
 
@@ -85,7 +87,20 @@ class Camera:
         self.yfocal_length = 1
         self.principal_point = (self.image_width / 2, self.image_height / 2)
 
-    def solve_pnp(self, point_matches):
+    def __format_radial_disto_cv2(self):
+        return np.array(
+            [self.radial_distortion[0], self.radial_distortion[1], self.tangential_disto[0], self.tangential_disto[1]])
+
+    def to_homography(self):
+
+        return self.calibration @ self.rotation @ np.concatenate((np.eye(3)[:, :2], -self.position.reshape(3, 1)),
+                                                                 axis=1)
+
+    def get_projection(self):
+        P = self.calibration @ self.rotation @ np.concatenate((np.eye(3), -self.position.reshape(3, 1)), axis=1)
+        return P
+
+    def solve_pnp(self, point_matches, with_distortion=False):
         """
         With a known calibration matrix, this method can be used in order to retrieve rotation and translation camera
         parameters.
@@ -93,9 +108,38 @@ class Camera:
         """
         target_pts = np.array([pt[0] for pt in point_matches])
         src_pts = np.array([pt[1] for pt in point_matches])
-        _, rvec, t, inliers = cv.solvePnPRansac(target_pts, src_pts, self.calibration, None)
+        _, _, roll_init = rotation_matrix_to_pan_tilt_roll(self.rotation)
+        old_rotation = self.rotation
+        old_position  = self.position
+
+        retval, rvec, t, inliers = cv.solvePnPRansac(target_pts, src_pts, self.calibration,
+                                                self.__format_radial_disto_cv2() if with_distortion else None)
+
         self.rotation, _ = cv.Rodrigues(rvec)
         self.position = - np.transpose(self.rotation) @ t.flatten()
+        errors = []
+        for point in zip(src_pts, target_pts):
+            proj = self.project_point(point[1])
+            dis = np.sqrt((proj[0] - point[1][0])**2+ (proj[1] - point[1][1])**2)
+            errors.append(dis)
+        derr = np.mean(errors)
+        if not(retval and derr > 8) :
+            self.rotation = old_rotation
+            self.position = old_position
+            return
+
+        pan, tilt, roll = rotation_matrix_to_pan_tilt_roll(self.rotation)
+        if -np.pi/2 > pan or pan > np.pi/2:
+            dpi = -np.sign(pan) * np.pi
+            pan += dpi
+            roll *=-1
+            self.position[2] *= -1
+        self.rotation = np.transpose(pan_tilt_roll_to_orientation(pan, tilt, roll))
+        errors = []
+        for point in zip(src_pts, target_pts):
+            proj = self.project_point(point[1])
+            dis = np.sqrt((proj[0] - point[1][0]) ** 2 + (proj[1] - point[1][1]) ** 2)
+            errors.append(dis)
 
     def refine_camera(self, pointMatches):
         """
@@ -167,6 +211,34 @@ class Camera:
 
         }
         return camera_dict
+
+    def set_camera(self, pan: float, tilt: float, roll: float, xfocal: float, yfocal: float,
+                   principal_point: Tuple[int, int], pos_x: float, pos_y: float, pos_z: float,
+                   distortion: np.array = np.zeros(12)):
+        self.xfocal_length = xfocal
+        self.yfocal_length = yfocal
+        self.principal_point = principal_point
+        self.calibration = np.array(
+            [[self.xfocal_length, 0, self.principal_point[0]],
+             [0, self.yfocal_length, self.principal_point[1]],
+             [0, 0, 1]])
+        self.image_width = 2 * principal_point[0]
+        self.image_height = 2 * principal_point[1]
+        self.rotation = np.transpose(pan_tilt_roll_to_orientation(pan, tilt, roll))
+        self.position = np.array([pos_x,
+                                  pos_y,
+                                  pos_z
+                                  ])
+        self.radial_distortion = np.zeros(6)
+        self.thin_prism_disto = np.zeros(4)
+        self.tangential_disto = np.zeros(2)
+        for i, k in enumerate(distortion):
+            if i < 6:
+                self.radial_distortion[i] = k
+            elif i < 8:
+                self.tangential_disto[i - 6] = k
+            else:
+                self.thin_prism_disto[i - 8] = k
 
     def from_json_parameters(self, calib_json_object):
         """
@@ -241,7 +313,7 @@ class Camera:
         """
         point = point3D - self.position
         rotated_point = self.rotation @ np.transpose(point)
-        if rotated_point[2] <= 1e-3 :
+        if rotated_point[2] <= 1e-3:
             return np.zeros(3)
         rotated_point = rotated_point / rotated_point[2]
         if distort:
@@ -251,6 +323,47 @@ class Camera:
         x = distorted_point[0] * self.xfocal_length + self.principal_point[0]
         y = distorted_point[1] * self.yfocal_length + self.principal_point[1]
         return np.array([x, y, 1])
+
+    def undistort_point(self, point2D):
+        p = np.ascontiguousarray([[point2D[0]], [point2D[1]]], np.float32)
+        normalized_plane_points = cv.undistortPoints(p, self.calibration, np.array([
+            self.radial_distortion[0],
+            self.radial_distortion[1],
+            self.tangential_disto[0],
+            self.tangential_disto[1],
+            self.radial_distortion[2],
+            self.radial_distortion[3],
+            self.radial_distortion[4],
+            self.radial_distortion[5],
+            self.thin_prism_disto[0],
+            self.thin_prism_disto[1],
+            self.thin_prism_disto[2],
+            self.thin_prism_disto[3]]))
+        to_return = np.array([normalized_plane_points[0, 0, 0], normalized_plane_points[0, 0, 1]])
+        return to_return
+
+    def unproject_point_to_plucker_world_ray(self, point2D, undistort=True):
+
+        if undistort:
+            pt = self.undistort_point(point2D)
+            homogeneous = np.array([pt[0], pt[1], 1])
+        else:
+            homogeneous = np.linalg.inv(self.calibration) @ np.array([point2D[0], point2D[1], 1])
+        worldray = np.linalg.inv(self.rotation) @ homogeneous + self.position
+        pos = np.pad(self.position, [0, 1], mode='constant', constant_values=1.).reshape(4, 1)
+
+        world_ray = np.pad(worldray, [0, 1], mode='constant', constant_values=1.).reshape(4, 1)
+        plucker_ray = world_ray * np.transpose(pos) - pos * np.transpose(world_ray)
+        return plucker_ray
+
+    def unproject_point_on_planeZ0(self, point2D, undistort=True):
+        plucker_ray = self.unproject_point_to_plucker_world_ray(point2D, undistort)
+
+        pi_Z0 = np.array([0, 0, 1, 0])
+        x = plucker_ray @ pi_Z0
+        x /= x[3]
+
+        return np.array([x[0], x[1], x[2]])
 
     def scale_resolution(self, factor):
         """
@@ -365,8 +478,12 @@ class Camera:
         A[4, 3] = 2 * H[0] * H[6] - 2 * H[1] * H[7]
         A[4, 4] = 2 * H[3] * H[6] - 2 * H[4] * H[7]
         A[4, 5] = H[6] * H[6] - H[7] * H[7]
+        try:
+            u, s, vh = np.linalg.svd(A)
+        except np.linalg.LinAlgError:
+            K = np.eye(3)
+            return False, K
 
-        u, s, vh = np.linalg.svd(A)
         w = vh[-1]
         W = np.zeros((3, 3))
         W[0, 0] = w[0] / w[5]
@@ -399,4 +516,3 @@ class Camera:
             [0, 0, 1]
         ], dtype='float')
         return True, K
-

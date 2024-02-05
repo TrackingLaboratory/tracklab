@@ -23,7 +23,7 @@ cfg:
     type: "image"
     sources: ["SoccerNet"]
     targets: ["SoccerNet"]
-    height: 384
+    height: 256
     width: 128
     combineall: False
     transforms: ["rc", "re"]
@@ -86,7 +86,7 @@ cfg:
 
   train:
     batch_size: 32
-    max_epoch: 2
+    max_epoch: 20
 
   test:
     #evaluate: True

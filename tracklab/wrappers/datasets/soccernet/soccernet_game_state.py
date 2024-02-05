@@ -1,22 +1,31 @@
+import logging
 import os
 import pandas as pd
 import json
 from pathlib import Path
+from tqdm import tqdm
 from tracklab.datastruct import TrackingDataset, TrackingSet
 from tracklab.utils import xywh_to_ltwh
 
+log = logging.getLogger(__name__)
+
 
 class SoccerNetGameState(TrackingDataset):
-    def __init__(self, dataset_path: str, *args, **kwargs):
+    def __init__(self,
+                 dataset_path: str,
+                 nvid: int = -1,
+                 vids_dict: list = None,
+                 *args, **kwargs):
         self.dataset_path = Path(dataset_path)
         assert self.dataset_path.exists(), f"'{self.dataset_path}' directory does not exist. Please check the path or download the dataset following the instructions here: https://github.com/SoccerNet/sn-game-state"
 
-        train_set = load_set(self.dataset_path / "train")
-        val_set = load_set(self.dataset_path / "validation")
+        train_set = load_set(self.dataset_path / "train", nvid, vids_dict["train"])
+        val_set = load_set(self.dataset_path / "validation", nvid, vids_dict["val"])
         # test_set = load_set(self.dataset_path / "challenge")
         test_set = None
 
-        super().__init__(dataset_path, train_set, val_set, test_set, *args, **kwargs)
+        # We pass 'nvid=-1', 'vids_dict=None' because video subsampling is already done in the load_set function
+        super().__init__(dataset_path, train_set, val_set, test_set, nvid=-1, vids_dict=None, *args, **kwargs)
 
 def extract_category(attributes):
     if attributes['role'] == 'goalkeeper':
@@ -55,7 +64,6 @@ def extract_category(attributes):
     
 def dict_to_df_detections(annotation_dict, categories_list):
     df = pd.DataFrame.from_dict(annotation_dict)
-    df['image_id'] = df['image_id']
 
     annotations_pitch_camera = df.loc[df['supercategory'] != 'object']   # remove the rows with non-human categories
     
@@ -67,9 +75,8 @@ def dict_to_df_detections(annotation_dict, categories_list):
     df['jersey_number'] = df.apply(lambda row: row['attributes']['jersey'], axis=1)
     df['position'] = None # df.apply(lambda row: row['attributes']['position'], axis=1)         for now there is no position in the json file
     df['category'] = df.apply(lambda row: extract_category(row['attributes']), axis=1)
-    df['person_id'] = df['track_id']  # Create person_id column with the same content as track_id
-    
-    columns = ['id', 'image_id', 'track_id', 'person_id', 'bbox_ltwh', 'bbox_pitch', 'team', 'role', 'jersey_number', 'position', 'category']
+
+    columns = ['id', 'image_id', 'track_id', 'bbox_ltwh', 'bbox_pitch', 'team', 'role', 'jersey_number', 'position', 'category']
     df = df[columns]
     
     video_level_categories = list(df['category'].unique())
@@ -82,15 +89,30 @@ def read_json_file(file_path):
     return file_json
 
 
-def load_set(dataset_path):
+def load_set(dataset_path, nvid=-1, vids_filter_set=None):
     video_metadatas_list = []
     image_metadata_list = []
     annotations_pitch_camera_list = []
     detections_list = []
     categories_list = []
+    split = os.path.basename(dataset_path)  # Get the split name from the dataset path
+    video_list = os.listdir(dataset_path)
+
+    if nvid > 0:
+        video_list = video_list[:nvid]
+
+    if vids_filter_set is not None and len(vids_filter_set) > 0:
+        missing_videos = set(vids_filter_set) - set(video_list)
+        if missing_videos:
+            log.warning(
+                f"Warning: The following videos provided in config 'dataset.vids_dict' do not exist in {split} set: {missing_videos}")
+
+        video_list = [video for video in video_list if video in vids_filter_set]
 
     image_counter = 0
-    for video_folder in sorted(os.listdir(dataset_path)):  # Sort videos by name
+    person_counter = 0
+    for video_folder in tqdm(sorted(video_list), desc=f"Loading SoccerNetGS '{split}' set videos"):
+
         video_folder_path = os.path.join(dataset_path, video_folder)
         if os.path.isdir(video_folder_path):
             # Read the gamestate.json file
@@ -101,16 +123,17 @@ def load_set(dataset_path):
             images_data = gamestate_data['images']
             annotations_data = gamestate_data['annotations']
             categories_data = gamestate_data['categories']
+            video_id = info_data.get("id", str(len(video_metadatas_list)+1))
 
             detections_df, annotation_pitch_camera_df, video_level_categories = dict_to_df_detections(annotations_data, categories_data)
+            detections_df['person_id'] = detections_df['track_id'] - 1 + person_counter
             # detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
-            detections_df['video_id'] = len(video_metadatas_list) + 1
+            detections_df['video_id'] = video_id
             detections_df['visibility'] = 1
             detections_list.append(detections_df)
 
             # Append video metadata
             nframes = int(info_data.get('seq_length', 0))
-            video_id = info_data.get("id", str(len(video_metadatas_list)+1))
             video_metadata = {
                 'id': video_id,
                 'name': info_data.get('name', ''),
@@ -158,6 +181,7 @@ def load_set(dataset_path):
             # img_metadata_df = img_metadata_df.drop(columns=['image_id'])
 
             image_counter += nframes
+            person_counter += len(detections_df['track_id'].unique())
             image_metadata_list.append(img_metadata_df)
             annotation_pitch_camera_df["video_id"] = video_id
             annotations_pitch_camera_list.append(annotation_pitch_camera_df)
@@ -189,9 +213,9 @@ def load_set(dataset_path):
     # Set 'id' column as the index in the detections and image dataframe
     detections['id'] = detections.index
 
-    detections.set_index("id", drop=True, inplace=True)
-    image_metadata.set_index("id", drop=True, inplace=True)
-    video_metadata.set_index("id", drop=True, inplace=True)
+    detections.set_index("id", drop=False, inplace=True)
+    image_metadata.set_index("id", drop=False, inplace=True)
+    video_metadata.set_index("id", drop=False, inplace=True)
 
 
     # Reorder columns in dataframes
@@ -207,6 +231,8 @@ def load_set(dataset_path):
     detections_column_ordered = ['image_id', 'video_id', 'track_id', 'person_id', 'bbox_ltwh', 'visibility']
     detections_column_ordered.extend(set(detections.columns) - set(detections_column_ordered))
     detections = detections[detections_column_ordered]
+    detections['bbox_conf'] = 1
+
     return TrackingSet(
         video_metadata,
         image_metadata,

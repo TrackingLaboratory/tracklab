@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
+from tqdm import tqdm
+
 from tracklab.datastruct import TrackerState
 from tracklab.callbacks import Callback
 from tracklab.utils.cv2 import (
@@ -26,6 +28,8 @@ from tracklab.utils.coordinates import (
 )
 
 import logging
+
+from tracklab.utils.pitch import draw_pitch
 
 log = logging.getLogger(__name__)
 
@@ -111,20 +115,23 @@ class VisualizationEngine(Callback):
                 self.processed_video_counter < self.cfg.process_n_videos
                 or self.cfg.process_n_videos == -1
             ):
-                self.run(engine.tracker_state, video_idx, detections)
+                self.run(engine.tracker_state, video_idx, detections, image_pred)
 
-    def run(self, tracker_state: TrackerState, video_id, detections):
+    def run(self, tracker_state: TrackerState, video_id, detections, image_preds):
         image_metadatas = tracker_state.image_metadatas[
             tracker_state.image_metadatas.video_id == video_id
         ]
+        image_gts = tracker_state.image_gt[tracker_state.image_gt.video_id == video_id]
         nframes = len(image_metadatas)
         video_name = tracker_state.video_metadatas.loc[video_id].name
-        for i, image_id in enumerate(image_metadatas.index):
+        for i, image_id in enumerate(tqdm(image_metadatas.index, desc="Visualization")):
             # check for process max frame per video
             if i >= self.cfg.process_n_frames_by_video != -1:
                 break
             # retrieve results
             image_metadata = image_metadatas.loc[image_id]
+            image_gt = image_gts.loc[image_id]
+            image_pred = image_preds.loc[image_id]
             detections_pred = detections[
                 detections.image_id == image_metadata.name
             ]
@@ -136,7 +143,8 @@ class VisualizationEngine(Callback):
                 ground_truths = None
             # process the detections
             self._process_frame(
-                image_metadata, detections_pred, ground_truths, video_name, nframes
+                image_metadata, detections_pred, ground_truths, video_name, nframes,
+                image_pred, image_gt
             )
         # save the final video
         if self.cfg.save_videos:
@@ -145,9 +153,10 @@ class VisualizationEngine(Callback):
         self.processed_video_counter += 1
 
     def _process_frame(
-        self, image_metadata, detections_pred, ground_truths, video_name, nframes
+        self, image_metadata, detections_pred, ground_truths, video_name, nframes,
+            image_pred, image_gt
     ):
-        patch = self.draw_frame(image_metadata, detections_pred, ground_truths, nframes)
+        patch = self.draw_frame(image_metadata, detections_pred, ground_truths, image_pred, image_gt, nframes)
         # save files
         if self.cfg.save_images:
             filepath = (
@@ -161,7 +170,7 @@ class VisualizationEngine(Callback):
         if self.cfg.save_videos:
             self._update_video(patch, video_name)
 
-    def draw_frame(self, image_metadata, detections_pred, ground_truths, nframes, image=None):
+    def draw_frame(self, image_metadata, detections_pred, ground_truths, image_pred, image_gt, nframes, image=None):
         if image is not None:
             patch = image
         else:
@@ -182,6 +191,9 @@ class VisualizationEngine(Callback):
         if ground_truths is not None:
             for _, ground_truth in ground_truths.iterrows():
                 self._draw_detection(patch, ground_truth, is_prediction=False)
+
+        if "pitch" in self.cfg and self.cfg.pitch is not None:
+            self.draw_pitch(patch, image_metadata, image_pred, image_gt, detections_pred, ground_truths, self.cfg.pitch)
 
         # postprocess image
         patch = final_patch(patch)
@@ -439,6 +451,14 @@ class VisualizationEngine(Callback):
                     color_txt=(0, 0, 0),
                     color_bg=(255, 255, 255),
                 )
+
+    def draw_pitch(self, patch, image_metadata, image_pred, image_gt, detections_pred, ground_truths, pitch_cfg):
+        draw_pitch(
+            patch,
+            detections_pred, ground_truths,
+            image_pred, image_gt,
+            **pitch_cfg
+        )
 
     def _colors(self, detection, is_prediction):
         cmap = prediction_cmap if is_prediction else ground_truth_cmap

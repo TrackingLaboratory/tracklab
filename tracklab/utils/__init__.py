@@ -12,8 +12,6 @@ class BBoxDataFrameAccessor:
     def _validate(obj):
         if "bbox_ltwh" not in obj.columns:
             raise AttributeError("Must have 'bbox_ltwh'.")
-        if "bbox_conf" not in obj.columns:
-            raise AttributeError("Must have 'bbox_conf'.")
 
     def ltwh(self, image_shape=None, rounded=False):
         return self._obj.bbox_ltwh.map(
@@ -27,8 +25,10 @@ class BBoxDataFrameAccessor:
         return self._obj.bbox_ltwh.map(lambda x: ltwh_to_xywh(x, image_shape, rounded))
 
     def conf(self):
-        return self._obj.bbox_conf
-
+        if "bbox_conf" in self._obj:
+            return self._obj.bbox_conf
+        else:
+            return self._obj.bbox_ltwh.map(lambda x: 1.)
 
 @pd.api.extensions.register_series_accessor("bbox")
 class BBoxSeriesAccessor:
@@ -40,8 +40,6 @@ class BBoxSeriesAccessor:
     def _validate(obj):
         if "bbox_ltwh" not in obj.index:
             raise AttributeError("Must have 'bbox_ltwh'.")
-        if "bbox_conf" not in obj.index:
-            raise AttributeError("Must have 'bbox_conf'.")
 
     def ltwh(self, image_shape=None, rounded=False):
         return sanitize_bbox_ltwh(self._obj.bbox_ltwh, image_shape, rounded)
@@ -53,8 +51,10 @@ class BBoxSeriesAccessor:
         return ltwh_to_xywh(self._obj.bbox_ltwh, image_shape, rounded)
 
     def conf(self):
-        return self._obj.bbox_conf
-
+        if "bbox_conf" in self._obj:
+            return self._obj.bbox_conf
+        else:
+            return 1.
 
 @pd.api.extensions.register_dataframe_accessor("keypoints")
 class KeypointsDataFrameAccessor:

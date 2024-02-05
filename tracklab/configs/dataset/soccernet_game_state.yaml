@@ -1,9 +1,0 @@
-defaults:
-  - default
-
-_target_: tracklab.wrappers.SoccerNetGameState
-
-dataset_path: ${data_dir}/SoccerNetGAMESTATE
-annotation_path: ${data_dir}/SoccerNetGAMESTATE
-trackeval_dataset_class: MotChallenge2DBox  # SoccerNetGS MotChallenge2DBox
-  

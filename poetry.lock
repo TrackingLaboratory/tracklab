@@ -1600,6 +1600,26 @@ files = [
 ]
 
 [[package]]
+name = "kornia"
+version = "0.6.3"
+description = "Open Source Differentiable Computer Vision Library for PyTorch"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "kornia-0.6.3-py2.py3-none-any.whl", hash = "sha256:c82c77cbc2dfe4aa537f794fb55560a71a2e08ae4047470de4f3ba330143d8b7"},
+    {file = "kornia-0.6.3.tar.gz", hash = "sha256:0b689b5a47f55f2b08f61e6731760542cc3e3c09c3f0498164b934a3aef0bab3"},
+]
+
+[package.dependencies]
+packaging = "*"
+torch = ">=1.8.1"
+
+[package.extras]
+all = ["accelerate (==0.5.1)", "autopep8", "dataclasses", "flake8 (==3.9.2)", "isort", "numpy", "pre-commit (>=2.0)", "pydocstyle", "pytest (==6.2.5)", "pytest-cov (==3.0.0)", "pytest-flake8 (==1.0.7)", "pytest-mypy (==0.8.1)", "pytest-xdist (==2.5.0)", "scipy", "yapf"]
+dev = ["autopep8", "flake8 (==3.9.2)", "isort", "numpy", "pre-commit (>=2.0)", "pydocstyle", "pytest (==6.2.5)", "pytest-cov (==3.0.0)", "pytest-flake8 (==1.0.7)", "pytest-mypy (==0.8.1)", "pytest-xdist (==2.5.0)", "scipy", "yapf"]
+x = ["accelerate (==0.5.1)", "dataclasses"]
+
+[[package]]
 name = "lap"
 version = "0.5.dev0"
 description = "Linear Assignment Problem solver (LAPJV/LAPMOD)."
@@ -4912,12 +4932,15 @@ resolved_reference = "3631212605aa5afad2c759c8cbceb9e96af6ca87"
 
 [[package]]
 name = "tracklab-calibration"
-version = "1.0.0"
+version = "1.0.1"
 description = ""
 optional = false
-python-versions = "*"
+python-versions = "^3.10"
 files = []
 develop = true
+
+[package.dependencies]
+kornia = "0.6.3"
 
 [package.source]
 type = "directory"

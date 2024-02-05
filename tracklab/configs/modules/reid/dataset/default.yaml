@@ -14,7 +14,7 @@ train:
   min_w: 10
   min_samples_per_id: 2
   ######## 4 - 12 ##########
-  max_samples_per_id: 12
+  max_samples_per_id: 4
   max_total_ids: -1
 test:
   min_vis: 0.
@@ -22,7 +22,7 @@ test:
   min_w: 0
   min_samples_per_id: 3
   ########## 6 - 15 ##########
-  max_samples_per_id: 15
+  max_samples_per_id: 6
   max_total_ids: -1
   ratio_query_per_id: 0.2
 

@@ -592,7 +592,7 @@ class ReidDataset(ImageDataset):
             # 'RuntimeError: torch.cat(): input types can't be cast to the desired output type Long' in collate.py
             # -> still has to be fixed
             data_list = sorted_df[
-                ["pid", "camid", "img_path", "masks_path", "visibility", "role", "team"]
+                ["pid", "camid", "img_path", "masks_path", "visibility", "role", "team", "game_id"]
             ]
             data_list = data_list.to_dict("records")
             results.append(data_list)

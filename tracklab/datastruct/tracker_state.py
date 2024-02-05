@@ -79,15 +79,16 @@ class TrackerState(AbstractContextManager):
             self.load_groundtruth(self.load_columns)
 
     def load_groundtruth(self, load_columns):
+        from tracklab.engine.engine import merge_dataframes
         # FIXME only work for topdown -> handle bottomup
         # We consider here that detect_multi detects the bbox
         # and that detect_single detects the keypoints
         if self.pipeline.is_empty():
             self.detections_pred = self.detections_gt.copy()  # load all columns if pipeline is empty
-            self.image_pred = self.image_gt.copy()
+            self.image_pred = merge_dataframes(self.image_metadatas.copy(), self.image_gt.copy())
         else:
-            self.detections_pred = self.detections_gt.copy()[load_columns]
-            self.image_pred = self.image_gt.copy()
+            self.detections_pred = self.detections_gt.copy()  # [load_columns]
+            self.image_pred = merge_dataframes(self.image_metadatas.copy(), self.image_gt.copy())
 
     def load_detections_pred_from_json(self, json_file):
         anns_path = Path(json_file)
@@ -260,7 +261,9 @@ class TrackerState(AbstractContextManager):
                 self.json_detections_pred.video_id == self.video_id
                 ]
         if self.load_from_groundtruth:
-            return self.detections_pred[self.detections_pred.video_id == self.video_id]
+            dets = self.detections_pred[self.detections_pred.video_id == self.video_id]
+            image_preds = self.image_pred[self.image_pred.video_id == self.video_id]
+            return dets, image_preds
         if self.load_file is None:
             return pd.DataFrame(), self.image_metadatas[self.image_metadatas.video_id == self.video_id]
 
@@ -273,8 +276,13 @@ class TrackerState(AbstractContextManager):
         if f"{self.video_id}_image.pkl" in self.zf["load"].namelist():
             with self.zf["load"].open(f"{self.video_id}_image.pkl", "r") as fp_image:
                 video_image_pred = pickle.load(fp_image)
+                from tracklab.engine.engine import merge_dataframes
+                video_image_pred = merge_dataframes(
+                    video_image_pred,
+                    self.image_metadatas[self.image_metadatas.video_id == self.video_id]
+                )
         else:
-            video_image_pred = pd.DataFrame()
+            video_image_pred = self.image_metadatas[self.image_metadatas.video_id == self.video_id]
         self.update(video_detections, video_image_pred)
         return video_detections, video_image_pred
 

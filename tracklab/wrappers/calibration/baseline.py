@@ -97,7 +97,7 @@ class BaselineCalibration(ImageLevelModule):
                                     (p3D, potential_matches[selected][:2]))
 
                     if len(point_matches) > 3:
-                        cam.refine_camera(point_matches)
+                        cam.solve_pnp(point_matches)
                         # cam.draw_colorful_pitch(cv_image, SoccerField.palette)
                         # print(image_path)
                         # cv.imshow("colorful pitch", cv_image)
@@ -105,7 +105,8 @@ class BaselineCalibration(ImageLevelModule):
 
         if success:
             camera_predictions = cam.to_json_parameters()
-            detections["bbox_pitch"] = detections.bbox.ltrb().apply(get_bbox_pitch(homography))
+            # confusion1, per_class_conf1, reproj_errors1 = evaluate_camera_projection()
+            detections["bbox_pitch"] = detections.bbox.ltrb().apply(get_bbox_pitch(cam))
         else:
             camera_predictions = {}
             detections["bbox_pitch"] = None
@@ -113,15 +114,17 @@ class BaselineCalibration(ImageLevelModule):
             pd.Series({"parameters": camera_predictions}, name=metadatas.iloc[0].name)
         ])
 
-def get_bbox_pitch(homography):
+def get_bbox_pitch(cam):
     def _get_bbox(bbox_ltrb):
         l, t, r, b = bbox_ltrb
-        bl = [b, l, 0]
-        br = [b, r, 0]
-        bm = [b, l+(r-l)/2, 0]
-        pbl_x, pbl_y, _ = unproject_image_point(homography, bl)
-        pbr_x, pbr_y, _ = unproject_image_point(homography, br)
-        pbm_x, pbm_y, _ = unproject_image_point(homography, bm)
+        bl = [l, b]
+        br = [r, b]
+        bm = [l+(r-l)/2, b]
+        pbl_x, pbl_y, _ = cam.unproject_point_on_planeZ0(bl)
+        pbr_x, pbr_y, _ = cam.unproject_point_on_planeZ0(br)
+        pbm_x, pbm_y, _ = cam.unproject_point_on_planeZ0(bm)
+        if np.any(np.isnan([pbl_x, pbl_y, pbr_x, pbr_y, pbm_x, pbm_y])):
+            return None
         return {
             "x_bottom_left": pbl_x, "y_bottom_left": pbl_y,
             "x_bottom_right": pbr_x, "y_bottom_right": pbr_y,
