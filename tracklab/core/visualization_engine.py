@@ -518,7 +518,7 @@ class VisualizationEngine(Callback):
         else:
             color_key = "color_prediction" if is_prediction else "color_ground_truth"
             if "team" in detection and detection.team is not None:
-                if "jersey_number" in detection and detection.jersey_number is not None:
+                if "jersey_number" in detection and pd.notnull(detection.jersey_number):
                     index = int(detection.jersey_number)
                     if detection.team == "right":
                         color_id = [int(c) for c in (np.array(right_cmap(index)) * 255)[:-1]]
