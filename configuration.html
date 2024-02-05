@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PbTrack Configuration &mdash; TrackLab  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Logging" href="logging.html" />
+    <link rel="prev" title="Installation guide" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TrackLab
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation guide </a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">PbTrack Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-directory">Configuration directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#automatic-initialization">Automatic initialization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Available_features.html">Available features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/Yolov8_pose_estimation.html">Integrating a new module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/MOT_dataset.html">New dataset integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/MOT_eval.html">New evaluator integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="additional/citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="additional/coming_soon.html">Coming soon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="additional/contribute.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="additional/licence.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TrackLab</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">PbTrack Configuration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/configuration.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="pbtrack-configuration">
+<h1>PbTrack Configuration<a class="headerlink" href="#pbtrack-configuration" title="Link to this heading"></a></h1>
+<p>This framework uses <a class="reference external" href="http://hydra.cc/">Hydra</a> for its configuration.</p>
+<p>Hydra combines commandline arguments with configuration directories,
+to create a configuration dictionary. The config tree is determined by
+the directory structure, and each file in a directory is a configuration choice.</p>
+<p>By default, the main configuration file looks like this :</p>
+<p>The <cite>defaults</cite> list in this file contains the default value for every category.
+You can change these defaults either through the commandline.
+For example, to change the dataset and the image detector, you could do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">tracklab</span><span class="o">.</span><span class="n">main</span> <span class="n">dataset</span><span class="o">=</span><span class="n">posetrack18</span> <span class="n">detect_multiple</span><span class="o">=</span><span class="n">openpifpaf</span>
+</pre></div>
+</div>
+<p>If you want to change a single value inside a category, for example the bbox extension factor:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">tracklab</span><span class="o">.</span><span class="n">main</span> <span class="n">detect_multiple</span><span class="o">=</span><span class="n">openpifpaf</span> <span class="s2">&quot;detect_multiple.cfg.bbox.extension_factor=[0.05,0.05,0.05]&quot;</span>
+</pre></div>
+</div>
+<p>This will both change the detector to <code class="docutils literal notranslate"><span class="pre">openpifpaf</span></code> and change a parameter inside the openpifpaf configuration.</p>
+<p>You can find out which values you can change by looking at the configuration directory or running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">tracklab</span><span class="o">.</span><span class="n">main</span> <span class="o">--</span><span class="n">help</span>
+</pre></div>
+</div>
+<p>Thanks to Hydra, we can also run a grid-search (or other kind of hyper-parameter searches). The default grid-search
+is activated with the <code class="docutils literal notranslate"><span class="pre">-m</span></code> flag, and by passing a comma-separated list of values, either at the category-level
+or at the key-level:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">tracklab</span><span class="o">.</span><span class="n">main</span> <span class="o">-</span><span class="n">m</span> <span class="n">dataset</span><span class="o">=</span><span class="n">posetrack18</span><span class="p">,</span><span class="n">posetrack21</span> <span class="n">detect_multiple</span><span class="o">=</span><span class="n">openpifpaf</span><span class="p">,</span><span class="n">yolox</span> <span class="n">track</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">max_dist</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.7</span>
+</pre></div>
+</div>
+<p>This command will run tracking multiple times, to test two datasets, two image-level detectors with three different
+tracking hyper-parameters (combining to 12 runs).</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>The first <code class="docutils literal notranslate"><span class="pre">-m</span></code> is a python flag to run a module, while the second <code class="docutils literal notranslate"><span class="pre">-m</span></code> is the multirun flag from hydra</p>
+</div>
+<section id="configuration-directory">
+<h2>Configuration directory<a class="headerlink" href="#configuration-directory" title="Link to this heading"></a></h2>
+<p>The configuration for tracklab is located in the <code class="docutils literal notranslate"><span class="pre">configs/</span></code> directory, with the following structure:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>configs
+├── dataset
+├── detect_multiple
+├── detect_single
+├── reid
+├── track
+├── engine
+├── eval
+├── machine
+├── state
+├── visualization
+└── config.yaml
+</pre></div>
+</div>
+<p>For example, when adding a new dataset, you should add a new file inside <code class="docutils literal notranslate"><span class="pre">configs/dataset/</span></code>, which will be the basis
+for your new dataset.</p>
+</section>
+<section id="automatic-initialization">
+<h2>Automatic initialization<a class="headerlink" href="#automatic-initialization" title="Link to this heading"></a></h2>
+<p>In the code, we use <code class="xref py py-func docutils literal notranslate"><span class="pre">hydra.initialize()</span></code> in order to find the right class to initialize or function to call. This
+requires the configuration to have a specific key, <code class="docutils literal notranslate"><span class="pre">_target_</span></code>, which must contain the full name (including modules) of</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="logging.html" class="btn btn-neutral float-right" title="Logging" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Baptiste Standaert, Vladimir Somers, Victor Joos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

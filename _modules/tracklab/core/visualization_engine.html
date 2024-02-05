@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tracklab.core.visualization_engine &mdash; TrackLab  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            TrackLab
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation guide </a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configuration.html">PbTrack Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Available_features.html">Available features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/Yolov8_pose_estimation.html">Integrating a new module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/coming_soon.html">Coming soon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/contribute.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/licence.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TrackLab</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tracklab.core.visualization_engine</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tracklab.core.visualization_engine</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">platform</span>
+
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="kn">from</span> <span class="nn">tracklab.datastruct</span> <span class="kn">import</span> <span class="n">TrackerState</span>
+<span class="kn">from</span> <span class="nn">tracklab.callbacks</span> <span class="kn">import</span> <span class="n">Callback</span>
+<span class="kn">from</span> <span class="nn">tracklab.utils.cv2</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">draw_text</span><span class="p">,</span>
+    <span class="n">draw_bbox</span><span class="p">,</span>
+    <span class="n">draw_bpbreid_heatmaps</span><span class="p">,</span>
+    <span class="n">draw_keypoints</span><span class="p">,</span>
+    <span class="n">draw_ignore_region</span><span class="p">,</span>
+    <span class="n">final_patch</span><span class="p">,</span>
+    <span class="n">print_count_frame</span><span class="p">,</span>
+    <span class="n">cv2_load_image</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">colormaps</span>
+
+<span class="c1"># FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor</span>
+<span class="kn">from</span> <span class="nn">tracklab.utils.coordinates</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">clip_bbox_ltrb_to_img_dim</span><span class="p">,</span>
+    <span class="n">round_bbox_coordinates</span><span class="p">,</span>
+    <span class="n">bbox_ltwh2ltrb</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">tracklab.utils.pitch</span> <span class="kn">import</span> <span class="n">draw_pitch</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">ground_truth_cmap</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="mi">251</span><span class="p">,</span> <span class="mi">248</span><span class="p">,</span> <span class="mi">204</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">253</span><span class="p">,</span> <span class="mi">228</span><span class="p">,</span> <span class="mi">207</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">207</span><span class="p">,</span> <span class="mi">210</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">241</span><span class="p">,</span> <span class="mi">192</span><span class="p">,</span> <span class="mi">232</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">207</span><span class="p">,</span> <span class="mi">186</span><span class="p">,</span> <span class="mi">240</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">163</span><span class="p">,</span> <span class="mi">196</span><span class="p">,</span> <span class="mi">243</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">144</span><span class="p">,</span> <span class="mi">219</span><span class="p">,</span> <span class="mi">244</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">142</span><span class="p">,</span> <span class="mi">236</span><span class="p">,</span> <span class="mi">245</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">152</span><span class="p">,</span> <span class="mi">245</span><span class="p">,</span> <span class="mi">225</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">185</span><span class="p">,</span> <span class="mi">251</span><span class="p">,</span> <span class="mi">192</span><span class="p">],</span>
+<span class="p">]</span>
+
+<span class="n">prediction_cmap</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">135</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">211</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">222</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">161</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">153</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">239</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">125</span><span class="p">,</span> <span class="mi">245</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">88</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">190</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span>
+<span class="p">]</span>
+
+<span class="n">left_cmap</span> <span class="o">=</span> <span class="n">colormaps</span><span class="p">[</span><span class="s2">&quot;Blues&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">reversed</span><span class="p">()</span><span class="o">.</span><span class="n">resampled</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">right_cmap</span> <span class="o">=</span> <span class="n">colormaps</span><span class="p">[</span><span class="s2">&quot;Reds&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">reversed</span><span class="p">()</span><span class="o">.</span><span class="n">resampled</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="VisualizationEngine">
+<a class="viewcode-back" href="../../../api/pbtrack.core.html#tracklab.core.visualization_engine.VisualizationEngine">[docs]</a>
+<span class="k">class</span> <span class="nc">VisualizationEngine</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;visualization&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processed_video_counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">windows</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="VisualizationEngine.on_image_loop_end">
+<a class="viewcode-back" href="../../../api/pbtrack.core.html#tracklab.core.visualization_engine.VisualizationEngine.on_image_loop_end">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_image_loop_end</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">,</span>
+        <span class="n">image_metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span>
+        <span class="n">image</span><span class="p">,</span>
+        <span class="n">image_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">show_online</span><span class="p">:</span>
+            <span class="n">tracker_state</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">tracker_state</span>
+            <span class="k">if</span> <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_gt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ground_truths</span> <span class="o">=</span> <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_gt</span><span class="p">[</span>
+                    <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_gt</span><span class="o">.</span><span class="n">image_id</span> <span class="o">==</span> <span class="n">image_metadata</span><span class="o">.</span><span class="n">name</span>
+                <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ground_truths</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">image</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">detections</span> <span class="o">=</span> <span class="n">detections</span><span class="p">[</span><span class="n">detections</span><span class="o">.</span><span class="n">image_id</span> <span class="o">==</span> <span class="n">image_metadata</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">draw_frame</span><span class="p">(</span><span class="n">image_metadata</span><span class="p">,</span>
+                                        <span class="n">detections</span><span class="p">,</span> <span class="n">ground_truths</span><span class="p">,</span> <span class="s2">&quot;inf&quot;</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Linux&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">video_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">windows</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">windows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_name</span><span class="p">)</span>
+                <span class="n">cv2</span><span class="o">.</span><span class="n">namedWindow</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_name</span><span class="p">),</span>
+                                <span class="n">cv2</span><span class="o">.</span><span class="n">WINDOW_NORMAL</span> <span class="o">|</span> <span class="n">cv2</span><span class="o">.</span><span class="n">WINDOW_KEEPRATIO</span><span class="p">)</span>  <span class="c1"># allow window resize (Linux)</span>
+                <span class="n">cv2</span><span class="o">.</span><span class="n">resizeWindow</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_name</span><span class="p">),</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_name</span><span class="p">),</span> <span class="n">image</span><span class="p">)</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VisualizationEngine.on_video_loop_start">
+<a class="viewcode-back" href="../../../api/pbtrack.core.html#tracklab.core.visualization_engine.VisualizationEngine.on_video_loop_start">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_video_loop_start</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">,</span>
+        <span class="n">video_metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span>  <span class="c1"># FIXME keep ?</span>
+        <span class="c1"># image_metadatas: pd.DataFrame,  # FIXME add ?</span>
+        <span class="n">video_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>  <span class="c1"># FIXME change name ?</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_name</span> <span class="o">=</span> <span class="n">video_metadata</span><span class="o">.</span><span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="VisualizationEngine.on_video_loop_end">
+<a class="viewcode-back" href="../../../api/pbtrack.core.html#tracklab.core.visualization_engine.VisualizationEngine.on_video_loop_end">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_video_loop_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">video_metadata</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">,</span> <span class="n">detections</span><span class="p">,</span> <span class="n">image_pred</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">save_videos</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">save_images</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">processed_video_counter</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">process_n_videos</span>
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">process_n_videos</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">tracker_state</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">,</span> <span class="n">detections</span><span class="p">,</span> <span class="n">image_pred</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VisualizationEngine.run">
+<a class="viewcode-back" href="../../../api/pbtrack.core.html#tracklab.core.visualization_engine.VisualizationEngine.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tracker_state</span><span class="p">:</span> <span class="n">TrackerState</span><span class="p">,</span> <span class="n">video_id</span><span class="p">,</span> <span class="n">detections</span><span class="p">,</span> <span class="n">image_preds</span><span class="p">):</span>
+        <span class="n">image_metadatas</span> <span class="o">=</span> <span class="n">tracker_state</span><span class="o">.</span><span class="n">image_metadatas</span><span class="p">[</span>
+            <span class="n">tracker_state</span><span class="o">.</span><span class="n">image_metadatas</span><span class="o">.</span><span class="n">video_id</span> <span class="o">==</span> <span class="n">video_id</span>
+        <span class="p">]</span>
+        <span class="n">image_gts</span> <span class="o">=</span> <span class="n">tracker_state</span><span class="o">.</span><span class="n">image_gt</span><span class="p">[</span><span class="n">tracker_state</span><span class="o">.</span><span class="n">image_gt</span><span class="o">.</span><span class="n">video_id</span> <span class="o">==</span> <span class="n">video_id</span><span class="p">]</span>
+        <span class="n">nframes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_metadatas</span><span class="p">)</span>
+        <span class="n">video_name</span> <span class="o">=</span> <span class="n">tracker_state</span><span class="o">.</span><span class="n">video_metadatas</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">video_id</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">image_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">image_metadatas</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Visualization&quot;</span><span class="p">)):</span>
+            <span class="c1"># check for process max frame per video</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">process_n_frames_by_video</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="c1"># retrieve results</span>
+            <span class="n">image_metadata</span> <span class="o">=</span> <span class="n">image_metadatas</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">image_id</span><span class="p">]</span>
+            <span class="n">image_gt</span> <span class="o">=</span> <span class="n">image_gts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">image_id</span><span class="p">]</span>
+            <span class="n">image_pred</span> <span class="o">=</span> <span class="n">image_preds</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">image_id</span><span class="p">]</span>
+            <span class="n">detections_pred</span> <span class="o">=</span> <span class="n">detections</span><span class="p">[</span>
+                <span class="n">detections</span><span class="o">.</span><span class="n">image_id</span> <span class="o">==</span> <span class="n">image_metadata</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_gt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ground_truths</span> <span class="o">=</span> <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_gt</span><span class="p">[</span>
+                    <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_gt</span><span class="o">.</span><span class="n">image_id</span> <span class="o">==</span> <span class="n">image_metadata</span><span class="o">.</span><span class="n">name</span>
+                <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ground_truths</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="c1"># process the detections</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process_frame</span><span class="p">(</span>
+                <span class="n">image_metadata</span><span class="p">,</span> <span class="n">detections_pred</span><span class="p">,</span> <span class="n">ground_truths</span><span class="p">,</span> <span class="n">video_name</span><span class="p">,</span> <span class="n">nframes</span><span class="p">,</span>
+                <span class="n">image_pred</span><span class="p">,</span> <span class="n">image_gt</span>
+            <span class="p">)</span>
+        <span class="c1"># save the final video</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">save_videos</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">video_writer</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+            <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;video_writer&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processed_video_counter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_process_frame</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">image_metadata</span><span class="p">,</span> <span class="n">detections_pred</span><span class="p">,</span> <span class="n">ground_truths</span><span class="p">,</span> <span class="n">video_name</span><span class="p">,</span> <span class="n">nframes</span><span class="p">,</span>
+            <span class="n">image_pred</span><span class="p">,</span> <span class="n">image_gt</span>
+    <span class="p">):</span>
+        <span class="n">patch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">draw_frame</span><span class="p">(</span><span class="n">image_metadata</span><span class="p">,</span> <span class="n">detections_pred</span><span class="p">,</span> <span class="n">ground_truths</span><span class="p">,</span> <span class="n">image_pred</span><span class="p">,</span> <span class="n">image_gt</span><span class="p">,</span> <span class="n">nframes</span><span class="p">)</span>
+        <span class="c1"># save files</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">save_images</span><span class="p">:</span>
+            <span class="n">filepath</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span>
+                <span class="o">/</span> <span class="s2">&quot;images&quot;</span>
+                <span class="o">/</span> <span class="nb">str</span><span class="p">(</span><span class="n">video_name</span><span class="p">)</span>
+                <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="n">image_metadata</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">)</span>
+            <span class="n">filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">),</span> <span class="n">patch</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">save_videos</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_video</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="n">video_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VisualizationEngine.draw_frame">
+<a class="viewcode-back" href="../../../api/pbtrack.core.html#tracklab.core.visualization_engine.VisualizationEngine.draw_frame">[docs]</a>
+    <span class="k">def</span> <span class="nf">draw_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_metadata</span><span class="p">,</span> <span class="n">detections_pred</span><span class="p">,</span> <span class="n">ground_truths</span><span class="p">,</span> <span class="n">image_pred</span><span class="p">,</span> <span class="n">image_gt</span><span class="p">,</span> <span class="n">nframes</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">patch</span> <span class="o">=</span> <span class="n">image</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">patch</span> <span class="o">=</span> <span class="n">cv2_load_image</span><span class="p">(</span><span class="n">image_metadata</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span>
+
+        <span class="c1"># print count of frame</span>
+        <span class="n">print_count_frame</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="n">image_metadata</span><span class="o">.</span><span class="n">frame</span><span class="p">,</span> <span class="n">nframes</span><span class="p">)</span>
+
+        <span class="c1"># draw ignore regions</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">ground_truth</span><span class="o">.</span><span class="n">draw_ignore_region</span><span class="p">:</span>
+            <span class="n">draw_ignore_region</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="n">image_metadata</span><span class="p">)</span>
+
+        <span class="c1"># draw detections_pred</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">detection_pred</span> <span class="ow">in</span> <span class="n">detections_pred</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_draw_detection</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="n">detection_pred</span><span class="p">,</span> <span class="n">is_prediction</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># draw ground truths</span>
+        <span class="k">if</span> <span class="n">ground_truths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ground_truth</span> <span class="ow">in</span> <span class="n">ground_truths</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_draw_detection</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="n">ground_truth</span><span class="p">,</span> <span class="n">is_prediction</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;pitch&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">pitch</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">draw_pitch</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="n">image_metadata</span><span class="p">,</span> <span class="n">image_pred</span><span class="p">,</span> <span class="n">image_gt</span><span class="p">,</span> <span class="n">detections_pred</span><span class="p">,</span> <span class="n">ground_truths</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">pitch</span><span class="p">)</span>
+
+        <span class="c1"># postprocess image</span>
+        <span class="n">patch</span> <span class="o">=</span> <span class="n">final_patch</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">patch</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_draw_detection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">detection</span><span class="p">,</span> <span class="n">is_prediction</span><span class="p">):</span>
+        <span class="n">is_matched</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">notna</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">track_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_matched</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">draw_unmatched</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># colors</span>
+        <span class="n">color_bbox</span><span class="p">,</span> <span class="n">color_text</span><span class="p">,</span> <span class="n">color_keypoint</span><span class="p">,</span> <span class="n">color_skeleton</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_colors</span><span class="p">(</span>
+            <span class="n">detection</span><span class="p">,</span> <span class="n">is_prediction</span>
+        <span class="p">)</span>
+
+        <span class="c1"># bpbreid heatmap (draw before other elements, so that they are not covered by heatmap)</span>
+        <span class="k">if</span> <span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">draw_bpbreid_heatmaps</span><span class="p">:</span>
+            <span class="n">draw_bpbreid_heatmaps</span><span class="p">(</span>
+                <span class="n">detection</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">heatmaps_display_threshold</span>
+            <span class="p">)</span>
+
+        <span class="c1"># bbox, confidence, id</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">draw_bbox</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">ground_truth</span><span class="o">.</span><span class="n">draw_bbox</span>
+        <span class="p">):</span>
+            <span class="n">print_confidence</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">print_bbox_confidence</span>
+            <span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">ground_truth</span><span class="o">.</span><span class="n">print_bbox_confidence</span><span class="p">)</span>
+            <span class="n">print_id</span> <span class="o">=</span> <span class="p">(</span><span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">print_id</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">ground_truth</span><span class="o">.</span><span class="n">print_id</span>
+            <span class="p">)</span>
+            <span class="n">draw_bbox</span><span class="p">(</span>
+                <span class="n">detection</span><span class="p">,</span>
+                <span class="n">patch</span><span class="p">,</span>
+                <span class="n">color_bbox</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">font</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                <span class="n">color_text</span><span class="p">,</span>
+                <span class="n">print_confidence</span><span class="p">,</span>
+                <span class="n">print_id</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># keypoints, confidences, skeleton</span>
+        <span class="k">if</span> <span class="s2">&quot;keypoints_xyc&quot;</span> <span class="ow">in</span> <span class="n">detection</span> <span class="ow">and</span> <span class="p">(</span><span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">draw_keypoints</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">ground_truth</span><span class="o">.</span><span class="n">draw_keypoints</span>
+        <span class="p">):</span>
+            <span class="n">print_confidence</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">print_keypoints_confidence</span>
+            <span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">ground_truth</span><span class="o">.</span><span class="n">print_keypoints_confidence</span>
+            <span class="p">)</span>
+            <span class="n">draw_skeleton</span> <span class="o">=</span> <span class="p">(</span><span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">draw_skeleton</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">ground_truth</span><span class="o">.</span><span class="n">draw_skeleton</span>
+            <span class="p">)</span>
+            <span class="n">detection</span><span class="o">.</span><span class="n">keypoints_xyc</span><span class="p">[</span><span class="n">detection</span><span class="o">.</span><span class="n">keypoints_xyc</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">vis_kp_threshold</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
+
+            <span class="n">draw_keypoints</span><span class="p">(</span>
+                <span class="n">detection</span><span class="p">,</span>
+                <span class="n">patch</span><span class="p">,</span>
+                <span class="n">color_keypoint</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">keypoint</span><span class="o">.</span><span class="n">radius</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">keypoint</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">font</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                <span class="n">color_text</span><span class="p">,</span>
+                <span class="n">color_skeleton</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                <span class="n">print_confidence</span><span class="p">,</span>
+                <span class="n">draw_skeleton</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># FIXME clean, put try catch, move to utils/cv2.py</span>
+        <span class="c1"># kf bbox</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">is_prediction</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">draw_kf_bbox</span>
+            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="s2">&quot;track_bbox_pred_kf_ltwh&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">track_bbox_pred_kf_ltwh</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="c1"># FIXME kf bbox from tracklets that were not matched are not displayed</span>
+            <span class="n">bbox_kf_ltrb</span> <span class="o">=</span> <span class="n">clip_bbox_ltrb_to_img_dim</span><span class="p">(</span>
+                <span class="n">round_bbox_coordinates</span><span class="p">(</span>
+                    <span class="n">bbox_ltwh2ltrb</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">track_bbox_pred_kf_ltwh</span><span class="p">)</span>
+                <span class="p">),</span>
+                <span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">rectangle</span><span class="p">(</span>
+                <span class="n">patch</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">bbox_kf_ltrb</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bbox_kf_ltrb</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="p">(</span><span class="n">bbox_kf_ltrb</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">bbox_kf_ltrb</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span>
+                <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">color_kf</span><span class="p">,</span>
+                <span class="n">thickness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">draw_text</span><span class="p">(</span>
+                <span class="n">patch</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">track_id</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">bbox_kf_ltrb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">3</span><span class="p">,</span> <span class="n">bbox_kf_ltrb</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">3</span><span class="p">),</span>
+                <span class="n">fontFace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">font</span><span class="p">,</span>
+                <span class="n">fontScale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                <span class="n">thickness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                <span class="n">color_txt</span><span class="o">=</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
+                <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                <span class="n">alignV</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># track state + hits + age</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">is_prediction</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">print_bbox_confidence</span>
+            <span class="ow">and</span> <span class="n">is_matched</span>
+            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="s2">&quot;state&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="s2">&quot;hits&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">l</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">(</span>
+                <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="n">draw_text</span><span class="p">(</span>
+                <span class="n">patch</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;st=</span><span class="si">{</span><span class="n">detection</span><span class="o">.</span><span class="n">state</span><span class="si">}</span><span class="s2"> | #d=</span><span class="si">{</span><span class="n">detection</span><span class="o">.</span><span class="n">hits</span><span class="si">}</span><span class="s2"> | age=</span><span class="si">{</span><span class="n">detection</span><span class="o">.</span><span class="n">age</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">5</span><span class="p">),</span>
+                <span class="n">fontFace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">font</span><span class="p">,</span>
+                <span class="n">fontScale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                <span class="n">thickness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                <span class="n">color_txt</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                <span class="n">alignV</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
+                <span class="n">alignH</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># display_matched_with</span>
+        <span class="k">if</span> <span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">display_matched_with</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">hasattr</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="s2">&quot;matched_with&quot;</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">detection</span><span class="o">.</span><span class="n">matched_with</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="n">is_matched</span>
+            <span class="p">):</span>
+                <span class="n">l</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">(</span>
+                    <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="n">draw_text</span><span class="p">(</span>
+                    <span class="n">patch</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">detection</span><span class="o">.</span><span class="n">matched_with</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">|</span><span class="si">{</span><span class="n">detection</span><span class="o">.</span><span class="n">matched_with</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="n">r</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">20</span><span class="p">),</span>
+                    <span class="n">fontFace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">font</span><span class="p">,</span>
+                    <span class="n">fontScale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                    <span class="n">thickness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                    <span class="n">color_txt</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                    <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                    <span class="n">alignV</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
+                    <span class="n">alignH</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="c1"># display_n_closer_tracklets_costs</span>
+        <span class="k">if</span> <span class="n">is_prediction</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">display_n_closer_tracklets_costs</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">l</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">(</span>
+                <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="s2">&quot;matched_with&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">is_matched</span><span class="p">:</span>
+                <span class="n">nt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">display_n_closer_tracklets_costs</span>
+                <span class="k">if</span> <span class="s2">&quot;R&quot;</span> <span class="ow">in</span> <span class="n">detection</span><span class="o">.</span><span class="n">costs</span><span class="p">:</span>
+                    <span class="n">sorted_reid_costs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                        <span class="nb">list</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">costs</span><span class="p">[</span><span class="s2">&quot;R&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
+                    <span class="n">processed_reid_costs</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">sorted_reid_costs</span><span class="p">[:</span><span class="n">nt</span><span class="p">]</span>
+                    <span class="p">}</span>
+                    <span class="n">draw_text</span><span class="p">(</span>
+                        <span class="n">patch</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s2">&quot;R(</span><span class="si">{</span><span class="n">detection</span><span class="o">.</span><span class="n">costs</span><span class="p">[</span><span class="s1">&#39;Rt&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">processed_reid_costs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="p">(</span><span class="n">l</span> <span class="o">+</span> <span class="mi">5</span><span class="p">,</span> <span class="n">b</span> <span class="o">-</span> <span class="mi">5</span><span class="p">),</span>
+                        <span class="n">fontFace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">font</span><span class="p">,</span>
+                        <span class="n">fontScale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                        <span class="n">thickness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                        <span class="n">color_txt</span><span class="o">=</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                        <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="s2">&quot;S&quot;</span> <span class="ow">in</span> <span class="n">detection</span><span class="o">.</span><span class="n">costs</span><span class="p">:</span>
+                    <span class="n">sorted_st_costs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                        <span class="nb">list</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">costs</span><span class="p">[</span><span class="s2">&quot;S&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
+                    <span class="n">processed_st_costs</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">sorted_st_costs</span><span class="p">[:</span><span class="n">nt</span><span class="p">]</span>
+                    <span class="p">}</span>
+                    <span class="n">draw_text</span><span class="p">(</span>
+                        <span class="n">patch</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s2">&quot;S(</span><span class="si">{</span><span class="n">detection</span><span class="o">.</span><span class="n">costs</span><span class="p">[</span><span class="s1">&#39;St&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">processed_st_costs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="p">(</span><span class="n">l</span> <span class="o">+</span> <span class="mi">5</span><span class="p">,</span> <span class="n">b</span> <span class="o">-</span> <span class="mi">20</span><span class="p">),</span>
+                        <span class="n">fontFace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">font</span><span class="p">,</span>
+                        <span class="n">fontScale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                        <span class="n">thickness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                        <span class="n">color_txt</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                        <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="s2">&quot;K&quot;</span> <span class="ow">in</span> <span class="n">detection</span><span class="o">.</span><span class="n">costs</span><span class="p">:</span>
+                    <span class="n">sorted_gated_kf_costs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                        <span class="nb">list</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">costs</span><span class="p">[</span><span class="s2">&quot;K&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
+                    <span class="n">processed_gated_kf_costs</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">sorted_gated_kf_costs</span><span class="p">[:</span><span class="n">nt</span><span class="p">]</span>
+                    <span class="p">}</span>
+                    <span class="n">draw_text</span><span class="p">(</span>
+                        <span class="n">patch</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s2">&quot;K(</span><span class="si">{</span><span class="n">detection</span><span class="o">.</span><span class="n">costs</span><span class="p">[</span><span class="s1">&#39;Kt&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">processed_gated_kf_costs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="p">(</span><span class="n">l</span> <span class="o">+</span> <span class="mi">5</span><span class="p">,</span> <span class="n">b</span> <span class="o">-</span> <span class="mi">35</span><span class="p">),</span>
+                        <span class="n">fontFace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">font</span><span class="p">,</span>
+                        <span class="n">fontScale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                        <span class="n">thickness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                        <span class="n">color_txt</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">150</span><span class="p">),</span>
+                        <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># display visibility_scores</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">is_prediction</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">display_reid_visibility_scores</span>
+            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="s2">&quot;visibility_scores&quot;</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">l</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">(</span>
+                <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="n">draw_text</span><span class="p">(</span>
+                <span class="n">patch</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;S: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">visibility_scores</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">l</span> <span class="o">+</span> <span class="mi">5</span><span class="p">,</span> <span class="n">b</span> <span class="o">-</span> <span class="mi">50</span><span class="p">),</span>
+                <span class="n">fontFace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">font</span><span class="p">,</span>
+                <span class="n">fontScale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                <span class="n">thickness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                <span class="n">color_txt</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="n">text_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="c1"># display jersey number</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">is_prediction</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">display_jersey_number</span>
+            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="s2">&quot;jersey_number&quot;</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">jersey_number</span><span class="p">):</span>
+                <span class="n">l</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">(</span>
+                    <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="n">text_size</span> <span class="o">+=</span> <span class="n">draw_text</span><span class="p">(</span>
+                    <span class="n">patch</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;JN: </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">jersey_number</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="nb">int</span><span class="p">((</span><span class="n">t</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)),</span>
+                    <span class="n">fontFace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">font</span><span class="p">,</span>
+                    <span class="n">fontScale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                    <span class="n">thickness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                    <span class="n">color_txt</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                    <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                    <span class="n">alpha_bg</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="c1"># display role</span>
+        <span class="k">if</span> <span class="p">(</span>
+                <span class="n">is_prediction</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">display_role</span>
+                <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="s2">&quot;role&quot;</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">role</span><span class="p">)</span> <span class="ow">and</span> <span class="n">detection</span><span class="o">.</span><span class="n">role</span> <span class="o">!=</span> <span class="s2">&quot;player&quot;</span><span class="p">:</span>
+                <span class="n">l</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">(</span>
+                    <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="n">text_size</span> <span class="o">+=</span> <span class="n">draw_text</span><span class="p">(</span>
+                    <span class="n">patch</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">detection</span><span class="o">.</span><span class="n">role</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="nb">int</span><span class="p">((</span><span class="n">t</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)),</span>
+                    <span class="n">fontFace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">font</span><span class="p">,</span>
+                    <span class="n">fontScale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                    <span class="n">thickness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                    <span class="n">color_txt</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                    <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                    <span class="n">alpha_bg</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">is_prediction</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">display_team</span>
+            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="s2">&quot;team&quot;</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">team</span><span class="p">):</span>
+                <span class="n">l</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">(</span>
+                    <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="n">draw_text</span><span class="p">(</span>
+                    <span class="n">patch</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;T: </span><span class="si">{</span><span class="n">detection</span><span class="o">.</span><span class="n">team</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="nb">int</span><span class="p">((</span><span class="n">t</span><span class="o">+</span><span class="n">b</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="n">text_size</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
+                    <span class="n">fontFace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">font</span><span class="p">,</span>
+                    <span class="n">fontScale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                    <span class="n">thickness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">thickness</span><span class="p">,</span>
+                    <span class="n">color_txt</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span> <span class="k">if</span> <span class="n">detection</span><span class="o">.</span><span class="n">team</span> <span class="o">==</span> <span class="s2">&quot;left&quot;</span> <span class="k">else</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                    <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                    <span class="n">alpha_bg</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                    <span class="n">alignV</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+<div class="viewcode-block" id="VisualizationEngine.draw_pitch">
+<a class="viewcode-back" href="../../../api/pbtrack.core.html#tracklab.core.visualization_engine.VisualizationEngine.draw_pitch">[docs]</a>
+    <span class="k">def</span> <span class="nf">draw_pitch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">image_metadata</span><span class="p">,</span> <span class="n">image_pred</span><span class="p">,</span> <span class="n">image_gt</span><span class="p">,</span> <span class="n">detections_pred</span><span class="p">,</span> <span class="n">ground_truths</span><span class="p">,</span> <span class="n">pitch_cfg</span><span class="p">):</span>
+        <span class="n">draw_pitch</span><span class="p">(</span>
+            <span class="n">patch</span><span class="p">,</span>
+            <span class="n">detections_pred</span><span class="p">,</span> <span class="n">ground_truths</span><span class="p">,</span>
+            <span class="n">image_pred</span><span class="p">,</span> <span class="n">image_gt</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">pitch_cfg</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_colors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detection</span><span class="p">,</span> <span class="n">is_prediction</span><span class="p">):</span>
+        <span class="n">cmap</span> <span class="o">=</span> <span class="n">prediction_cmap</span> <span class="k">if</span> <span class="n">is_prediction</span> <span class="k">else</span> <span class="n">ground_truth_cmap</span>
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">track_id</span><span class="p">):</span>
+            <span class="n">color_bbox</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">color_no_id</span>
+            <span class="n">color_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">color_no_id</span>
+            <span class="n">color_keypoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">keypoint</span><span class="o">.</span><span class="n">color_no_id</span>
+            <span class="n">color_skeleton</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">skeleton</span><span class="o">.</span><span class="n">color_no_id</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">color_key</span> <span class="o">=</span> <span class="s2">&quot;color_prediction&quot;</span> <span class="k">if</span> <span class="n">is_prediction</span> <span class="k">else</span> <span class="s2">&quot;color_ground_truth&quot;</span>
+            <span class="k">if</span> <span class="s2">&quot;team&quot;</span> <span class="ow">in</span> <span class="n">detection</span> <span class="ow">and</span> <span class="n">detection</span><span class="o">.</span><span class="n">team</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;jersey_number&quot;</span> <span class="ow">in</span> <span class="n">detection</span> <span class="ow">and</span> <span class="n">pd</span><span class="o">.</span><span class="n">notnull</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">jersey_number</span><span class="p">):</span>
+                    <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">jersey_number</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">detection</span><span class="o">.</span><span class="n">team</span> <span class="o">==</span> <span class="s2">&quot;right&quot;</span><span class="p">:</span>
+                        <span class="n">color_id</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">right_cmap</span><span class="p">(</span><span class="n">index</span><span class="p">))</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">color_id</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">left_cmap</span><span class="p">(</span><span class="n">index</span><span class="p">))</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">color_id</span> <span class="o">=</span> <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">detection</span><span class="p">[</span><span class="s2">&quot;team&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;right&quot;</span> <span class="k">else</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">color_id</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">track_id</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">cmap</span><span class="p">)]</span>
+            <span class="n">color_bbox</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">bbox</span><span class="p">[</span><span class="n">color_key</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">bbox</span><span class="p">[</span><span class="n">color_key</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">color_id</span>
+            <span class="p">)</span>
+            <span class="n">color_text</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="n">color_key</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="n">color_key</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">color_id</span>
+            <span class="p">)</span>
+            <span class="n">color_keypoint</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">keypoint</span><span class="p">[</span><span class="n">color_key</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">keypoint</span><span class="p">[</span><span class="n">color_key</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="n">color_id</span>
+            <span class="p">)</span>
+            <span class="n">color_skeleton</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">skeleton</span><span class="p">[</span><span class="n">color_key</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">skeleton</span><span class="p">[</span><span class="n">color_key</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="n">color_id</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">color_bbox</span><span class="p">,</span> <span class="n">color_text</span><span class="p">,</span> <span class="n">color_keypoint</span><span class="p">,</span> <span class="n">color_skeleton</span>
+
+    <span class="k">def</span> <span class="nf">_update_video</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">video_name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;video_writer&quot;</span><span class="p">):</span>
+            <span class="n">filepath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span> <span class="o">/</span> <span class="s2">&quot;videos&quot;</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">video_name</span><span class="si">}</span><span class="s2">.mp4&quot;</span>
+            <span class="n">filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">video_writer</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoWriter</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">),</span>
+                <span class="n">cv2</span><span class="o">.</span><span class="n">VideoWriter_fourcc</span><span class="p">(</span><span class="o">*</span><span class="s2">&quot;mp4v&quot;</span><span class="p">),</span>
+                <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">video_fps</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Baptiste Standaert, Vladimir Somers, Victor Joos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

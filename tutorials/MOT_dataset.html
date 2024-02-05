@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New dataset integration &mdash; TrackLab  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="New evaluator integration" href="MOT_eval.html" />
+    <link rel="prev" title="Integrating a new module" href="Yolov8_pose_estimation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TrackLab
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation guide </a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">PbTrack Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Available_features.html">Available features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Yolov8_pose_estimation.html">Integrating a new module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">New dataset integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#trackingdataset-extension"><code class="docutils literal notranslate"><span class="pre">TrackingDataset</span></code> extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#config-file">Config file</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MOT_eval.html">New evaluator integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../additional/citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/coming_soon.html">Coming soon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/contribute.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/licence.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TrackLab</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">New dataset integration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/MOT_dataset.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="new-dataset-integration">
+<h1>New dataset integration<a class="headerlink" href="#new-dataset-integration" title="Link to this heading"></a></h1>
+<p>For this tutorial we are going to integrate the <a class="reference external" href="https://motchallenge.net/data/MOT20/">MOT20</a> dataset.
+Please refer to their documentation to download the dataset on your own machine. You can download all the
+data from <a class="reference external" href="https://motchallenge.net/data/MOT20.zip">this link</a>.</p>
+<section id="trackingdataset-extension">
+<h2><code class="docutils literal notranslate"><span class="pre">TrackingDataset</span></code> extension<a class="headerlink" href="#trackingdataset-extension" title="Link to this heading"></a></h2>
+<p>The first step is to create a new class that extends the <code class="docutils literal notranslate"><span class="pre">TrackingDataset</span></code> class.
+This class will be used to load the data from the dataset and to provide the structure for
+the pipeline to work on. The <code class="docutils literal notranslate"><span class="pre">TrackingDataset</span></code> class is defined in <code class="docutils literal notranslate"><span class="pre">tracklab/datastruct/tracking_dataset.py</span></code>.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">TrackingDataset</span></code> is an abstract class that allows to work on a subset of the dataset. It is composed of
+<code class="docutils literal notranslate"><span class="pre">TrackingSet</span></code> which represent the different splits of the dataset. These <code class="docutils literal notranslate"><span class="pre">TrackingSet</span></code> contain the information
+about ground truth detections, images and videos metadata which are stored as of <code class="docutils literal notranslate"><span class="pre">pandas</span></code> dataframes.</p>
+<p>Basically, you need to here define the way to load the files and fill the <code class="docutils literal notranslate"><span class="pre">pandas</span></code> dataframes that
+respectively contain the information about the detection ground truths,
+images metadata and videos metadata for each split of your dataset. The minimum required information to be
+included in the <code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code> are the following:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">detections</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">image_metadatas</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">video_metadatas</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">[image_id,</span> <span class="pre">video_id,</span> <span class="pre">..]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[video_id,</span> <span class="pre">file_path,</span> <span class="pre">frame,</span> <span class="pre">..]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[name,</span> <span class="pre">nframes,</span> <span class="pre">..]</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>/!\ do not forget to set the indexes of your dataframes to a unique ID. The
+update of the results accross the pipeline relies on the uniqueness of the
+indexes.</p>
+<p>You can find the example of the MOT20 implementation of the <code class="docutils literal notranslate"><span class="pre">TrackingDataset</span></code>
+that we implemented in <code class="docutils literal notranslate"><span class="pre">tracklab/wrappers/dataset/mot20.py</span></code>. You will then
+need to add your new class to the <code class="docutils literal notranslate"><span class="pre">tracklab/wrappers/dataset/__init__.py</span></code> file.</p>
+</section>
+<section id="config-file">
+<h2>Config file<a class="headerlink" href="#config-file" title="Link to this heading"></a></h2>
+<p>Our framework works with the <a class="reference external" href="https://hydra.cc/">Hydra</a> configuration system which
+takes advantage of a hierarchical configuration via files. This is very convenient
+to easily change modules.</p>
+<p>Basically, you will need to add a <code class="docutils literal notranslate"><span class="pre">.yaml</span></code> file in <code class="docutils literal notranslate"><span class="pre">configs/dataset</span></code> which will be
+converted to a dictionary and will contain all the arguments required for your
+new class. The <code class="docutils literal notranslate"><span class="pre">_target_</span></code> element indicates the object you want to
+instantiate for the creation of your dataset.
+It  will point to our new class <code class="docutils literal notranslate"><span class="pre">tracklab.wrappers.MOT20</span></code>. You can find the configuration
+file in <code class="docutils literal notranslate"><span class="pre">configs/dataset/mot20.yaml</span></code>.</p>
+<p>Then you have to change in the main config file (<code class="docutils literal notranslate"><span class="pre">configs/config.yaml</span></code>) the entry in
+datasets in defaults to <code class="docutils literal notranslate"><span class="pre">mot20</span></code> (the name of the new file without the extension).</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Yolov8_pose_estimation.html" class="btn btn-neutral float-left" title="Integrating a new module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="MOT_eval.html" class="btn btn-neutral float-right" title="New evaluator integration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Baptiste Standaert, Vladimir Somers, Victor Joos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tracklab.utils.cv2 &mdash; TrackLab  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            TrackLab
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation guide </a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configuration.html">PbTrack Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Available_features.html">Available features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/Yolov8_pose_estimation.html">Integrating a new module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/coming_soon.html">Coming soon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/contribute.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/licence.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TrackLab</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../utils.html">tracklab.utils</a></li>
+      <li class="breadcrumb-item active">tracklab.utils.cv2</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tracklab.utils.cv2</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span>
+<span class="kn">from</span> <span class="nn">.coordinates</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># FIXME load from categories in video_metadata</span>
+<span class="n">posetrack_human_skeleton</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">14</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">17</span><span class="p">,</span> <span class="mi">15</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">15</span><span class="p">,</span> <span class="mi">13</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">13</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">13</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="VideoReader">
+<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.VideoReader">[docs]</a>
+<span class="k">class</span> <span class="nc">VideoReader</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cap</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># cv2.VideoCapture(filename)</span>
+
+<div class="viewcode-block" id="VideoReader.set_filename">
+<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.VideoReader.set_filename">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cap</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cap</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">cap</span><span class="o">.</span><span class="n">isOpened</span><span class="p">(),</span> <span class="s2">&quot;Error opening video stream or file&quot;</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;You should first set the filename&quot;</span>
+        <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">cap</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_POS_FRAMES</span><span class="p">,</span> <span class="n">idx</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ret</span><span class="p">,</span> <span class="n">image</span> <span class="o">=</span> <span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">cap</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">ret</span><span class="p">,</span> <span class="s2">&quot;Read past the end of the video file&quot;</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+
+<span class="n">video_reader</span> <span class="o">=</span> <span class="n">VideoReader</span><span class="p">()</span>
+
+<div class="viewcode-block" id="cv2_load_image">
+<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.cv2_load_image">[docs]</a>
+<span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">cv2_load_image</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="n">file_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;vid://&quot;</span><span class="p">):</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">&quot;vid://&quot;</span><span class="p">)</span>
+        <span class="n">video_file</span><span class="p">,</span> <span class="n">frame_id</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">video_reader</span><span class="o">.</span><span class="n">filename</span> <span class="o">!=</span> <span class="n">video_file</span><span class="p">:</span>
+            <span class="n">video_reader</span><span class="o">.</span><span class="n">set_filename</span><span class="p">(</span><span class="n">video_file</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">video_reader</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">frame_id</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">image</span></div>
+
+
+<div class="viewcode-block" id="crop_bbox_ltwh">
+<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.crop_bbox_ltwh">[docs]</a>
+<span class="k">def</span> <span class="nf">crop_bbox_ltwh</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">bbox</span><span class="p">):</span>
+    <span class="n">bbox</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span><span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+    <span class="k">return</span> <span class="n">img</span></div>
+
+    
+
+<div class="viewcode-block" id="draw_keypoints">
+<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.draw_keypoints">[docs]</a>
+<span class="k">def</span> <span class="nf">draw_keypoints</span><span class="p">(</span>
+    <span class="n">detection</span><span class="p">,</span>
+    <span class="n">patch</span><span class="p">,</span>
+    <span class="n">kp_color</span><span class="p">,</span>
+    <span class="n">kp_radius</span><span class="p">,</span>
+    <span class="n">kp_thickness</span><span class="p">,</span>
+    <span class="n">text_font</span><span class="p">,</span>
+    <span class="n">text_scale</span><span class="p">,</span>
+    <span class="n">text_thickness</span><span class="p">,</span>
+    <span class="n">text_color</span><span class="p">,</span>
+    <span class="n">skeleton_color</span><span class="p">,</span>
+    <span class="n">skeleton_thickness</span><span class="p">,</span>
+    <span class="n">print_confidence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">draw_skeleton</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">keypoints_xy</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">keypoints</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span><span class="n">rounded</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">keypoints_c</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">keypoints</span><span class="o">.</span><span class="n">c</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">xy</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keypoints_xy</span><span class="p">,</span> <span class="n">keypoints_c</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">cv2</span><span class="o">.</span><span class="n">circle</span><span class="p">(</span>
+                    <span class="n">patch</span><span class="p">,</span>
+                    <span class="p">(</span><span class="n">xy</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xy</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                    <span class="n">color</span><span class="o">=</span><span class="n">kp_color</span><span class="p">,</span>
+                    <span class="n">radius</span><span class="o">=</span><span class="n">kp_radius</span><span class="p">,</span>
+                    <span class="n">thickness</span><span class="o">=</span><span class="n">kp_thickness</span><span class="p">,</span>
+                    <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">print_confidence</span><span class="p">:</span>
+                    <span class="n">draw_text</span><span class="p">(</span>
+                        <span class="n">patch</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">c</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> %&quot;</span><span class="p">,</span>
+                        <span class="p">(</span><span class="n">xy</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xy</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                        <span class="n">fontFace</span><span class="o">=</span><span class="n">text_font</span><span class="p">,</span>
+                        <span class="n">fontScale</span><span class="o">=</span><span class="n">text_scale</span><span class="p">,</span>
+                        <span class="n">thickness</span><span class="o">=</span><span class="n">text_thickness</span><span class="p">,</span>
+                        <span class="n">color_txt</span><span class="o">=</span><span class="n">text_color</span><span class="p">,</span>
+                        <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                        <span class="n">alignH</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span>
+                        <span class="n">alignV</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+            <span class="k">if</span> <span class="n">draw_skeleton</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">posetrack_human_skeleton</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">keypoints_c</span><span class="p">[</span><span class="n">link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">keypoints_c</span><span class="p">[</span><span class="n">link</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">cv2</span><span class="o">.</span><span class="n">line</span><span class="p">(</span>
+                            <span class="n">patch</span><span class="p">,</span>
+                            <span class="p">(</span>
+                                <span class="n">keypoints_xy</span><span class="p">[</span><span class="n">link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                <span class="n">keypoints_xy</span><span class="p">[</span><span class="n">link</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                            <span class="p">),</span>
+                            <span class="p">(</span>
+                                <span class="n">keypoints_xy</span><span class="p">[</span><span class="n">link</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                <span class="n">keypoints_xy</span><span class="p">[</span><span class="n">link</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                            <span class="p">),</span>
+                            <span class="n">color</span><span class="o">=</span><span class="n">kp_color</span><span class="p">,</span>
+                            <span class="n">thickness</span><span class="o">=</span><span class="n">skeleton_thickness</span><span class="p">,</span>
+                            <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">,</span>
+                        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;You tried to draw the keypoints but no &#39;keypoints_xyc&#39; were found in the &quot;</span>
+            <span class="s2">&quot;detection.&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="draw_bbox">
+<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.draw_bbox">[docs]</a>
+<span class="k">def</span> <span class="nf">draw_bbox</span><span class="p">(</span>
+    <span class="n">detection</span><span class="p">,</span>
+    <span class="n">patch</span><span class="p">,</span>
+    <span class="n">bbox_color</span><span class="p">,</span>
+    <span class="n">bbox_thickness</span><span class="p">,</span>
+    <span class="n">text_font</span><span class="p">,</span>
+    <span class="n">text_scale</span><span class="p">,</span>
+    <span class="n">text_thickness</span><span class="p">,</span>
+    <span class="n">text_color</span><span class="p">,</span>
+    <span class="n">print_confidence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">print_id</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">l</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">(</span>
+        <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">r</span> <span class="o">-</span> <span class="n">l</span><span class="p">,</span> <span class="n">b</span> <span class="o">-</span> <span class="n">t</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">rectangle</span><span class="p">(</span>
+        <span class="n">patch</span><span class="p">,</span>
+        <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">bbox_color</span><span class="p">,</span>
+        <span class="n">thickness</span><span class="o">=</span><span class="n">bbox_thickness</span><span class="p">,</span>
+        <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">print_confidence</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">draw_text</span><span class="p">(</span>
+                <span class="n">patch</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">conf</span><span class="p">()</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%s&quot;</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">l</span><span class="o">+</span><span class="mi">5</span><span class="p">,</span> <span class="n">t</span><span class="o">+</span><span class="mi">5</span><span class="p">),</span>
+                <span class="n">fontFace</span><span class="o">=</span><span class="n">text_font</span><span class="p">,</span>
+                <span class="n">fontScale</span><span class="o">=</span><span class="n">text_scale</span><span class="p">,</span>
+                <span class="n">thickness</span><span class="o">=</span><span class="n">text_thickness</span><span class="p">,</span>
+                <span class="n">color_txt</span><span class="o">=</span><span class="n">text_color</span><span class="p">,</span>
+                <span class="n">alignH</span><span class="o">=</span><span class="s2">&quot;l&quot;</span><span class="p">,</span>
+                <span class="n">alignV</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
+                <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                <span class="n">darken</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;You tried to draw the confidence but no &#39;bbox_conf&#39; was found in the &quot;</span>
+                <span class="s2">&quot;detection.&quot;</span>
+            <span class="p">)</span>
+    <span class="k">if</span> <span class="n">print_id</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">track_id</span><span class="p">):</span>
+                <span class="n">draw_text</span><span class="p">(</span>
+                    <span class="n">patch</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">track_id</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="p">(</span><span class="n">r</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="n">t</span><span class="o">-</span><span class="mi">15</span><span class="p">),</span>
+                    <span class="n">fontFace</span><span class="o">=</span><span class="n">text_font</span><span class="p">,</span>
+                    <span class="n">fontScale</span><span class="o">=</span><span class="n">text_scale</span><span class="p">,</span>
+                    <span class="n">thickness</span><span class="o">=</span><span class="n">text_thickness</span><span class="p">,</span>
+                    <span class="n">alignH</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span>
+                    <span class="n">alignV</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
+                    <span class="n">color_txt</span><span class="o">=</span><span class="n">text_color</span><span class="p">,</span>
+                    <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                    <span class="n">darken</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;You tried to draw the track id but no &#39;track_id&#39; was found in the &quot;</span>
+                <span class="s2">&quot;detection.&quot;</span>
+            <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="draw_bpbreid_heatmaps">
+<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.draw_bpbreid_heatmaps">[docs]</a>
+<span class="k">def</span> <span class="nf">draw_bpbreid_heatmaps</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">heatmaps_display_threshold</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">l</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">(</span>
+            <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">patch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="n">img_crop</span> <span class="o">=</span> <span class="n">patch</span><span class="p">[</span><span class="n">t</span><span class="p">:</span><span class="n">b</span><span class="p">,</span> <span class="n">l</span><span class="p">:</span><span class="n">r</span><span class="p">]</span>
+        <span class="n">body_masks</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">body_masks</span>
+        <span class="n">img_crop_with_mask</span> <span class="o">=</span> <span class="n">overlay_heatmap</span><span class="p">(</span>
+            <span class="n">img_crop</span><span class="p">,</span>
+            <span class="n">body_masks</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">mask_threshold</span><span class="o">=</span><span class="n">heatmaps_display_threshold</span><span class="p">,</span>
+            <span class="n">rgb</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">patch</span><span class="p">[</span><span class="n">t</span><span class="p">:</span><span class="n">b</span><span class="p">,</span> <span class="n">l</span><span class="p">:</span><span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_crop_with_mask</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;You tried to draw the bpbreid heatmaps but no &#39;body_masks&#39; were found in &quot;</span>
+            <span class="s2">&quot;the detection.&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="overlay_heatmap">
+<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.overlay_heatmap">[docs]</a>
+<span class="k">def</span> <span class="nf">overlay_heatmap</span><span class="p">(</span>
+    <span class="n">img</span><span class="p">,</span> <span class="n">heatmap</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">mask_threshold</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">color_map</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">COLORMAP_JET</span><span class="p">,</span> <span class="n">rgb</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Overlay a heatmap on an image with given color map.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        img: input image in OpenCV BGR format</span>
+<span class="sd">        heatmap: heatmap to overlay in float from range 0-&gt;1. Will be resized to image size and values clipped to 0-&gt;1.</span>
+<span class="sd">        weight: alpha blending weight between image and heatmap, 1-weight for image and weight for heatmap. Set to -1 to</span>
+<span class="sd">        use the heatmap as alpha channel.</span>
+<span class="sd">        color_map: OpenCV type colormap to use for heatmap.</span>
+<span class="sd">        mask_threshold: heatmap values below this threshold will not be displayed.</span>
+<span class="sd">        rgb: if True, the heatmap will be converted to RGB before overlaying.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Image with heatmap overlayed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">heatmap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">heatmap</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="n">interpolation</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_CUBIC</span><span class="p">)</span>
+    <span class="n">heatmap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">heatmap</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">heatmap_gray</span> <span class="o">=</span> <span class="p">(</span><span class="n">heatmap</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="n">heatmap_color</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">applyColorMap</span><span class="p">(</span><span class="n">heatmap_gray</span><span class="p">,</span> <span class="n">color_map</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rgb</span><span class="p">:</span>
+        <span class="n">heatmap_color</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">heatmap_color</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
+    <span class="n">mask_alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">heatmap</span><span class="p">)</span>
+    <span class="n">mask_alpha</span><span class="p">[</span><span class="n">heatmap</span> <span class="o">&lt;</span> <span class="n">mask_threshold</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">mask_alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">mask_alpha</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">weight</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">heatmap</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">img_with_heatmap</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">img</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mask_alpha</span> <span class="o">*</span> <span class="n">weight</span><span class="p">)</span> <span class="o">+</span> <span class="n">heatmap_color</span> <span class="o">*</span> <span class="n">mask_alpha</span> <span class="o">*</span> <span class="n">weight</span>
+    <span class="p">)</span>
+    <span class="c1"># img_with_heatmap = cv2.addWeighted(img, 1-weight, heatmap_color.astype(img.dtype), weight, 0)</span>
+    <span class="k">return</span> <span class="n">img_with_heatmap</span></div>
+
+
+
+<div class="viewcode-block" id="draw_ignore_region">
+<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.draw_ignore_region">[docs]</a>
+<span class="k">def</span> <span class="nf">draw_ignore_region</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="n">image_metadata</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">image_metadata</span><span class="p">[</span><span class="s2">&quot;ignore_regions_x&quot;</span><span class="p">],</span> <span class="n">image_metadata</span><span class="p">[</span><span class="s2">&quot;ignore_regions_y&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">polylines</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="p">[</span><span class="n">points</span><span class="p">],</span> <span class="kc">True</span><span class="p">,</span> <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;You tried to draw the ignored regions but no &#39;ignore_regions_x&#39; or &#39;ignore_regions_y&#39; were found in &quot;</span>
+            <span class="s2">&quot;the image metadata.&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="print_count_frame">
+<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.print_count_frame">[docs]</a>
+<span class="k">def</span> <span class="nf">print_count_frame</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">nframes</span><span class="p">):</span>
+    <span class="n">draw_text</span><span class="p">(</span>
+        <span class="n">patch</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">frame</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">nframes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
+        <span class="n">fontFace</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">fontScale</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+        <span class="n">thickness</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">color_txt</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+        <span class="n">alignH</span><span class="o">=</span><span class="s2">&quot;l&quot;</span><span class="p">,</span>
+        <span class="n">alignV</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="final_patch">
+<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.final_patch">[docs]</a>
+<span class="k">def</span> <span class="nf">final_patch</span><span class="p">(</span><span class="n">patch</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_RGB2BGR</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="draw_text">
+<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.draw_text">[docs]</a>
+<span class="k">def</span> <span class="nf">draw_text</span><span class="p">(</span>
+    <span class="n">img</span><span class="p">,</span>
+    <span class="n">text</span><span class="p">,</span>
+    <span class="n">pos</span><span class="p">,</span>
+    <span class="n">fontFace</span><span class="p">,</span>
+    <span class="n">fontScale</span><span class="p">,</span>
+    <span class="n">thickness</span><span class="p">,</span>
+    <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">,</span>
+    <span class="n">color_txt</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">color_bg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">alpha_bg</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">alignH</span><span class="o">=</span><span class="s2">&quot;l&quot;</span><span class="p">,</span>  <span class="c1"># l: left, c: center, r: right</span>
+    <span class="n">alignV</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span>  <span class="c1"># t: top, c: center, b: bottom</span>
+    <span class="n">darken</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="c1"># TODO: add multiline support</span>
+    <span class="c1"># TODO: add scale: txt size depend on scale of bbox?</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">pos</span>
+    <span class="n">text_size</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getTextSize</span><span class="p">(</span>
+        <span class="n">text</span><span class="p">,</span> <span class="n">fontFace</span><span class="o">=</span><span class="n">fontFace</span><span class="p">,</span> <span class="n">fontScale</span><span class="o">=</span><span class="n">fontScale</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="n">thickness</span>
+    <span class="p">)</span>
+    <span class="n">text_w</span><span class="p">,</span> <span class="n">text_h</span> <span class="o">=</span> <span class="n">text_size</span>
+    <span class="k">if</span> <span class="n">alignV</span> <span class="o">==</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span>
+        <span class="c1"># txt_pos_y = round((y + fontScale - 1))</span>
+        <span class="n">txt_pos_y</span> <span class="o">=</span> <span class="n">y</span>
+    <span class="k">elif</span> <span class="n">alignV</span> <span class="o">==</span> <span class="s2">&quot;t&quot;</span><span class="p">:</span>
+        <span class="c1"># txt_pos_y = round((y + fontScale - 1)) + text_h</span>
+        <span class="n">txt_pos_y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">text_h</span>
+    <span class="k">elif</span> <span class="n">alignV</span> <span class="o">==</span> <span class="s2">&quot;c&quot;</span><span class="p">:</span>
+        <span class="n">txt_pos_y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">text_h</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;alignV must be one of &#39;t&#39;, &#39;b&#39;, &#39;c&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">alignH</span> <span class="o">==</span> <span class="s2">&quot;l&quot;</span><span class="p">:</span>
+        <span class="n">txt_pos_x</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="k">elif</span> <span class="n">alignH</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span>
+        <span class="n">txt_pos_x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">text_w</span>
+    <span class="k">elif</span> <span class="n">alignH</span> <span class="o">==</span> <span class="s2">&quot;c&quot;</span><span class="p">:</span>
+        <span class="n">txt_pos_x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">text_w</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;alignH must be one of &#39;l&#39;, &#39;r&#39;, &#39;c&#39;&quot;</span><span class="p">)</span>
+
+    <span class="n">text_position</span> <span class="o">=</span> <span class="p">(</span><span class="n">txt_pos_x</span><span class="p">,</span> <span class="n">txt_pos_y</span><span class="p">)</span>
+    <span class="n">padding</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">rect_pos_x</span> <span class="o">=</span> <span class="n">txt_pos_x</span> <span class="o">-</span> <span class="n">padding</span>
+    <span class="n">rect_pos_y</span> <span class="o">=</span> <span class="n">txt_pos_y</span> <span class="o">+</span> <span class="n">padding</span>
+    <span class="n">rect_position</span> <span class="o">=</span> <span class="p">(</span><span class="n">rect_pos_x</span><span class="p">,</span> <span class="n">rect_pos_y</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">color_bg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rect_w</span> <span class="o">=</span> <span class="n">text_w</span> <span class="o">+</span> <span class="n">padding</span>
+        <span class="n">rect_h</span> <span class="o">=</span> <span class="n">text_h</span> <span class="o">+</span> <span class="n">padding</span>
+        <span class="n">x_start</span><span class="p">,</span> <span class="n">x_stop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">([</span><span class="n">rect_pos_x</span><span class="p">,</span> <span class="n">txt_pos_x</span><span class="o">+</span><span class="n">rect_w</span><span class="p">])</span>
+        <span class="n">y_start</span><span class="p">,</span> <span class="n">y_stop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">([</span><span class="n">rect_pos_y</span><span class="p">,</span> <span class="n">txt_pos_y</span><span class="o">-</span><span class="n">rect_h</span><span class="p">])</span>
+        <span class="n">crop</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">y_start</span><span class="p">,</span> <span class="mi">0</span><span class="p">]):</span><span class="n">y_stop</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">x_start</span><span class="p">,</span> <span class="mi">0</span><span class="p">]):</span><span class="n">x_stop</span><span class="p">]</span>
+        <span class="n">bg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">crop</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">color_bg</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">crop</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">img</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">y_start</span><span class="p">,</span> <span class="mi">0</span><span class="p">]):</span><span class="n">y_stop</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">x_start</span><span class="p">,</span> <span class="mi">0</span><span class="p">]):</span><span class="n">x_stop</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">addWeighted</span><span class="p">(</span><span class="n">crop</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha_bg</span><span class="p">),</span> <span class="n">bg</span><span class="p">,</span> <span class="n">alpha_bg</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+
+    <span class="n">cv2</span><span class="o">.</span><span class="n">putText</span><span class="p">(</span>
+        <span class="n">img</span><span class="p">,</span>
+        <span class="n">text</span><span class="p">,</span>
+        <span class="n">text_position</span><span class="p">,</span>
+        <span class="n">fontFace</span><span class="o">=</span><span class="n">fontFace</span><span class="p">,</span>
+        <span class="n">fontScale</span><span class="o">=</span><span class="n">fontScale</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">color_txt</span><span class="p">)</span> <span class="o">*</span> <span class="n">darken</span><span class="p">,</span>
+        <span class="n">thickness</span><span class="o">=</span><span class="n">thickness</span><span class="p">,</span>
+        <span class="n">lineType</span><span class="o">=</span><span class="n">lineType</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">text_size</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Baptiste Standaert, Vladimir Somers, Victor Joos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

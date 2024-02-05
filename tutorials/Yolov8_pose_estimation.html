@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Integrating a new module &mdash; TrackLab  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="New dataset integration" href="MOT_dataset.html" />
+    <link rel="prev" title="Available features" href="../Available_features.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TrackLab
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation guide </a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">PbTrack Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Available_features.html">Available features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Integrating a new module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#imagelevelmodule-extension"><cite>ImageLevelModule</cite> extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#config-file">Config file</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MOT_dataset.html">New dataset integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MOT_eval.html">New evaluator integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../additional/citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/coming_soon.html">Coming soon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/contribute.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/licence.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TrackLab</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Integrating a new module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/Yolov8_pose_estimation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="integrating-a-new-module">
+<h1>Integrating a new module<a class="headerlink" href="#integrating-a-new-module" title="Link to this heading"></a></h1>
+<p>This tutorial aims to integrate a new pose detector in the framework.
+[Yolov8](<a class="reference external" href="https://docs.ultralytics.com/tasks/pose/">https://docs.ultralytics.com/tasks/pose/</a>) proposes a pose detector
+which takes as input an image and provides as output the positions of the
+detected joints and the bounding boxes. To do this, we will start by extending
+the abstract class <a class="reference internal" href="../api/pbtrack.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule" title="tracklab.pipeline.imagelevel_module.ImageLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageLevelModule</span></code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The first thing we need to do is determine at what level we want to run the module :</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="../api/pbtrack.pipeline.html#tracklab.pipeline.videolevel_module.VideoLevelModule" title="tracklab.pipeline.videolevel_module.VideoLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">VideoLevelModule</span></code></a> : You get all the detections from a video at once.</p></li>
+<li><p><a class="reference internal" href="../api/pbtrack.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule" title="tracklab.pipeline.imagelevel_module.ImageLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageLevelModule</span></code></a> : You get all the detections from a single image.</p></li>
+<li><p><a class="reference internal" href="../api/pbtrack.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule" title="tracklab.pipeline.detectionlevel_module.DetectionLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionLevelModule</span></code></a> : You get the information of a single detection</p></li>
+</ul>
+</div></blockquote>
+</div>
+<section id="imagelevelmodule-extension">
+<h2><cite>ImageLevelModule</cite> extension<a class="headerlink" href="#imagelevelmodule-extension" title="Link to this heading"></a></h2>
+<p>The abstract class <a class="reference internal" href="../api/pbtrack.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule" title="tracklab.pipeline.imagelevel_module.ImageLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageLevelModule</span></code></a> is defined in the file <cite>pipeline/imagelevel_module.py</cite>.
+It allows to define a common interface for the different detectors and the
+automation of the aggregation of the results in the pipeline.</p>
+<p>Basically, its role is to take as input an image and to provide as output the
+<cite>detections</cite> objects that the model will have made.</p>
+<p>It will be necessary to define the functions <cite>__init__</cite>, <cite>preprocess</cite> and
+<cite>process</cite> whose expected behavior is described in the docstring of the class.</p>
+<p>The <cite>__init__</cite> function will be called once in <cite>main.py</cite> when the model is
+initialized.</p>
+<p>The <cite>preprocess</cite> function is called at each iteration of the pipeline, it allows
+to define what is the expected behavior of the <cite>dataloader</cite>. It is in this function
+that we load the image, the metadata and apply the processing (if required) before
+providing it to the <cite>process</cite> function. The default behavior of the
+collate function is that of Pytorch, but it can of course be modified by changing
+the <cite>self.collate_fn</cite> attribute. Finally, it takes as argument a <cite>pd.Series</cite> object
+which contains the metadata related to the image, and a <cite>pd.DataFrame</cite> which contains
+the detections from the previous steps (if applicable).</p>
+<p>The <cite>process</cite> function is called after the batching of the dataloader via the
+<cite>self.collate_fn</cite> function. It takes as argument the batch and the metadata linked
+to the input images. This is where the processing by the model must be done.
+This function must return the results of the detections in one of the following
+forms: <cite>Union[pd.Series, List[pd.Series], pd.DataFrame]</cite>. The mechanism for updating
+the results during the pipeline is based on the index of the <cite>detections</cite>.
+This is why it is important to assign a unique <cite>id</cite> to each object. This can be done by
+incrementing the <cite>self.id</cite> variable. This <cite>id</cite> should then be added as a <cite>name</cite>
+argument in the case of a <cite>pd.Series</cite> or as an <cite>index</cite> in the case of a <cite>pd.DataFrame</cite>.
+Finally, it is expected that at least the following attributes are assigned in
+the <cite>detections</cite>: <cite>image_id</cite>, <cite>video_id</cite>, <cite>category_id</cite>, <cite>bbox_ltwh</cite> and <cite>bbox_conf</cite>.
+Of course other elements can be added at this stage if needed.</p>
+<p>An example of the implementation for Yolov8-Pose is available in the file
+<cite>wrappers/detect_multi/yolov8_pose.py</cite>. You will also need to add this new class
+to the <cite>wrappers/detect_multi/__init__.py</cite> file.</p>
+</section>
+<section id="config-file">
+<h2>Config file<a class="headerlink" href="#config-file" title="Link to this heading"></a></h2>
+<p>Our framework works with the [Hydra](<a class="reference external" href="https://hydra.cc/">https://hydra.cc/</a>) configuration system which
+takes advantage of a hierarchical configuration via files. This is very convenient
+to easily change modules.</p>
+<p>You will have to create a new <cite>.yaml</cite> configuration file, add the required
+arguments in the <cite>cfg</cite> field and link the <cite>_target_</cite> to the new object for the
+instantiation. The completed example is available in
+<cite>configs/modules/pose_bottomup/yolov8_pose.yaml</cite>.</p>
+<p>You will also have to change in the main config file <cite>configs/config.yaml</cite> the field
+<cite>modules/pose_bottomup: yolov8_pose</cite> (name of the new file) to infer with the new
+model.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../Available_features.html" class="btn btn-neutral float-left" title="Available features" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="MOT_dataset.html" class="btn btn-neutral float-right" title="New dataset integration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Baptiste Standaert, Vladimir Somers, Victor Joos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
