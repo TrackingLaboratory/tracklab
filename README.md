@@ -34,7 +34,7 @@ Here's what makes TrackLab different from other existing tracking frameworks:
   - person re-identification
 
 ## Documentation
-You can find the documentation in the docs/ folder. After installing, you can run `make html` inside this folder
+You can find the documentation at [https://trackinglaboratory.github.io/tracklab/](https://trackinglaboratory.github.io/tracklab/) or in the docs/ folder. After installing, you can run `make html` inside this folder
 to get an html version of the documentation.
 
 ## Installation guide[^1]
