@@ -56,7 +56,7 @@ def init(cfg):
         wandb.init(project=cfg["experiment_name"], config=cfg)
 
 
-def log(res_dict, name, video_dict=None):
+def log_metric(res_dict, name, video_dict=None):
     try:
         wandb.log(
             {f"{name}/{k}": v for k, v in res_dict.items()},
@@ -66,6 +66,14 @@ def log(res_dict, name, video_dict=None):
             video_df = pd.DataFrame.from_dict(video_dict, orient="index")
             video_df.insert(0, "video", video_df.index)
             wandb.log({f"{name}/videos": video_df}, step=0)
+    except wandb.Error:
+        logger.warning("Wandb error, skipping logging")
+        pass
+
+
+def log(res_dict):
+    try:
+        wandb.log(res_dict)
     except wandb.Error:
         logger.warning("Wandb error, skipping logging")
         pass

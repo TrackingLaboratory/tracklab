@@ -8,25 +8,26 @@ from tracklab.utils.cv2 import draw_text
 def draw_pitch(patch, detections_pred, detections_gt,
                image_pred, image_gt,
                line_thickness=3,
-               radar_view_scale=3,
+               pitch_scale=3,
                pitch_image=None,
                ):
 
     # Draw the lines on the image pitch
-    image_height, image_width, _ = patch.shape
-    for name, line in image_pred["lines"].items():
-        for j in np.arange(len(line)-1):
-            cv2.line(
-                patch,
-                (int(line[j]["x"] * image_width), int(line[j]["y"] * image_height)),
-                (int(line[j+1]["x"] * image_width), int(line[j+1]["y"] * image_height)),
-                color=SoccerPitch.palette[name],
-                thickness=line_thickness,  # TODO : make this a parameter
-            )
+    if "lines" in image_pred:
+        image_height, image_width, _ = patch.shape
+        for name, line in image_pred["lines"].items():
+            for j in np.arange(len(line)-1):
+                cv2.line(
+                    patch,
+                    (int(line[j]["x"] * image_width), int(line[j]["y"] * image_height)),
+                    (int(line[j+1]["x"] * image_width), int(line[j+1]["y"] * image_height)),
+                    color=SoccerPitch.palette[name],
+                    thickness=line_thickness,  # TODO : make this a parameter
+                )
 
     # Draw the Top-view pitch
-    draw_radar_view(patch, detections_gt, scale=radar_view_scale, group="gt", pitch_image=pitch_image)
-    draw_radar_view(patch, detections_pred, scale=radar_view_scale, group="pred", pitch_image=pitch_image)
+    draw_radar_view(patch, detections_gt, scale=pitch_scale, group="gt", pitch_image=pitch_image)
+    draw_radar_view(patch, detections_pred, scale=pitch_scale, group="pred", pitch_image=pitch_image)
 
 
 def draw_radar_view(patch, detections, scale, delta=32, group="gt", pitch_image=None):
@@ -44,10 +45,14 @@ def draw_radar_view(patch, detections, scale, delta=32, group="gt", pitch_image=
         radar_img = cv2.bitwise_not(radar_img)
     else:
         radar_img = np.ones((pitch_height * scale, pitch_width * scale, 3)) * 255
+
+    alpha = 0.3
     patch[radar_top_y:radar_top_y + radar_height, radar_top_x:radar_top_x + radar_width,
-    :] = radar_img
+    :] = cv2.addWeighted(patch[radar_top_y:radar_top_y + radar_height, radar_top_x:radar_top_x + radar_width,
+    :], 1-alpha, radar_img, alpha, 0.0)
     patch[radar_top_y:radar_top_y + radar_height, radar_top_x:radar_top_x + radar_width,
-    :] = radar_img
+    :] = cv2.addWeighted(patch[radar_top_y:radar_top_y + radar_height, radar_top_x:radar_top_x + radar_width,
+    :], 1-alpha, radar_img, alpha, 0.0)
     draw_text(
         patch,
         group,
@@ -89,7 +94,7 @@ def draw_radar_view(patch, detections, scale, delta=32, group="gt", pitch_image=
                 (radar_center_x + int(x_middle * scale),
                  radar_center_y + int(y_middle * scale)),
                 1,
-                0.6,
+                0.2*scale,
                 1,
                 color_txt=color,
                 alignH="c",

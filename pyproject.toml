@@ -32,14 +32,11 @@ mmengine = "^0.10.1"
 timm = "^0.9.12"
 torchreid = {path = "/home/user01/Amir/TrackLab/bpbreid-victor", develop = true}
 openpifpaf = "^0.13.11"
-easyocr = "^1.7.1"
 soccernet = "^0.1.53"
-mmocr = "^1.0.1"
 mmpose = "^1.2.0"
-trackeval = {git = "https://github.com/TrackingLaboratory/TrackEval.git", develop= true}
+trackeval = {git = "https://github.com/SoccerNet/sn-trackeval.git", develop= true}
 yt-dlp = "^2023.12.30"
 gdown = "^4.7.1"
-tracklab-calibration = {path = "plugins/calibration", develop = true}
 
 [tool.poetry.scripts]
 tracklab = 'tracklab.main:main'

@@ -86,7 +86,7 @@ def load_from_overrides(overrides=[]) -> TrackEngine:
     evaluator = instantiate(cfg.eval)
     vis_engine = instantiate(cfg.visualization)
 
-    val_state = TrackerState(tracking_dataset.val_set)
+    val_state = TrackerState(tracking_dataset.sets['val'])
 
     tracking_engine = instantiate(
         cfg.engine,

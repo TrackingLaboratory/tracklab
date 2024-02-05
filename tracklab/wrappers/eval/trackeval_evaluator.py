@@ -1,16 +1,14 @@
 import json
 import os
-from math import isnan
-
 import numpy as np
 import pandas as pd
 import logging
 import trackeval
-import wandb
 
 from pathlib import Path
 from tabulate import tabulate
 from tracklab.core import Evaluator as EvaluatorBase
+from tracklab.utils import wandb
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +35,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         pred_save_path = Path(self.cfg.dataset.TRACKERS_FOLDER) / f"{self.trackeval_dataset_class.__name__}-{self.eval_set}" / tracker_name
         save_functions[self.trackeval_dataset_name](
             tracker_state.detections_pred,
-            tracker_state.image_pred,
+            tracker_state.image_metadatas,
             tracker_state.video_metadatas,
             pred_save_path,
             self.cfg.bbox_column_for_eval,
@@ -53,16 +51,17 @@ class TrackEvalEvaluator(EvaluatorBase):
                 f"Stopping evaluation because the current split ({self.eval_set}) has no ground truth detections.")
             return
 
-        # Save ground truth in MOT Challenge format (.txt)
-        save_functions[self.trackeval_dataset_name](
-            tracker_state.detections_gt,
-            tracker_state.image_gt,
-            tracker_state.video_metadatas,
-            Path(self.cfg.dataset.GT_FOLDER) / f"{self.trackeval_dataset_name}-{self.eval_set}",
-            self.cfg.bbox_column_for_eval,
-            save_classes,
-            is_ground_truth=True
-        )
+        # Save ground truth
+        if self.cfg.save_gt:
+            save_functions[self.trackeval_dataset_name](
+                tracker_state.detections_gt,
+                tracker_state.image_metadatas,
+                tracker_state.video_metadatas,
+                Path(self.cfg.dataset.GT_FOLDER) / f"{self.trackeval_dataset_name}-{self.eval_set}",
+                self.cfg.bbox_column_for_eval,
+                save_classes,
+                is_ground_truth=True
+            )
 
         log.info(
             f"Tracking ground truth saved in {self.trackeval_dataset_name} format in {pred_save_path}")
@@ -73,6 +72,10 @@ class TrackEvalEvaluator(EvaluatorBase):
         dataset_config['BENCHMARK'] = self.trackeval_dataset_class.__name__  # required for trackeval.datasets.MotChallenge2DBox
         for key, value in self.cfg.dataset.items():
             dataset_config[key] = value
+
+        if not self.cfg.save_gt:
+            dataset_config['GT_FOLDER'] = "/home/vladimirsomers/datasets/tracking/SoccerNetGS"  # Location of GT data
+            dataset_config['GT_LOC_FORMAT'] = '{gt_folder}/{seq}/Labels-GameState.json'  # '{gt_folder}/{seq}/gt/gt.txt'
         dataset = self.trackeval_dataset_class(dataset_config)
 
         # Build metrics
@@ -121,12 +124,13 @@ def save_in_soccernet_format(detections: pd.DataFrame,
         video_predictions_df = predictions[predictions["video_id"] == str(id)].copy()
         if not video_predictions_df.empty:
             video_predictions_df.sort_values(by="id", inplace=True)
-            video_predictions = [{k: v for k, v in m.items() if np.all(pd.notna(v))} for m in
-                                 video_predictions_df.to_dict(orient="records")]
+            video_predictions = [{k: int(v) if k == 'track_id' else v for k, v in m.items() if np.all(pd.notna(v))} for m in video_predictions_df.to_dict(orient="records")]
             with file_path.open("w") as fp:
                 json.dump({"predictions": video_predictions}, fp, indent=2)
 
 
+def transform_bbox_image(row):
+    return {"x": row[0], "y": row[1], "w": row[2], "h": row[3]}
 
 def soccernet_encoding(dataframe: pd.DataFrame, supercategory):
     dataframe["supercategory"] = supercategory
@@ -143,6 +147,8 @@ def soccernet_encoding(dataframe: pd.DataFrame, supercategory):
         dataframe = dataframe[dataframe.columns.intersection(
             ["id", "image_id", "video_id", "track_id", "supercategory",
              "category_id", "attributes", "bbox_image", "bbox_pitch"])]
+
+        dataframe['bbox_image'] = dataframe['bbox_image'].apply(transform_bbox_image)
     elif supercategory == "camera":
         dataframe["image_id"] = dataframe.index
         dataframe["category_id"] = 6

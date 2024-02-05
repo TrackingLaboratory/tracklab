@@ -20,8 +20,6 @@ _target_: tracklab.wrappers.PoseTrack21Evaluator
 #  - MOTA score is above paper results
 #  - Some videos with ignored regions have negative MOTA
 
-eval_set: "val"
-
 cfg:
   eval_pose_estimation: True
   eval_pose_tracking: True

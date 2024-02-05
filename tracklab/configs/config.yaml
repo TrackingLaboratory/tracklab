@@ -30,7 +30,7 @@ defaults:
 pipeline:
   - bbox_detector
   - reid
-  #- track
+  - track
   #- role
   #- team
   #- team_side
@@ -38,6 +38,8 @@ pipeline:
   #- calibration
   #- jersey_number_detect
   #- tracklet_agg
+
+
 
 # Experiment name
 experiment_name: "tracklab"

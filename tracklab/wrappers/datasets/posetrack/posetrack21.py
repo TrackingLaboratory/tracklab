@@ -39,7 +39,9 @@ class PoseTrack21(TrackingDataset):
         )
         test_set = None  # TODO
 
-        super().__init__(dataset_path, train_set, val_set, test_set, *args, **kwargs)
+        sets = {"train": train_set, "val": val_set, "test": test_set}
+
+        super().__init__(dataset_path, sets, *args, **kwargs)
 
 
 def load_tracking_set(anns_path, dataset_path, posetrack_version=21):

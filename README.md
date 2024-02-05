@@ -1,6 +1,7 @@
-# TrackLab
-<p align="center"></p>
-TrackLab is an easy-to-use modular framework for multi-object pose/segmentation/bbox tracking that supports many tracking datasets and evaluation metrics.  
+![TrackLab](docs/tracklab_banner.png)
+
+TrackLab is an easy-to-use modular framework for multi-object pose/segmentation/bbox tracking that supports many tracking datasets and evaluation metrics.
+
 
 <p align="center">
   <img src="docs/assets/gifs/PoseTrack21_008827.gif" width="400" />
@@ -8,7 +9,7 @@ TrackLab is an easy-to-use modular framework for multi-object pose/segmentation/
 </p>
 
 ## News
-- [2024.02.01] Planned public release 
+- [2024.02.05] Public release
 
 ## Introduction
 Welcome to this official repository of TrackLab, a modular framework for multi-object tracking.
@@ -33,7 +34,7 @@ Here's what makes TrackLab different from other existing tracking frameworks:
   - person re-identification
 
 ## Documentation
-You can find the documentation in the docs/ folder. After installing, you can run `make html` inside this folder
+You can find the documentation at [https://trackinglaboratory.github.io/tracklab/](https://trackinglaboratory.github.io/tracklab/) or in the docs/ folder. After installing, you can run `make html` inside this folder
 to get an html version of the documentation.
 
 ## Installation guide[^1]

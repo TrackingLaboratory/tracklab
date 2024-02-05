@@ -25,7 +25,13 @@ class SoccerNetMOT(TrackingDataset):
         # challenge_set = load_set(self.dataset_path / "challenge")
         challenge_set = None  #  58 videos
 
-        super().__init__(dataset_path, train_set, test_set, challenge_set, nvid=-1, vids_dict=None, *args, **kwargs)
+        sets = {
+            "train": train_set,
+            "test": test_set,
+            "challenge": challenge_set
+        }
+
+        super().__init__(dataset_path, sets, nvid=-1, vids_dict=None, *args, **kwargs)
 
 
 def read_ini_file(file_path):

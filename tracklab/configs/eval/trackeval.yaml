@@ -1,11 +1,12 @@
 _target_: tracklab.wrappers.TrackEvalEvaluator
 
 
-eval_set: "val"  # TODO should be dataset config?
+eval_set: ${dataset.eval_set}
 trackeval_dataset_class: ${..dataset.trackeval_dataset_class}  # TrackEval dataset class to use for evaluation, e.g. "MotChallenge2DBox", as defined in the library package "trackeval.datasets". To be defined in the corresponding dataset config.
 show_progressbar: True  # Show progressbar during evaluation
 
 cfg:
+  save_gt: False
   bbox_column_for_eval: "bbox_ltwh"  # which bbox column to use for evaluation: {"bbox_ltwh", "track_bbox_kf_ltwh", ...}
   metrics:  # List of performance metrics to compute as listed in "trackeval.metrics"
     - "HOTA"
@@ -31,7 +32,7 @@ cfg:
     TRACKER_SUB_FOLDER: '' # Tracker files are in TRACKER_FOLDER/tracker_name/TRACKER_SUB_FOLDER
     OUTPUT_FOLDER: "eval/results" # Where to save eval results (if None, same as TRACKERS_FOLDER)
     OUTPUT_SUB_FOLDER: '' # Output files are saved in OUTPUT_FOLDER/tracker_name/OUTPUT_SUB_FOLDER
-    SPLIT_TO_EVAL: ${...eval_set}
+    SPLIT_TO_EVAL: ${dataset.eval_set}
     PRINT_CONFIG: False
     DO_PREPROC: False
     TRACKER_DISPLAY_NAMES: null

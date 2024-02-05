@@ -59,7 +59,7 @@ class PoseTrack18Evaluator(EvaluatorBase):
                 "Pose estimation - bbox metrics\n"
                 + tabulate([data], headers=headers, tablefmt="plain")
             )
-            wandb.log(bbox_map, "PoseTrack18/bbox/AP")
+            wandb.log_metric(bbox_map, "PoseTrack18/bbox/AP")
 
             # Bounding box evaluation
             bbox_map = PTEvaluator.compute_bbox_map(
@@ -74,7 +74,7 @@ class PoseTrack18Evaluator(EvaluatorBase):
                 "Pose estimation - bbox metrics\n"
                 + tabulate([data], headers=headers, tablefmt="plain")
             )
-            wandb.log(bbox_map, "PoseTrack18/bbox/AP")
+            wandb.log_metric(bbox_map, "PoseTrack18/bbox/AP")
 
             # Keypoint evaluation
             argv = ["", self.cfg.posetrack_gt_folder, trackers_folder]
@@ -89,7 +89,7 @@ class PoseTrack18Evaluator(EvaluatorBase):
                 title="Pose estimation - keypoints average precision",
                 print_by_video=self.cfg.print_by_video,
             )
-            wandb.log(res_combined, "PoseTrack18/kp/AP")
+            wandb.log_metric(res_combined, "PoseTrack18/kp/AP")
             res_combined = precmetrics2dict(preAll)
             PTEvaluator._print_results(
                 res_combined,
@@ -97,7 +97,7 @@ class PoseTrack18Evaluator(EvaluatorBase):
                 title="Pose estimation - keypoints precision",
                 print_by_video=self.cfg.print_by_video,
             )
-            wandb.log(res_combined, "PoseTrack18/kp/precision")
+            wandb.log_metric(res_combined, "PoseTrack18/kp/precision")
             res_combined = recallmetrics2dict(recAll)
             PTEvaluator._print_results(
                 res_combined,
@@ -105,7 +105,7 @@ class PoseTrack18Evaluator(EvaluatorBase):
                 title="Pose estimation - keypoints recall",
                 print_by_video=self.cfg.print_by_video,
             )
-            wandb.log(res_combined, "PoseTrack18/kp/recall")
+            wandb.log_metric(res_combined, "PoseTrack18/kp/recall")
 
         if self.cfg.eval_pose_tracking:
             annotations = PTEvaluator._annotations_tracking_eval(
@@ -134,4 +134,4 @@ class PoseTrack18Evaluator(EvaluatorBase):
                 title="Pose tracking - keypoints MOTA",
                 print_by_video=self.cfg.print_by_video,
             )
-            wandb.log(res_combined, "PoseTrack18/kp/MOTA")
+            wandb.log_metric(res_combined, "PoseTrack18/kp/MOTA")
