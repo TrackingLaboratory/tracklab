@@ -1,8 +1,11 @@
 import cv2
 import numpy as np
+from pathlib import Path
 
 from sn_calibration_baseline.soccerpitch import SoccerPitch
 from tracklab.utils.cv2 import draw_text
+
+pitch_file = Path(__file__).parent / "Radar.png"
 
 
 def draw_pitch(patch, detections_pred, detections_gt,
@@ -40,8 +43,8 @@ def draw_radar_view(patch, detections, scale, delta=32, group="gt", pitch_image=
     radar_top_y = int(1080 - pitch_height * scale)
     radar_width = int(pitch_width * scale)
     radar_height = int(pitch_height * scale)
-    if pitch_image is not None:
-        radar_img = cv2.resize(cv2.imread(pitch_image), (pitch_width * scale, pitch_height * scale))
+    if pitch_file is not None:
+        radar_img = cv2.resize(cv2.imread(str(pitch_file)), (pitch_width * scale, pitch_height * scale))
         radar_img = cv2.bitwise_not(radar_img)
     else:
         radar_img = np.ones((pitch_height * scale, pitch_width * scale, 3)) * 255
