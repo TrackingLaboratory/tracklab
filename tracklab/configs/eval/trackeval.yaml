@@ -4,6 +4,7 @@ _target_: tracklab.wrappers.TrackEvalEvaluator
 eval_set: ${dataset.eval_set}
 trackeval_dataset_class: ${..dataset.trackeval_dataset_class}  # TrackEval dataset class to use for evaluation, e.g. "MotChallenge2DBox", as defined in the library package "trackeval.datasets". To be defined in the corresponding dataset config.
 show_progressbar: True  # Show progressbar during evaluation
+dataset_path: "${dataset.dataset_path}"
 
 cfg:
   save_gt: False
