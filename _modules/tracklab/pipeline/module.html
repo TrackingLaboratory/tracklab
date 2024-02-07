@@ -175,24 +175,25 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Module</span><span class="p">]):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span> <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;skip&quot;</span><span class="p">]</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Pipeline: &quot;</span> <span class="o">+</span> <span class="s2">&quot; -&gt; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 
 <div class="viewcode-block" id="Pipeline.validate">
 <a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.module.Pipeline.validate">[docs]</a>
-    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">columns</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">input_columns</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">model</span><span class="o">.</span><span class="n">output_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2"> should contain input_ and output_columns&quot;</span>
-                <span class="p">)</span>
-            <span class="c1"># if not set(model.input_columns).issubset(columns):</span>
-            <span class="c1">#     raise AttributeError(</span>
-            <span class="c1">#         f&quot;The {model} model doesn&#39;t have &quot;</span>
-            <span class="c1">#         &quot;all the input needed, &quot;</span>
-            <span class="c1">#         f&quot;needed {model.input_columns}, provided {columns}&quot;</span>
-            <span class="c1">#     )</span>
-            <span class="n">columns</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">output_columns</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_columns</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">set</span><span class="p">]):</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">set</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">load_columns</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;detection&quot;</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">input_columns</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">model</span><span class="o">.</span><span class="n">output_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2"> should contain input_ and output_columns&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">get_input_columns</span><span class="p">(</span><span class="n">level</span><span class="p">))</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="n">level</span><span class="p">]):</span>
+                    <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;The </span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2"> model doesn&#39;t have &quot;</span>
+                        <span class="s2">&quot;all the input needed, &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;needed </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">get_input_columns</span><span class="p">(</span><span class="n">level</span><span class="p">)</span><span class="si">}</span><span class="s2">, provided </span><span class="si">{</span><span class="n">columns</span><span class="p">[</span><span class="n">level</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                <span class="n">columns</span><span class="p">[</span><span class="n">level</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">get_output_columns</span><span class="p">(</span><span class="n">level</span><span class="p">))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pipeline has been validated&quot;</span><span class="p">)</span></div>
 
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

@@ -177,6 +177,7 @@
     <span class="p">):</span>
         <span class="c1"># super().__init__()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">module_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">module</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">modules</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span> <span class="o">=</span> <span class="n">callbacks</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="n">callbacks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">callbacks</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="k">if</span> <span class="n">callbacks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
         <span class="n">callbacks</span> <span class="o">=</span> <span class="n">callbacks</span> <span class="o">+</span> <span class="p">[</span><span class="n">tracker_state</span><span class="p">]</span>
 
