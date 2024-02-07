@@ -18,12 +18,13 @@ class TrackEvalEvaluator(EvaluatorBase):
     Evaluator using the TrackEval library (https://github.com/JonathonLuiten/TrackEval).
     Save on disk the tracking predictions and ground truth in MOT Challenge format and run the evaluation by calling TrackEval.
     """
-    def __init__(self, cfg, eval_set, trackeval_dataset_class, show_progressbar, *args, **kwargs):
+    def __init__(self, cfg, eval_set, trackeval_dataset_class, show_progressbar, dataset_path, *args, **kwargs):
         self.cfg = cfg
         self.eval_set = eval_set
         self.trackeval_dataset_name = trackeval_dataset_class
         self.trackeval_dataset_class = getattr(trackeval.datasets, trackeval_dataset_class)
         self.show_progressbar = show_progressbar
+        self.dataset_path = dataset_path
 
     def run(self, tracker_state):
         log.info("Starting evaluation using TrackEval library (https://github.com/JonathonLuiten/TrackEval)")
@@ -74,7 +75,7 @@ class TrackEvalEvaluator(EvaluatorBase):
             dataset_config[key] = value
 
         if not self.cfg.save_gt:
-            dataset_config['GT_FOLDER'] = "/home/vladimirsomers/datasets/tracking/SoccerNetGS"  # Location of GT data
+            dataset_config['GT_FOLDER'] = self.dataset_path  # Location of GT data
             dataset_config['GT_LOC_FORMAT'] = '{gt_folder}/{seq}/Labels-GameState.json'  # '{gt_folder}/{seq}/gt/gt.txt'
         dataset = self.trackeval_dataset_class(dataset_config)
 
@@ -137,6 +138,17 @@ def soccernet_encoding(dataframe: pd.DataFrame, supercategory):
     dataframe = dataframe.map(lambda x: x.tolist() if isinstance(x, np.ndarray) else x)
     dataframe = dataframe.replace({np.nan: None})
     if supercategory == "object":
+        # Remove detections that don't have mandatory columns
+        # Detections with no track_id will therefore be removed and not count as FP at evaluation
+        dataframe.dropna(
+            subset=[
+                "track_id",
+                "bbox_ltwh",
+                "bbox_pitch",
+            ],
+            how="any",
+            inplace=True,
+        )
         dataframe = dataframe.rename(columns={"bbox_ltwh": "bbox_image", "jersey_number": "jersey"})
         dataframe["track_id"] = dataframe["track_id"]
         dataframe["attributes"] = dataframe.apply(
