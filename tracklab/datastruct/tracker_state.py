@@ -83,6 +83,9 @@ class TrackerState(AbstractContextManager):
             | {"video_id", "file_path", "frame"})
         if self.load_file:
             log.info(f"Loading {self.load_columns} from {self.load_file}")
+
+        pipeline.validate(self.load_columns)
+
         self.zf = None
         self.video_id = None
         self.bbox_format = bbox_format
