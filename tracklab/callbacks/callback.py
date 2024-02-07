@@ -9,6 +9,8 @@ if TYPE_CHECKING:
 
 
 class Callback:
+    after_saved_state = False
+
     def on_dataset_track_start(self, engine: "TrackingEngine"):
         pass
 
