@@ -90,13 +90,235 @@
   <section id="tracklab-wrappers-reid-package">
 <h1>tracklab.wrappers.reid package<a class="headerlink" href="#tracklab-wrappers-reid-package" title="Link to this heading"></a></h1>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+<span id="module-tracklab.wrappers.reid"></span><h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
 <section id="tracklab-wrappers-reid-bpbreid-api-module">
 <h2>tracklab.wrappers.reid.bpbreid_api module<a class="headerlink" href="#tracklab-wrappers-reid-bpbreid-api-module" title="Link to this heading"></a></h2>
+<dl class="py class" id="module-tracklab.wrappers.reid.bpbreid_api">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_api.BPBReId">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.wrappers.reid.bpbreid_api.</span></span><span class="sig-name descname"><span class="pre">BPBReId</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_keypoints_visibility_scores_for_reid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_enabled</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_api.html#BPBReId"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_api.BPBReId" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="pbtrack.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule" title="tracklab.pipeline.detectionlevel_module.DetectionLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionLevelModule</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_api.BPBReId.collate_fn">
+<span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_api.BPBReId.collate_fn" title="Link to this definition"></a></dt>
+<dd><p>Puts each data field into a tensor with outer dimension batch size</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_api.BPBReId.download_models">
+<span class="sig-name descname"><span class="pre">download_models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backbone</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_api.html#BPBReId.download_models"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_api.BPBReId.download_models" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_api.BPBReId.input_columns">
+<span class="sig-name descname"><span class="pre">input_columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['bbox_ltwh']</span></em><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_api.BPBReId.input_columns" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_api.BPBReId.output_columns">
+<span class="sig-name descname"><span class="pre">output_columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['embeddings',</span> <span class="pre">'visibility_scores',</span> <span class="pre">'body_masks']</span></em><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_api.BPBReId.output_columns" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_api.BPBReId.preprocess">
+<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_api.html#BPBReId.preprocess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_api.BPBReId.preprocess" title="Link to this definition"></a></dt>
+<dd><p>Adapts the default input to your specific case.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – a numpy array of the current image</p></li>
+<li><p><strong>detection</strong> – a Series containing all the detections pertaining to a single
+image</p></li>
+<li><p><strong>metadata</strong> – additional information about the image</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>input for the process function</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>preprocessed_sample</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_api.BPBReId.process">
+<span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadatas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_api.html#BPBReId.process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_api.BPBReId.process" title="Link to this definition"></a></dt>
+<dd><p>The main processing function. Runs on GPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – The batched outputs of <cite>preprocess</cite></p></li>
+<li><p><strong>detections</strong> – The previous detections.</p></li>
+<li><p><strong>metadatas</strong> – The previous image metadatas</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Either a DataFrame containing the new/updated detections.</dt><dd><p>The DataFrames can be either a list of Series, a list of DataFrames
+or a single DataFrame. The returned objects will be aggregated
+automatically according to the <cite>name</cite> of the Series/<cite>index</cite> of
+the DataFrame. <strong>It is thus mandatory here to name correctly
+your series or index your dataframes.</strong>
+The output will override the previous detections
+with the same name/index.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>output</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_api.BPBReId.train">
+<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_api.html#BPBReId.train"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_api.BPBReId.train" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="tracklab-wrappers-reid-bpbreid-dataset-module">
 <h2>tracklab.wrappers.reid.bpbreid_dataset module<a class="headerlink" href="#tracklab-wrappers-reid-bpbreid-dataset-module" title="Link to this heading"></a></h2>
+<dl class="py class" id="module-tracklab.wrappers.reid.bpbreid_dataset">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.wrappers.reid.bpbreid_dataset.</span></span><span class="sig-name descname"><span class="pre">ReidDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tracking_dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="pbtrack.datastruct.html#tracklab.datastruct.tracking_dataset.TrackingDataset" title="tracklab.datastruct.tracking_dataset.TrackingDataset"><span class="pre">TrackingDataset</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">reid_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pose_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_dataset.html#ReidDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ImageDataset</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.ad_pid_column">
+<span class="sig-name descname"><span class="pre">ad_pid_column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gt_dets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_dataset.html#ReidDataset.ad_pid_column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.ad_pid_column" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.annotations_dir">
+<span class="sig-name descname"><span class="pre">annotations_dir</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'posetrack_data'</span></em><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.annotations_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.build_reid_set">
+<span class="sig-name descname"><span class="pre">build_reid_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tracking_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reid_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_test_set</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_dataset.html#ReidDataset.build_reid_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.build_reid_set" title="Link to this definition"></a></dt>
+<dd><p>Build ReID metadata for a given MOT dataset split.
+Only a subset of all MOT groundtruth detections is used for ReID.
+Detections to be used for ReID are selected according to the filtering criteria specified in the config ‘reid_cfg’.
+Image crops and human parsing labels (masks) are generated for each selected detection only.
+If the config is changed and more detections are selected, the image crops and masks are generated only for
+these new detections.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.dataset_dir">
+<span class="sig-name descname"><span class="pre">dataset_dir</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PoseTrack21'</span></em><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.dataset_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.gallery_filter">
+<span class="sig-name descname"><span class="pre">gallery_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q_pid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_camid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_ann</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g_pids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g_camids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g_anns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_dataset.html#ReidDataset.gallery_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.gallery_filter" title="Link to this definition"></a></dt>
+<dd><p>camid refers to video id: remove gallery samples from the different videos than query sample</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.get_masks_config">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_masks_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">masks_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_dataset.html#ReidDataset.get_masks_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.get_masks_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.images_anns_filename">
+<span class="sig-name descname"><span class="pre">images_anns_filename</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'reid_crops_anns.json'</span></em><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.images_anns_filename" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.img_ext">
+<span class="sig-name descname"><span class="pre">img_ext</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'.jpg'</span></em><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.img_ext" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.load_reid_annotations">
+<span class="sig-name descname"><span class="pre">load_reid_annotations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gt_dets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reid_anns_filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_dataset.html#ReidDataset.load_reid_annotations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.load_reid_annotations" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.masks_anns_filename">
+<span class="sig-name descname"><span class="pre">masks_anns_filename</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'reid_masks_anns.json'</span></em><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.masks_anns_filename" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.masks_dirs">
+<span class="sig-name descname"><span class="pre">masks_dirs</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'gaussian_joints':</span> <span class="pre">(10,</span> <span class="pre">False,</span> <span class="pre">'.npy',</span> <span class="pre">['p1',</span> <span class="pre">'p2',</span> <span class="pre">'p3',</span> <span class="pre">'p4',</span> <span class="pre">'p5',</span> <span class="pre">'p6',</span> <span class="pre">'p7',</span> <span class="pre">'p8',</span> <span class="pre">'p9',</span> <span class="pre">'p10',</span> <span class="pre">'p11',</span> <span class="pre">'p12',</span> <span class="pre">'p13',</span> <span class="pre">'p14',</span> <span class="pre">'p15',</span> <span class="pre">'p16']),</span> <span class="pre">'gaussian_keypoints':</span> <span class="pre">(17,</span> <span class="pre">False,</span> <span class="pre">'.npy',</span> <span class="pre">['p1',</span> <span class="pre">'p2',</span> <span class="pre">'p3',</span> <span class="pre">'p4',</span> <span class="pre">'p5',</span> <span class="pre">'p6',</span> <span class="pre">'p7',</span> <span class="pre">'p8',</span> <span class="pre">'p9',</span> <span class="pre">'p10',</span> <span class="pre">'p11',</span> <span class="pre">'p12',</span> <span class="pre">'p13',</span> <span class="pre">'p14',</span> <span class="pre">'p15',</span> <span class="pre">'p16']),</span> <span class="pre">'pose_on_img':</span> <span class="pre">(35,</span> <span class="pre">False,</span> <span class="pre">'.npy',</span> <span class="pre">['p1',</span> <span class="pre">'p2',</span> <span class="pre">'p3',</span> <span class="pre">'p4',</span> <span class="pre">'p5',</span> <span class="pre">'p6',</span> <span class="pre">'p7',</span> <span class="pre">'p8',</span> <span class="pre">'p9',</span> <span class="pre">'p10',</span> <span class="pre">'p11',</span> <span class="pre">'p12',</span> <span class="pre">'p13',</span> <span class="pre">'p14',</span> <span class="pre">'p15',</span> <span class="pre">'p16',</span> <span class="pre">'p17',</span> <span class="pre">'p18',</span> <span class="pre">'p19',</span> <span class="pre">'p20',</span> <span class="pre">'p21',</span> <span class="pre">'p22',</span> <span class="pre">'p23',</span> <span class="pre">'p24',</span> <span class="pre">'p25',</span> <span class="pre">'p26',</span> <span class="pre">'p27',</span> <span class="pre">'p28',</span> <span class="pre">'p29',</span> <span class="pre">'p30',</span> <span class="pre">'p31',</span> <span class="pre">'p32',</span> <span class="pre">'p33',</span> <span class="pre">'p34'])}</span></em><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.masks_dirs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.masks_ext">
+<span class="sig-name descname"><span class="pre">masks_ext</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'.npy'</span></em><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.masks_ext" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.query_gallery_split">
+<span class="sig-name descname"><span class="pre">query_gallery_split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gt_dets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ratio</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_dataset.html#ReidDataset.query_gallery_split"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.query_gallery_split" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.reid_anns_dir">
+<span class="sig-name descname"><span class="pre">reid_anns_dir</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'anns'</span></em><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.reid_anns_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.reid_dir">
+<span class="sig-name descname"><span class="pre">reid_dir</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'reid'</span></em><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.reid_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.reid_fig_dir">
+<span class="sig-name descname"><span class="pre">reid_fig_dir</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'figures'</span></em><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.reid_fig_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.reid_images_dir">
+<span class="sig-name descname"><span class="pre">reid_images_dir</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'images'</span></em><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.reid_images_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.reid_masks_dir">
+<span class="sig-name descname"><span class="pre">reid_masks_dir</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'masks'</span></em><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.reid_masks_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.rescale_and_filter_keypoints">
+<span class="sig-name descname"><span class="pre">rescale_and_filter_keypoints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keypoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox_ltwh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_h</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_dataset.html#ReidDataset.rescale_and_filter_keypoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.rescale_and_filter_keypoints" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.sample_detections_for_reid">
+<span class="sig-name descname"><span class="pre">sample_detections_for_reid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dets_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reid_cfg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_dataset.html#ReidDataset.sample_detections_for_reid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.sample_detections_for_reid" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.save_reid_img_crops">
+<span class="sig-name descname"><span class="pre">save_reid_img_crops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gt_dets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reid_anns_filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadatas_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_crop_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_dataset.html#ReidDataset.save_reid_img_crops"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.save_reid_img_crops" title="Link to this definition"></a></dt>
+<dd><p>Save on disk all detections image crops from the ground truth dataset to build the reid dataset.
+Create a json annotation file with crops metadata.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.save_reid_masks_crops">
+<span class="sig-name descname"><span class="pre">save_reid_masks_crops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gt_dets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks_save_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_save_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reid_anns_filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadatas_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gaussian_keypoints'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_dataset.html#ReidDataset.save_reid_masks_crops"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.save_reid_masks_crops" title="Link to this definition"></a></dt>
+<dd><p>Save on disk all human parsing gt for each reid crop.
+Create a json annotation file with human parsing metadata.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.to_torchreid_dataset_format">
+<span class="sig-name descname"><span class="pre">to_torchreid_dataset_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_dataset.html#ReidDataset.to_torchreid_dataset_format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.to_torchreid_dataset_format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.uniform_tracklet_sampling">
+<span class="sig-name descname"><span class="pre">uniform_tracklet_sampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_samples_per_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/reid/bpbreid_dataset.html#ReidDataset.uniform_tracklet_sampling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.reid.bpbreid_dataset.ReidDataset.uniform_tracklet_sampling" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 
