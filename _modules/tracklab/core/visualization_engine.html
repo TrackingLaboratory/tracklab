@@ -156,6 +156,8 @@
 <div class="viewcode-block" id="VisualizationEngine">
 <a class="viewcode-back" href="../../../api/pbtrack.core.html#tracklab.core.visualization_engine.VisualizationEngine">[docs]</a>
 <span class="k">class</span> <span class="nc">VisualizationEngine</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="n">after_saved_state</span> <span class="o">=</span> <span class="kc">True</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;visualization&quot;</span><span class="p">)</span>
