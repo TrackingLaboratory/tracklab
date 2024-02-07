@@ -21,7 +21,7 @@ class SoccerNetGameState(TrackingDataset):
         assert self.dataset_path.exists(), f"'{self.dataset_path}' directory does not exist. Please check the path or download the dataset following the instructions here: https://github.com/SoccerNet/sn-game-state"
 
         train_set = load_set(self.dataset_path / "train", nvid, vids_dict.get("train", [])) if os.path.exists(self.dataset_path / "train") else None
-        val_set = load_set(self.dataset_path / "validation", nvid, vids_dict.get("train", [])) if os.path.exists(self.dataset_path / "validation") else None
+        val_set = load_set(self.dataset_path / "validation", nvid, vids_dict.get("validation", [])) if os.path.exists(self.dataset_path / "validation") else None
         challenge = load_set(self.dataset_path / "challenge", nvid, vids_dict.get("challenge", [])) if os.path.exists(self.dataset_path / "challenge") else None
 
         sets = {
