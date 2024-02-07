@@ -4,6 +4,7 @@ num_workers: ${num_cores}
 callbacks:
   progress:
     _target_: tracklab.callbacks.Progressbar
+    use_rich: ${use_rich}
   ignored_regions:
     _target_: tracklab.callbacks.IgnoredRegions
     max_intersection: 0.9

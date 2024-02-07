@@ -10,8 +10,17 @@ from tracklab.engine import TrackingEngine
 
 log = logging.getLogger(__name__)
 
+
 class Progressbar(Callback):
-    def __init__(self):
+    def __new__(cls, use_rich=False):
+        if not use_rich:
+            return super().__new__(TQDMProgressbar)
+        else:
+            return super().__new__(RichProgressbar)
+
+
+class TQDMProgressbar(Progressbar):
+    def __init__(self, **kwargs):
         self.pbar: Optional[tqdm] = None
         self.task_pbars = {}
 
@@ -47,6 +56,9 @@ class Progressbar(Callback):
             length = len(engine.img_metadatas[engine.img_metadatas.video_id == self.video_id])
         else:
             length = len(dataloader)
+        self.init_progress_bar(task, desc, length)
+
+    def init_progress_bar(self, task, desc, length):
         self.task_pbars[task]: tqdm = tqdm(
             total=length, desc=desc, leave=False, position=1
         )
@@ -61,7 +73,7 @@ class Progressbar(Callback):
 
 
 class RichProgressbar(Progressbar):
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.pbar: Optional[Progress] = None
         self.tasks = {}
 
@@ -95,6 +107,9 @@ class RichProgressbar(Progressbar):
             length = len(engine.img_metadatas[engine.img_metadatas.video_id == self.video_id])
         else:
             length = len(dataloader)
+        self.init_progress_bar(task, desc, length)
+
+    def init_progress_bar(self, task, desc, length):
         self.tasks[task] = self.pbar.add_task(desc, total=length)
 
     def on_module_step_end(

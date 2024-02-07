@@ -83,6 +83,7 @@ class TrackingEngine(ABC):
     ):
         # super().__init__()
         self.module_names = [module.name for module in modules]
+        self.callbacks = callbacks or {}
         callbacks = list(callbacks.values()) if callbacks is not None else []
         callbacks = callbacks + [tracker_state]
 

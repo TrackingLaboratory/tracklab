@@ -31,6 +31,7 @@ from tracklab.utils.coordinates import (
 import logging
 
 from tracklab.utils.pitch import draw_pitch
+from tracklab.utils.progress import progress
 
 log = logging.getLogger(__name__)
 
@@ -119,16 +120,26 @@ class VisualizationEngine(Callback):
                 self.processed_video_counter < self.cfg.process_n_videos
                 or self.cfg.process_n_videos == -1
             ):
-                self.run(engine.tracker_state, video_idx, detections, image_pred)
+                if "progress" in engine.callbacks:
+                    progress = engine.callbacks["progress"]
+                else:
+                    progress = None
+                self.run(engine.tracker_state, video_idx, detections, image_pred, progress=progress)
 
-    def run(self, tracker_state: TrackerState, video_id, detections, image_preds):
+    def run(self, tracker_state: TrackerState, video_id, detections, image_preds, progress=None):
         image_metadatas = tracker_state.image_metadatas[
             tracker_state.image_metadatas.video_id == video_id
         ]
         image_gts = tracker_state.image_gt[tracker_state.image_gt.video_id == video_id]
         nframes = len(image_metadatas)
         video_name = tracker_state.video_metadatas.loc[video_id].name
-        for i, image_id in enumerate(tqdm(image_metadatas.index, desc="Visualization")):
+        if progress:
+            if self.cfg.process_n_frames_by_video == -1:
+                total = len(image_metadatas.index)
+            else:
+                total = self.cfg.process_n_frames_by_video
+            progress.init_progress_bar("vis", "Visualization", total)
+        for i, image_id in enumerate(image_metadatas.index):
             # check for process max frame per video
             if i >= self.cfg.process_n_frames_by_video != -1:
                 break
@@ -150,11 +161,15 @@ class VisualizationEngine(Callback):
                 image_metadata, detections_pred, ground_truths, video_name, nframes,
                 image_pred, image_gt
             )
+            if progress:
+                progress.on_module_step_end(None, "vis", None, None)
         # save the final video
         if self.cfg.save_videos:
             self.video_writer.release()
             delattr(self, "video_writer")
         self.processed_video_counter += 1
+        if progress:
+            progress.on_module_end(None, "vis", None)
 
     def _process_frame(
         self, image_metadata, detections_pred, ground_truths, video_name, nframes,

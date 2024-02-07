@@ -5,7 +5,8 @@ import hydra
 import warnings
 import logging
 
-from tracklab.utils import monkeypatch_hydra  # needed to avoid complex hydra stacktraces when errors occur in "instantiate(...)"
+from tracklab.utils import monkeypatch_hydra, \
+    progress  # needed to avoid complex hydra stacktraces when errors occur in "instantiate(...)"
 from hydra.utils import instantiate
 from omegaconf import OmegaConf
 from tracklab.datastruct import TrackerState
@@ -77,6 +78,7 @@ def set_sharing_strategy():
 
 def init_environment(cfg):
     # For Hydra and Slurm compatibility
+    progress.use_rich = cfg.use_rich
     set_sharing_strategy()  # Do not touch
     device = "cuda" if torch.cuda.is_available() else "cpu"
     log.info(f"Using device: '{device}'.")
@@ -84,6 +86,9 @@ def init_environment(cfg):
     if cfg.print_config:
         log.info(OmegaConf.to_yaml(cfg))
     if cfg.use_rich:
+        for handler in log.root.handlers:
+            if type(handler) is logging.StreamHandler:
+                handler.setLevel(logging.ERROR)
         log.root.addHandler(rich.logging.RichHandler(level=logging.INFO))
     else:
         # TODO : Fix for mmcv fix. This should be done in a nicer way

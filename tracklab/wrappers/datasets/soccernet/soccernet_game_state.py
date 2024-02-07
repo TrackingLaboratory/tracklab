@@ -6,6 +6,7 @@ from pathlib import Path
 from tqdm import tqdm
 from tracklab.datastruct import TrackingDataset, TrackingSet
 from tracklab.utils import xywh_to_ltwh
+from tracklab.utils.progress import progress
 
 log = logging.getLogger(__name__)
 
@@ -100,7 +101,7 @@ def load_set_challenge(dataset_path):
     image_gt_list = []
     image_counter = 0
     video_list = os.listdir(dataset_path)
-    for video_folder in tqdm(sorted(video_list), desc=f"Loading SoccerNetGS challenge set videos"):
+    for video_folder in progress(sorted(video_list), desc=f"Loading SoccerNetGS challenge set videos"):
         video_folder_path = os.path.join(dataset_path, video_folder)
         if os.path.isdir(video_folder_path):
             img_folder_path = os.path.join(video_folder_path, 'img1')
@@ -159,7 +160,7 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
 
     image_counter = 0
     person_counter = 0
-    for video_folder in tqdm(sorted(video_list), desc=f"Loading SoccerNetGS '{split}' set videos"):
+    for video_folder in progress(sorted(video_list), desc=f"Loading SoccerNetGS '{split}' set videos"):
 
         video_folder_path = os.path.join(dataset_path, video_folder)
         if os.path.isdir(video_folder_path):
