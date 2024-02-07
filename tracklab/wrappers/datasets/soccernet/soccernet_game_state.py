@@ -196,14 +196,14 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
                 'action_class': info_data.get('action_class', ''),
                 'visibility': info_data.get('visibility', ''),
                 'clip_start': int(info_data.get('clip_start', 0)),
-                'game_time_start': info_data.get('game_time_start', '').split(' - ')[1],
+                'game_time_start': info_data.get('game_time_start', ' - ').split(' - ')[1],
                 # Remove the half period index
-                'game_time_stop': info_data.get('game_time_stop', '').split(' - ')[1],  # Remove the half period index 
+                'game_time_stop': info_data.get('game_time_stop', ' - ').split(' - ')[1],  # Remove the half period index
                 'clip_stop': int(info_data.get('clip_stop', 0)),
                 'num_tracklets': int(info_data.get('num_tracklets', 0)),
-                'half_period_start': int(info_data.get('game_time_start', '').split(' - ')[0]),
+                'half_period_start': int(info_data.get('game_time_start', '0 - ').split(' - ')[0]),
                 # Add the half period start column
-                'half_period_stop': int(info_data.get('game_time_stop', '').split(' - ')[0]),
+                'half_period_stop': int(info_data.get('game_time_stop', '0 - ').split(' - ')[0]),
                 # Add the half period stop column
             }
 
