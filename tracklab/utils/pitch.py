@@ -29,11 +29,12 @@ def draw_pitch(patch, detections_pred, detections_gt,
                 )
 
     # Draw the Top-view pitch
-    draw_radar_view(patch, detections_gt, scale=pitch_scale, group="gt", pitch_image=pitch_image)
-    draw_radar_view(patch, detections_pred, scale=pitch_scale, group="pred", pitch_image=pitch_image)
+    if "parameters" in image_pred and "bbox_pitch" in detections_pred:
+        draw_radar_view(patch, detections_gt, scale=pitch_scale, group="gt")
+        draw_radar_view(patch, detections_pred, scale=pitch_scale, group="pred")
 
 
-def draw_radar_view(patch, detections, scale, delta=32, group="gt", pitch_image=None):
+def draw_radar_view(patch, detections, scale, delta=32, group="gt"):
     pitch_width = 105 + 2 * 10  # pitch size + 2 * margin
     pitch_height = 68 + 2 * 5  # pitch size + 2 * margin
     sign = -1 if group == "gt" else +1
