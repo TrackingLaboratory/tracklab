@@ -66,22 +66,23 @@ class Pipeline:
     def __init__(self, models: List[Module]):
         self.models = [model for model in models if model.name != "skip"]
         log.info("Pipeline: " + " -> ".join(model.name for model in self.models))
-        self.validate()
 
-    def validate(self):
-        columns = set()
-        for model in self.models:
-            if model.input_columns is None or model.output_columns is None:
-                raise AttributeError(
-                    f"{type(model)} should contain input_ and output_columns"
-                )
-            # if not set(model.input_columns).issubset(columns):
-            #     raise AttributeError(
-            #         f"The {model} model doesn't have "
-            #         "all the input needed, "
-            #         f"needed {model.input_columns}, provided {columns}"
-            #     )
-            columns.update(model.output_columns)
+    def validate(self, load_columns: dict[str, set]):
+        columns = {k: set(v) for k, v in load_columns.items()}
+        for level in ["image", "detection"]:
+            for model in self.models:
+                if model.input_columns is None or model.output_columns is None:
+                    raise AttributeError(
+                        f"{type(model)} should contain input_ and output_columns"
+                    )
+                if not set(model.get_input_columns(level)).issubset(columns[level]):
+                    raise AttributeError(
+                        f"The {model} model doesn't have "
+                        "all the input needed, "
+                        f"needed {model.get_input_columns(level)}, provided {columns[level]}"
+                    )
+                columns[level].update(model.get_output_columns(level))
+        log.info(f"Pipeline has been validated")
 
     def __str__(self):
         return " -> ".join(model.name for model in self.models)

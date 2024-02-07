@@ -30,7 +30,7 @@ from tracklab.utils.coordinates import (
 
 import logging
 
-from tracklab.utils.pitch import draw_pitch
+from tracklab.utils.progress import progress
 
 log = logging.getLogger(__name__)
 
@@ -119,16 +119,26 @@ class VisualizationEngine(Callback):
                 self.processed_video_counter < self.cfg.process_n_videos
                 or self.cfg.process_n_videos == -1
             ):
-                self.run(engine.tracker_state, video_idx, detections, image_pred)
+                if "progress" in engine.callbacks:
+                    progress = engine.callbacks["progress"]
+                else:
+                    progress = None
+                self.run(engine.tracker_state, video_idx, detections, image_pred, progress=progress)
 
-    def run(self, tracker_state: TrackerState, video_id, detections, image_preds):
+    def run(self, tracker_state: TrackerState, video_id, detections, image_preds, progress=None):
         image_metadatas = tracker_state.image_metadatas[
             tracker_state.image_metadatas.video_id == video_id
         ]
         image_gts = tracker_state.image_gt[tracker_state.image_gt.video_id == video_id]
         nframes = len(image_metadatas)
         video_name = tracker_state.video_metadatas.loc[video_id].name
-        for i, image_id in enumerate(tqdm(image_metadatas.index, desc="Visualization")):
+        if progress:
+            if self.cfg.process_n_frames_by_video == -1:
+                total = len(image_metadatas.index)
+            else:
+                total = self.cfg.process_n_frames_by_video
+            progress.init_progress_bar("vis", "Visualization", total)
+        for i, image_id in enumerate(image_metadatas.index):
             # check for process max frame per video
             if i >= self.cfg.process_n_frames_by_video != -1:
                 break
@@ -150,11 +160,15 @@ class VisualizationEngine(Callback):
                 image_metadata, detections_pred, ground_truths, video_name, nframes,
                 image_pred, image_gt
             )
+            if progress:
+                progress.on_module_step_end(None, "vis", None, None)
         # save the final video
         if self.cfg.save_videos:
             self.video_writer.release()
             delattr(self, "video_writer")
         self.processed_video_counter += 1
+        if progress:
+            progress.on_module_end(None, "vis", None)
 
     def _process_frame(
         self, image_metadata, detections_pred, ground_truths, video_name, nframes,
@@ -195,9 +209,6 @@ class VisualizationEngine(Callback):
         if ground_truths is not None:
             for _, ground_truth in ground_truths.iterrows():
                 self._draw_detection(patch, ground_truth, is_prediction=False)
-
-        if "pitch" in self.cfg and self.cfg.pitch is not None:
-            self.draw_pitch(patch, image_metadata, image_pred, image_gt, detections_pred, ground_truths, self.cfg.pitch)
 
         # postprocess image
         patch = final_patch(patch)
@@ -435,79 +446,6 @@ class VisualizationEngine(Callback):
                 color_bg=(255, 255, 255),
             )
 
-        text_size = np.array([0, 0])
-        # display jersey number
-        if (
-            is_prediction
-            and self.cfg.prediction.display_jersey_number
-            and hasattr(detection, "jersey_number")
-        ):
-            if not pd.isna(detection.jersey_number):
-                l, t, r, b = detection.bbox.ltrb(
-                    image_shape=(patch.shape[1], patch.shape[0]), rounded=True
-                )
-                text_size += draw_text(
-                    patch,
-                    f"JN: {int(detection.jersey_number)}",
-                    (int(r), int((t + b)/2)),
-                    fontFace=self.cfg.text.font,
-                    fontScale=self.cfg.text.scale,
-                    thickness=self.cfg.text.thickness,
-                    color_txt=(0, 0, 0),
-                    color_bg=(255, 255, 255),
-                    alpha_bg=0.3,
-                )
-        # display role
-        if (
-                is_prediction
-                and self.cfg.prediction.display_role
-                and hasattr(detection, "role")
-        ):
-            if not pd.isna(detection.role) and detection.role != "player":
-                l, t, r, b = detection.bbox.ltrb(
-                    image_shape=(patch.shape[1], patch.shape[0]), rounded=True
-                )
-                text_size += draw_text(
-                    patch,
-                    f"{detection.role}",
-                    (int(r), int((t + b) / 2)),
-                    fontFace=self.cfg.text.font,
-                    fontScale=self.cfg.text.scale,
-                    thickness=self.cfg.text.thickness,
-                    color_txt=(0, 0, 0),
-                    color_bg=(255, 255, 255),
-                    alpha_bg=0.3,
-                )
-        if (
-            is_prediction
-            and self.cfg.prediction.display_team
-            and hasattr(detection, "team")
-        ):
-            if not pd.isna(detection.team):
-                l, t, r, b = detection.bbox.ltrb(
-                    image_shape=(patch.shape[1], patch.shape[0]), rounded=True
-                )
-                draw_text(
-                    patch,
-                    f"T: {detection.team}",
-                    (int(r), int((t+b)/2+text_size[1])),
-                    fontFace=self.cfg.text.font,
-                    fontScale=self.cfg.text.scale,
-                    thickness=self.cfg.text.thickness,
-                    color_txt=(0, 0, 255) if detection.team == "left" else (255, 0, 0),
-                    color_bg=(255, 255, 255),
-                    alpha_bg=0.3,
-                    alignV="t",
-                )
-
-    def draw_pitch(self, patch, image_metadata, image_pred, image_gt, detections_pred, ground_truths, pitch_cfg):
-        draw_pitch(
-            patch,
-            detections_pred, ground_truths,
-            image_pred, image_gt,
-            **pitch_cfg
-        )
-
     def _colors(self, detection, is_prediction):
         cmap = prediction_cmap if is_prediction else ground_truth_cmap
         if pd.isna(detection.track_id):
@@ -517,17 +455,7 @@ class VisualizationEngine(Callback):
             color_skeleton = self.cfg.skeleton.color_no_id
         else:
             color_key = "color_prediction" if is_prediction else "color_ground_truth"
-            if "team" in detection and detection.team is not None:
-                if "jersey_number" in detection and pd.notnull(detection.jersey_number):
-                    index = int(detection.jersey_number)
-                    if detection.team == "right":
-                        color_id = [int(c) for c in (np.array(right_cmap(index)) * 255)[:-1]]
-                    else:
-                        color_id = [int(c) for c in (np.array(left_cmap(index)) * 255)[:-1]]
-                else:
-                    color_id = [255, 0, 0] if detection["team"] == "right" else [0, 0, 255]
-            else:
-                color_id = cmap[int(detection.track_id) % len(cmap)]
+            color_id = cmap[int(detection.track_id) % len(cmap)]
             color_bbox = (
                 self.cfg.bbox[color_key] if self.cfg.bbox[color_key] is not None else color_id
             )
