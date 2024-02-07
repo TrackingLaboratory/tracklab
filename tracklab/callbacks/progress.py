@@ -2,7 +2,8 @@ import pandas as pd
 import logging
 
 from typing import Any, Optional
-from rich.progress import Progress
+from rich.progress import Progress, TextColumn, BarColumn, TaskProgressColumn, \
+    TimeRemainingColumn, MofNCompleteColumn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from tracklab.callbacks import Callback
@@ -17,6 +18,9 @@ class Progressbar(Callback):
             return super().__new__(TQDMProgressbar)
         else:
             return super().__new__(RichProgressbar)
+
+    def init_progress_bar(self, task, desc, length):
+        pass
 
 
 class TQDMProgressbar(Progressbar):
@@ -79,7 +83,12 @@ class RichProgressbar(Progressbar):
 
     def on_dataset_track_start(self, engine: TrackingEngine):
         total = len(engine.video_metadatas)
-        self.pbar = Progress()
+        self.pbar = Progress(
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                MofNCompleteColumn(),
+                TimeRemainingColumn(),
+        )
         self.pbar.start()
         self.tasks["main"] = self.pbar.add_task("[yellow]Tracking videos", total=total)
 
