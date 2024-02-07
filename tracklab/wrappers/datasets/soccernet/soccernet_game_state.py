@@ -154,33 +154,31 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
                 detections_df['visibility'] = 1
                 detections_list.append(detections_df)
 
-            # Append video metadata
-            nframes = int(info_data.get('seq_length', 0))
-            video_metadata = {
-                'id': video_id,
-                'name': info_data.get('name', ''),
-                'nframes': nframes,
-                'frame_rate': int(info_data.get('frame_rate', 0)),
-                'seq_length': nframes,
-                'im_width': int(images_data[0].get('width', 0)),
-                'im_height': int(images_data[0].get('height', 0)),
-                'game_id': int(info_data.get('gameID', 0)),
-                'action_position': int(info_data.get('action_position', 0)),
-                'action_class': info_data.get('action_class', ''),
-                'visibility': info_data.get('visibility', ''),
-                'clip_start': int(info_data.get('clip_start', 0)),
-                'game_time_start': info_data.get('game_time_start', ' - ').split(' - ')[1],
-                # Remove the half period index
-                'game_time_stop': info_data.get('game_time_stop', ' - ').split(' - ')[1],  # Remove the half period index
-                'clip_stop': int(info_data.get('clip_stop', 0)),
-                'num_tracklets': int(info_data.get('num_tracklets', 0)),
-                'half_period_start': int(info_data.get('game_time_start', '0 - ').split(' - ')[0]),
-                # Add the half period start column
-                'half_period_stop': int(info_data.get('game_time_stop', '0 - ').split(' - ')[0]),
-                # Add the half period stop column
-            }
-
-
+                # Append video metadata
+                nframes = int(info_data.get('seq_length', 0))
+                video_metadata = {
+                    'id': video_id,
+                    'name': info_data.get('name', ''),
+                    'nframes': nframes,
+                    'frame_rate': int(info_data.get('frame_rate', 0)),
+                    'seq_length': nframes,
+                    'im_width': int(images_data[0].get('width', 0)),
+                    'im_height': int(images_data[0].get('height', 0)),
+                    'game_id': int(info_data.get('gameID', 0)),
+                    'action_position': int(info_data.get('action_position', 0)),
+                    'action_class': info_data.get('action_class', ''),
+                    'visibility': info_data.get('visibility', ''),
+                    'clip_start': int(info_data.get('clip_start', 0)),
+                    'game_time_start': info_data.get('game_time_start', ' - ').split(' - ')[1],
+                    # Remove the half period index
+                    'game_time_stop': info_data.get('game_time_stop', ' - ').split(' - ')[1],  # Remove the half period index
+                    'clip_stop': int(info_data.get('clip_stop', 0)),
+                    'num_tracklets': int(info_data.get('num_tracklets', 0)),
+                    'half_period_start': int(info_data.get('game_time_start', '0 - ').split(' - ')[0]),
+                    # Add the half period start column
+                    'half_period_stop': int(info_data.get('game_time_stop', '0 - ').split(' - ')[0]),
+                    # Add the half period stop column
+                }
 
             
             if split == "challenge":
