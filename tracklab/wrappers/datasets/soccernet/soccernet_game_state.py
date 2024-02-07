@@ -21,8 +21,7 @@ class SoccerNetGameState(TrackingDataset):
 
         train_set = load_set(self.dataset_path / "train", nvid, vids_dict["train"])
         val_set = load_set(self.dataset_path / "validation", nvid, vids_dict["val"])
-        # challenge = load_set(self.dataset_path / "challenge")
-        challenge = None
+        challenge = load_set_challenge(self.dataset_path / "challenge")
 
         sets = {
             "train": train_set,
@@ -95,6 +94,48 @@ def read_json_file(file_path):
         file_json = json.load(file)
     return file_json
 
+def load_set_challenge(dataset_path):
+    video_metadatas_list = []
+    image_metadata_list = []
+    image_gt_list = []
+    image_counter = 0
+    video_list = os.listdir(dataset_path)
+    for video_folder in tqdm(sorted(video_list), desc=f"Loading SoccerNetGS challenge set videos"):
+        video_folder_path = os.path.join(dataset_path, video_folder)
+        if os.path.isdir(video_folder_path):
+            img_folder_path = os.path.join(video_folder_path, 'img1')
+            video_metadata = {
+                'id': len(video_metadatas_list),
+                'name': video_folder,
+            }
+            
+            nframes = len(os.listdir(img_folder_path))
+            img_metadata_df = pd.DataFrame({
+                'frame': [i for i in range(0, nframes)],
+                'id': [image_counter + i for i in range(0, nframes)],
+                'video_id': len(video_metadatas_list),
+                'file_path': [os.path.join(img_folder_path, f'{i:06d}.jpg') for i in
+                              range(1, nframes + 1)],
+            })
+            
+            image_gt_list.append(pd.DataFrame({
+                'video_id': len(video_metadatas_list),
+                'image_id': [image_counter + i for i in range(0, nframes)],
+            }))
+            video_metadatas_list.append(video_metadata)
+            image_metadata_list.append(img_metadata_df)
+            image_counter += nframes
+    video_metadata = pd.DataFrame(video_metadatas_list)
+    image_metadata = pd.concat(image_metadata_list, ignore_index=True)
+    # detections = pd.DataFrame()
+    detections = None
+    image_gt = pd.concat(image_gt_list, ignore_index=True)
+    return TrackingSet(
+        video_metadata,
+        image_metadata,
+        detections,
+        image_gt,
+    )
 
 def load_set(dataset_path, nvid=-1, vids_filter_set=None):
     video_metadatas_list = []
@@ -150,18 +191,18 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
                 'im_width': int(images_data[0].get('width', 0)),
                 'im_height': int(images_data[0].get('height', 0)),
                 'game_id': int(info_data.get('gameID', 0)),
-                'action_position': int(info_data.get('actionPosition', 0)),
-                'action_class': info_data.get('actionClass', ''),
+                'action_position': int(info_data.get('action_position', 0)),
+                'action_class': info_data.get('action_class', ''),
                 'visibility': info_data.get('visibility', ''),
-                'clip_start': int(info_data.get('clipStart', 0)),
-                'game_time_start': info_data.get('gameTimeStart', '').split(' - ')[1],
+                'clip_start': int(info_data.get('clip_start', 0)),
+                'game_time_start': info_data.get('game_time_start', '').split(' - ')[1],
                 # Remove the half period index
-                'game_time_stop': info_data.get('gameTimeStop', '').split(' - ')[1],  # Remove the half period index 
-                'clip_stop': int(info_data.get('clipStop', 0)),
+                'game_time_stop': info_data.get('game_time_stop', '').split(' - ')[1],  # Remove the half period index 
+                'clip_stop': int(info_data.get('clip_stop', 0)),
                 'num_tracklets': int(info_data.get('num_tracklets', 0)),
-                'half_period_start': int(info_data.get('gameTimeStart', '').split(' - ')[0]),
+                'half_period_start': int(info_data.get('game_time_start', '').split(' - ')[0]),
                 # Add the half period start column
-                'half_period_stop': int(info_data.get('gameTimeStop', '').split(' - ')[0]),
+                'half_period_stop': int(info_data.get('game_time_stop', '').split(' - ')[0]),
                 # Add the half period stop column
             }
 
