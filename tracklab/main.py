@@ -104,13 +104,8 @@ def close_enviroment():
 
 def evaluate(cfg, evaluator, tracker_state):
     if cfg.get("eval_tracking", True) and cfg.dataset.nframes == -1:
-        if tracker_state.detections_gt is not None:
-            log.info("Starting evaluation.")
-            evaluator.run(tracker_state)
-        else:
-            log.warning(
-                "Skipping evaluation because there is no ground truth detection."
-            )
+        log.info("Starting evaluation.")
+        evaluator.run(tracker_state)
     else:
         log.warning(
             "Skipping evaluation because only part of video was tracked (i.e. 'cfg.dataset.nframes' was not set "
