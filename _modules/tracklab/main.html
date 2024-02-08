@@ -207,13 +207,8 @@
 <a class="viewcode-back" href="../../api/pbtrack.html#tracklab.main.evaluate">[docs]</a>
 <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">evaluator</span><span class="p">,</span> <span class="n">tracker_state</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;eval_tracking&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cfg</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">nframes</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_gt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting evaluation.&quot;</span><span class="p">)</span>
-            <span class="n">evaluator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tracker_state</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;Skipping evaluation because there is no ground truth detection.&quot;</span>
-            <span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting evaluation.&quot;</span><span class="p">)</span>
+        <span class="n">evaluator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tracker_state</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
             <span class="s2">&quot;Skipping evaluation because only part of video was tracked (i.e. &#39;cfg.dataset.nframes&#39; was not set &quot;</span>
