@@ -347,10 +347,11 @@ def draw_text(
         rect_h = text_h + padding
         x_start, x_stop = np.sort([rect_pos_x, txt_pos_x+rect_w])
         y_start, y_stop = np.sort([rect_pos_y, txt_pos_y-rect_h])
-        crop = img[np.max([y_start, 0]):y_stop, np.max([x_start, 0]):x_stop]
-        bg = np.ones_like(crop) * np.array(color_bg, dtype=crop.dtype)
-        img[np.max([y_start, 0]):y_stop, np.max([x_start, 0]):x_stop] = (
-            cv2.addWeighted(crop, (1-alpha_bg), bg, alpha_bg, 0.0))
+        if not (x_start < 0 or x_stop < 0 or y_start < 0 or y_stop < 0):
+            crop = img[np.max([y_start, 0]):y_stop, np.max([x_start, 0]):x_stop]
+            bg = np.ones_like(crop) * np.array(color_bg, dtype=crop.dtype)
+            img[np.max([y_start, 0]):y_stop, np.max([x_start, 0]):x_stop] = (
+                cv2.addWeighted(crop, (1-alpha_bg), bg, alpha_bg, 0.0))
 
     cv2.putText(
         img,
