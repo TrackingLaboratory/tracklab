@@ -7,6 +7,7 @@ from tqdm import tqdm
 from tracklab.datastruct import TrackingDataset, TrackingSet
 from tracklab.utils import xywh_to_ltwh
 from tracklab.utils.progress import progress
+from multiprocessing import Pool
 
 log = logging.getLogger(__name__)
 
@@ -82,6 +83,7 @@ def dict_to_df_detections(annotation_dict, categories_list):
     df['position'] = None # df.apply(lambda row: row['attributes']['position'], axis=1)         for now there is no position in the json file
     df['category'] = df.apply(lambda row: extract_category(row['attributes']), axis=1)
     df['track_id'] = df['track_id'].astype(int)
+    # df['id'] = df['id']
 
     columns = ['id', 'image_id', 'track_id', 'bbox_ltwh', 'bbox_pitch', 'team', 'role', 'jersey_number', 'position', 'category']
     df = df[columns]
@@ -95,7 +97,96 @@ def read_json_file(file_path):
         file_json = json.load(file)
     return file_json
 
+def video_dir_to_dfs(args):
+    dataset_path = args['dataset_path']
+    video_folder = args['video_folder']
+    split = args['split']
+    annotation_pitch_camera_df = None
+    detections_df = None
+    video_level_categories = []
+    video_folder_path = os.path.join(dataset_path, video_folder)
+    if os.path.isdir(video_folder_path):
+        if split == "challenge":
+            img_folder_path = os.path.join(video_folder_path, 'img1')
+            video_id = str(int(video_folder.split('-')[-1]))
+            video_metadata = {
+                'id': video_id,
+                'name': video_folder,
+            }
+            
+            nframes = len(os.listdir(img_folder_path))
+            img_metadata_df = pd.DataFrame({
+                'frame': [i for i in range(0, nframes)],
+                'id': [str(int(video_id) * 10000 + i) for i in range(0, nframes)],
+                'video_id': video_id,
+                'file_path': [os.path.join(img_folder_path, f'{i:06d}.jpg') for i in
+                            range(1, nframes + 1)],
+            })
+            
+        else:
+            # Read the gamestate.json file
+            gamestate_path = os.path.join(video_folder_path, 'Labels-GameState.json')
+            gamestate_data = read_json_file(gamestate_path)
 
+            info_data = gamestate_data['info']
+            images_data = gamestate_data['images']
+            annotations_data = gamestate_data['annotations']
+            categories_data = gamestate_data['categories']
+            video_id = info_data.get("id", str(int(video_folder.split('-')[-1])))
+
+            detections_df, annotation_pitch_camera_df, video_level_categories = dict_to_df_detections(annotations_data, categories_data)
+            detections_df['person_id'] = detections_df['id']
+            # detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
+            detections_df['video_id'] = video_id
+            detections_df['visibility'] = 1
+            # detections_list.append(detections_df)
+
+            # Append video metadata
+            nframes = int(info_data.get('seq_length', 0))
+            video_metadata = {
+                'id': video_id,
+                'name': info_data.get('name', ''),
+                'nframes': nframes,
+                'frame_rate': int(info_data.get('frame_rate', 0)),
+                'seq_length': nframes,
+                'im_width': int(images_data[0].get('width', 0)),
+                'im_height': int(images_data[0].get('height', 0)),
+                'game_id': int(info_data.get('gameID', 0)),
+                'action_position': int(info_data.get('action_position', 0)),
+                'action_class': info_data.get('action_class', ''),
+                'visibility': info_data.get('visibility', ''),
+                'clip_start': int(info_data.get('clip_start', 0)),
+                'game_time_start': info_data.get('game_time_start', ' - ').split(' - ')[1],
+                # Remove the half period index
+                'game_time_stop': info_data.get('game_time_stop', ' - ').split(' - ')[1],  # Remove the half period index
+                'clip_stop': int(info_data.get('clip_stop', 0)),
+                'num_tracklets': int(info_data.get('num_tracklets', 0)),
+                'half_period_start': int(info_data.get('game_time_start', '0 - ').split(' - ')[0]),
+                # Add the half period start column
+                'half_period_stop': int(info_data.get('game_time_stop', '0 - ').split(' - ')[0]),
+                # Add the half period stop column
+            }
+            # categories_list += video_level_categories
+            img_folder_path = os.path.join(video_folder_path, info_data.get('im_dir', 'img1'))
+            img_metadata_df = pd.DataFrame({
+                'frame': [i for i in range(0, nframes)],
+                'id': [i['image_id'] for i in images_data],
+                # 'id': [image_counter + i for i in range(0, nframes)],
+                'video_id': video_id,
+                'file_path': [os.path.join(img_folder_path, i['file_name']) for i in
+                            images_data],
+                'is_labeled': [i['is_labeled'] for i in images_data],
+            })
+            annotation_pitch_camera_df["video_id"] = video_id
+        
+        return {
+            "video_metadata": video_metadata,
+            "image_metadata": img_metadata_df,
+            "detections": detections_df,
+            "annotations_pitch_camera": annotation_pitch_camera_df,
+            "video_level_categories": video_level_categories,
+        }
+    
 def load_set(dataset_path, nvid=-1, vids_filter_set=None):
     video_metadatas_list = []
     image_metadata_list = []
@@ -117,110 +208,25 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
     if nvid > 0:
         video_list = video_list[:nvid]
 
-    image_counter = 0
-    person_counter = 0
-    for video_folder in progress(sorted(video_list), desc=f"Loading SoccerNetGS '{split}' set videos"):
-
-        video_folder_path = os.path.join(dataset_path, video_folder)
-        if os.path.isdir(video_folder_path):
-            if split == "challenge":
-                img_folder_path = os.path.join(video_folder_path, 'img1')
-                video_metadata = {
-                    'id': len(video_metadatas_list),
-                    'name': video_folder,
-                }
-                
-                nframes = len(os.listdir(img_folder_path))
-                
-                image_gt_challenge.append(pd.DataFrame({
-                    'video_id': len(video_metadatas_list),
-                    'image_id': [image_counter + i for i in range(0, nframes)],
-                }))
-            else:
-                # Read the gamestate.json file
-                gamestate_path = os.path.join(video_folder_path, 'Labels-GameState.json')
-                gamestate_data = read_json_file(gamestate_path)
-
-                info_data = gamestate_data['info']
-                images_data = gamestate_data['images']
-                annotations_data = gamestate_data['annotations']
-                categories_data = gamestate_data['categories']
-                video_id = info_data.get("id", str(len(video_metadatas_list)+1))
-
-                detections_df, annotation_pitch_camera_df, video_level_categories = dict_to_df_detections(annotations_data, categories_data)
-                detections_df['person_id'] = detections_df['track_id'] - 1 + person_counter
-                # detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
-                detections_df['video_id'] = video_id
-                detections_df['visibility'] = 1
-                detections_list.append(detections_df)
-
-                # Append video metadata
-                nframes = int(info_data.get('seq_length', 0))
-                video_metadata = {
-                    'id': video_id,
-                    'name': info_data.get('name', ''),
-                    'nframes': nframes,
-                    'frame_rate': int(info_data.get('frame_rate', 0)),
-                    'seq_length': nframes,
-                    'im_width': int(images_data[0].get('width', 0)),
-                    'im_height': int(images_data[0].get('height', 0)),
-                    'game_id': int(info_data.get('gameID', 0)),
-                    'action_position': int(info_data.get('action_position', 0)),
-                    'action_class': info_data.get('action_class', ''),
-                    'visibility': info_data.get('visibility', ''),
-                    'clip_start': int(info_data.get('clip_start', 0)),
-                    'game_time_start': info_data.get('game_time_start', ' - ').split(' - ')[1],
-                    # Remove the half period index
-                    'game_time_stop': info_data.get('game_time_stop', ' - ').split(' - ')[1],  # Remove the half period index
-                    'clip_stop': int(info_data.get('clip_stop', 0)),
-                    'num_tracklets': int(info_data.get('num_tracklets', 0)),
-                    'half_period_start': int(info_data.get('game_time_start', '0 - ').split(' - ')[0]),
-                    # Add the half period start column
-                    'half_period_stop': int(info_data.get('game_time_stop', '0 - ').split(' - ')[0]),
-                    # Add the half period stop column
-                }
-
-            
-            if split == "challenge":
-                img_metadata_df = pd.DataFrame({
-                    'frame': [i for i in range(0, nframes)],
-                    'id': [image_counter + i for i in range(0, nframes)],
-                    'video_id': len(video_metadatas_list),
-                    'file_path': [os.path.join(img_folder_path, f'{i:06d}.jpg') for i in
-                                range(1, nframes + 1)],
-                })
-            else:
-                categories_list += video_level_categories
-                img_folder_path = os.path.join(video_folder_path, info_data.get('im_dir', 'img1'))
-                img_metadata_df = pd.DataFrame({
-                    'frame': [i for i in range(0, nframes)],
-                    'id': [i['image_id'] for i in images_data],
-                    # 'id': [image_counter + i for i in range(0, nframes)],
-                    'video_id': video_id,
-                    'file_path': [os.path.join(img_folder_path, i['file_name']) for i in
-                                images_data],
-                    'is_labeled': [i['is_labeled'] for i in images_data],
-                })
-                # extract the camera parameters
-                # img_metadata_df = pd.DataFrame.merge(img_metadata_df, video_camera_df, left_on='id', right_on='image_id')
-                # img_metadata_df = img_metadata_df.drop(columns=['image_id'])
-
-                person_counter += len(detections_df['track_id'].unique())
-                annotation_pitch_camera_df["video_id"] = video_id
-                annotations_pitch_camera_list.append(annotation_pitch_camera_df)
-            
-            # Append video metadata
-            video_metadatas_list.append(video_metadata)
-            
-            # Append image metadata
-            image_metadata_list.append(img_metadata_df)
-            image_counter += nframes
+    
+    pool = Pool()
+    args = [{"dataset_path": dataset_path, "video_folder": video_folder, "split": split} for video_folder in video_list]
+    for result in progress(pool.imap_unordered(video_dir_to_dfs, args), total=len(args), desc=f"Loading SoccerNetGS '{split}' set videos"):
+        if result is not None:
+            video_metadatas_list.append(result["video_metadata"])
+            image_metadata_list.append(result["image_metadata"])
+            detections_list.append(result["detections"])
+            annotations_pitch_camera_list.append(result["annotations_pitch_camera"])
+            categories_list += result["video_level_categories"]
 
     if split == "challenge":
         video_metadata = pd.DataFrame(video_metadatas_list)
         image_metadata = pd.concat(image_metadata_list, ignore_index=True)
         detections = None
-        image_gt = pd.concat(image_gt_challenge, ignore_index=True)
+        # image_gt = pd.concat(image_gt_challenge, ignore_index=True)
+        image_gt = None
+        image_metadata.set_index("id", drop=False, inplace=True)
+        video_metadata.set_index("id", drop=False, inplace=True)
     else:
         categories_list = [{'id': i + 1, 'name': category, 'supercategory': 'person'} for i, category in
                         enumerate(sorted(set(categories_list)))]
