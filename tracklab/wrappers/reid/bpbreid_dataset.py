@@ -90,6 +90,7 @@ class ReidDataset(ImageDataset):
         self.dataset_path = Path(self.tracking_dataset.dataset_path)
         self.masks_dir = masks_dir
         self.pose_datapipe = EngineDatapipe(self.pose_model)
+        self.column_mapping = {}
         self.pose_dl = DataLoader(
             dataset=self.pose_datapipe,
             batch_size=128,
@@ -175,7 +176,7 @@ class ReidDataset(ImageDataset):
         log.info("Loading {} set...".format(split))
 
         # Precompute all paths
-        reid_path = Path(self.dataset_path, self.reid_dir, masks_mode)
+        reid_path = Path(self.dataset_path, self.reid_dir, masks_mode) if self.reid_config.enable_human_parsing_labels else Path(self.dataset_path, self.reid_dir)
         reid_img_path = reid_path / self.reid_images_dir / split
         reid_mask_path = reid_path / self.reid_masks_dir / split
         reid_fig_path = reid_path / self.reid_fig_dir / split
@@ -330,7 +331,6 @@ class ReidDataset(ImageDataset):
         Save on disk all detections image crops from the ground truth dataset to build the reid dataset.
         Create a json annotation file with crops metadata.
         """
-        save_path = save_path
         max_h, max_w = max_crop_size
         gt_dets_for_reid = gt_dets[
             (gt_dets.split != "none") & gt_dets.reid_crop_path.isnull()
@@ -586,7 +586,7 @@ class ReidDataset(ImageDataset):
         for df in dataframes:
             df = df.copy()  # to avoid SettingWithCopyWarning
             # use video id as camera id: camid is used at inference to filter out gallery samples given a query sample
-            df["camid"] = df["video_id"]  # FIXME use 'video_id' and 'mot_inter_intra_video'
+            df["camid"] = df["video_id"]
             df["img_path"] = df["reid_crop_path"]
             # remove bbox_head as it is not available for each sample
             # df to list of dict
@@ -595,8 +595,13 @@ class ReidDataset(ImageDataset):
             # 'RuntimeError: torch.cat(): input types can't be cast to the desired output type Long' in collate.py
             # -> still has to be fixed
             data_list = sorted_df[
-                ["pid", "camid", "img_path", "masks_path", "visibility"]
+                ["pid", "camid", "img_path", "masks_path", "visibility", "image_id", "video_id"] + self.reid_config.columns
             ]
+            # factorize all columns, i.e. replace string values with 0-based increasing ids
+            for col in self.reid_config.columns:
+                factorize = pd.factorize(sorted_df[col])
+                data_list[col] = factorize[0]
+                self.column_mapping[col] =  {i: name for i, name in enumerate(factorize[1])}
             data_list = data_list.to_dict("records")
             results.append(data_list)
         return results

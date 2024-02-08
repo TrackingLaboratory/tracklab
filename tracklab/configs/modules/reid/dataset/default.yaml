@@ -7,6 +7,8 @@ masks_mode: "pose_on_img_crops"
 enable_human_parsing_labels: False
 eval_metric: "default"  # {"mot_inter_intra_video", "mot_intra_video", "mot_inter_video"}
 multi_video_queries_only: False  # will be set to True by default if eval_metric is "mot_inter_video"
+columns: []
+
 train:
   set_name: "train"
   min_vis: 0.3

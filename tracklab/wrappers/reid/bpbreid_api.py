@@ -38,14 +38,6 @@ from ...utils.download import download_file
 
 class BPBReId(DetectionLevelModule):
     """
-    TODO:
-        why bbox move after strong_sort?
-        training
-        batch process
-        save config + commit hash with model weights
-        model download from URL: HRNet etc
-        save folder: uniform with reconnaissance
-        wandb support
     """
 
     collate_fn = default_collate
