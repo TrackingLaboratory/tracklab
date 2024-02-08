@@ -23,11 +23,13 @@ class SoccerNetGameState(TrackingDataset):
 
         train_set = load_set(self.dataset_path / "train", nvid, vids_dict.get("train", [])) if os.path.exists(self.dataset_path / "train") else None
         val_set = load_set(self.dataset_path / "validation", nvid, vids_dict.get("validation", [])) if os.path.exists(self.dataset_path / "validation") else None
+        test_set = load_set(self.dataset_path / "test", nvid, vids_dict.get("test", [])) if (self.dataset_path / "test").exists() else None
         challenge = load_set(self.dataset_path / "challenge", nvid, vids_dict.get("challenge", [])) if os.path.exists(self.dataset_path / "challenge") else None
 
         sets = {
             "train": train_set,
             "validation": val_set,
+            "test": test_set,
             "challenge": challenge
         }
 
