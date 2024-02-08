@@ -1,8 +1,13 @@
 import logging
 import os
+import zipfile
+
 import pandas as pd
 import json
 from pathlib import Path
+
+from SoccerNet.Downloader import SoccerNetDownloader
+from rich.prompt import Confirm, Prompt
 from tqdm import tqdm
 from tracklab.datastruct import TrackingDataset, TrackingSet
 from tracklab.utils import xywh_to_ltwh
@@ -19,7 +24,9 @@ class SoccerNetGameState(TrackingDataset):
                  vids_dict: list = None,
                  *args, **kwargs):
         self.dataset_path = Path(dataset_path)
-        assert self.dataset_path.exists(), f"'{self.dataset_path}' directory does not exist. Please check the path or download the dataset following the instructions here: https://github.com/SoccerNet/sn-game-state"
+        if not self.dataset_path.exists():
+            download_dataset(self.dataset_path)
+        assert self.dataset_path.exists(), f"'{self.dataset_path}' directory does not exist. Please check the path or download the dataset following the instructions here: https://github.com/SoccerNet/sn-gamestate"
 
         train_set = load_set(self.dataset_path / "train", nvid, vids_dict.get("train", [])) if os.path.exists(self.dataset_path / "train") else None
         val_set = load_set(self.dataset_path / "validation", nvid, vids_dict.get("validation", [])) if os.path.exists(self.dataset_path / "validation") else None
@@ -283,3 +290,19 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
         detections,
         image_gt,
     )
+
+def download_dataset(dataset_path, splits=("train", "validation", "test", "challenge")):
+    mySoccerNetDownloader = SoccerNetDownloader(LocalDirectory=str(dataset_path))
+    download = Confirm.ask("Do you want to download the "
+                           "datasets automatically ? [i]"
+                           f"({'/'.join(splits)})[/i]")
+    if download:
+        password = Prompt.ask("Password for videos "
+                              "[i](received after filling the NDA at "
+                              "[link=https://www.soccer-net.org/data]"
+                              "https://www.soccer-net.org/data[/link])[/i]")
+        mySoccerNetDownloader.downloadDataTask(task="gamestate-2024",
+                                               split=splits, password=password)
+        for split in splits:
+            with zipfile.ZipFile(dataset_path/"gamestate-2024"/f"{split}.zip", 'r') as zf:
+                zf.extractall(dataset_path / split)
