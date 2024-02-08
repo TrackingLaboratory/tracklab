@@ -47,7 +47,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         log.info(
             f"Tracking predictions saved in {self.trackeval_dataset_name} format in {pred_save_path}")
 
-        if len(tracker_state.detections_gt) == 0:
+        if tracker_state.detections_gt is None or len(tracker_state.detections_gt) == 0:
             log.info(
                 f"Stopping evaluation because the current split ({self.eval_set}) has no ground truth detections.")
             return
