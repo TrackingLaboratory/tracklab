@@ -144,9 +144,9 @@ def video_dir_to_dfs(args):
             video_id = info_data.get("id", str(int(video_folder.split('-')[-1])))
 
             detections_df, annotation_pitch_camera_df, video_level_categories = dict_to_df_detections(annotations_data, categories_data)
-            detections_df['person_id'] = detections_df['id']
             # detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
             detections_df['video_id'] = video_id
+            detections_df['person_id'] = detections_df['track_id'].astype(str) + detections_df['video_id'].astype(str)
             detections_df['visibility'] = 1
             # detections_list.append(detections_df)
 
@@ -248,6 +248,9 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
         video_metadata = pd.DataFrame(video_metadatas_list)
         image_metadata = pd.concat(image_metadata_list, ignore_index=True)
         detections = pd.concat(detections_list, ignore_index=True)
+
+        # Person id as unique 0-based index
+        detections['person_id'] = pd.factorize(detections['person_id'])[0]
 
         # add camera parameters and pitch as ground truth
         pitch_camera = pd.concat(annotations_pitch_camera_list, ignore_index=True)
