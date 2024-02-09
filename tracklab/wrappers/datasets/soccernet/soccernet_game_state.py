@@ -205,6 +205,7 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
     image_gt_challenge = []
     split = os.path.basename(dataset_path)  # Get the split name from the dataset path
     video_list = os.listdir(dataset_path)
+    video_list.sort()
 
     if vids_filter_set is not None and len(vids_filter_set) > 0:
         missing_videos = set(vids_filter_set) - set(video_list)
@@ -217,7 +218,6 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
     if nvid > 0:
         video_list = video_list[:nvid]
 
-    
     pool = Pool()
     args = [{"dataset_path": dataset_path, "video_folder": video_folder, "split": split} for video_folder in video_list]
     for result in progress(pool.imap_unordered(video_dir_to_dfs, args), total=len(args), desc=f"Loading SoccerNetGS '{split}' set videos"):
