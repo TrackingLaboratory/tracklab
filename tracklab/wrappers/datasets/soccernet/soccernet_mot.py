@@ -208,12 +208,14 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
     image_metadata = pd.concat(image_metadata_list, ignore_index=True)
     detections = pd.concat(detections_list, ignore_index=True)
 
+    # Sort to obtain deterministic ids and index
+    detections = detections.sort_values(by=['video_id', 'image_id', 'track_id'], ascending=[True, True, True])
+    detections = detections.reset_index(drop=True)
+    detections['id'] = detections.index
+
     # Add category id to detections
     category_to_id = {category['name']: category['id'] for category in categories_list}
     detections['category_id'] = detections['category'].apply(lambda x: category_to_id[x])
-
-    # Set 'id' column as the index in the detections and image dataframe
-    detections['id'] = detections.index
 
     detections.set_index("id", drop=False, inplace=True)
     image_metadata.set_index("id", drop=False, inplace=True)

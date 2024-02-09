@@ -252,6 +252,11 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
         # Person id as unique 0-based index
         detections['person_id'] = pd.factorize(detections['person_id'])[0]
 
+        # Sort to obtain deterministic ids and index
+        detections = detections.sort_values(by=['video_id', 'image_id', 'track_id'], ascending=[True, True, True])
+        detections = detections.reset_index(drop=True)
+        detections['id'] = detections.index
+
         # add camera parameters and pitch as ground truth
         pitch_camera = pd.concat(annotations_pitch_camera_list, ignore_index=True)
         pitch_gt = (pitch_camera[["image_id", "video_id", "lines"]]
@@ -264,8 +269,6 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
         category_to_id = {category['name']: category['id'] for category in categories_list}
         detections['category_id'] = detections['category'].apply(lambda x: category_to_id[x])
 
-        # Set 'id' column as the index in the detections and image dataframe
-        detections['id'] = detections.index
 
         detections.set_index("id", drop=False, inplace=True)
         image_metadata.set_index("id", drop=False, inplace=True)
