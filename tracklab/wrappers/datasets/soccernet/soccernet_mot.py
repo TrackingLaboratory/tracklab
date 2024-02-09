@@ -54,6 +54,7 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
     categories_list = []
     split = os.path.basename(dataset_path)  # Get the split name from the dataset path
     video_list = os.listdir(dataset_path)
+    video_list.sort()
 
     if nvid > 0:
         video_list = video_list[:nvid]
