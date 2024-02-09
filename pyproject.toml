@@ -34,7 +34,7 @@ torchreid = {git = "https://github.com/VlSomers/bpbreid"}
 openpifpaf = "^0.13.11"
 soccernet = "^0.1.53"
 mmpose = "^1.2.0"
-trackeval = {git = "https://github.com/SoccerNet/sn-trackeval.git", develop= true}
+trackeval = {git = "https://github.com/SoccerNet/sn-trackeval.git"}
 yt-dlp = "^2023.12.30"
 gdown = "^4.7.1"
 
