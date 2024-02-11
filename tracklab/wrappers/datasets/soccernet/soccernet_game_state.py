@@ -29,13 +29,13 @@ class SoccerNetGameState(TrackingDataset):
         assert self.dataset_path.exists(), f"'{self.dataset_path}' directory does not exist. Please check the path or download the dataset following the instructions here: https://github.com/SoccerNet/sn-gamestate"
 
         train_set = load_set(self.dataset_path / "train", nvid, vids_dict.get("train", [])) if os.path.exists(self.dataset_path / "train") else None
-        val_set = load_set(self.dataset_path / "validation", nvid, vids_dict.get("validation", [])) if os.path.exists(self.dataset_path / "validation") else None
+        val_set = load_set(self.dataset_path / "valid", nvid, vids_dict.get("valid", [])) if os.path.exists(self.dataset_path / "valid") else None
         test_set = load_set(self.dataset_path / "test", nvid, vids_dict.get("test", [])) if (self.dataset_path / "test").exists() else None
         challenge = load_set(self.dataset_path / "challenge", nvid, vids_dict.get("challenge", [])) if os.path.exists(self.dataset_path / "challenge") else None
 
         sets = {
             "train": train_set,
-            "validation": val_set,
+            "valid": val_set,
             "test": test_set,
             "challenge": challenge
         }
@@ -296,7 +296,7 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
         image_gt,
     )
 
-def download_dataset(dataset_path, splits=("train", "validation", "test", "challenge")):
+def download_dataset(dataset_path, splits=("train", "valid", "test", "challenge")):
     mySoccerNetDownloader = SoccerNetDownloader(LocalDirectory=str(dataset_path))
     download = Confirm.ask("Do you want to download the "
                            "datasets automatically ? [i]"
