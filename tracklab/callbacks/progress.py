@@ -2,8 +2,9 @@ import pandas as pd
 import logging
 
 from typing import Any, Optional
-from rich.progress import Progress, TextColumn, BarColumn, TaskProgressColumn, \
-    TimeRemainingColumn, MofNCompleteColumn
+from rich.progress import Progress, TextColumn, BarColumn, \
+    TimeRemainingColumn, MofNCompleteColumn, TimeElapsedColumn
+
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from tracklab.callbacks import Callback
@@ -87,7 +88,10 @@ class RichProgressbar(Progressbar):
                 TextColumn("[progress.description]{task.description}"),
                 BarColumn(),
                 MofNCompleteColumn(),
+                TimeElapsedColumn(),
+                TextColumn("•"),
                 TimeRemainingColumn(),
+                speed_estimate_period=600, # estimate speed over ten minutes
         )
         self.pbar.start()
         self.tasks["main"] = self.pbar.add_task("[yellow]Tracking videos", total=total)
