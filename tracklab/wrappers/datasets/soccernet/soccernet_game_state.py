@@ -296,12 +296,8 @@ def download_dataset(dataset_path, splits=("train", "valid", "test", "challenge"
                            "datasets automatically ? [i]"
                            f"({'/'.join(splits)})[/i]")
     if download:
-        password = Prompt.ask("Password for videos "
-                              "[i](received after filling the NDA at "
-                              "[link=https://www.soccer-net.org/data]"
-                              "https://www.soccer-net.org/data[/link])[/i]")
         mySoccerNetDownloader.downloadDataTask(task="gamestate-2024",
-                                               split=splits, password=password)
+                                               split=splits)
         for split in splits:
             with zipfile.ZipFile(dataset_path/"gamestate-2024"/f"{split}.zip", 'r') as zf:
                 zf.extractall(dataset_path / split)
