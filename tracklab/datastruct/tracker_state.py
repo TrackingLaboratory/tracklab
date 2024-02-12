@@ -72,16 +72,16 @@ class TrackerState(AbstractContextManager):
                 self.output_columns[level] |= set(module.get_output_columns(level))
                 self.forget_columns[level] += getattr(module, "forget_columns", [])
 
-        self.load_columns = {}
-        self.load_columns["detection"] = list(
-            (load_columns["detection"] - self.output_columns["detection"])
-            | self.input_columns["detection"]
-            | {"image_id", "video_id"})
-        self.load_columns["image"] = list(
-            (load_columns["image"] - self.output_columns["image"])
-            | self.input_columns["image"]
-            | {"video_id", "file_path", "frame"})
+        self.load_columns = {"detection": list(), "image": list()}
         if self.load_file:
+            self.load_columns["detection"] = list(
+                (load_columns["detection"] - self.output_columns["detection"])
+                | self.input_columns["detection"]
+                | {"image_id", "video_id"})
+            self.load_columns["image"] = list(
+                (load_columns["image"] - self.output_columns["image"])
+                | self.input_columns["image"]
+                | {"video_id", "file_path", "frame"})
             log.info(f"Loading {self.load_columns} from {self.load_file}")
 
         pipeline.validate(self.load_columns)

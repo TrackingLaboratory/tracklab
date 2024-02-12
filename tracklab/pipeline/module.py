@@ -77,7 +77,7 @@ class Pipeline:
                     )
                 if not set(model.get_input_columns(level)).issubset(columns[level]):
                     raise AttributeError(
-                        f"The {model} model doesn't have "
+                        f"The {model.name} model doesn't have "
                         "all the input needed, "
                         f"needed {model.get_input_columns(level)}, provided {columns[level]}"
                     )
