@@ -94,6 +94,18 @@
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 
+<div class="viewcode-block" id="SetsDict">
+<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.tracking_dataset.SetsDict">[docs]</a>
+<span class="k">class</span> <span class="nc">SetsDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to access a &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; split of the dataset that is not available. &quot;</span>
+                           <span class="sa">f</span><span class="s2">&quot;Available splits are </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">. &quot;</span>
+                           <span class="sa">f</span><span class="s2">&quot;Make sur this split name is correct or is available in the dataset folder.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="TrackingSet">
 <a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.tracking_dataset.TrackingSet">[docs]</a>
 <span class="nd">@dataclass</span>
@@ -119,12 +131,8 @@
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dataset_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sets</span> <span class="o">=</span> <span class="n">sets</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">train_set</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">val_set</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">test_set</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="n">sub_sampled_sets</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sets</span> <span class="o">=</span> <span class="n">SetsDict</span><span class="p">(</span><span class="n">sets</span><span class="p">)</span>
+        <span class="n">sub_sampled_sets</span> <span class="o">=</span> <span class="n">SetsDict</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">set_name</span><span class="p">,</span> <span class="n">split</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">vid_list</span> <span class="o">=</span> <span class="n">vids_dict</span><span class="p">[</span><span class="n">set_name</span><span class="p">]</span> <span class="k">if</span> <span class="n">vids_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">set_name</span> <span class="ow">in</span> <span class="n">vids_dict</span> <span class="k">else</span> <span class="kc">None</span>
             <span class="n">sub_sampled_sets</span><span class="p">[</span><span class="n">set_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subsample</span><span class="p">(</span><span class="n">split</span><span class="p">,</span> <span class="n">nvid</span><span class="p">,</span> <span class="n">nframes</span><span class="p">,</span> <span class="n">vid_list</span><span class="p">)</span>
