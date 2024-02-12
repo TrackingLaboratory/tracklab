@@ -28,17 +28,12 @@ class SoccerNetGameState(TrackingDataset):
             download_dataset(self.dataset_path)
         assert self.dataset_path.exists(), f"'{self.dataset_path}' directory does not exist. Please check the path or download the dataset following the instructions here: https://github.com/SoccerNet/sn-gamestate"
 
-        train_set = load_set(self.dataset_path / "train", nvid, vids_dict.get("train", [])) if os.path.exists(self.dataset_path / "train") else None
-        val_set = load_set(self.dataset_path / "validation", nvid, vids_dict.get("validation", [])) if os.path.exists(self.dataset_path / "validation") else None
-        test_set = load_set(self.dataset_path / "test", nvid, vids_dict.get("test", [])) if (self.dataset_path / "test").exists() else None
-        challenge = load_set(self.dataset_path / "challenge", nvid, vids_dict.get("challenge", [])) if os.path.exists(self.dataset_path / "challenge") else None
-
-        sets = {
-            "train": train_set,
-            "validation": val_set,
-            "test": test_set,
-            "challenge": challenge
-        }
+        sets = {}
+        for split in ["train", "valid", "test", "challenge"]:
+            if os.path.exists(self.dataset_path / split):
+                sets[split] = load_set(self.dataset_path / split, nvid, vids_dict.get(split, []))
+            else:
+                log.warning(f"Warning: The '{split}' set does not exist in the SoccerNetGS dataset at '{self.dataset_path}'")
 
         # We pass 'nvid=-1', 'vids_dict=None' because video subsampling is already done in the load_set function
         super().__init__(dataset_path, sets, nvid=-1, vids_dict=None, *args, **kwargs)
@@ -202,7 +197,6 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
     annotations_pitch_camera_list = []
     detections_list = []
     categories_list = []
-    image_gt_challenge = []
     split = os.path.basename(dataset_path)  # Get the split name from the dataset path
     video_list = os.listdir(dataset_path)
     video_list.sort()
@@ -252,10 +246,9 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
         # Person id as unique 0-based index
         detections['person_id'] = pd.factorize(detections['person_id'])[0]
 
-        # Sort to obtain deterministic ids and index
+        # Use video_id, image_id, track_id as unique id
         detections = detections.sort_values(by=['video_id', 'image_id', 'track_id'], ascending=[True, True, True])
-        detections = detections.reset_index(drop=True)
-        detections['id'] = detections.index
+        detections['id'] = detections['video_id'].astype(str) + "_" + detections['image_id'].astype(str) + "_" + detections['track_id'].astype(str)
 
         # add camera parameters and pitch as ground truth
         pitch_camera = pd.concat(annotations_pitch_camera_list, ignore_index=True)
@@ -297,7 +290,7 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
         image_gt,
     )
 
-def download_dataset(dataset_path, splits=("train", "validation", "test", "challenge")):
+def download_dataset(dataset_path, splits=("train", "valid", "test", "challenge")):
     mySoccerNetDownloader = SoccerNetDownloader(LocalDirectory=str(dataset_path))
     download = Confirm.ask("Do you want to download the "
                            "datasets automatically ? [i]"

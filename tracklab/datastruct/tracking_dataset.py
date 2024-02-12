@@ -5,6 +5,15 @@ from dataclasses import dataclass
 import pandas as pd
 
 
+class SetsDict(dict):
+    def __getitem__(self, key):
+        if key not in self:
+            raise KeyError(f"Trying to access a '{key}' split of the dataset that is not available. "
+                           f"Available splits are {list(self.keys())}. "
+                           f"Make sur this split name is correct or is available in the dataset folder.")
+        return super().__getitem__(key)
+
+
 @dataclass
 class TrackingSet:
     video_metadatas: pd.DataFrame
@@ -25,12 +34,8 @@ class TrackingDataset(ABC):
         **kwargs
     ):
         self.dataset_path = Path(dataset_path)
-        self.sets = sets
-        self.train_set = None
-        self.val_set = None
-        self.test_set = None
-
-        sub_sampled_sets = {}
+        self.sets = SetsDict(sets)
+        sub_sampled_sets = SetsDict()
         for set_name, split in self.sets.items():
             vid_list = vids_dict[set_name] if vids_dict is not None and set_name in vids_dict else None
             sub_sampled_sets[set_name] = self._subsample(split, nvid, nframes, vid_list)
