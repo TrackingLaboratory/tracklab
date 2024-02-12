@@ -226,9 +226,8 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
         video_metadata = pd.DataFrame(video_metadatas_list)
         image_metadata = pd.concat(image_metadata_list, ignore_index=True)
         detections = None
-        # image_gt = pd.concat(image_gt_challenge, ignore_index=True)
-        image_gt = None
         image_metadata.set_index("id", drop=False, inplace=True)
+        image_gt = image_metadata.copy()
         video_metadata.set_index("id", drop=False, inplace=True)
     else:
         categories_list = [{'id': i + 1, 'name': category, 'supercategory': 'person'} for i, category in
