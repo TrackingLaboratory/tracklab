@@ -347,8 +347,9 @@ def draw_text(
         rect_h = text_h + padding
         x_start, x_stop = np.sort([rect_pos_x, txt_pos_x+rect_w])
         y_start, y_stop = np.sort([rect_pos_y, txt_pos_y-rect_h])
-        if not (x_start < 0 or x_stop < 0 or y_start < 0 or y_stop < 0):
-            crop = img[np.max([y_start, 0]):y_stop, np.max([x_start, 0]):x_stop]
+        crop = img[np.max([y_start, 0]):y_stop, np.max([x_start, 0]):x_stop]
+        if not (x_start < 0 or x_stop < 0 or y_start < 0 or y_stop < 0 or crop.size == 0):
+            # log.info(f"{y_start} {y_stop} {x_start} {x_stop} {crop.shape}")
             bg = np.ones_like(crop) * np.array(color_bg, dtype=crop.dtype)
             img[np.max([y_start, 0]):y_stop, np.max([x_start, 0]):x_stop] = (
                 cv2.addWeighted(crop, (1-alpha_bg), bg, alpha_bg, 0.0))
