@@ -188,7 +188,7 @@
                     <span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">get_input_columns</span><span class="p">(</span><span class="n">level</span><span class="p">))</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="n">level</span><span class="p">]):</span>
                     <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;The </span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2"> model doesn&#39;t have &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;The </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> model doesn&#39;t have &quot;</span>
                         <span class="s2">&quot;all the input needed, &quot;</span>
                         <span class="sa">f</span><span class="s2">&quot;needed </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">get_input_columns</span><span class="p">(</span><span class="n">level</span><span class="p">)</span><span class="si">}</span><span class="s2">, provided </span><span class="si">{</span><span class="n">columns</span><span class="p">[</span><span class="n">level</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
                     <span class="p">)</span>
