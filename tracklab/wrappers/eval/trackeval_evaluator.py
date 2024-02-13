@@ -1,5 +1,7 @@
 import json
 import os
+import zipfile
+
 import numpy as np
 import pandas as pd
 import logging
@@ -48,7 +50,7 @@ class TrackEvalEvaluator(EvaluatorBase):
             f"Tracking predictions saved in {self.trackeval_dataset_name} format in {pred_save_path}")
 
         if tracker_state.detections_gt is None or len(tracker_state.detections_gt) == 0:
-            log.info(
+            log.warning(
                 f"Stopping evaluation because the current split ({self.eval_set}) has no ground truth detections.")
             return
 
@@ -111,6 +113,7 @@ def save_in_soccernet_format(detections: pd.DataFrame,
                              bbox_column_for_eval="bbox_ltwh",
                              save_classes=False,
                              is_ground_truth=False,
+                             save_zip=True
                              ):
     if is_ground_truth:
         return
@@ -120,6 +123,7 @@ def save_in_soccernet_format(detections: pd.DataFrame,
     camera_metadata = soccernet_encoding(image_metadatas.copy(), supercategory="camera")
     pitch_metadata = soccernet_encoding(image_metadatas.copy(), supercategory="pitch")
     predictions = pd.concat([detections, camera_metadata, pitch_metadata], ignore_index=True)
+    zf_save_path = save_path.parents[1] / f"{save_path.parent.name}.zip"
     for id, video in video_metadatas.iterrows():
         file_path = save_path / f"{video['name']}.json"
         video_predictions_df = predictions[predictions["video_id"] == str(id)].copy()
@@ -128,6 +132,9 @@ def save_in_soccernet_format(detections: pd.DataFrame,
             video_predictions = [{k: int(v) if k == 'track_id' else v for k, v in m.items() if np.all(pd.notna(v))} for m in video_predictions_df.to_dict(orient="records")]
             with file_path.open("w") as fp:
                 json.dump({"predictions": video_predictions}, fp, indent=2)
+            if save_zip:
+                with zipfile.ZipFile(zf_save_path, "a", compression=zipfile.ZIP_DEFLATED) as zf:
+                    zf.write(file_path, arcname=f"{save_path.name}/{file_path.name}")
 
 
 def transform_bbox_image(row):
