@@ -33,7 +33,8 @@ class SoccerNetGameState(TrackingDataset):
             if os.path.exists(self.dataset_path / split):
                 sets[split] = load_set(self.dataset_path / split, nvid, vids_dict.get(split, []))
             else:
-                log.warning(f"Warning: The '{split}' set does not exist in the SoccerNetGS dataset at '{self.dataset_path}'")
+                log.warning(f"Warning: The '{split}' set does not exist in the SoccerNetGS dataset at '{self.dataset_path}'."
+                            f"Please check the path or download the dataset following the instructions here: https://github.com/soccerNet/sn-gamestate#manual-downloading-of-soccernet-gamestate")
 
         # We pass 'nvid=-1', 'vids_dict=None' because video subsampling is already done in the load_set function
         super().__init__(dataset_path, sets, nvid=-1, vids_dict=None, *args, **kwargs)
