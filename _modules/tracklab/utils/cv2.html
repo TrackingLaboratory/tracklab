@@ -293,7 +293,7 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">track_id</span><span class="p">):</span>
                 <span class="n">draw_text</span><span class="p">(</span>
                     <span class="n">patch</span><span class="p">,</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">track_id</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;ID: </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">track_id</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="p">(</span><span class="n">r</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="n">t</span><span class="o">-</span><span class="mi">15</span><span class="p">),</span>
                     <span class="n">fontFace</span><span class="o">=</span><span class="n">text_font</span><span class="p">,</span>
                     <span class="n">fontScale</span><span class="o">=</span><span class="n">text_scale</span><span class="p">,</span>
@@ -302,7 +302,7 @@
                     <span class="n">alignV</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">,</span>
                     <span class="n">color_txt</span><span class="o">=</span><span class="n">text_color</span><span class="p">,</span>
                     <span class="n">color_bg</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
-                    <span class="n">darken</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+                    <span class="n">alpha_bg</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
                 <span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
