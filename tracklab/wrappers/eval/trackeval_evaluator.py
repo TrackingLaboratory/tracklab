@@ -134,7 +134,7 @@ def save_in_soccernet_format(detections: pd.DataFrame,
                 json.dump({"predictions": video_predictions}, fp, indent=2)
             if save_zip:
                 with zipfile.ZipFile(zf_save_path, "a", compression=zipfile.ZIP_DEFLATED) as zf:
-                    zf.write(file_path, arcname=f"{save_path.parent.name}/{save_path.name}")
+                    zf.write(file_path, arcname=f"{save_path.name}/{file_path.name}")
 
 
 def transform_bbox_image(row):
