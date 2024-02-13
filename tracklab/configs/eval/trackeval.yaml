@@ -11,7 +11,6 @@ cfg:
   bbox_column_for_eval: "bbox_ltwh"  # which bbox column to use for evaluation: {"bbox_ltwh", "track_bbox_kf_ltwh", ...}
   metrics:  # List of performance metrics to compute as listed in "trackeval.metrics"
     - "HOTA"
-    - "CLEAR"
     - "Identity"
   eval:  # mapped to trackeval/eval.py
     USE_PARALLEL: False  # TODO try
