@@ -186,7 +186,7 @@ def draw_bbox(
             if not np.isnan(detection.track_id):
                 draw_text(
                     patch,
-                    f"{int(detection.track_id)}",
+                    f"ID: {int(detection.track_id)}",
                     (r-5, t-15),
                     fontFace=text_font,
                     fontScale=text_scale,
@@ -195,7 +195,7 @@ def draw_bbox(
                     alignV="t",
                     color_txt=text_color,
                     color_bg=(255, 255, 255),
-                    darken=0.7,
+                    alpha_bg=0.5,
                 )
         except KeyError:
             log.warning(
