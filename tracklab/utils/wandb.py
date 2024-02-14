@@ -53,7 +53,10 @@ def init(cfg):
     use_wandb = cfg.use_wandb
     if use_wandb:
         cfg = OmegaConf.to_container(cfg, resolve=True)
-        wandb.init(project=cfg["experiment_name"], config=cfg)
+        kwargs = {}
+        if "wandb" in cfg:
+            kwargs = cfg.wandb
+        wandb.init(project=cfg["experiment_name"], config=cfg, **kwargs)
 
 
 def log_metric(res_dict, name, video_dict=None):
