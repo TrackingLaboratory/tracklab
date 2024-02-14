@@ -52,10 +52,10 @@ def init(cfg):
     global use_wandb
     use_wandb = cfg.use_wandb
     if use_wandb:
-        cfg = OmegaConf.to_container(cfg, resolve=True)
         kwargs = {}
         if "wandb" in cfg:
             kwargs = cfg.wandb
+        cfg = OmegaConf.to_container(cfg, resolve=True)
         wandb.init(project=cfg["experiment_name"], config=cfg, **kwargs)
 
 
