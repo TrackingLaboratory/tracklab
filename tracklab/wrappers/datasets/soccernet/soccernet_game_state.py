@@ -213,6 +213,8 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
     if nvid > 0:
         video_list = video_list[:nvid]
 
+    assert len(video_list) != 0, f"After applying filtering, no videos left in the '{split}' set, please fix the 'dataset.vids_dict' config."
+
     pool = Pool()
     args = [{"dataset_path": dataset_path, "video_folder": video_folder, "split": split} for video_folder in video_list]
     for result in progress(pool.imap_unordered(video_dir_to_dfs, args), total=len(args), desc=f"Loading SoccerNetGS '{split}' set videos"):
