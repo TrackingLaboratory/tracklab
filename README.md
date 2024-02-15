@@ -146,7 +146,7 @@ Here is an overview of the important TrackLab classes:
 - **[Callback](tracklab/callbacks/callback.py)**: Implement this class to add a callback that is triggered at a specific point during the tracking process, e.g. when dataset/video/module processing starts/ends.
   - Example: [VisualizationEngine](tracklab/core/visualization_engine.py). Implements "on_video_loop_end" to save each video tracking results as a .mp4 or a list of .jpg. 
 - **[Evaluator](tracklab/core/evaluator.py)**: Implement this class to add a new evaluation metric, such as MOTA, HOTA, or any other (non-tracking related) metrics. 
-  - Example: [SoccerNetMOTEvaluator](tracklab/wrappers/eval/soccernet/soccernet_mot_evaluator.py). Evaluate performance of a tracker on the SoccerNet Tracking dataset using the official [SoccerNet evaluation library](https://github.com/SoccerNet/sn-tracking).
+  - Example: [TrackEvalEvaluator](tracklab/wrappers/eval/trackeval_evaluator.py). Evaluate the performance of a tracker using the official [TrackEval library](https://github.com/JonathonLuiten/TrackEval).
 
 ### Execution Flow Overview
 Here is an overview of what happen when you run TrackLab:
