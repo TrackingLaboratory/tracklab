@@ -72,7 +72,7 @@ class VideoOnlineTrackingEngine:
         video_cap = cv2.VideoCapture(video_filename)
         fps = video_cap.get(cv2.CAP_PROP_FPS)
         frame_modulo = fps // self.target_fps
-        assert video_cap.isOpened(), "Error opening video stream or file"
+        assert video_cap.isOpened(), f"Error opening video stream or file {video_filename}"
         if platform.system() == "Linux":
             cv2.namedWindow(str(self.video_filename), cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
             # cv2.resizeWindow(str(self.video_filename))
