@@ -134,10 +134,10 @@ Here is an overview of the important TrackLab classes:
 - **[TrackingEngine](tracklab/engine/engine.py)**: This class is responsible for executing the entire tracking pipeline on the dataset. It loops over all videos of the dataset and calls all modules defined in the pipeline sequentially. The exact execution order (e.g. online/offline/...) is defined by the TrackingEngine subclass.
   - Example: **[OfflineTrackingEngine](tracklab/engine/offline.py)**. The offline tracking engine performs tracking one module after another to speed up inference by leveraging large batch sizes and maximum GPU utilization. For instance, YoloV8 is first applied on an entire video by batching multiple images, then the re-identification model is applied on all detections in the video, etc. 
 - **[Pipeline](tracklab/pipeline/module.py)**: Define the order in which modules are executed by the TrackingEngine. If a tracker_state is loaded from disk, modules that should not be executed again must be removed.
-  - Example: [bbox_detector, reid, track, jn_detect, jn_tracklet]
+  - Example: [bbox_detector, reid, track]
 - **[VideoLevelModule](tracklab/pipeline/videolevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on all frames simultaneously. Can be used to implement offline tracking strategies, tracklet level voting mechanisms, etc. 
-  - Example: [VotingTrackletJerseyNumber](tracklab/wrappers/jn_detector/voting_tracklet_jn_api.py). To perform majority voting within each tracklet and compute a consistent tracklet level jersey number. Update the "jersey_number" column within `detections_pred`.
-- **[ImageLevelModule](tracklab/pipeline/imagelevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates operates on a single frame. Can be used to implement online tracking strategies, pose/segmentation/bbox detectors, etc.
+  - Example: [VotingTrackletJerseyNumber](tracklab/wrappers/jn_detector/voting_tracklet_jn_api.py). To perform majority voting within each tracklet and compute a consistent tracklet level attribute (an attribute can be, for instance, the result of a detection level classification task).
+- **[ImageLevelModule](tracklab/pipeline/imagelevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on a single frame. Can be used to implement online tracking strategies, pose/segmentation/bbox detectors, etc.
   - Example 1: [YOLOv8](tracklab/wrappers/detect_multiple/yolov8_api.py). To perform object detection on each image with [YOLOv8](https://github.com/ultralytics/ultralytics). Creates a new row (i.e. detection) within `detections_pred`.
   - Example 2: [StrongSORT](tracklab/wrappers/track/strong_sort_api.py). To perform online tracking with [StrongSORT](https://github.com/dyhBUPT/StrongSORT). Creates a new "track_id" column for each detection within `detections_pred`. 
 - **[DetectionLevelModule](tracklab/pipeline/detectionlevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on a single detection. Can be used to implement pose estimation for top-down strategies, re-identification, attributes recognition, etc. 
@@ -146,7 +146,7 @@ Here is an overview of the important TrackLab classes:
 - **[Callback](tracklab/callbacks/callback.py)**: Implement this class to add a callback that is triggered at a specific point during the tracking process, e.g. when dataset/video/module processing starts/ends.
   - Example: [VisualizationEngine](tracklab/core/visualization_engine.py). Implements "on_video_loop_end" to save each video tracking results as a .mp4 or a list of .jpg. 
 - **[Evaluator](tracklab/core/evaluator.py)**: Implement this class to add a new evaluation metric, such as MOTA, HOTA, or any other (non-tracking related) metrics. 
-  - Example: [SoccerNetMOTEvaluator](tracklab/wrappers/eval/soccernet/soccernet_mot_evaluator.py). Evaluate performance of a tracker on the SoccerNet Tracking dataset using the official [SoccerNet evaluation library](https://github.com/SoccerNet/sn-tracking).
+  - Example: [TrackEvalEvaluator](tracklab/wrappers/eval/trackeval_evaluator.py). Evaluate the performance of a tracker using the official [TrackEval library](https://github.com/JonathonLuiten/TrackEval).
 
 ### Execution Flow Overview
 Here is an overview of what happen when you run TrackLab:
