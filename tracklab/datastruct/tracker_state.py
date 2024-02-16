@@ -293,9 +293,10 @@ class TrackerState(AbstractContextManager):
             return self.json_detections_pred[
                 self.json_detections_pred.video_id == self.video_id
                 ]
-        image_preds = self.image_metadatas[self.image_metadatas.video_id == self.video_id]
+        video_detections = pd.DataFrame()
+        video_image_preds = self.image_metadatas[self.image_metadatas.video_id == self.video_id]
         if self.load_from_groundtruth:
-            image_preds = self.image_pred[self.image_pred.video_id == self.video_id]
+            video_image_preds = self.image_pred[self.image_pred.video_id == self.video_id]
         if self.load_file is not None:
             if f"{self.video_id}.pkl" in self.zf["load"].namelist():
                 with self.zf["load"].open(f"{self.video_id}.pkl", "r") as fp:
@@ -306,7 +307,7 @@ class TrackerState(AbstractContextManager):
             if f"{self.video_id}_image.pkl" in self.zf["load"].namelist():
                 with self.zf["load"].open(f"{self.video_id}_image.pkl", "r") as fp_image:
                     video_image_preds = merge_dataframes(
-                        pickle.load(fp_image), image_preds
+                        pickle.load(fp_image), video_image_preds
                     )[self.load_columns["image"]]
             else:
                 video_image_preds = self.image_metadatas[
