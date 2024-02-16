@@ -43,6 +43,7 @@ class TQDMProgressbar(Progressbar):
         n = index
         total = len(engine.video_metadatas)
         self.video_id = video_idx
+        self.pbar.set_description(f"Tracking videos ({video_metadata['name']})")
 
     def on_video_loop_end(
         self,
