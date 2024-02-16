@@ -103,6 +103,7 @@ class RichProgressbar(Progressbar):
         self, engine: TrackingEngine, video_metadata: pd.Series, video_idx: int, index: int
     ):
         self.video_id = video_idx
+        self.pbar.update(self.tasks["main"], description=f"[yellow]Tracking videos ({video_metadata['name']})")
 
     def on_video_loop_end(
         self,
