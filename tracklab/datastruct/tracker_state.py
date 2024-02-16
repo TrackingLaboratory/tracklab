@@ -3,6 +3,7 @@ import json
 import pickle
 import zipfile
 from collections import defaultdict
+from collections.abc import Mapping
 
 import numpy as np
 import pandas as pd
@@ -100,17 +101,22 @@ class TrackerState(AbstractContextManager):
 
     def load_groundtruth(self, load_columns):
         from tracklab.engine.engine import merge_dataframes
-        # FIXME only work for topdown -> handle bottomup
-        # We consider here that detect_multi detects the bbox
-        # and that detect_single detects the keypoints
         if self.pipeline.is_empty():
             self.detections_pred = self.detections_gt.copy()  # load all columns if pipeline is empty
             self.image_pred = merge_dataframes(self.image_metadatas.copy(), self.image_gt.copy())
         else:
+            if isinstance(self.load_from_groundtruth, Mapping):
+                if "detection" in self.load_from_groundtruth:
+                    raise ValueError("You can't yet load some detections from the detections")
+                load_columns = {k: list(set(self.load_from_groundtruth.get(k, [])) & set(v))
+                                for k, v in load_columns.items()
+                                }
             self.detections_pred = self.detections_gt.copy()[
-                self.detections_gt.columns.intersection(load_columns["detection"])
+                self.detections_gt.columns.intersection(load_columns["detection"]+["image_id", "video_id"])
             ]
-            self.image_pred = merge_dataframes(self.image_metadatas.copy(), self.image_gt.copy())[load_columns["image"]]
+            self.image_pred = merge_dataframes(
+                self.image_metadatas.copy(), self.image_gt.copy()
+            )[load_columns["image"]+["video_id", "file_path", "frame"]]
 
     def load_detections_pred_from_json(self, json_file):
         anns_path = Path(json_file)
@@ -281,36 +287,33 @@ class TrackerState(AbstractContextManager):
             bool: True if the pickle contains the video detections,
                 and False otherwise.
         """
+        from tracklab.engine.engine import merge_dataframes
         assert self.video_id is not None, "Load can only be called in a contextmanager"
         if self.json_file is not None:
             return self.json_detections_pred[
                 self.json_detections_pred.video_id == self.video_id
                 ]
+        image_preds = self.image_metadatas[self.image_metadatas.video_id == self.video_id]
         if self.load_from_groundtruth:
-            dets = self.detections_pred[self.detections_pred.video_id == self.video_id]
             image_preds = self.image_pred[self.image_pred.video_id == self.video_id]
-            return dets, image_preds
-        if self.load_file is None:
-            return pd.DataFrame(), self.image_metadatas[self.image_metadatas.video_id == self.video_id]
-
-        if f"{self.video_id}.pkl" in self.zf["load"].namelist():
-            with self.zf["load"].open(f"{self.video_id}.pkl", "r") as fp:
-                video_detections = pickle.load(fp)[self.load_columns["detection"]]
-        else:
-            log.info(f"{self.video_id} detections not in pklz file.")
-            video_detections = pd.DataFrame()
-        if f"{self.video_id}_image.pkl" in self.zf["load"].namelist():
-            with self.zf["load"].open(f"{self.video_id}_image.pkl", "r") as fp_image:
-                video_image_pred = pickle.load(fp_image)
-                from tracklab.engine.engine import merge_dataframes
-                video_image_pred = merge_dataframes(
-                    video_image_pred,
-                    self.image_metadatas[self.image_metadatas.video_id == self.video_id]
-                )[self.load_columns["image"]]
-        else:
-            video_image_pred = self.image_metadatas[self.image_metadatas.video_id == self.video_id]
-        self.update(video_detections, video_image_pred)
-        return video_detections, video_image_pred
+        if self.load_file is not None:
+            if f"{self.video_id}.pkl" in self.zf["load"].namelist():
+                with self.zf["load"].open(f"{self.video_id}.pkl", "r") as fp:
+                    video_detections = pickle.load(fp)[self.load_columns["detection"]]
+            else:
+                log.info(f"{self.video_id} detections not in pklz file.")
+                video_detections = pd.DataFrame()
+            if f"{self.video_id}_image.pkl" in self.zf["load"].namelist():
+                with self.zf["load"].open(f"{self.video_id}_image.pkl", "r") as fp_image:
+                    video_image_preds = merge_dataframes(
+                        pickle.load(fp_image), image_preds
+                    )[self.load_columns["image"]]
+            else:
+                video_image_preds = self.image_metadatas[
+                    self.image_metadatas.video_id == self.video_id
+                    ]
+        self.update(video_detections, video_image_preds)
+        return video_detections, video_image_preds
 
     def __exit__(self, exc_type, exc_value, traceback):
         """
