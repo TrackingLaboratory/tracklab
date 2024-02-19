@@ -5,5 +5,30 @@ _target_: tracklab.wrappers.SoccerNetGameState
 
 dataset_path: ${data_dir}/SoccerNetGS
 annotation_path: ${data_dir}/SoccerNetGS
-trackeval_dataset_class: SoccerNetGS  # SoccerNetGS MotChallenge2DBox
 eval_set: "valid"
+
+track_eval:  # Used by tracklab/configs/eval/trackeval.yaml
+  dataset_class: SoccerNetGS
+  GT_FOLDER: "eval/gt" # Location of GT data
+  GT_LOC_FORMAT: '{gt_folder}/{seq}.txt' # '{gt_folder}/{seq}/gt/gt.txt'
+  TRACKERS_FOLDER: 'eval/pred' # Trackers location
+  TRACKER_SUB_FOLDER: '' # Tracker files are in TRACKER_FOLDER/tracker_name/TRACKER_SUB_FOLDER
+  OUTPUT_FOLDER: "eval/results" # Where to save eval results (if None, same as TRACKERS_FOLDER)
+  OUTPUT_SUB_FOLDER: '' # Output files are saved in OUTPUT_FOLDER/tracker_name/OUTPUT_SUB_FOLDER
+  SPLIT_TO_EVAL: ${dataset.eval_set}
+  PRINT_CONFIG: False
+  DO_PREPROC: False
+  TRACKER_DISPLAY_NAMES: null
+  # GS-HOTA related configs:
+  # ^^^^^^^^^^^^^^^^^^^^^^^
+  # If 'EVAL_SPACE=image' and all attributes are disabled, the GS-HOTA is strictly equivalent to the standard HOTA.
+  # Use 'EVAL_SPACE=pitch' and enable all attributes to evaluate for the true GS-HOTA, i.e. the performance metric used for the GSR challenge.
+  # Eval space: If the evaluation is performed in image space, the ground truth bboxes (in image space) are matched with the predicted bboxes by their IOU.
+  # If the evaluation is performed in pitch space, the ground truth 2D positions on the pitch are matched with the 2D predicted positions using a gaussian
+  # kernel with sigma=2.5 applied on their euclidean distance (resulting in a 0->1 similarity score, fulfilling an objective similar to the IOU in image space).
+  EVAL_SPACE: 'pitch'  # {'pitch', 'image'}.
+  # Below are the enabled attributes (i.e. team, role, or jersey numbers) for evaluation.
+  # When an attribute is enabled, ground truth and predictions that don't share the same value for this attribute are given a '0' similarity score and can therefore not be matched.
+  USE_ROLES: True  #
+  USE_TEAMS: True  # affects only ground truth / predictions with role=player or role=goalkeeper
+  USE_JERSEY_NUMBERS: True  # affects only ground truth / predictions with role=player or role=goalkeeper

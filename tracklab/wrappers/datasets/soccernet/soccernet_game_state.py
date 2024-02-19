@@ -1,14 +1,13 @@
 import logging
 import os
 import zipfile
-
+import numpy as np
 import pandas as pd
 import json
-from pathlib import Path
 
+from pathlib import Path
 from SoccerNet.Downloader import SoccerNetDownloader
-from rich.prompt import Confirm, Prompt
-from tqdm import tqdm
+from rich.prompt import Confirm
 from tracklab.datastruct import TrackingDataset, TrackingSet
 from tracklab.utils import xywh_to_ltwh
 from tracklab.utils.progress import progress
@@ -38,6 +37,102 @@ class SoccerNetGameState(TrackingDataset):
 
         # We pass 'nvid=-1', 'vids_dict=None' because video subsampling is already done in the load_set function
         super().__init__(dataset_path, sets, nvid=-1, vids_dict=None, *args, **kwargs)
+
+    def process_trackeval_results(self, results, dataset_config, eval_config):
+        combined_results = results['SUMMARIES']['cls_comb_det_av']
+        combined_results['GS-HOTA'] = combined_results.pop('HOTA')
+        # In all keys, replace the substring "HOTA" with "GS-HOTA"
+        combined_results['GS-HOTA'] = {k.replace('HOTA', 'GS-HOTA'): v for k, v in
+                                       combined_results['GS-HOTA'].items()}
+        log.info(f"SoccerNet Game State Recognition performance GS-HOTA = {combined_results['GS-HOTA']['GS-HOTA']}% (ocnfig: EVAL_SPACE={dataset_config['EVAL_SPACE']}, USE_JERSEY_NUMBERS={dataset_config['USE_JERSEY_NUMBERS']}, USE_TEAMS={dataset_config['USE_TEAMS']}, USE_ROLES={dataset_config['USE_ROLES']})")
+        log.info(f"Have a look at 'tracklab/tracklab/configs/dataset/soccernet_gs.yaml' for more details about the GS-HOTA metric and the evaluation configuration.")
+        return combined_results
+
+    def save_for_eval(self,
+                      detections: pd.DataFrame,
+                      image_metadatas: pd.DataFrame,
+                      video_metadatas: pd.DataFrame,
+                      save_folder: str,
+                      bbox_column_for_eval="bbox_ltwh",
+                      save_classes=False,
+                      is_ground_truth=False,
+                      save_zip=True
+                      ):
+        if is_ground_truth:
+            return
+        save_path = Path(save_folder)
+        save_path.mkdir(parents=True, exist_ok=True)
+        detections = self.soccernet_encoding(detections.copy(), supercategory="object")
+        camera_metadata = self.soccernet_encoding(image_metadatas.copy(), supercategory="camera")
+        pitch_metadata = self.soccernet_encoding(image_metadatas.copy(), supercategory="pitch")
+        predictions = pd.concat([detections, camera_metadata, pitch_metadata], ignore_index=True)
+        zf_save_path = save_path.parents[1] / f"{save_path.parent.name}.zip"
+        for id, video in video_metadatas.iterrows():
+            file_path = save_path / f"{video['name']}.json"
+            video_predictions_df = predictions[predictions["video_id"] == str(id)].copy()
+            if not video_predictions_df.empty:
+                video_predictions_df.sort_values(by="id", inplace=True)
+                video_predictions = [
+                    {k: int(v) if k == 'track_id' else v for k, v in m.items() if np.all(pd.notna(v))} for m in
+                    video_predictions_df.to_dict(orient="records")]
+                with file_path.open("w") as fp:
+                    json.dump({"predictions": video_predictions}, fp, indent=2)
+                if save_zip:
+                    with zipfile.ZipFile(zf_save_path, "a", compression=zipfile.ZIP_DEFLATED) as zf:
+                        zf.write(file_path, arcname=f"{save_path.name}/{file_path.name}")
+
+    @staticmethod
+    def soccernet_encoding(dataframe: pd.DataFrame, supercategory):
+        dataframe["supercategory"] = supercategory
+        dataframe = dataframe.map(lambda x: x.tolist() if isinstance(x, np.ndarray) else x)
+        dataframe = dataframe.replace({np.nan: None})
+        if supercategory == "object":
+            # Remove detections that don't have mandatory columns
+            # Detections with no track_id will therefore be removed and not count as FP at evaluation
+            dataframe.dropna(
+                subset=[
+                    "track_id",
+                    "bbox_ltwh",
+                    "bbox_pitch",
+                ],
+                how="any",
+                inplace=True,
+            )
+            dataframe = dataframe.rename(columns={"bbox_ltwh": "bbox_image", "jersey_number": "jersey"})
+            dataframe["track_id"] = dataframe["track_id"]
+            dataframe["attributes"] = dataframe.apply(
+                lambda x: x[x.index.intersection(["role", "jersey", "team"])].to_dict(),
+                axis=1
+            )
+            dataframe["id"] = dataframe.index
+            dataframe = dataframe[dataframe.columns.intersection(
+                ["id", "image_id", "video_id", "track_id", "supercategory",
+                 "category_id", "attributes", "bbox_image", "bbox_pitch"])]
+
+            dataframe['bbox_image'] = dataframe['bbox_image'].apply(transform_bbox_image)
+        elif supercategory == "camera":
+            dataframe["image_id"] = dataframe.index
+            dataframe["category_id"] = 6
+            dataframe["id"] = dataframe.index.map(lambda x: str(x) + "01")
+            dataframe = dataframe[dataframe.columns.intersection(
+                ["id", "image_id", "video_id", "supercategory", "category_id", "parameters",
+                 "relative_mean_reproj", "accuracy@5"])
+            ]
+        elif supercategory == "pitch":
+            dataframe["image_id"] = dataframe.index
+            dataframe["category_id"] = 5
+            dataframe["id"] = dataframe.index.map(lambda x: str(x) + "00")
+            dataframe = dataframe[dataframe.columns.intersection(
+                ["id", "image_id", "video_id", "supercategory", "category_id", "lines"])]
+        dataframe["video_id"] = dataframe["video_id"].apply(str)
+        dataframe["image_id"] = dataframe["image_id"].apply(str)
+        dataframe["id"] = dataframe["id"].apply(str)
+        return dataframe
+
+
+def transform_bbox_image(row):
+    return {"x": row[0], "y": row[1], "w": row[2], "h": row[3]}
+
 
 def extract_category(attributes):
     if attributes['role'] == 'goalkeeper':

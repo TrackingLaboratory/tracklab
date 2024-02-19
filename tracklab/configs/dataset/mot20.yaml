@@ -4,4 +4,3 @@ defaults:
 _target_: tracklab.wrappers.MOT20
 
 dataset_path: ${data_dir}/MOT20
-trackeval_dataset_class: MotChallenge2DBox

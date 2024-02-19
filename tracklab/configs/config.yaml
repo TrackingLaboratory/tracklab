@@ -39,6 +39,7 @@ use_rich: True
 # Flags
 test_tracking: True
 print_config: False
+eval_tracking: True
 
 # configure Hydra to use the current working directory
 # and set up the output directory according to experiment_name

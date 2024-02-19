@@ -60,26 +60,28 @@ def init(cfg):
 
 
 def log_metric(res_dict, name, video_dict=None):
-    try:
-        wandb.log(
-            {f"{name}/{k}": v for k, v in res_dict.items()},
-            step=0,
-        )
-        if video_dict is not None:
-            video_df = pd.DataFrame.from_dict(video_dict, orient="index")
-            video_df.insert(0, "video", video_df.index)
-            wandb.log({f"{name}/videos": video_df}, step=0)
-    except wandb.Error:
-        logger.warning("Wandb error, skipping logging")
-        pass
+    if use_wandb:
+        try:
+            wandb.log(
+                {f"{name}/{k}": v for k, v in res_dict.items()},
+                step=0,
+            )
+            if video_dict is not None:
+                video_df = pd.DataFrame.from_dict(video_dict, orient="index")
+                video_df.insert(0, "video", video_df.index)
+                wandb.log({f"{name}/videos": video_df}, step=0)
+        except wandb.Error:
+            logger.warning("Wandb error, skipping logging")
+            pass
 
 
 def log(res_dict):
-    try:
-        wandb.log(res_dict)
-    except wandb.Error:
-        logger.warning("Wandb error, skipping logging")
-        pass
+    if use_wandb:
+        try:
+            wandb.log(res_dict)
+        except wandb.Error:
+            logger.warning("Wandb error, skipping logging")
+            pass
 
 
 def apply_recursively(d, f=lambda v: v, filter=lambda k, v: True, always_filter=False):

@@ -26,7 +26,7 @@ def main(cfg):
 
     # Instantiate all modules
     tracking_dataset = instantiate(cfg.dataset)
-    evaluator = instantiate(cfg.eval)
+    evaluator = instantiate(cfg.eval, tracking_dataset=tracking_dataset)
 
     modules = []
     if cfg.pipeline is not None:
