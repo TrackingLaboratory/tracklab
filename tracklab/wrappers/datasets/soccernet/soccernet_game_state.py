@@ -111,7 +111,7 @@ def video_dir_to_dfs(args):
     video_level_categories = []
     video_folder_path = os.path.join(dataset_path, video_folder)
     if os.path.isdir(video_folder_path):
-        if split == "challenge":
+        if not (Path(video_folder_path) / "Labels-GameState.json").exists():
             img_folder_path = os.path.join(video_folder_path, 'img1')
             video_id = str(int(video_folder.split('-')[-1]))
             video_metadata = {
@@ -225,7 +225,7 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
             annotations_pitch_camera_list.append(result["annotations_pitch_camera"])
             categories_list += result["video_level_categories"]
 
-    if split == "challenge":
+    if len(categories_list) == 0:
         video_metadata = pd.DataFrame(video_metadatas_list)
         image_metadata = pd.concat(image_metadata_list, ignore_index=True)
         detections = None
