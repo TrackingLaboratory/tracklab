@@ -296,6 +296,7 @@ class TrackerState(AbstractContextManager):
         video_detections = pd.DataFrame()
         video_image_preds = self.image_metadatas[self.image_metadatas.video_id == self.video_id]
         if self.load_from_groundtruth:
+            video_detections = self.detections_pred[self.detections_pred.video_id == self.video_id]
             video_image_preds = self.image_pred[self.image_pred.video_id == self.video_id]
         if self.load_file is not None:
             if f"{self.video_id}.pkl" in self.zf["load"].namelist():
