@@ -79,26 +79,3 @@ class TopDownMMPose(DetectionLevelModule):
         detections["keypoints_xyc"] = kps_xyc
         return detections
 
-    """
-    from mmpose.core.post_processing import oks_nms
-    def postprocess(self, detections: pd.DataFrame, metadata: pd.DataFrame = None):
-        # FIXME do we want it here ? or in the tracker ?
-        # we must be as lax as possible here and be severe in the tracker
-        img_kpts = []
-        for _, detection in detections.iterrows():
-            img_kpts.append(
-                {
-                    "keypoints": detection.keypoints_xyc,
-                    "score": detections.score,
-                    "area": detections.bbox_ltwh[2] * detections.bbox_ltwh[3],
-                }
-            )
-        keep = oks_nms(
-            img_kpts,
-            self.cfg.oks_threshold,
-            vis_thr=self.cfg.visibility_threshold,
-            sigmas=self.dataset_info.sigmas,
-        )
-        detections = detections.iloc[keep]  # FIXME won't work
-        return detections
-    """
