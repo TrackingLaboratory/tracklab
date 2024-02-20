@@ -96,75 +96,44 @@
 <h2>tracklab.wrappers.detect_single.topdown_mmpose_api module<a class="headerlink" href="#tracklab-wrappers-detect-single-topdown-mmpose-api-module" title="Link to this heading"></a></h2>
 <dl class="py class" id="module-tracklab.wrappers.detect_single.topdown_mmpose_api">
 <dt class="sig sig-object py" id="tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.wrappers.detect_single.topdown_mmpose_api.</span></span><span class="sig-name descname"><span class="pre">TopDownMMPose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_checkpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vis_kp_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_num_vis_kp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/detect_single/topdown_mmpose_api.html#TopDownMMPose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="pbtrack.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule" title="tracklab.pipeline.imagelevel_module.ImageLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageLevelModule</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.wrappers.detect_single.topdown_mmpose_api.</span></span><span class="sig-name descname"><span class="pre">TopDownMMPose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_checkpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vis_kp_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_num_vis_kp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/detect_single/topdown_mmpose_api.html#TopDownMMPose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="pbtrack.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule" title="tracklab.pipeline.detectionlevel_module.DetectionLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionLevelModule</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose.collate_fn">
-<span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose.collate_fn" title="Link to this definition"></a></dt>
-<dd><p>Function that takes in a batch of data and puts the elements within the batch
-into a tensor with an additional outer dimension - batch size. The exact output type can be
-a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, a <cite>Sequence</cite> of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, a
-Collection of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, or left unchanged, depending on the input type.
-This is used as the default function for collation when
-<cite>batch_size</cite> or <cite>batch_sampler</cite> is defined in <code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code>.</p>
-<p>Here is the general input type (based on the type of the element within the batch) to output type mapping:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code> -&gt; <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code> (with an added outer dimension batch size)</p></li>
-<li><p>NumPy Arrays -&gt; <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code></p></li>
-<li><p><cite>float</cite> -&gt; <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code></p></li>
-<li><p><cite>int</cite> -&gt; <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code></p></li>
-<li><p><cite>str</cite> -&gt; <cite>str</cite> (unchanged)</p></li>
-<li><p><cite>bytes</cite> -&gt; <cite>bytes</cite> (unchanged)</p></li>
-<li><p><cite>Mapping[K, V_i]</cite> -&gt; <cite>Mapping[K, default_collate([V_1, V_2, …])]</cite></p></li>
-<li><p><cite>NamedTuple[V1_i, V2_i, …]</cite> -&gt; <cite>NamedTuple[default_collate([V1_1, V1_2, …]),
-default_collate([V2_1, V2_2, …]), …]</cite></p></li>
-<li><p><cite>Sequence[V1_i, V2_i, …]</cite> -&gt; <cite>Sequence[default_collate([V1_1, V1_2, …]),
-default_collate([V2_1, V2_2, …]), …]</cite></p></li>
-</ul>
-</div></blockquote>
+<span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose.collate_fn" title="Link to this definition"></a></dt>
+<dd><p>Convert list of data sampled from dataset into a batch of data, of which
+type consistent with the type of each data_itement in <code class="docutils literal notranslate"><span class="pre">data_batch</span></code>.</p>
+<p>Different from <code class="xref py py-func docutils literal notranslate"><span class="pre">pseudo_collate()</span></code>, <code class="docutils literal notranslate"><span class="pre">default_collate</span></code> will stack
+tensor contained in <code class="docutils literal notranslate"><span class="pre">data_batch</span></code> into a batched tensor with the
+first dimension batch size, and then move input tensor to the target
+device.</p>
+<p>Different from <code class="docutils literal notranslate"><span class="pre">default_collate</span></code> in pytorch, <code class="docutils literal notranslate"><span class="pre">default_collate</span></code> will
+not process <code class="docutils literal notranslate"><span class="pre">BaseDataElement</span></code>.</p>
+<p>This code is referenced from:
+<a class="reference external" href="https://github.com/pytorch/pytorch/blob/master/torch/utils/data/_utils/collate.py">Pytorch default_collate</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">default_collate</span></code> only accept input tensor with the same shape.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>batch</strong> – a single batch to be collated</p>
+<dd class="field-odd"><p><strong>data_batch</strong> (<em>Sequence</em>) – Data sampled from dataset.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Data in the same format as the data_itement of <code class="docutils literal notranslate"><span class="pre">data_batch</span></code>, of which
+tensors have been stacked, and ndarray, int, float have been
+converted to tensors.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example with a batch of `int`s:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
-<span class="go">tensor([0, 1, 2, 3])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example with a batch of `str`s:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">([</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">])</span>
-<span class="go">[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example with `Map` inside the batch:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">([{</span><span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">}])</span>
-<span class="go">{&#39;A&#39;: tensor([  0, 100]), &#39;B&#39;: tensor([  1, 100])}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example with `NamedTuple` inside the batch:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># xdoctest: +SKIP</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">Point</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Point&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">([</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
-<span class="go">Point(x=tensor([0, 1]), y=tensor([0, 1]))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example with `Tuple` inside the batch:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)])</span>
-<span class="go">[tensor([0, 2]), tensor([1, 3])]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example with `List` inside the batch:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]])</span>
-<span class="go">[tensor([0, 2]), tensor([1, 3])]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Two options to extend `default_collate` to handle specific type</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Option 1: Write custom collate function and invoke `default_collate`</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">custom_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="n">elem</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">... </span>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">CustomType</span><span class="p">):</span>  <span class="c1"># Some custom condition</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="o">...</span>
-<span class="gp">... </span>    <span class="k">else</span><span class="p">:</span>  <span class="c1"># Fall back to `default_collate`</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="n">default_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Option 2: In-place modify `default_collate_fn_map`</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">collate_customtype_fn</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">collate_fn_map</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">return</span> <span class="o">...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate_fn_map</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">CustoType</span><span class="p">,</span> <span class="n">collate_customtype_fn</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>  <span class="c1"># Handle `CustomType` automatically</span>
-</pre></div>
-</div>
 </dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose.input_columns">
+<span class="sig-name descname"><span class="pre">input_columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['bbox_ltwh',</span> <span class="pre">'bbox_conf']</span></em><a class="headerlink" href="#tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose.input_columns" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose.output_columns">
@@ -173,13 +142,13 @@ default_collate([V2_1, V2_2, …]), …]</cite></p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose.preprocess">
-<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">detection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/detect_single/topdown_mmpose_api.html#TopDownMMPose.preprocess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose.preprocess" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/detect_single/topdown_mmpose_api.html#TopDownMMPose.preprocess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose.preprocess" title="Link to this definition"></a></dt>
 <dd><p>Adapts the default input to your specific case.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>image</strong> – a numpy array of the current image</p></li>
-<li><p><strong>detections</strong> – a DataFrame containing all the detections pertaining to a single
+<li><p><strong>detection</strong> – a Series containing all the detections pertaining to a single
 image</p></li>
 <li><p><strong>metadata</strong> – additional information about the image</p></li>
 </ul>
@@ -195,7 +164,7 @@ image</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose.process">
-<span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/detect_single/topdown_mmpose_api.html#TopDownMMPose.process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose.process" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadatas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/detect_single/topdown_mmpose_api.html#TopDownMMPose.process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose.process" title="Link to this definition"></a></dt>
 <dd><p>The main processing function. Runs on GPU.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -207,8 +176,7 @@ image</p></li>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
-<dt>Either a DataFrame containing the new/updated detections</dt><dd><p>or a tuple containing detections and metadatas (in that order)
-The DataFrames can be either a list of Series, a list of DataFrames
+<dt>Either a DataFrame containing the new/updated detections.</dt><dd><p>The DataFrames can be either a list of Series, a list of DataFrames
 or a single DataFrame. The returned objects will be aggregated
 automatically according to the <cite>name</cite> of the Series/<cite>index</cite> of
 the DataFrame. <strong>It is thus mandatory here to name correctly
@@ -226,11 +194,6 @@ with the same name/index.</p>
 </dd></dl>
 
 </dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="tracklab.wrappers.detect_single.topdown_mmpose_api.mmpose_collate">
-<span class="sig-prename descclassname"><span class="pre">tracklab.wrappers.detect_single.topdown_mmpose_api.</span></span><span class="sig-name descname"><span class="pre">mmpose_collate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/detect_single/topdown_mmpose_api.html#mmpose_collate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.detect_single.topdown_mmpose_api.mmpose_collate" title="Link to this definition"></a></dt>
-<dd></dd></dl>
 
 </section>
 </section>

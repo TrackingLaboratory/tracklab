@@ -96,16 +96,14 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">mim</span> <span class="kn">import</span> <span class="n">get_model_info</span>
 <span class="kn">from</span> <span class="nn">mim.utils</span> <span class="kn">import</span> <span class="n">get_installed_path</span>
+<span class="kn">from</span> <span class="nn">mmpose.apis.inference</span> <span class="kn">import</span> <span class="n">dataset_meta_from_config</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
 <span class="kn">import</span> <span class="nn">mmcv</span>
-<span class="c1"># from mmcv.parallel import collate, scatter</span>
 <span class="kn">from</span> <span class="nn">mmpose.apis</span> <span class="kn">import</span> <span class="n">init_model</span>
-<span class="c1"># from mmpose.datasets.dataset_info import DatasetInfo</span>
-<span class="kn">from</span> <span class="nn">mmengine.dataset</span> <span class="kn">import</span> <span class="n">Compose</span>
+<span class="kn">from</span> <span class="nn">mmengine.dataset</span> <span class="kn">import</span> <span class="n">Compose</span><span class="p">,</span> <span class="n">default_collate</span>
 
-
-<span class="kn">from</span> <span class="nn">tracklab.pipeline</span> <span class="kn">import</span> <span class="n">ImageLevelModule</span>
+<span class="kn">from</span> <span class="nn">tracklab.pipeline</span> <span class="kn">import</span> <span class="n">ImageLevelModule</span><span class="p">,</span> <span class="n">DetectionLevelModule</span>
 <span class="kn">from</span> <span class="nn">tracklab.utils.openmmlab</span> <span class="kn">import</span> <span class="n">get_checkpoint</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -113,22 +111,20 @@
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="mmpose_collate">
-<a class="viewcode-back" href="../../../../api/pbtrack.wrappers.detect_single.html#tracklab.wrappers.detect_single.topdown_mmpose_api.mmpose_collate">[docs]</a>
-<span class="k">def</span> <span class="nf">mmpose_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">collate</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">))</span></div>
-
+<span class="c1"># def mmpose_collate(batch):</span>
+<span class="c1">#     return collate(batch, len(batch))</span>
 
 
 <div class="viewcode-block" id="TopDownMMPose">
 <a class="viewcode-back" href="../../../../api/pbtrack.wrappers.detect_single.html#tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose">[docs]</a>
-<span class="k">class</span> <span class="nc">TopDownMMPose</span><span class="p">(</span><span class="n">ImageLevelModule</span><span class="p">):</span>
-    <span class="n">collate_fn</span> <span class="o">=</span> <span class="n">mmpose_collate</span>
+<span class="k">class</span> <span class="nc">TopDownMMPose</span><span class="p">(</span><span class="n">DetectionLevelModule</span><span class="p">):</span>
+    <span class="n">collate_fn</span> <span class="o">=</span> <span class="n">default_collate</span>
+    <span class="n">input_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;bbox_ltwh&quot;</span><span class="p">,</span> <span class="s2">&quot;bbox_conf&quot;</span><span class="p">]</span>
     <span class="n">output_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;keypoints_xyc&quot;</span><span class="p">,</span> <span class="s2">&quot;keypoints_conf&quot;</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">config_name</span><span class="p">,</span> <span class="n">path_to_checkpoint</span><span class="p">,</span>
-                 <span class="n">vis_kp_threshold</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">min_num_vis_kp</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
+                 <span class="n">vis_kp_threshold</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">min_num_vis_kp</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
         <span class="n">model_df</span> <span class="o">=</span> <span class="n">get_model_info</span><span class="p">(</span><span class="n">package</span><span class="o">=</span><span class="s2">&quot;mmpose&quot;</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="p">[</span><span class="n">config_name</span><span class="p">])</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_df</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Multiple values found for the config name&quot;</span><span class="p">)</span>
@@ -139,83 +135,47 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">init_model</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path_to_config</span><span class="p">),</span> <span class="n">path_to_checkpoint</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vis_kp_threshold</span> <span class="o">=</span> <span class="n">vis_kp_threshold</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_num_vis_kp</span> <span class="o">=</span> <span class="n">min_num_vis_kp</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_info</span> <span class="o">=</span> <span class="n">DatasetInfo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">dataset_info</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">test_pipeline</span> <span class="o">=</span> <span class="n">Compose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">test_pipeline</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_info</span> <span class="o">=</span> <span class="n">dataset_meta_from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">)</span>
+
+        <span class="c1"># self.dataset_info = DatasetInfo(self.model.cfg.dataset_info)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_pipeline</span> <span class="o">=</span> <span class="n">Compose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">test_dataloader</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">pipeline</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TopDownMMPose.preprocess">
 <a class="viewcode-back" href="../../../../api/pbtrack.wrappers.detect_single.html#tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose.preprocess">[docs]</a>
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
-    <span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detection</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span>  <span class="c1"># BGR not RGB !</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;bbox&quot;</span><span class="p">:</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox_ltwh</span><span class="p">,</span>
-            <span class="s2">&quot;img&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span>
-            <span class="s2">&quot;bbox_score&quot;</span><span class="p">:</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox_conf</span><span class="p">,</span>
-            <span class="s2">&quot;bbox_id&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_info</span><span class="o">.</span><span class="n">dataset_name</span><span class="p">,</span>
-            <span class="s2">&quot;joints_3d&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
-                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">data_cfg</span><span class="o">.</span><span class="n">num_joints</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span>
-            <span class="p">),</span>
-            <span class="s2">&quot;joints_3d_visible&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
-                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">data_cfg</span><span class="o">.</span><span class="n">num_joints</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span>
-            <span class="p">),</span>
-            <span class="s2">&quot;rotation&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="s2">&quot;ann_info&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;image_size&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">data_cfg</span><span class="p">[</span><span class="s2">&quot;image_size&quot;</span><span class="p">]),</span>
-                <span class="s2">&quot;num_joints&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">data_cfg</span><span class="o">.</span><span class="n">num_joints</span><span class="p">,</span>
-                <span class="s2">&quot;flip_pairs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_info</span><span class="o">.</span><span class="n">flip_pairs</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">}</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_pipeline</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">detection</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+        <span class="n">data_info</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">img</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_RGB2BGR</span><span class="p">))</span>
+        <span class="n">data_info</span><span class="p">[</span><span class="s2">&quot;bbox&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">()[</span><span class="kc">None</span><span class="p">]</span>
+        <span class="n">data_info</span><span class="p">[</span><span class="s2">&quot;bbox_score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox_conf</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+        <span class="n">data_info</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">dataset_meta</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_pipeline</span><span class="p">(</span><span class="n">data_info</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="TopDownMMPose.process">
 <a class="viewcode-back" href="../../../../api/pbtrack.wrappers.detect_single.html#tracklab.wrappers.detect_single.topdown_mmpose_api.TopDownMMPose.process">[docs]</a>
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
-    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
-        <span class="n">batch</span> <span class="o">=</span> <span class="n">scatter</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">keypoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span>
-                <span class="n">img</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;img&quot;</span><span class="p">],</span>
-                <span class="n">img_metas</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;img_metas&quot;</span><span class="p">],</span>
-                <span class="n">return_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">return_heatmap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="p">)[</span><span class="s2">&quot;preds&quot;</span><span class="p">]</span>
-        <span class="n">keypoints</span><span class="p">[</span><span class="n">keypoints</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">vis_kp_threshold</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">keypoints</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">keypoints</span><span class="p">)</span>
-        <span class="n">confs</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">kp</span> <span class="ow">in</span> <span class="n">keypoints</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">kp</span><span class="p">[</span><span class="n">kp</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_num_vis_kp</span><span class="p">:</span>
-                <span class="n">confs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">metadatas</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">test_step</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+        <span class="n">kps_xyc</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">kps_conf</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">pred_instances</span>
+            <span class="n">keypoints</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">keypoints</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">visibility_scores</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">keypoints_visible</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">visibility_scores</span><span class="p">[</span><span class="n">visibility_scores</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">vis_kp_threshold</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">keypoints_xyc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">keypoints</span><span class="p">,</span> <span class="n">visibility_scores</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">visibility_scores</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_num_vis_kp</span><span class="p">:</span>
+                <span class="n">conf</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">confs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">kp</span><span class="p">[</span><span class="n">kp</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
-        <span class="n">detections</span><span class="p">[</span><span class="s2">&quot;keypoints_conf&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">confs</span>
-        <span class="n">detections</span><span class="p">[</span><span class="s2">&quot;keypoints_xyc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keypoints</span>
+                <span class="n">conf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">visibility_scores</span><span class="p">[</span><span class="n">visibility_scores</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">])</span>
+            <span class="n">kps_xyc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">keypoints_xyc</span><span class="p">)</span>
+            <span class="n">kps_conf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+        <span class="n">detections</span><span class="p">[</span><span class="s2">&quot;keypoints_conf&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kps_conf</span>
+        <span class="n">detections</span><span class="p">[</span><span class="s2">&quot;keypoints_xyc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kps_xyc</span>
         <span class="k">return</span> <span class="n">detections</span></div>
+</div>
 
-
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    from mmpose.core.post_processing import oks_nms</span>
-<span class="sd">    def postprocess(self, detections: pd.DataFrame, metadata: pd.DataFrame = None):</span>
-<span class="sd">        # FIXME do we want it here ? or in the tracker ?</span>
-<span class="sd">        # we must be as lax as possible here and be severe in the tracker</span>
-<span class="sd">        img_kpts = []</span>
-<span class="sd">        for _, detection in detections.iterrows():</span>
-<span class="sd">            img_kpts.append(</span>
-<span class="sd">                {</span>
-<span class="sd">                    &quot;keypoints&quot;: detection.keypoints_xyc,</span>
-<span class="sd">                    &quot;score&quot;: detections.score,</span>
-<span class="sd">                    &quot;area&quot;: detections.bbox_ltwh[2] * detections.bbox_ltwh[3],</span>
-<span class="sd">                }</span>
-<span class="sd">            )</span>
-<span class="sd">        keep = oks_nms(</span>
-<span class="sd">            img_kpts,</span>
-<span class="sd">            self.cfg.oks_threshold,</span>
-<span class="sd">            vis_thr=self.cfg.visibility_threshold,</span>
-<span class="sd">            sigmas=self.dataset_info.sigmas,</span>
-<span class="sd">        )</span>
-<span class="sd">        detections = detections.iloc[keep]  # FIXME won&#39;t work</span>
-<span class="sd">        return detections</span>
-<span class="sd">    &quot;&quot;&quot;</span></div>
 
 </pre></div>
 
