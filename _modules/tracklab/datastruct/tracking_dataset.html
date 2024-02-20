@@ -87,11 +87,15 @@
            <div itemprop="articleBody">
              
   <h1>Source code for tracklab.datastruct.tracking_dataset</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
-
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="SetsDict">
@@ -189,7 +193,93 @@
             <span class="n">tiny_image_metadatas</span><span class="p">,</span>
             <span class="n">tiny_detections</span><span class="p">,</span>
             <span class="n">tiny_image_gt</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_mot_encoding</span><span class="p">(</span><span class="n">detections</span><span class="p">,</span> <span class="n">image_metadatas</span><span class="p">,</span> <span class="n">video_metadatas</span><span class="p">,</span> <span class="n">bbox_column</span><span class="p">):</span>
+        <span class="n">detections</span> <span class="o">=</span> <span class="n">detections</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">image_metadatas</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_metadatas</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+            <span class="n">image_metadatas</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">detections</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">,</span>
+            <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span>
+            <span class="n">suffixes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;_y&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">len_before_drop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span>
+            <span class="n">subset</span><span class="o">=</span><span class="p">[</span>
+                <span class="s2">&quot;frame&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;track_id&quot;</span><span class="p">,</span>
+                <span class="n">bbox_column</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">how</span><span class="o">=</span><span class="s2">&quot;any&quot;</span><span class="p">,</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">len_before_drop</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Dropped </span><span class="si">{}</span><span class="s2"> rows with NA values&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">len_before_drop</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;track_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;track_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;bb_left&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">bbox_column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;bb_top&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">bbox_column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;bb_width&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">bbox_column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;bb_height&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">bbox_column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">x</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df</span>
+
+
+<div class="viewcode-block" id="TrackingDataset.save_for_eval">
+<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.tracking_dataset.TrackingDataset.save_for_eval">[docs]</a>
+    <span class="k">def</span> <span class="nf">save_for_eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detections</span><span class="p">,</span> <span class="n">image_metadatas</span><span class="p">,</span> <span class="n">video_metadatas</span><span class="p">,</span>
+                                     <span class="n">save_folder</span><span class="p">,</span> <span class="n">bbox_column_for_eval</span><span class="o">=</span><span class="s2">&quot;bbox_ltwh&quot;</span><span class="p">,</span>
+                                     <span class="n">save_classes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_ground_truth</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save predictions in MOT Challenge format.&quot;&quot;&quot;</span>
+        <span class="n">mot_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mot_encoding</span><span class="p">(</span><span class="n">detections</span><span class="p">,</span> <span class="n">image_metadatas</span><span class="p">,</span> <span class="n">video_metadatas</span><span class="p">,</span> <span class="n">bbox_column_for_eval</span><span class="p">)</span>
+
+        <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_folder</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># MOT Challenge format = &lt;frame&gt;, &lt;id&gt;, &lt;bb_left&gt;, &lt;bb_top&gt;, &lt;bb_width&gt;, &lt;bb_height&gt;, &lt;conf&gt;, &lt;x&gt;, &lt;y&gt;, &lt;z&gt;</span>
+        <span class="c1"># videos_names = mot_df[&quot;video_name&quot;].unique()</span>
+        <span class="k">for</span> <span class="nb">id</span><span class="p">,</span> <span class="n">video</span> <span class="ow">in</span> <span class="n">video_metadatas</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">video</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.txt&quot;</span><span class="p">)</span>
+            <span class="n">file_df</span> <span class="o">=</span> <span class="n">mot_df</span><span class="p">[</span><span class="n">mot_df</span><span class="p">[</span><span class="s2">&quot;video_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">id</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">file_df</span><span class="p">[</span><span class="s2">&quot;frame&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">file_df</span><span class="p">[</span><span class="s2">&quot;frame&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_df</span><span class="p">[</span><span class="s2">&quot;frame&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># MOT Challenge format starts at 1</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">file_df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="n">file_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s2">&quot;frame&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">clazz</span> <span class="o">=</span> <span class="s2">&quot;category_id&quot;</span> <span class="k">if</span> <span class="n">save_classes</span> <span class="k">else</span> <span class="s2">&quot;x&quot;</span>
+                <span class="n">file_df</span><span class="p">[</span>
+                    <span class="p">[</span>
+                        <span class="s2">&quot;frame&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;track_id&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;bb_left&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;bb_top&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;bb_width&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;bb_height&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;bbox_conf&quot;</span><span class="p">,</span>
+                        <span class="n">clazz</span><span class="p">,</span>
+                        <span class="s2">&quot;y&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;z&quot;</span><span class="p">,</span>
+                    <span class="p">]</span>
+                <span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+                    <span class="n">file_path</span><span class="p">,</span>
+                    <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TrackingDataset.process_trackeval_results">
+<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.tracking_dataset.TrackingDataset.process_trackeval_results">[docs]</a>
+    <span class="k">def</span> <span class="nf">process_trackeval_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">dataset_config</span><span class="p">,</span> <span class="n">eval_config</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TrackEval results = </span><span class="si">{</span><span class="n">results</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+</div>
 
 </pre></div>
 

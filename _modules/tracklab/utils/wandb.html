@@ -158,29 +158,31 @@
 <div class="viewcode-block" id="log_metric">
 <a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.wandb.log_metric">[docs]</a>
 <span class="k">def</span> <span class="nf">log_metric</span><span class="p">(</span><span class="n">res_dict</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">video_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">wandb</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
-            <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">res_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
-            <span class="n">step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">video_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">video_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">video_dict</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
-            <span class="n">video_df</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;video&quot;</span><span class="p">,</span> <span class="n">video_df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-            <span class="n">wandb</span><span class="o">.</span><span class="n">log</span><span class="p">({</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/videos&quot;</span><span class="p">:</span> <span class="n">video_df</span><span class="p">},</span> <span class="n">step</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="k">except</span> <span class="n">wandb</span><span class="o">.</span><span class="n">Error</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Wandb error, skipping logging&quot;</span><span class="p">)</span>
-        <span class="k">pass</span></div>
+    <span class="k">if</span> <span class="n">use_wandb</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">res_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+                <span class="n">step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">video_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">video_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">video_dict</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+                <span class="n">video_df</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;video&quot;</span><span class="p">,</span> <span class="n">video_df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+                <span class="n">wandb</span><span class="o">.</span><span class="n">log</span><span class="p">({</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/videos&quot;</span><span class="p">:</span> <span class="n">video_df</span><span class="p">},</span> <span class="n">step</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">wandb</span><span class="o">.</span><span class="n">Error</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Wandb error, skipping logging&quot;</span><span class="p">)</span>
+            <span class="k">pass</span></div>
 
 
 
 <div class="viewcode-block" id="log">
 <a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.wandb.log">[docs]</a>
 <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">res_dict</span><span class="p">):</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">wandb</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">res_dict</span><span class="p">)</span>
-    <span class="k">except</span> <span class="n">wandb</span><span class="o">.</span><span class="n">Error</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Wandb error, skipping logging&quot;</span><span class="p">)</span>
-        <span class="k">pass</span></div>
+    <span class="k">if</span> <span class="n">use_wandb</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">res_dict</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">wandb</span><span class="o">.</span><span class="n">Error</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Wandb error, skipping logging&quot;</span><span class="p">)</span>
+            <span class="k">pass</span></div>
 
 
 

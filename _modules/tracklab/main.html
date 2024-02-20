@@ -117,7 +117,7 @@
 
     <span class="c1"># Instantiate all modules</span>
     <span class="n">tracking_dataset</span> <span class="o">=</span> <span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
-    <span class="n">evaluator</span> <span class="o">=</span> <span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">eval</span><span class="p">)</span>
+    <span class="n">evaluator</span> <span class="o">=</span> <span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">eval</span><span class="p">,</span> <span class="n">tracking_dataset</span><span class="o">=</span><span class="n">tracking_dataset</span><span class="p">)</span>
 
     <span class="n">modules</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">pipeline</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
