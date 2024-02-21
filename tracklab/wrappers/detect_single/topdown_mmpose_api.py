@@ -7,16 +7,14 @@ import requests
 import numpy as np
 from mim import get_model_info
 from mim.utils import get_installed_path
+from mmpose.apis.inference import dataset_meta_from_config
 from tqdm import tqdm
 
 import mmcv
-# from mmcv.parallel import collate, scatter
 from mmpose.apis import init_model
-# from mmpose.datasets.dataset_info import DatasetInfo
-from mmengine.dataset import Compose
+from mmengine.dataset import Compose, default_collate
 
-
-from tracklab.pipeline import ImageLevelModule
+from tracklab.pipeline import ImageLevelModule, DetectionLevelModule
 from tracklab.utils.openmmlab import get_checkpoint
 
 import logging
@@ -24,17 +22,18 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def mmpose_collate(batch):
-    return collate(batch, len(batch))
+# def mmpose_collate(batch):
+#     return collate(batch, len(batch))
 
 
-class TopDownMMPose(ImageLevelModule):
-    collate_fn = mmpose_collate
+class TopDownMMPose(DetectionLevelModule):
+    collate_fn = default_collate
+    input_columns = ["bbox_ltwh", "bbox_conf"]
     output_columns = ["keypoints_xyc", "keypoints_conf"]
 
     def __init__(self, device, batch_size, config_name, path_to_checkpoint,
-                 vis_kp_threshold=0.4, min_num_vis_kp=3):
-        super().__init__(device, batch_size)
+                 vis_kp_threshold=0.4, min_num_vis_kp=3, **kwargs):
+        super().__init__(batch_size)
         model_df = get_model_info(package="mmpose", configs=[config_name])
         if len(model_df) != 1:
             raise ValueError("Multiple values found for the config name")
@@ -45,74 +44,38 @@ class TopDownMMPose(ImageLevelModule):
         self.model = init_model(str(path_to_config), path_to_checkpoint, device)
         self.vis_kp_threshold = vis_kp_threshold
         self.min_num_vis_kp = min_num_vis_kp
-        self.dataset_info = DatasetInfo(self.model.cfg.dataset_info)
-        self.test_pipeline = Compose(self.model.cfg.test_pipeline)
+        self.dataset_info = dataset_meta_from_config(self.model.cfg, "test")
+
+        # self.dataset_info = DatasetInfo(self.model.cfg.dataset_info)
+        self.test_pipeline = Compose(self.model.cfg.test_dataloader.dataset.pipeline)
 
     @torch.no_grad()
-    def preprocess(self, detection: pd.Series, metadata: pd.Series):
-        image = cv2.imread(metadata.file_path)  # BGR not RGB !
-        data = {
-            "bbox": detection.bbox_ltwh,
-            "img": image,
-            "bbox_score": detection.bbox_conf,
-            "bbox_id": 0,
-            "dataset": self.dataset_info.dataset_name,
-            "joints_3d": np.zeros(
-                (self.model.cfg.data_cfg.num_joints, 3), dtype=np.float32
-            ),
-            "joints_3d_visible": np.zeros(
-                (self.model.cfg.data_cfg.num_joints, 3), dtype=np.float32
-            ),
-            "rotation": 0,
-            "ann_info": {
-                "image_size": np.array(self.model.cfg.data_cfg["image_size"]),
-                "num_joints": self.model.cfg.data_cfg.num_joints,
-                "flip_pairs": self.dataset_info.flip_pairs,
-            },
-        }
-        return self.test_pipeline(data)
+    def preprocess(self, image, detection: pd.Series, metadata: pd.Series):
+        data_info = dict(img=cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        data_info["bbox"] = detection.bbox.ltrb()[None]
+        data_info["bbox_score"] = detection.bbox_conf[None]
+        data_info.update(self.model.dataset_meta)
+
+        return self.test_pipeline(data_info)
 
     @torch.no_grad()
-    def process(self, batch, detections: pd.DataFrame):
-        batch = scatter(batch, [self.device])[0]
-        keypoints = self.model(
-                img=batch["img"],
-                img_metas=batch["img_metas"],
-                return_loss=False,
-                return_heatmap=False,
-            )["preds"]
-        keypoints[keypoints[:, :, 2] < self.vis_kp_threshold, 2] = 0
-        keypoints = list(keypoints)
-        confs = []
-        for kp in keypoints:
-            if kp[kp[:, 2] != 0].shape[0] < self.min_num_vis_kp:
-                confs.append(0.)
+    def process(self, batch, detections: pd.DataFrame, metadatas: pd.DataFrame):
+        results = self.model.test_step(batch)
+        kps_xyc = []
+        kps_conf = []
+        for result in results:
+            result = result.pred_instances
+            keypoints = result.keypoints[0]
+            visibility_scores = result.keypoints_visible[0]
+            visibility_scores[visibility_scores < self.vis_kp_threshold] = 0
+            keypoints_xyc = np.concatenate([keypoints, visibility_scores[:, None]], axis=-1)
+            if len(np.nonzero(visibility_scores)[0]) < self.min_num_vis_kp:
+                conf = 0
             else:
-                confs.append(np.mean(kp[kp[:, 2] != 0, 2]))
-        detections["keypoints_conf"] = confs
-        detections["keypoints_xyc"] = keypoints
+                conf = np.mean(visibility_scores[visibility_scores != 0])
+            kps_xyc.append(keypoints_xyc)
+            kps_conf.append(conf)
+        detections["keypoints_conf"] = kps_conf
+        detections["keypoints_xyc"] = kps_xyc
         return detections
 
-    """
-    from mmpose.core.post_processing import oks_nms
-    def postprocess(self, detections: pd.DataFrame, metadata: pd.DataFrame = None):
-        # FIXME do we want it here ? or in the tracker ?
-        # we must be as lax as possible here and be severe in the tracker
-        img_kpts = []
-        for _, detection in detections.iterrows():
-            img_kpts.append(
-                {
-                    "keypoints": detection.keypoints_xyc,
-                    "score": detections.score,
-                    "area": detections.bbox_ltwh[2] * detections.bbox_ltwh[3],
-                }
-            )
-        keep = oks_nms(
-            img_kpts,
-            self.cfg.oks_threshold,
-            vis_thr=self.cfg.visibility_threshold,
-            sigmas=self.dataset_info.sigmas,
-        )
-        detections = detections.iloc[keep]  # FIXME won't work
-        return detections
-    """
