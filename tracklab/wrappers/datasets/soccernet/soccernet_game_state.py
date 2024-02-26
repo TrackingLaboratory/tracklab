@@ -44,7 +44,7 @@ class SoccerNetGameState(TrackingDataset):
         # In all keys, replace the substring "HOTA" with "GS-HOTA"
         combined_results['GS-HOTA'] = {k.replace('HOTA', 'GS-HOTA'): v for k, v in
                                        combined_results['GS-HOTA'].items()}
-        log.info(f"SoccerNet Game State Recognition performance GS-HOTA = {combined_results['GS-HOTA']['GS-HOTA']}% (ocnfig: EVAL_SPACE={dataset_config['EVAL_SPACE']}, USE_JERSEY_NUMBERS={dataset_config['USE_JERSEY_NUMBERS']}, USE_TEAMS={dataset_config['USE_TEAMS']}, USE_ROLES={dataset_config['USE_ROLES']})")
+        log.info(f"SoccerNet Game State Recognition performance GS-HOTA = {combined_results['GS-HOTA']['GS-HOTA']}% (config: EVAL_SPACE={dataset_config['EVAL_SPACE']}, USE_JERSEY_NUMBERS={dataset_config['USE_JERSEY_NUMBERS']}, USE_TEAMS={dataset_config['USE_TEAMS']}, USE_ROLES={dataset_config['USE_ROLES']})")
         log.info(f"Have a look at 'tracklab/tracklab/configs/dataset/soccernet_gs.yaml' for more details about the GS-HOTA metric and the evaluation configuration.")
         return combined_results
 
