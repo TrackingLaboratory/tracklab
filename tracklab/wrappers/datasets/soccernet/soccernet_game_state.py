@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 import zipfile
 import numpy as np
 import pandas as pd
@@ -84,7 +85,6 @@ class SoccerNetGameState(TrackingDataset):
     @staticmethod
     def soccernet_encoding(dataframe: pd.DataFrame, supercategory):
         dataframe["supercategory"] = supercategory
-        dataframe = dataframe.map(lambda x: x.tolist() if isinstance(x, np.ndarray) else x)
         dataframe = dataframe.replace({np.nan: None})
         if supercategory == "object":
             # Remove detections that don't have mandatory columns
@@ -100,10 +100,7 @@ class SoccerNetGameState(TrackingDataset):
             )
             dataframe = dataframe.rename(columns={"bbox_ltwh": "bbox_image", "jersey_number": "jersey"})
             dataframe["track_id"] = dataframe["track_id"]
-            dataframe["attributes"] = dataframe.apply(
-                lambda x: x[x.index.intersection(["role", "jersey", "team"])].to_dict(),
-                axis=1
-            )
+            dataframe["attributes"] = [{"role": x.get("role"), "jersey": x.get("jersey"), "team": x.get("team")} for n, x in dataframe.iterrows()]
             dataframe["id"] = dataframe.index
             dataframe = dataframe[dataframe.columns.intersection(
                 ["id", "image_id", "video_id", "track_id", "supercategory",
@@ -127,6 +124,8 @@ class SoccerNetGameState(TrackingDataset):
         dataframe["video_id"] = dataframe["video_id"].apply(str)
         dataframe["image_id"] = dataframe["image_id"].apply(str)
         dataframe["id"] = dataframe["id"].apply(str)
+        dataframe = dataframe.map(
+            lambda x: x.tolist() if isinstance(x, np.ndarray) else x)
         return dataframe
 
 
