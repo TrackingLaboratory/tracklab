@@ -163,7 +163,7 @@ class TrackingEngine(ABC):
                 batch_input_detections,
                 batch_metadatas)
         else:
-            batch_detections = detections.loc[idxs]
+            batch_detections = detections.loc[list(idxs)]
             if not image_pred.empty:
                 batch_metadatas = image_pred.loc[np.isin(image_pred.index, batch_detections.image_id)]
             else:
