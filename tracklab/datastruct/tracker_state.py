@@ -63,6 +63,9 @@ class TrackerState(AbstractContextManager):
                     with zf.open(image_file) as fp:
                         images = pickle.load(fp)
                         load_columns["image"] = set(images.columns)
+        elif load_from_groundtruth:
+            load_columns["image"] = set(self.image_gt.columns)
+            load_columns["detection"] = set(self.detections_gt.columns)
 
         self.input_columns = defaultdict(set)
         self.output_columns = defaultdict(set)
@@ -74,7 +77,7 @@ class TrackerState(AbstractContextManager):
                 self.forget_columns[level] += getattr(module, "forget_columns", [])
 
         self.load_columns = {"detection": list(), "image": list()}
-        if self.load_file:
+        if self.load_file or load_from_groundtruth:
             self.load_columns["detection"] = list(
                 (load_columns["detection"] - self.output_columns["detection"])
                 | self.input_columns["detection"]
@@ -111,12 +114,12 @@ class TrackerState(AbstractContextManager):
                 load_columns = {k: list(set(self.load_from_groundtruth.get(k, [])) & set(v))
                                 for k, v in load_columns.items()
                                 }
-            self.detections_pred = self.detections_gt.copy()[
+            self.detections_pred_gt = self.detections_gt.copy()[
                 self.detections_gt.columns.intersection(load_columns["detection"]+["image_id", "video_id"])
             ]
-            self.image_pred = merge_dataframes(
+            self.image_pred_gt = merge_dataframes(
                 self.image_metadatas.copy(), self.image_gt.copy()
-            )[load_columns["image"]+["video_id", "file_path", "frame"]]
+            )[list(set(load_columns["image"]) | {"video_id", "file_path", "frame"})]
 
     def load_detections_pred_from_json(self, json_file):
         anns_path = Path(json_file)
@@ -296,8 +299,8 @@ class TrackerState(AbstractContextManager):
         video_detections = pd.DataFrame()
         video_image_preds = self.image_metadatas[self.image_metadatas.video_id == self.video_id]
         if self.load_from_groundtruth:
-            video_detections = self.detections_pred[self.detections_pred.video_id == self.video_id]
-            video_image_preds = self.image_pred[self.image_pred.video_id == self.video_id]
+            video_detections = self.detections_pred_gt[self.detections_pred_gt.video_id == self.video_id]
+            video_image_preds = self.image_pred_gt[self.image_pred_gt.video_id == self.video_id]
         if self.load_file is not None:
             if f"{self.video_id}.pkl" in self.zf["load"].namelist():
                 with self.zf["load"].open(f"{self.video_id}.pkl", "r") as fp:
