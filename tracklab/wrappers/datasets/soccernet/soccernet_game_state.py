@@ -178,6 +178,7 @@ def dict_to_df_detections(annotation_dict, categories_list):
     
     df['bbox_ltwh'] = df.apply(lambda row: xywh_to_ltwh([row['bbox_image']['x_center'], row['bbox_image']['y_center'], row['bbox_image']['w'], row['bbox_image']['h']]), axis=1)
     df['team'] = df.apply(lambda row: row['attributes']['team'], axis=1)
+    df['team_cluster'] = (df["team"] == "left").astype(float)
     df['role'] = df.apply(lambda row: row['attributes']['role'], axis=1)
     df['jersey_number'] = df.apply(lambda row: row['attributes']['jersey'], axis=1)
     df['position'] = None # df.apply(lambda row: row['attributes']['position'], axis=1)         for now there is no position in the json file
@@ -185,7 +186,8 @@ def dict_to_df_detections(annotation_dict, categories_list):
     df['track_id'] = df['track_id'].astype(int)
     # df['id'] = df['id']
 
-    columns = ['id', 'image_id', 'track_id', 'bbox_ltwh', 'bbox_pitch', 'team', 'role', 'jersey_number', 'position', 'category']
+    columns = ['id', 'image_id', 'track_id', 'bbox_ltwh', 'bbox_pitch', 'team_cluster',
+               'team', 'role', 'jersey_number', 'position', 'category']
     df = df[columns]
     
     video_level_categories = list(df['category'].unique())
