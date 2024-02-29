@@ -105,8 +105,8 @@ class TrackerState(AbstractContextManager):
     def load_groundtruth(self, load_columns):
         from tracklab.engine.engine import merge_dataframes
         if self.pipeline.is_empty():
-            self.detections_pred = self.detections_gt.copy()  # load all columns if pipeline is empty
-            self.image_pred = merge_dataframes(self.image_metadatas.copy(), self.image_gt.copy())
+            self.detections_pred_gt = self.detections_gt.copy()  # load all columns if pipeline is empty
+            self.image_pred_gt = merge_dataframes(self.image_metadatas.copy(), self.image_gt.copy())
         else:
             if isinstance(self.load_from_groundtruth, Mapping):
                 if "detection" in self.load_from_groundtruth:
