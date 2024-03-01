@@ -38,7 +38,7 @@ class OCSORT(ImageLevelModule):
             ltrb = detection.bbox.ltrb()
             conf = detection.bbox.conf()
             cls = detection.category_id
-            tracklab_id = detection.name
+            tracklab_id = int(detection.name)
             processed_detections.append(
                 np.array([*ltrb, conf, cls, tracklab_id])
             )
