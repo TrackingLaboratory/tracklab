@@ -134,7 +134,7 @@
             <span class="n">ltrb</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">()</span>
             <span class="n">conf</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">conf</span><span class="p">()</span>
             <span class="bp">cls</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">category_id</span>
-            <span class="n">tracklab_id</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">tracklab_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             <span class="n">processed_detections</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">*</span><span class="n">ltrb</span><span class="p">,</span> <span class="n">conf</span><span class="p">,</span> <span class="bp">cls</span><span class="p">,</span> <span class="n">tracklab_id</span><span class="p">])</span>
             <span class="p">)</span>
