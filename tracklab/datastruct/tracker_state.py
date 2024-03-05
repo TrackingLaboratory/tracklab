@@ -114,9 +114,12 @@ class TrackerState(AbstractContextManager):
                 load_columns = {k: list(set(self.load_from_groundtruth.get(k, [])) & set(v))
                                 for k, v in load_columns.items()
                                 }
-            self.detections_pred_gt = self.detections_gt.copy()[
-                self.detections_gt.columns.intersection(load_columns["detection"]+["image_id", "video_id"])
-            ]
+            if len(load_columns["detection"]) == 0:
+                self.detections_pred_gt = pd.DataFrame(columns=["video_id","image_id"])
+            else:
+                self.detections_pred_gt = self.detections_gt.copy()[
+                    self.detections_gt.columns.intersection(load_columns["detection"]+["image_id", "video_id"])
+                ]
             self.image_pred_gt = merge_dataframes(
                 self.image_metadatas.copy(), self.image_gt.copy()
             )[list(set(load_columns["image"]) | {"video_id", "file_path", "frame"})]
