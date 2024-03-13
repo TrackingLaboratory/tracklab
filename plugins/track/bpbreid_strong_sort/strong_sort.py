@@ -58,11 +58,9 @@ class StrongSORT(object):
         visibility_scores,
         confidences,
         classes,
-        ori_img,
         frame,
-        keypoints,
+        keypoints=None,
     ):
-        self.height, self.width = ori_img.shape[:2]
         # generate detections
         detections = [
             Detection(
@@ -77,7 +75,7 @@ class StrongSORT(object):
                         visibility_scores[i].cpu().detach().numpy()
                     ),
                 },
-                keypoints=keypoints[i].cpu().detach().numpy(),
+                keypoints=keypoints[i].cpu().detach().numpy() if keypoints is not None else None,
             )
             for i, conf in enumerate(confidences)
         ]
@@ -85,6 +83,7 @@ class StrongSORT(object):
         detections = self.filter_detections(detections)
 
         # update tracker
+        self.tracker.predict()
         assert self.tracker.predict_done, "predict() must be called before update()"
         if len(detections) > 0:
             self.tracker.update(detections, classes, confidences)
