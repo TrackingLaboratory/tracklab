@@ -14,8 +14,6 @@ log = logging.getLogger(__name__)
 class BPBReIDStrongSORT(ImageLevelModule):
     input_columns = [
         "bbox_ltwh",
-        "keypoints_xyc",
-        "keypoints_conf",
         "embeddings",
         "visibility_scores",
     ]
@@ -73,44 +71,46 @@ class BPBReIDStrongSORT(ImageLevelModule):
 
     @torch.no_grad()
     def preprocess(self, image, detections: pd.DataFrame, metadata: pd.Series):
+        if len(detections) == 0:
+            return {
+            "id": [],
+            "bbox_ltwh": [],
+            "reid_features": [],
+            "visibility_scores": [],
+            "scores": [],
+            "classes": [],
+            "frame": [],
+        }
         if hasattr(detections, "bbox_conf"):
             score = detections.bbox.conf()
         else:
             score = detections.keypoints_conf
-        input_tuple = (
-            detections.index.to_numpy(),
-            np.stack(detections.bbox_ltwh),
-            np.stack(detections.embeddings),
-            np.stack(detections.visibility_scores),
-            np.stack(score),
-            np.zeros(len(detections.index)),
-            np.ones(len(detections.index)) * metadata.frame,
-            np.stack(detections.keypoints_xyc),
-        )
+        input_tuple = {
+            "id": detections.index.to_numpy(),
+            "bbox_ltwh": np.stack(detections.bbox_ltwh),
+            "reid_features": np.stack(detections.embeddings),
+            "visibility_scores": np.stack(detections.visibility_scores),
+            "scores": np.stack(score),
+            "classes": np.zeros(len(detections.index)),
+            "frame": np.ones(len(detections.index)) * metadata.frame,
+        }
+        if "keypoints_xyc" in detections:
+            input_tuple["keypoints"] = np.stack(detections.keypoints_xyc)
         return input_tuple
 
     @torch.no_grad()
-    def process(self, batch, image, detections: pd.DataFrame):
-        (
-            id,
-            bbox_ltwh,
-            reid_features,
-            visibility_scores,
-            scores,
-            classes,
-            frame,
-            keypoints,
-        ) = batch
+    def process(self, batch, detections: pd.DataFrame, metadatas: pd.DataFrame):
+        if len(detections) == 0:
+            return []
         results = self.model.update(
-            id,
-            bbox_ltwh,
-            reid_features,
-            visibility_scores,
-            scores,
-            classes,
-            image,
-            frame,
-            keypoints,
+            batch["id"][0],
+            batch["bbox_ltwh"][0],
+            batch["reid_features"][0],
+            batch["visibility_scores"][0],
+            batch["scores"][0],
+            batch["classes"][0],
+            batch["frame"][0],
+            batch["keypoints"][0] if "keypoints" in batch else None,
         )
         assert set(results.index).issubset(
             detections.index
