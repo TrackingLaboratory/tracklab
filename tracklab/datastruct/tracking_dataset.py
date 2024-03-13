@@ -134,9 +134,16 @@ class TrackingDataset(ABC):
         return df
 
 
-    def save_for_eval(self, detections, image_metadatas, video_metadatas,
-                                     save_folder, bbox_column_for_eval="bbox_ltwh",
-                                     save_classes=False, is_ground_truth=False):
+    def save_for_eval(self,
+                      detections: pd.DataFrame,
+                      image_metadatas: pd.DataFrame,
+                      video_metadatas: pd.DataFrame,
+                      save_folder: str,
+                      bbox_column_for_eval="bbox_ltwh",
+                      save_classes=False,
+                      is_ground_truth=False,
+                      save_zip=True
+                      ):
         """Save predictions in MOT Challenge format."""
         mot_df = self._mot_encoding(detections, image_metadatas, video_metadatas, bbox_column_for_eval)
 
