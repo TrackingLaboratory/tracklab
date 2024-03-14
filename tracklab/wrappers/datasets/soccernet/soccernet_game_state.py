@@ -353,9 +353,10 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
         pitch_camera = pd.concat(annotations_pitch_camera_list, ignore_index=True)
         pitch_gt = (pitch_camera[["image_id", "video_id", "lines"]]
                     [pitch_camera.supercategory=="pitch"].set_index("image_id", drop=True))
-        camera_gt = (pitch_camera[["image_id", "parameters", "relative_mean_reproj", "accuracy@5"]]
-                    [pitch_camera.supercategory=="camera"].set_index("image_id", drop=True))
-        image_gt = pitch_gt.join(camera_gt)
+        # camera_gt = (pitch_camera[["image_id", "parameters", "relative_mean_reproj", "accuracy@5"]]
+        #             [pitch_camera.supercategory=="camera"].set_index("image_id", drop=True))
+        # image_gt = pitch_gt.join(camera_gt)
+        image_gt = pitch_gt
 
         # Add category id to detections
         category_to_id = {category['name']: category['id'] for category in categories_list}
