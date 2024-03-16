@@ -1,0 +1,37 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: TrackLab
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Vladimir
+    family-names: Somers
+    email: vladimir.somers@gmail.com
+    affiliation: 'UCLouvain, EPFL'
+    orcid: '0000-0001-5787-4276'
+  - given-names: Victor
+    email: victor.joos@uclouvain.be
+    affiliation: UCLouvain
+    family-names: Joos
+  - given-names: Baptiste
+    family-names: Standaert
+    email: baptiste.standaert@uclouvain.be
+    affiliation: UCLouvain
+repository-code: 'https://github.com/TrackingLaboratory/tracklab'
+abstract: >-
+  A modular end-to-end video tracking framework for research
+  and development
+keywords:
+  - Multi-Object Tracking
+  - Video Understanding
+  - Computer Vision
+  - Deep Learning
+  - Object Detection
+  - Re-Identification
+  - YOLO
+version: 1.0.0
+date-released: '2024-02-05'
