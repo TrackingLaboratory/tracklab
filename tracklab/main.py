@@ -106,6 +106,8 @@ def evaluate(cfg, evaluator, tracker_state):
     if cfg.get("eval_tracking", True) and cfg.dataset.nframes == -1:
         log.info("Starting evaluation.")
         evaluator.run(tracker_state)
+    elif cfg.get("eval_tracking", False):
+        log.warning("Skipping evaluation because 'eval_tracking' was set to False.")
     else:
         log.warning(
             "Skipping evaluation because only part of video was tracked (i.e. 'cfg.dataset.nframes' was not set "
