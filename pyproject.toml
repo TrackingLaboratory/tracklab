@@ -37,6 +37,7 @@ mmpose = "^1.2.0"
 trackeval = {git = "https://github.com/SoccerNet/sn-trackeval.git"}
 yt-dlp = "^2023.12.30"
 gdown = "^4.7.1"
+pandas = "^2.1.0"
 
 [tool.poetry.scripts]
 tracklab = 'tracklab.main:main'
