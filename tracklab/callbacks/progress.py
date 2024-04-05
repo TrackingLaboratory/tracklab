@@ -14,8 +14,10 @@ log = logging.getLogger(__name__)
 
 
 class Progressbar(Callback):
-    def __new__(cls, use_rich=False):
-        if not use_rich:
+    def __new__(cls, use_rich=False, dummy=False):
+        if dummy:
+            return super().__new__(cls)
+        elif not use_rich:
             return super().__new__(TQDMProgressbar)
         else:
             return super().__new__(RichProgressbar)
