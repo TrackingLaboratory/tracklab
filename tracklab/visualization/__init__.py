@@ -1,1 +1,2 @@
+from .detection import SimpleDetectionVisualizer, EllipseDetectionVisualizer
 from .visualization_engine import VisualizationEngine
