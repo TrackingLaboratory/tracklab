@@ -1,3 +1,3 @@
-from .detection import SimpleDetectionVisualizer, EllipseDetectionVisualizer
+from .detection import SimpleDetectionVisualizer, DefaultDetectionVisualizer, EllipseDetectionVisualizer
 from .tracking import TrackingLineVisualizer
 from .visualization_engine import VisualizationEngine

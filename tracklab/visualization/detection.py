@@ -4,9 +4,25 @@ from tracklab.core.visualizer import DetectionVisualizer
 from tracklab.utils.cv2 import draw_bbox
 
 
+class DefaultDetectionVisualizer(DetectionVisualizer):
+    def __init__(self, draw_prediction=True, draw_ground_truth=False):
+        super().__init__()
+        self.draw_prediction = draw_prediction
+        self.draw_ground_truth = draw_ground_truth
+
+    def draw_detection(self, image, detection_pred, detection_gt, metric=None):
+        if self.draw_ground_truth and detection_gt is not None:
+            color_gt = self.color(detection_gt, is_prediction=False, color_type="bbox")
+            draw_bbox(detection_gt, image, color_gt, 1, None, None, None, None)
+        if self.draw_prediction and detection_pred is not None:
+            color_pred = self.color(detection_pred, is_prediction=True, color_type="bbox")
+            draw_bbox(detection_pred, image, color_pred, 1, None, None, None, None)
+
+
 class SimpleDetectionVisualizer(DetectionVisualizer):
     def __init__(self, threshold=0.5):
         self.threshold = threshold
+        super().__init__()
 
     def draw_detection(self, image, detection_pred, detection_gt, metric=None):
         if metric is not None and metric > self.threshold:
@@ -22,6 +38,7 @@ class SimpleDetectionVisualizer(DetectionVisualizer):
 class EllipseDetectionVisualizer(DetectionVisualizer):
     def __init__(self, threshold=0.5):
         self.threshold = threshold
+        super().__init__()
 
     def draw_detection(self, image, detection_pred, detection_gt, metric=None):
         if detection_gt is not None:

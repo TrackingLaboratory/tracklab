@@ -8,6 +8,7 @@ from tracklab.core.visualizer import DetectionVisualizer
 
 class TrackingLineVisualizer(DetectionVisualizer):
     def __init__(self, max_length: int = 60):
+        super().__init__()
         self.current_frame_id = 0
         self.max_length = max_length
         self.frame_id = []  # deque(maxlen=max_length) # np.array([], dtype=int)

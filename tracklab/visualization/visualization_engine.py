@@ -32,6 +32,7 @@ class VisualizationEngine(Callback):
                  video_fps: int = 25,
                  process_n_videos: Optional[int] = None,
                  process_n_frames_by_video: Optional[int] = None,
+                 **kwargs
                  ):
         self.visualizers = visualizers
         self.save_dir = Path("visualization")
@@ -40,6 +41,8 @@ class VisualizationEngine(Callback):
         self.video_fps = video_fps
         self.max_videos = process_n_videos
         self.max_frames = process_n_frames_by_video
+        for visualizer in visualizers.values():
+            visualizer.post_init(**kwargs)
 
     def on_video_loop_end(self, engine, video_metadata, video_idx, detections,
                           image_pred):
