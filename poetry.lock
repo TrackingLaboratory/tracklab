@@ -1542,7 +1542,7 @@ alldeps = ["numpy (>=1.10.1)"]
 
 [package.source]
 type = "git"
-url = "https://github.com/PbTrack/lap"
+url = "https://github.com/TrackingLaboratory/lap"
 reference = "HEAD"
 resolved_reference = "b02b664623fdfef5fd822b8ee0d1b2491ab945ed"
 
@@ -2787,7 +2787,7 @@ dev = ["pylint", "pytest"]
 
 [package.source]
 type = "git"
-url = "https://github.com/PbTrack/poseval"
+url = "https://github.com/TrackingLaboratory/poseval"
 reference = "pbtrack"
 resolved_reference = "0df5b1d1653e9f4dfb64f3a8a5f36375792e5d21"
 
@@ -4986,4 +4986,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "237793d400c4b5725bf1f97cd6d385c94558b64432e78f4d547d5b13bf867fa6"
+content-hash = "e0355711bae9071f34f396bcbb38e3c8167e4f46ffd8d616f09afc3b98d1320c"
