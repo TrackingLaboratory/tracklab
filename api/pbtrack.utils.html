@@ -16,7 +16,7 @@
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -316,7 +316,7 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>keypoints</strong> (<em>np.ndarray</em>) – A numpy array of shape (K, 3) representing the keypoints in the format (x, y, c).</p></li>
 <li><p><strong>extension_factor</strong> (<em>tuple</em>) – A tuple of float [top, bottom, right&amp;left] representing the factor by which</p></li>
-<li><p><strong>keypoints.</strong> (<em>the bounding box should be extended based on the</em>) – </p></li>
+<li><p><strong>keypoints.</strong> (<em>the bounding box should be extended based on the</em>)</p></li>
 <li><p><strong>image_shape</strong> (<em>tuple</em>) – A tuple of two integers representing the image dimensions <cite>(width, height)</cite>.</p></li>
 </ul>
 </dd>
@@ -424,9 +424,9 @@ Apply above ‘clip_bbox_ltrb_to_img_dim’ to clip bbox to image dimensions.
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>bbox</strong> (<em>np.ndarray</em>) – A numpy array of shape (4,) representing the bounding box in the format</p></li>
 <li><p><strong>`</strong><strong>[</strong><strong>left</strong> – </p></li>
-<li><p><strong>top</strong> – </p></li>
-<li><p><strong>right</strong> – </p></li>
-<li><p><strong>bottom</strong><strong>]</strong><strong>`.</strong> – </p></li>
+<li><p><strong>top</strong></p></li>
+<li><p><strong>right</strong></p></li>
+<li><p><strong>bottom</strong><strong>]</strong><strong>`.</strong></p></li>
 <li><p><strong>image_shape</strong> (<em>tuple</em>) – A tuple of two integers representing the image dimensions <cite>(width, height)</cite>.</p></li>
 <li><p><strong>round</strong> (<em>bool</em>) – Whether to round the bounding box coordinates, type becomes int.</p></li>
 </ul>
@@ -450,9 +450,9 @@ Apply above ‘clip_bbox_ltrb_to_img_dim’ to clip bbox to image dimensions.
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>bbox</strong> (<em>np.ndarray</em>) – A numpy array of shape (4,) representing the bounding box in the format</p></li>
 <li><p><strong>`</strong><strong>[</strong><strong>left</strong> – </p></li>
-<li><p><strong>top</strong> – </p></li>
-<li><p><strong>width</strong> – </p></li>
-<li><p><strong>height</strong><strong>]</strong><strong>`.</strong> – </p></li>
+<li><p><strong>top</strong></p></li>
+<li><p><strong>width</strong></p></li>
+<li><p><strong>height</strong><strong>]</strong><strong>`.</strong></p></li>
 <li><p><strong>image_shape</strong> (<em>tuple</em>) – A tuple of two integers representing the image dimensions <cite>(width, height)</cite>.</p></li>
 <li><p><strong>rounded</strong> (<em>bool</em>) – Whether to round the bounding box coordinates, type becomes int.</p></li>
 </ul>
@@ -476,9 +476,9 @@ Apply above ‘clip_bbox_ltrb_to_img_dim’ to clip bbox to image dimensions.
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>box</strong> (<em>np.ndarray</em>) – A numpy array of shape (4,) representing the bounding box in the format</p></li>
 <li><p><strong>`</strong><strong>[</strong><strong>x_center</strong> – </p></li>
-<li><p><strong>y_center</strong> – </p></li>
-<li><p><strong>width</strong> – </p></li>
-<li><p><strong>height</strong><strong>]</strong><strong>`.</strong> – </p></li>
+<li><p><strong>y_center</strong></p></li>
+<li><p><strong>width</strong></p></li>
+<li><p><strong>height</strong><strong>]</strong><strong>`.</strong></p></li>
 <li><p><strong>image_shape</strong> (<em>tuple</em>) – A tuple of two integers representing the image dimensions <cite>(width, height)</cite>.</p></li>
 <li><p><strong>rounded</strong> (<em>bool</em>) – Whether to round the bounding box coordinates, type becomes int.</p></li>
 </ul>
