@@ -173,18 +173,26 @@ Finally, evaluation is performed via the evaluator.run() function once the Track
 When developing a new module, it is often useful to dump the tracker state to disk to save computation time and avoid running the other modules several times.
 Here is how to do it:
 1. First, save the tracker state by using the corresponding configuration in the config.yaml file:
-```
+```yaml
 defaults:
     - state: save
-    ...
+# ...
+state:
+  save_file: "states/${experiment_name}.pklz"  # 'null' to disable saving. This is the save path for the tracker_state object that contains all modules outputs (bboxes, reid embeddings, jersey numbers, roles, teams, etc)
+  load_file: null
 ```
-2. Run Tracklab. The tracker state will be saved in the experiment folder as a .pcklz file.
-3. Then modify "tracklab/configs/state/load.yaml" to specify the path to the tracker state file that has just been created (`load_file: "..."` config).
-4. Then change config.yaml to load the tracker state by using the corresponding configuration in the config.yaml file:
-```
-defaults:
-    - state: load
-    ...
-```
+2. Run Tracklab. The tracker state will be saved in the experiment folder as a .pklz file.
+3. Then modify the load_file key in "config.yaml" to specify the path to the tracker state file that has just been created  (`load_file: "..."` config).
 5. In config.yaml, remove from the pipeline all modules that should not be executed again. For instance, if you want to use the detections and reid embeddings from the saved tracker state, remove the "bbox_detector" and "reid" modules from the pipeline. Use `pipeline: []` if no module should be run again.
-6. Run Tracklab again.
+```yaml
+defaults:
+    - state: save
+# ...
+pipeline:
+  - track
+# ...
+state:
+  save_file: null  # 'null' to disable saving. This is the save path for the tracker_state object that contains all modules outputs (bboxes, reid embeddings, jersey numbers, roles, teams, etc)
+  load_file: "path/to/tracker_state.pklz"
+```
+8. Run Tracklab again.
