@@ -9,7 +9,7 @@ packages = [{include = "tracklab"}]
 [tool.poetry.dependencies]
 python = "^3.9"
 # openpifpaf = {git="https://github.com/PbTrack/openpifpaf", branch="pbtrack", develop=true, extras=["dev","train","test"]}
-poseval = {git="https://github.com/PbTrack/poseval", branch="pbtrack", develop=true}
+poseval = {git="https://github.com/TrackingLaboratory/poseval", branch="pbtrack", develop=true}
 posetrack21 = {path = "plugins/eval/PoseTrack21/posetrack21", develop = true}
 posetrack21_mot = {path = "plugins/eval/PoseTrack21/posetrack21_mot", develop = true}
 hydra-core = "^1.3"
@@ -26,18 +26,19 @@ torch = "1.13.1"
 torchvision = "0.14.1"
 mmdet = "~3.1.0"
 chumpy = "0.66"
-lap = {git = "https://github.com/PbTrack/lap"}
+lap = {git = "https://github.com/TrackingLaboratory/lap"}
 track-bench-track = {path = "plugins/track", develop = true}
 mmengine = "^0.10.1"
 timm = "^0.9.12"
 torchreid = {git = "https://github.com/VlSomers/bpbreid"}
-openpifpaf = "^0.13.11"
+# openpifpaf = "^0.13.11"  # FIXME : Removed until dependency is fixed
 soccernet = "^0.1.53"
 mmpose = "^1.2.0"
-trackeval = {git = "https://github.com/SoccerNet/sn-trackeval.git"}
-yt-dlp = "^2023.12.30"
+sn-trackeval = ">=0.3.0" # {git = "https://github.com/SoccerNet/sn-trackeval.git"}
+yt-dlp = ">2023.12.30"
 gdown = "^4.7.1"
 pandas = "^2.1.0"
+matplotlib = "<3.9.0"
 
 [tool.poetry.scripts]
 tracklab = 'tracklab.main:main'

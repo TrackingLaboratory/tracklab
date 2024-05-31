@@ -173,18 +173,71 @@ Finally, evaluation is performed via the evaluator.run() function once the Track
 When developing a new module, it is often useful to dump the tracker state to disk to save computation time and avoid running the other modules several times.
 Here is how to do it:
 1. First, save the tracker state by using the corresponding configuration in the config.yaml file:
-```
+```yaml
 defaults:
     - state: save
-    ...
+# ...
+state:
+  save_file: "states/${experiment_name}.pklz"  # 'null' to disable saving. This is the save path for the tracker_state object that contains all modules outputs (bboxes, reid embeddings, jersey numbers, roles, teams, etc)
+  load_file: null
 ```
-2. Run Tracklab. The tracker state will be saved in the experiment folder as a .pcklz file.
-3. Then modify "tracklab/configs/state/load.yaml" to specify the path to the tracker state file that has just been created (`load_file: "..."` config).
-4. Then change config.yaml to load the tracker state by using the corresponding configuration in the config.yaml file:
-```
-defaults:
-    - state: load
-    ...
-```
+2. Run Tracklab. The tracker state will be saved in the experiment folder as a .pklz file.
+3. Then modify the load_file key in "config.yaml" to specify the path to the tracker state file that has just been created  (`load_file: "..."` config).
 5. In config.yaml, remove from the pipeline all modules that should not be executed again. For instance, if you want to use the detections and reid embeddings from the saved tracker state, remove the "bbox_detector" and "reid" modules from the pipeline. Use `pipeline: []` if no module should be run again.
-6. Run Tracklab again.
+```yaml
+defaults:
+    - state: save
+# ...
+pipeline:
+  - track
+# ...
+state:
+  save_file: null  # 'null' to disable saving. This is the save path for the tracker_state object that contains all modules outputs (bboxes, reid embeddings, jersey numbers, roles, teams, etc)
+  load_file: "path/to/tracker_state.pklz"
+```
+8. Run Tracklab again.
+
+
+## Citation
+If you use this repository for your research or wish to refer to our contributions, please use the following BibTeX entries:
+
+[TrackLab](https://github.com/TrackingLaboratory/tracklab):
+```
+@misc{Joos2024Tracklab,
+	title = {{TrackLab}},
+	author = {Joos, Victor and Somers, Vladimir and Standaert, Baptiste},
+	journal = {GitHub repository},
+	year = {2024},
+	howpublished = {\url{https://github.com/TrackingLaboratory/tracklab}}
+}
+```
+
+[SoccerNet Game State Reconstruction](https://arxiv.org/abs/2404.11335):
+```
+@inproceedings{Somers2024SoccerNetGameState,
+        title = {{SoccerNet} Game State Reconstruction: End-to-End Athlete Tracking and Identification on a Minimap},
+        author = {Somers, Vladimir and Joos, Victor and Giancola, Silvio and Cioppa, Anthony and Ghasemzadeh, Seyed Abolfazl and Magera, Floriane and Standaert, Baptiste and Mansourian, Amir Mohammad and Zhou, Xin and Kasaei, Shohreh and Ghanem, Bernard and Alahi, Alexandre and Van Droogenbroeck, Marc and De Vleeschouwer, Christophe},
+        booktitle = cvsports,
+        month = Jun,
+        year = {2024},
+        address = city-seattle,
+}
+```
+
+[BPBreID](https://arxiv.org/abs/2211.03679):
+```
+@article{bpbreid,
+    archivePrefix = {arXiv},
+    arxivId = {2211.03679},
+    author = {Somers, Vladimir and {De Vleeschouwer}, Christophe and Alahi, Alexandre},
+    doi = {10.48550/arxiv.2211.03679},
+    eprint = {2211.03679},
+    file = {:Users/vladimirsomers/Library/CloudStorage/OneDrive-SportradarAG/PhD/Scientific Literature/Mendeley/Somers, De Vleeschouwer, Alahi_2023_Body Part-Based Representation Learning for Occluded Person Re-Identification.pdf:pdf},
+    isbn = {2211.03679v1},
+    journal = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV23)},
+    month = {nov},
+    title = {{Body Part-Based Representation Learning for Occluded Person Re-Identification}},
+    url = {https://arxiv.org/abs/2211.03679v1 http://arxiv.org/abs/2211.03679},
+    year = {2023}
+}
+```

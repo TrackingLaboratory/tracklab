@@ -203,6 +203,7 @@ def video_dir_to_dfs(args):
     dataset_path = args['dataset_path']
     video_folder = args['video_folder']
     split = args['split']
+    split_id = ["train", "valid", "test", "challenge"].index(split) + 1
     annotation_pitch_camera_df = None
     detections_df = None
     video_level_categories = []
@@ -210,7 +211,7 @@ def video_dir_to_dfs(args):
     if os.path.isdir(video_folder_path):
         if not (Path(video_folder_path) / "Labels-GameState.json").exists():
             img_folder_path = os.path.join(video_folder_path, 'img1')
-            video_id = str(int(video_folder.split('-')[-1]))
+            video_id = str(video_folder.split('-')[-1])
             video_metadata = {
                 'id': video_id,
                 'name': video_folder,
@@ -219,7 +220,7 @@ def video_dir_to_dfs(args):
             nframes = len(os.listdir(img_folder_path))
             img_metadata_df = pd.DataFrame({
                 'frame': [i for i in range(0, nframes)],
-                'id': [str(int(video_id) * 10000 + i) for i in range(0, nframes)],
+                'id': [f"{split_id}{video_id}{i:06d}" for i in range(1, nframes + 1)],
                 'video_id': video_id,
                 'file_path': [os.path.join(img_folder_path, f'{i:06d}.jpg') for i in
                             range(1, nframes + 1)],
@@ -234,7 +235,7 @@ def video_dir_to_dfs(args):
             images_data = gamestate_data['images']
             annotations_data = gamestate_data['annotations']
             categories_data = gamestate_data['categories']
-            video_id = info_data.get("id", str(int(video_folder.split('-')[-1])))
+            video_id = info_data.get("id", str(video_folder.split('-')[-1]))
 
             detections_df, annotation_pitch_camera_df, video_level_categories = dict_to_df_detections(annotations_data, categories_data)
             # detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
