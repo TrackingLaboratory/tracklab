@@ -31,7 +31,7 @@ track-bench-track = {path = "plugins/track", develop = true}
 mmengine = "^0.10.1"
 timm = "^0.9.12"
 torchreid = {git = "https://github.com/VlSomers/bpbreid"}
-openpifpaf = "^0.13.11"
+# openpifpaf = "^0.13.11"  # FIXME : Removed until dependency is fixed
 soccernet = "^0.1.53"
 mmpose = "^1.2.0"
 sn-trackeval = ">0.3.0" # {git = "https://github.com/SoccerNet/sn-trackeval.git"}
