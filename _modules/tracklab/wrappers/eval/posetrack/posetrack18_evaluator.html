@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tracklab.wrappers.eval.posetrack.posetrack18_evaluator &mdash; TrackLab  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            TrackLab
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../installation.html">Installation guide </a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../configuration.html">PbTrack Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Available_features.html">Available features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/Yolov8_pose_estimation.html">Integrating a new module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../additional/citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../additional/coming_soon.html">Coming soon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../additional/contribute.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../additional/licence.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">TrackLab</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tracklab.wrappers.eval.posetrack.posetrack18_evaluator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tracklab.wrappers.eval.posetrack.posetrack18_evaluator</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+
+<span class="kn">from</span> <span class="nn">tracklab.core</span> <span class="kn">import</span> <span class="n">Evaluator</span> <span class="k">as</span> <span class="n">EvaluatorBase</span>
+<span class="kn">from</span> <span class="nn">tracklab.utils</span> <span class="kn">import</span> <span class="n">wandb</span>
+
+<span class="kn">from</span> <span class="nn">poseval.eval_helpers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">load_data_dir</span><span class="p">,</span>
+    <span class="n">Joint</span><span class="p">,</span>
+    <span class="n">mapmetrics2dict</span><span class="p">,</span>
+    <span class="n">precmetrics2dict</span><span class="p">,</span>
+    <span class="n">recallmetrics2dict</span><span class="p">,</span>
+    <span class="n">motmetrics2dict</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">poseval.evaluateAP</span> <span class="kn">import</span> <span class="n">evaluateAP</span>
+<span class="kn">from</span> <span class="nn">poseval.evaluateTracking</span> <span class="kn">import</span> <span class="n">evaluateTracking</span>
+
+<span class="kn">from</span> <span class="nn">.posetrack21_evaluator</span> <span class="kn">import</span> <span class="n">PoseTrack21Evaluator</span> <span class="k">as</span> <span class="n">PTEvaluator</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="PoseTrack18Evaluator">
+<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack18_evaluator.PoseTrack18Evaluator">[docs]</a>
+<span class="k">class</span> <span class="nc">PoseTrack18Evaluator</span><span class="p">(</span><span class="n">EvaluatorBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span>
+
+<div class="viewcode-block" id="PoseTrack18Evaluator.run">
+<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack18_evaluator.PoseTrack18Evaluator.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tracker_state</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting evaluation on PoseTrack18&quot;</span><span class="p">)</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">PTEvaluator</span><span class="o">.</span><span class="n">_images</span><span class="p">(</span><span class="n">tracker_state</span><span class="o">.</span><span class="n">image_metadatas</span><span class="p">)</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="n">PTEvaluator</span><span class="o">.</span><span class="n">_category</span><span class="p">(</span><span class="n">tracker_state</span><span class="o">.</span><span class="n">video_metadatas</span><span class="p">)</span>
+        <span class="n">seqs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tracker_state</span><span class="o">.</span><span class="n">video_metadatas</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">bbox_column</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">bbox_column_for_eval</span>
+        <span class="n">eval_pose_on_all</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">eval_pose_on_all</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">eval_pose_estimation</span><span class="p">:</span>
+            <span class="n">annotations</span> <span class="o">=</span> <span class="n">PTEvaluator</span><span class="o">.</span><span class="n">_annotations_pose_estimation_eval</span><span class="p">(</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_pred</span><span class="p">,</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">image_metadatas</span><span class="p">,</span>
+                <span class="n">bbox_column</span><span class="p">,</span>
+                <span class="n">eval_pose_on_all</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">trackers_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">posetrack_trackers_folder</span><span class="p">,</span> <span class="s2">&quot;pose_estimation&quot;</span>
+            <span class="p">)</span>
+            <span class="n">PTEvaluator</span><span class="o">.</span><span class="n">_save_json</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">annotations</span><span class="p">,</span> <span class="n">category</span><span class="p">,</span> <span class="n">trackers_folder</span><span class="p">)</span>
+
+            <span class="c1"># Bounding box evaluation</span>
+            <span class="n">bbox_map</span> <span class="o">=</span> <span class="n">PTEvaluator</span><span class="o">.</span><span class="n">compute_bbox_map</span><span class="p">(</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_pred</span><span class="p">,</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_gt</span><span class="p">,</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">image_metadatas</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="nb">map</span><span class="p">(</span><span class="n">bbox_map</span><span class="o">.</span><span class="n">pop</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;map_per_class&quot;</span><span class="p">,</span> <span class="s2">&quot;mar_100_per_class&quot;</span><span class="p">])</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">bbox_map</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">bbox_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">]</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Pose estimation - bbox metrics</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="o">+</span> <span class="n">tabulate</span><span class="p">([</span><span class="n">data</span><span class="p">],</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s2">&quot;plain&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="n">bbox_map</span><span class="p">,</span> <span class="s2">&quot;PoseTrack18/bbox/AP&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Bounding box evaluation</span>
+            <span class="n">bbox_map</span> <span class="o">=</span> <span class="n">PTEvaluator</span><span class="o">.</span><span class="n">compute_bbox_map</span><span class="p">(</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_pred</span><span class="p">,</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_gt</span><span class="p">,</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">image_metadatas</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="nb">map</span><span class="p">(</span><span class="n">bbox_map</span><span class="o">.</span><span class="n">pop</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;map_per_class&quot;</span><span class="p">,</span> <span class="s2">&quot;mar_100_per_class&quot;</span><span class="p">])</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">bbox_map</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">bbox_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">]</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Pose estimation - bbox metrics</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="o">+</span> <span class="n">tabulate</span><span class="p">([</span><span class="n">data</span><span class="p">],</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s2">&quot;plain&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="n">bbox_map</span><span class="p">,</span> <span class="s2">&quot;PoseTrack18/bbox/AP&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Keypoint evaluation</span>
+            <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">posetrack_gt_folder</span><span class="p">,</span> <span class="n">trackers_folder</span><span class="p">]</span>
+            <span class="n">gtFramesAll</span><span class="p">,</span> <span class="n">prFramesAll</span> <span class="o">=</span> <span class="n">load_data_dir</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">seqs</span><span class="p">)</span>
+            <span class="n">apAll</span><span class="p">,</span> <span class="n">preAll</span><span class="p">,</span> <span class="n">recAll</span> <span class="o">=</span> <span class="n">evaluateAP</span><span class="p">(</span>
+                <span class="n">gtFramesAll</span><span class="p">,</span> <span class="n">prFramesAll</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span>
+            <span class="p">)</span>
+            <span class="n">res_combined</span> <span class="o">=</span> <span class="n">mapmetrics2dict</span><span class="p">(</span><span class="n">apAll</span><span class="p">)</span>
+            <span class="n">PTEvaluator</span><span class="o">.</span><span class="n">_print_results</span><span class="p">(</span>
+                <span class="n">res_combined</span><span class="p">,</span>
+                <span class="n">scale_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pose estimation - keypoints average precision&quot;</span><span class="p">,</span>
+                <span class="n">print_by_video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">print_by_video</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="n">res_combined</span><span class="p">,</span> <span class="s2">&quot;PoseTrack18/kp/AP&quot;</span><span class="p">)</span>
+            <span class="n">res_combined</span> <span class="o">=</span> <span class="n">precmetrics2dict</span><span class="p">(</span><span class="n">preAll</span><span class="p">)</span>
+            <span class="n">PTEvaluator</span><span class="o">.</span><span class="n">_print_results</span><span class="p">(</span>
+                <span class="n">res_combined</span><span class="p">,</span>
+                <span class="n">scale_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pose estimation - keypoints precision&quot;</span><span class="p">,</span>
+                <span class="n">print_by_video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">print_by_video</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="n">res_combined</span><span class="p">,</span> <span class="s2">&quot;PoseTrack18/kp/precision&quot;</span><span class="p">)</span>
+            <span class="n">res_combined</span> <span class="o">=</span> <span class="n">recallmetrics2dict</span><span class="p">(</span><span class="n">recAll</span><span class="p">)</span>
+            <span class="n">PTEvaluator</span><span class="o">.</span><span class="n">_print_results</span><span class="p">(</span>
+                <span class="n">res_combined</span><span class="p">,</span>
+                <span class="n">scale_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pose estimation - keypoints recall&quot;</span><span class="p">,</span>
+                <span class="n">print_by_video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">print_by_video</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="n">res_combined</span><span class="p">,</span> <span class="s2">&quot;PoseTrack18/kp/recall&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">eval_pose_tracking</span><span class="p">:</span>
+            <span class="n">annotations</span> <span class="o">=</span> <span class="n">PTEvaluator</span><span class="o">.</span><span class="n">_annotations_tracking_eval</span><span class="p">(</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_pred</span><span class="p">,</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">image_metadatas</span><span class="p">,</span>
+                <span class="n">bbox_column</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">trackers_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">posetrack_trackers_folder</span><span class="p">,</span> <span class="s2">&quot;pose_tracking&quot;</span>
+            <span class="p">)</span>
+            <span class="n">PTEvaluator</span><span class="o">.</span><span class="n">_save_json</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">annotations</span><span class="p">,</span> <span class="n">category</span><span class="p">,</span> <span class="n">trackers_folder</span><span class="p">)</span>
+
+            <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">posetrack_gt_folder</span><span class="p">,</span> <span class="n">trackers_folder</span><span class="p">]</span>
+            <span class="n">gtFramesAll</span><span class="p">,</span> <span class="n">prFramesAll</span> <span class="o">=</span> <span class="n">load_data_dir</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">seqs</span><span class="p">)</span>
+            <span class="n">metricsAll</span> <span class="o">=</span> <span class="n">evaluateTracking</span><span class="p">(</span><span class="n">gtFramesAll</span><span class="p">,</span> <span class="n">prFramesAll</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">metrics</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">metrics</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">metricsAll</span><span class="p">[</span><span class="s2">&quot;mota&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">metricsAll</span><span class="p">[</span><span class="s2">&quot;motp&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">]</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">metricsAll</span><span class="p">[</span><span class="s2">&quot;pre&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">]</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">metricsAll</span><span class="p">[</span><span class="s2">&quot;rec&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">]</span>
+            <span class="n">res_combined</span> <span class="o">=</span> <span class="n">motmetrics2dict</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+            <span class="n">PTEvaluator</span><span class="o">.</span><span class="n">_print_results</span><span class="p">(</span>
+                <span class="n">res_combined</span><span class="p">,</span>
+                <span class="n">scale_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pose tracking - keypoints MOTA&quot;</span><span class="p">,</span>
+                <span class="n">print_by_video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">print_by_video</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="n">res_combined</span><span class="p">,</span> <span class="s2">&quot;PoseTrack18/kp/MOTA&quot;</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Baptiste Standaert, Vladimir Somers, Victor Joos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

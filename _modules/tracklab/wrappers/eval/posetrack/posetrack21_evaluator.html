@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tracklab.wrappers.eval.posetrack.posetrack21_evaluator &mdash; TrackLab  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            TrackLab
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../installation.html">Installation guide </a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../configuration.html">PbTrack Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Available_features.html">Available features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/Yolov8_pose_estimation.html">Integrating a new module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../additional/citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../additional/coming_soon.html">Coming soon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../additional/contribute.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../additional/licence.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">TrackLab</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tracklab.wrappers.eval.posetrack.posetrack21_evaluator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tracklab.wrappers.eval.posetrack.posetrack21_evaluator</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+
+<span class="kn">from</span> <span class="nn">tracklab.core</span> <span class="kn">import</span> <span class="n">Evaluator</span> <span class="k">as</span> <span class="n">EvaluatorBase</span>
+<span class="kn">from</span> <span class="nn">tracklab.utils</span> <span class="kn">import</span> <span class="n">wandb</span>
+
+<span class="kn">import</span> <span class="nn">posetrack21</span>
+<span class="kn">import</span> <span class="nn">posetrack21_mot</span>
+<span class="kn">from</span> <span class="nn">poseval.eval_helpers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">load_data_dir</span><span class="p">,</span>
+    <span class="n">Joint</span><span class="p">,</span>
+    <span class="n">mapmetrics2dict</span><span class="p">,</span>
+    <span class="n">precmetrics2dict</span><span class="p">,</span>
+    <span class="n">recallmetrics2dict</span><span class="p">,</span>
+    <span class="n">motmetrics2dict</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">poseval.evaluateAP</span> <span class="kn">import</span> <span class="n">evaluateAP</span>
+<span class="kn">from</span> <span class="nn">poseval.evaluateTracking</span> <span class="kn">import</span> <span class="n">evaluateTracking</span>
+<span class="kn">from</span> <span class="nn">torchmetrics.detection.mean_ap</span> <span class="kn">import</span> <span class="n">MeanAveragePrecision</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="c1"># FIXME some parts can be cleaned but works for now</span>
+<div class="viewcode-block" id="PoseTrack21Evaluator">
+<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator">[docs]</a>
+<span class="k">class</span> <span class="nc">PoseTrack21Evaluator</span><span class="p">(</span><span class="n">EvaluatorBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span>
+
+<div class="viewcode-block" id="PoseTrack21Evaluator.run">
+<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tracker_state</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting evaluation on PoseTrack21&quot;</span><span class="p">)</span>
+        <span class="n">image_metadatas</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">tracker_state</span><span class="o">.</span><span class="n">image_metadatas</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">video_metadatas</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;video_id&quot;</span><span class="p">,</span>
+                <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">tracker_state</span><span class="o">.</span><span class="n">image_metadatas</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;video_name&quot;</span><span class="p">})</span>
+        <span class="p">)</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_images</span><span class="p">(</span><span class="n">image_metadatas</span><span class="p">)</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_category</span><span class="p">(</span><span class="n">tracker_state</span><span class="o">.</span><span class="n">video_metadatas</span><span class="p">)</span>
+        <span class="n">seqs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tracker_state</span><span class="o">.</span><span class="n">video_metadatas</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">bbox_column</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">bbox_column_for_eval</span>
+        <span class="n">keypoints_column</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">keypoints_column_for_eval</span>
+        <span class="n">eval_pose_on_all</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">eval_pose_on_all</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;save_eval&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+            <span class="n">tempdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">posetrack_trackers_folder</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">tempdir</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">posetrack_trackers_folder</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">mot_trackers_folder</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">tempdir</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">mot_trackers_folder</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">eval_pose_estimation</span><span class="p">:</span>
+            <span class="n">annotations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_annotations_pose_estimation_eval</span><span class="p">(</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_pred</span><span class="p">,</span>
+                <span class="n">image_metadatas</span><span class="p">,</span>
+                <span class="n">bbox_column</span><span class="p">,</span>
+                <span class="n">keypoints_column</span><span class="p">,</span>
+                <span class="n">eval_pose_on_all</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">trackers_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">posetrack_trackers_folder</span><span class="p">,</span> <span class="s2">&quot;pose_estimation&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_save_json</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">annotations</span><span class="p">,</span> <span class="n">category</span><span class="p">,</span> <span class="n">trackers_folder</span><span class="p">)</span>
+
+            <span class="c1"># Keypoint evaluation</span>
+            <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">posetrack_gt_folder</span><span class="p">,</span> <span class="n">trackers_folder</span><span class="p">]</span>
+            <span class="n">gtFramesAll</span><span class="p">,</span> <span class="n">prFramesAll</span> <span class="o">=</span> <span class="n">load_data_dir</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">seqs</span><span class="p">)</span>
+            <span class="n">apAll</span><span class="p">,</span> <span class="n">preAll</span><span class="p">,</span> <span class="n">recAll</span> <span class="o">=</span> <span class="n">evaluateAP</span><span class="p">(</span>
+                <span class="n">gtFramesAll</span><span class="p">,</span> <span class="n">prFramesAll</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span>
+            <span class="p">)</span>
+            <span class="n">res_combined</span> <span class="o">=</span> <span class="n">mapmetrics2dict</span><span class="p">(</span><span class="n">apAll</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_results</span><span class="p">(</span>
+                <span class="n">res_combined</span><span class="p">,</span>
+                <span class="n">scale_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pose estimation - keypoints average precision&quot;</span><span class="p">,</span>
+                <span class="n">print_by_video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">print_by_video</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="n">res_combined</span><span class="p">,</span> <span class="s2">&quot;PoseTrack21/kp/AP&quot;</span><span class="p">)</span>
+            <span class="n">res_combined</span> <span class="o">=</span> <span class="n">precmetrics2dict</span><span class="p">(</span><span class="n">preAll</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_results</span><span class="p">(</span>
+                <span class="n">res_combined</span><span class="p">,</span>
+                <span class="n">scale_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pose estimation - keypoints precision&quot;</span><span class="p">,</span>
+                <span class="n">print_by_video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">print_by_video</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="n">res_combined</span><span class="p">,</span> <span class="s2">&quot;PoseTrack21/kp/precision&quot;</span><span class="p">)</span>
+            <span class="n">res_combined</span> <span class="o">=</span> <span class="n">recallmetrics2dict</span><span class="p">(</span><span class="n">recAll</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_results</span><span class="p">(</span>
+                <span class="n">res_combined</span><span class="p">,</span>
+                <span class="n">scale_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pose estimation - keypoints recall&quot;</span><span class="p">,</span>
+                <span class="n">print_by_video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">print_by_video</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="n">res_combined</span><span class="p">,</span> <span class="s2">&quot;PoseTrack21/kp/recall&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">eval_pose_tracking</span><span class="p">:</span>
+            <span class="n">annotations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_annotations_tracking_eval</span><span class="p">(</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_pred</span><span class="p">,</span>
+                <span class="n">image_metadatas</span><span class="p">,</span>
+                <span class="n">bbox_column</span><span class="p">,</span>
+                <span class="n">keypoints_column</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">trackers_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">posetrack_trackers_folder</span><span class="p">,</span> <span class="s2">&quot;pose_tracking&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_save_json</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">annotations</span><span class="p">,</span> <span class="n">category</span><span class="p">,</span> <span class="n">trackers_folder</span><span class="p">)</span>
+
+            <span class="c1"># Keypoint tracking evaluation</span>
+            <span class="n">evaluator</span> <span class="o">=</span> <span class="n">posetrack21</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">get_api</span><span class="p">(</span>
+                <span class="n">trackers_folder</span><span class="o">=</span><span class="n">trackers_folder</span><span class="p">,</span>
+                <span class="n">gt_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">posetrack_gt_folder</span><span class="p">,</span>
+                <span class="n">eval_type</span><span class="o">=</span><span class="s2">&quot;pose_tracking&quot;</span><span class="p">,</span>
+                <span class="n">use_parallel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">use_parallel</span><span class="p">,</span>
+                <span class="n">num_parallel_cores</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">num_parallel_cores</span><span class="p">),</span>
+                <span class="n">SEQS</span><span class="o">=</span><span class="n">seqs</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">res_combined</span><span class="p">,</span> <span class="n">res_by_video</span> <span class="o">=</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_results</span><span class="p">(</span>
+                <span class="n">res_combined</span><span class="p">,</span>
+                <span class="n">res_by_video</span><span class="p">,</span>
+                <span class="n">scale_factor</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pose tracking - keypoints HOTA&quot;</span><span class="p">,</span>
+                <span class="n">print_by_video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">print_by_video</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="n">res_combined</span><span class="p">,</span> <span class="s2">&quot;PoseTrack21/kp/HOTA&quot;</span><span class="p">,</span> <span class="n">res_by_video</span><span class="p">)</span>
+
+            <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">posetrack_gt_folder</span><span class="p">,</span> <span class="n">trackers_folder</span><span class="p">]</span>
+            <span class="n">gtFramesAll</span><span class="p">,</span> <span class="n">prFramesAll</span> <span class="o">=</span> <span class="n">load_data_dir</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">seqs</span><span class="p">)</span>
+            <span class="n">metricsAll</span> <span class="o">=</span> <span class="n">evaluateTracking</span><span class="p">(</span><span class="n">gtFramesAll</span><span class="p">,</span> <span class="n">prFramesAll</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+            <span class="n">metrics</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">metrics</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">metricsAll</span><span class="p">[</span><span class="s2">&quot;mota&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">metricsAll</span><span class="p">[</span><span class="s2">&quot;motp&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">]</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">metricsAll</span><span class="p">[</span><span class="s2">&quot;pre&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">]</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">metricsAll</span><span class="p">[</span><span class="s2">&quot;rec&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">]</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">metricsAll</span><span class="p">[</span><span class="s2">&quot;num_misses&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">]</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">metricsAll</span><span class="p">[</span><span class="s2">&quot;num_switches&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">]</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">metricsAll</span><span class="p">[</span><span class="s2">&quot;num_false_positives&quot;</span><span class="p">][</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="n">Joint</span><span class="p">()</span><span class="o">.</span><span class="n">count</span>
+            <span class="p">]</span>
+            <span class="n">res_combined</span> <span class="o">=</span> <span class="n">motmetrics2dict</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_results</span><span class="p">(</span>
+                <span class="n">res_combined</span><span class="p">,</span>
+                <span class="n">scale_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pose tracking - keypoints MOTA&quot;</span><span class="p">,</span>
+                <span class="n">print_by_video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">print_by_video</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="n">res_combined</span><span class="p">,</span> <span class="s2">&quot;PoseTrack21/kp/MOTA&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">eval_reid_pose_tracking</span><span class="p">:</span>
+            <span class="n">annotations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_annotations_reid_pose_tracking_eval</span><span class="p">(</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_pred</span><span class="p">,</span>
+                <span class="n">image_metadatas</span><span class="p">,</span>
+                <span class="n">bbox_column</span><span class="p">,</span>
+                <span class="n">keypoints_column</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">trackers_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">posetrack_trackers_folder</span><span class="p">,</span> <span class="s2">&quot;reid_pose_tracking&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_save_json</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">annotations</span><span class="p">,</span> <span class="n">category</span><span class="p">,</span> <span class="n">trackers_folder</span><span class="p">)</span>
+            <span class="n">evaluator</span> <span class="o">=</span> <span class="n">posetrack21</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">get_api</span><span class="p">(</span>
+                <span class="n">trackers_folder</span><span class="o">=</span><span class="n">trackers_folder</span><span class="p">,</span>
+                <span class="n">gt_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">posetrack_gt_folder</span><span class="p">,</span>
+                <span class="n">eval_type</span><span class="o">=</span><span class="s2">&quot;reid_tracking&quot;</span><span class="p">,</span>
+                <span class="n">use_parallel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">use_parallel</span><span class="p">,</span>
+                <span class="n">num_parallel_cores</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">num_parallel_cores</span><span class="p">),</span>
+                <span class="n">SEQS</span><span class="o">=</span><span class="n">seqs</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">res_combined</span><span class="p">,</span> <span class="n">res_by_video</span> <span class="o">=</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_results</span><span class="p">(</span>
+                <span class="n">res_combined</span><span class="p">,</span>
+                <span class="n">res_by_video</span><span class="p">,</span>
+                <span class="n">scale_factor</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pose tracking cross-video - keypoints HOTA&quot;</span><span class="p">,</span>
+                <span class="n">print_by_video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">print_by_video</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="n">res_combined</span><span class="p">,</span> <span class="s2">&quot;PoseTrack21/kp/ReID&quot;</span><span class="p">,</span> <span class="n">res_by_video</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">eval_mot</span><span class="p">:</span>
+            <span class="c1"># Bounding box evaluation</span>
+            <span class="c1"># AP</span>
+            <span class="n">bbox_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_bbox_map</span><span class="p">(</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_pred</span><span class="p">,</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_gt</span><span class="p">,</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">image_metadatas</span><span class="p">,</span>
+                <span class="n">bbox_column</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="nb">map</span><span class="p">(</span><span class="n">bbox_map</span><span class="o">.</span><span class="n">pop</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;map_per_class&quot;</span><span class="p">,</span> <span class="s2">&quot;mar_100_per_class&quot;</span><span class="p">])</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">bbox_map</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">bbox_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">]</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;MOT - bbox mAP</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">tabulate</span><span class="p">([</span><span class="n">data</span><span class="p">],</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s2">&quot;plain&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="n">bbox_map</span><span class="p">,</span> <span class="s2">&quot;PoseTrack21/bbox/AP&quot;</span><span class="p">)</span>
+
+            <span class="c1"># HOTA</span>
+            <span class="n">trackers_folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">mot_trackers_folder</span>
+            <span class="n">mot_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mot_encoding</span><span class="p">(</span>
+                <span class="n">tracker_state</span><span class="o">.</span><span class="n">detections_pred</span><span class="p">,</span> <span class="n">image_metadatas</span><span class="p">,</span> <span class="n">bbox_column</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_save_mot</span><span class="p">(</span><span class="n">mot_df</span><span class="p">,</span> <span class="n">trackers_folder</span><span class="p">)</span>
+            <span class="n">evaluator</span> <span class="o">=</span> <span class="n">posetrack21</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">get_api</span><span class="p">(</span>
+                <span class="n">trackers_folder</span><span class="o">=</span><span class="n">trackers_folder</span><span class="p">,</span>
+                <span class="n">gt_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">mot_gt_folder</span><span class="p">,</span>
+                <span class="n">eval_type</span><span class="o">=</span><span class="s2">&quot;posetrack_mot&quot;</span><span class="p">,</span>
+                <span class="n">use_parallel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">use_parallel</span><span class="p">,</span>
+                <span class="n">num_parallel_cores</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">num_parallel_cores</span><span class="p">),</span>
+                <span class="n">SEQS</span><span class="o">=</span><span class="n">seqs</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">res_combined</span><span class="p">,</span> <span class="n">res_by_video</span> <span class="o">=</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_results</span><span class="p">(</span>
+                <span class="n">res_combined</span><span class="p">,</span>
+                <span class="n">res_by_video</span><span class="p">,</span>
+                <span class="mi">100</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;MOT - bbox HOTA&quot;</span><span class="p">,</span>
+                <span class="n">print_by_video</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">print_by_video</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span><span class="n">res_combined</span><span class="p">,</span> <span class="s2">&quot;PoseTrack21/bbox/HOTA&quot;</span><span class="p">,</span> <span class="n">res_by_video</span><span class="p">)</span>
+
+            <span class="c1"># MOTA</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">posetrack21_mot</span><span class="o">.</span><span class="n">PTWrapper</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">mot_gt_folder</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">mot</span><span class="o">.</span><span class="n">dataset_path</span><span class="p">,</span>
+                <span class="n">seqs</span><span class="p">,</span>
+                <span class="n">vis_threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">mot</span><span class="o">.</span><span class="n">vis_threshold</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">mot_accums</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">:</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">load_results</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">trackers_folder</span><span class="p">,</span> <span class="s2">&quot;results&quot;</span><span class="p">))</span>
+                <span class="n">mot_accums</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">posetrack21_mot</span><span class="o">.</span><span class="n">get_mot_accum</span><span class="p">(</span>
+                        <span class="n">results</span><span class="p">,</span>
+                        <span class="n">seq</span><span class="p">,</span>
+                        <span class="n">use_ignore_regions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">mot</span><span class="o">.</span><span class="n">use_ignore_regions</span><span class="p">,</span>
+                        <span class="n">ignore_iou_thres</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">mot</span><span class="o">.</span><span class="n">ignore_iou_thres</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">mot_accums</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;MOT - bbox MOTA&quot;</span><span class="p">)</span>
+                <span class="n">str_summary</span><span class="p">,</span> <span class="n">summary</span> <span class="o">=</span> <span class="n">posetrack21_mot</span><span class="o">.</span><span class="n">evaluate_mot_accums</span><span class="p">(</span>
+                    <span class="n">mot_accums</span><span class="p">,</span>
+                    <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">dataset</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">no_gt</span><span class="p">],</span>
+                    <span class="n">generate_overall</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">results_mot_bbox</span> <span class="o">=</span> <span class="n">summary</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+                <span class="n">wandb</span><span class="o">.</span><span class="n">log_metric</span><span class="p">(</span>
+                    <span class="n">results_mot_bbox</span><span class="p">[</span><span class="s2">&quot;OVERALL&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;PoseTrack21/bbox/MOTA&quot;</span><span class="p">,</span>
+                    <span class="n">results_mot_bbox</span><span class="p">,</span>
+                <span class="p">)</span></div>
+
+
+    <span class="c1"># PoseTrack helper functions</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_images</span><span class="p">(</span><span class="n">image_metadatas</span><span class="p">):</span>
+        <span class="n">len_before_drop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_metadatas</span><span class="p">)</span>
+        <span class="n">image_metadatas</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_metadatas</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">image_metadatas</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span>
+            <span class="n">subset</span><span class="o">=</span><span class="p">[</span>
+                <span class="s2">&quot;file_path&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;id&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;frame&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">how</span><span class="o">=</span><span class="s2">&quot;any&quot;</span><span class="p">,</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">len_before_drop</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_metadatas</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Dropped </span><span class="si">{}</span><span class="s2"> rows with NA values from image metadatas&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">len_before_drop</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_metadatas</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">image_metadatas</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;file_path&quot;</span><span class="p">:</span> <span class="s2">&quot;file_name&quot;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">image_metadatas</span><span class="p">[</span><span class="s2">&quot;frame_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_metadatas</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+
+        <span class="n">images</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">videos_names</span> <span class="o">=</span> <span class="n">image_metadatas</span><span class="p">[</span><span class="s2">&quot;video_name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">video_name</span> <span class="ow">in</span> <span class="n">videos_names</span><span class="p">:</span>
+            <span class="n">images_by_video</span> <span class="o">=</span> <span class="n">image_metadatas</span><span class="p">[</span>
+                <span class="n">image_metadatas</span><span class="p">[</span><span class="s2">&quot;video_name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">video_name</span>
+            <span class="p">]</span>
+            <span class="n">images</span><span class="p">[</span><span class="n">video_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">images_by_video</span><span class="p">[</span>
+                <span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;frame_id&quot;</span><span class="p">]</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s2">&quot;records&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">images</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_category</span><span class="p">(</span><span class="n">video_metadatas</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">video_metadatas</span><span class="o">.</span><span class="n">categories</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># FIXME fuse different annotations functions</span>
+    <span class="k">def</span> <span class="nf">_annotations_pose_estimation_eval</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">detections_pred</span><span class="p">,</span>
+        <span class="n">image_metadatas</span><span class="p">,</span>
+        <span class="n">bbox_column</span><span class="p">,</span>
+        <span class="n">keypoints_column</span><span class="p">,</span>
+        <span class="n">eval_pose_on_all</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">detections_pred</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">na_col_to_drop</span> <span class="o">=</span> <span class="p">[</span><span class="n">keypoints_column</span><span class="p">,</span> <span class="n">bbox_column</span><span class="p">,</span> <span class="s2">&quot;image_id&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">eval_pose_on_all</span><span class="p">:</span>
+            <span class="c1"># If set to false, will evaluate pose estimation only on tracked detections (i.e. detections with a</span>
+            <span class="c1"># defined &#39;track_id&#39;)</span>
+            <span class="n">na_col_to_drop</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;track_id&quot;</span><span class="p">)</span>
+        <span class="n">na_col_to_drop</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">na_col_to_drop</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">detections_pred</span><span class="o">.</span><span class="n">columns</span>
+        <span class="p">]</span>
+        <span class="n">len_before_drop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections_pred</span><span class="p">)</span>
+        <span class="n">detections_pred</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span>
+            <span class="n">subset</span><span class="o">=</span><span class="n">na_col_to_drop</span><span class="p">,</span>
+            <span class="n">how</span><span class="o">=</span><span class="s2">&quot;any&quot;</span><span class="p">,</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># drop detections that are in ignored regions</span>
+        <span class="n">detections_pred</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="n">detections_pred</span><span class="o">.</span><span class="n">ignored</span> <span class="o">==</span> <span class="kc">False</span><span class="p">]</span>
+        <span class="c1"># drop detections that are not reliable</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;enough_vis_kp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="n">keypoints_column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_enough_vis_kp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">detections_pred</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="n">detections_pred</span><span class="o">.</span><span class="n">enough_vis_kp</span> <span class="o">==</span> <span class="kc">True</span><span class="p">]</span>
+        <span class="n">detections_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_if_tracklet</span><span class="p">(</span><span class="n">detections_pred</span><span class="p">)</span>
+        <span class="n">detections_pred</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="n">detections_pred</span><span class="o">.</span><span class="n">is_tracklet</span> <span class="o">==</span> <span class="kc">True</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">len_before_drop</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections_pred</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Dropped </span><span class="si">{}</span><span class="s2"> detections&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">len_before_drop</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections_pred</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="n">keypoints_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="n">keypoints_column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_not_visible_kps</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;scores&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="n">keypoints_column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;track_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;track_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;person_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">detections_pred</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+            <span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">keypoints_column</span><span class="p">:</span> <span class="s2">&quot;keypoints&quot;</span><span class="p">,</span> <span class="n">bbox_column</span><span class="p">:</span> <span class="s2">&quot;bbox&quot;</span><span class="p">},</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">annotations</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">videos_names</span> <span class="o">=</span> <span class="n">image_metadatas</span><span class="p">[</span><span class="s2">&quot;video_name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">video_name</span> <span class="ow">in</span> <span class="n">videos_names</span><span class="p">:</span>
+            <span class="n">image_ids</span> <span class="o">=</span> <span class="n">image_metadatas</span><span class="p">[</span>
+                <span class="n">image_metadatas</span><span class="p">[</span><span class="s2">&quot;video_name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">video_name</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">index</span>
+            <span class="n">predictions_by_video</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span>
+                <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">image_ids</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="n">annotations</span><span class="p">[</span><span class="n">video_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">predictions_by_video</span><span class="p">[</span>
+                <span class="p">[</span><span class="s2">&quot;bbox&quot;</span><span class="p">,</span> <span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="s2">&quot;keypoints&quot;</span><span class="p">,</span> <span class="s2">&quot;scores&quot;</span><span class="p">,</span> <span class="s2">&quot;person_id&quot;</span><span class="p">,</span> <span class="s2">&quot;track_id&quot;</span><span class="p">]</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s2">&quot;records&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">annotations</span>
+
+<div class="viewcode-block" id="PoseTrack21Evaluator.remove_not_visible_kps">
+<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.remove_not_visible_kps">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove_not_visible_kps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">[</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">vis_kp_threshold</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="PoseTrack21Evaluator.has_enough_vis_kp">
+<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.has_enough_vis_kp">[docs]</a>
+    <span class="k">def</span> <span class="nf">has_enough_vis_kp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">vis_kp_threshold</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">min_num_vis_kp</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PoseTrack21Evaluator.check_if_tracklet">
+<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.check_if_tracklet">[docs]</a>
+    <span class="k">def</span> <span class="nf">check_if_tracklet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detections</span><span class="p">):</span>
+        <span class="n">detections</span> <span class="o">=</span> <span class="n">detections</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;video_id&quot;</span><span class="p">,</span> <span class="s2">&quot;track_id&quot;</span><span class="p">])</span>
+
+        <span class="n">tracklet_lengths</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">detections</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;video_id&quot;</span><span class="p">,</span> <span class="s2">&quot;track_id&quot;</span><span class="p">])</span>
+            <span class="o">.</span><span class="n">size</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;tracklet_len&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">detections</span> <span class="o">=</span> <span class="n">detections</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">tracklet_lengths</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;video_id&quot;</span><span class="p">,</span> <span class="s2">&quot;track_id&quot;</span><span class="p">])</span>
+        <span class="n">detections</span><span class="p">[</span><span class="s2">&quot;is_tracklet&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections</span><span class="p">[</span><span class="s2">&quot;tracklet_len&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">min_tracklet_length</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">detections</span></div>
+
+
+    <span class="c1"># FIXME fuse different annotations functions</span>
+    <span class="k">def</span> <span class="nf">_annotations_tracking_eval</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">detections_pred</span><span class="p">,</span> <span class="n">image_metadatas</span><span class="p">,</span> <span class="n">bbox_column</span><span class="p">,</span> <span class="n">keypoints_column</span>
+    <span class="p">):</span>
+        <span class="n">detections_pred</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">na_col_to_drop</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">keypoints_column</span><span class="p">,</span>
+            <span class="n">bbox_column</span><span class="p">,</span>
+            <span class="s2">&quot;image_id&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;track_id&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">na_col_to_drop</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">na_col_to_drop</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">detections_pred</span><span class="o">.</span><span class="n">columns</span>
+        <span class="p">]</span>
+        <span class="n">len_before_drop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections_pred</span><span class="p">)</span>
+        <span class="n">detections_pred</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span>
+            <span class="n">subset</span><span class="o">=</span><span class="n">na_col_to_drop</span><span class="p">,</span>
+            <span class="n">how</span><span class="o">=</span><span class="s2">&quot;any&quot;</span><span class="p">,</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># drop detections that are in ignored regions</span>
+        <span class="n">detections_pred</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="n">detections_pred</span><span class="o">.</span><span class="n">ignored</span> <span class="o">==</span> <span class="kc">False</span><span class="p">]</span>
+        <span class="c1"># drop detections that are not reliable</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;enough_vis_kp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="n">keypoints_column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_enough_vis_kp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">detections_pred</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="n">detections_pred</span><span class="o">.</span><span class="n">enough_vis_kp</span> <span class="o">==</span> <span class="kc">True</span><span class="p">]</span>
+        <span class="n">detections_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_if_tracklet</span><span class="p">(</span><span class="n">detections_pred</span><span class="p">)</span>
+        <span class="n">detections_pred</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="n">detections_pred</span><span class="o">.</span><span class="n">is_tracklet</span> <span class="o">==</span> <span class="kc">True</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">len_before_drop</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections_pred</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Dropped </span><span class="si">{}</span><span class="s2"> detections&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">len_before_drop</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections_pred</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="n">keypoints_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="n">keypoints_column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_not_visible_kps</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;scores&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="n">keypoints_column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;track_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;track_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;person_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">detections_pred</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+            <span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">keypoints_column</span><span class="p">:</span> <span class="s2">&quot;keypoints&quot;</span><span class="p">,</span> <span class="n">bbox_column</span><span class="p">:</span> <span class="s2">&quot;bbox&quot;</span><span class="p">},</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">annotations</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">videos_names</span> <span class="o">=</span> <span class="n">image_metadatas</span><span class="p">[</span><span class="s2">&quot;video_name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">video_name</span> <span class="ow">in</span> <span class="n">videos_names</span><span class="p">:</span>
+            <span class="n">image_ids</span> <span class="o">=</span> <span class="n">image_metadatas</span><span class="p">[</span>
+                <span class="n">image_metadatas</span><span class="p">[</span><span class="s2">&quot;video_name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">video_name</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">index</span>
+            <span class="n">predictions_by_video</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span>
+                <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">image_ids</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="n">annotations</span><span class="p">[</span><span class="n">video_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">predictions_by_video</span><span class="p">[</span>
+                <span class="p">[</span><span class="s2">&quot;bbox&quot;</span><span class="p">,</span> <span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="s2">&quot;keypoints&quot;</span><span class="p">,</span> <span class="s2">&quot;scores&quot;</span><span class="p">,</span> <span class="s2">&quot;person_id&quot;</span><span class="p">,</span> <span class="s2">&quot;track_id&quot;</span><span class="p">]</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s2">&quot;records&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">annotations</span>
+
+    <span class="c1"># FIXME fuse different annotations functions</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_annotations_reid_pose_tracking_eval</span><span class="p">(</span>
+        <span class="n">detections_pred</span><span class="p">,</span> <span class="n">image_metadatas</span><span class="p">,</span> <span class="n">bbox_column</span><span class="p">,</span> <span class="n">keypoints_column</span>
+    <span class="p">):</span>
+        <span class="n">detections_pred</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">len_before_drop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections_pred</span><span class="p">)</span>
+        <span class="n">detections_pred</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span>
+            <span class="n">subset</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">keypoints_column</span><span class="p">,</span>
+                <span class="n">bbox_column</span><span class="p">,</span>
+                <span class="s2">&quot;image_id&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;track_id&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;person_id&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">how</span><span class="o">=</span><span class="s2">&quot;any&quot;</span><span class="p">,</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># drop detections that are in ignored regions</span>
+        <span class="n">detections_pred</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span>
+            <span class="n">detections_pred</span><span class="p">[</span><span class="n">detections_pred</span><span class="o">.</span><span class="n">ignored</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">len_before_drop</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections_pred</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Dropped </span><span class="si">{}</span><span class="s2"> rows with NA values&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">len_before_drop</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections_pred</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">detections_pred</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+            <span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">keypoints_column</span><span class="p">:</span> <span class="s2">&quot;keypoints&quot;</span><span class="p">,</span> <span class="n">bbox_column</span><span class="p">:</span> <span class="s2">&quot;bbox&quot;</span><span class="p">},</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;scores&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;keypoints&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;track_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;track_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;person_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;person_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">annotations</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">videos_names</span> <span class="o">=</span> <span class="n">image_metadatas</span><span class="p">[</span><span class="s2">&quot;video_name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">video_name</span> <span class="ow">in</span> <span class="n">videos_names</span><span class="p">:</span>
+            <span class="n">image_ids</span> <span class="o">=</span> <span class="n">image_metadatas</span><span class="p">[</span>
+                <span class="n">image_metadatas</span><span class="p">[</span><span class="s2">&quot;video_name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">video_name</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">index</span>
+            <span class="n">predictions_by_video</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span>
+                <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">image_ids</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="n">annotations</span><span class="p">[</span><span class="n">video_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">predictions_by_video</span><span class="p">[</span>
+                <span class="p">[</span><span class="s2">&quot;bbox&quot;</span><span class="p">,</span> <span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="s2">&quot;keypoints&quot;</span><span class="p">,</span> <span class="s2">&quot;scores&quot;</span><span class="p">,</span> <span class="s2">&quot;person_id&quot;</span><span class="p">,</span> <span class="s2">&quot;track_id&quot;</span><span class="p">]</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s2">&quot;records&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">annotations</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_save_json</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">annotations</span><span class="p">,</span> <span class="n">category</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">video_name</span> <span class="ow">in</span> <span class="n">images</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">video_name</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="n">images</span><span class="p">[</span><span class="n">video_name</span><span class="p">],</span>
+                        <span class="s2">&quot;annotations&quot;</span><span class="p">:</span> <span class="n">annotations</span><span class="p">[</span><span class="n">video_name</span><span class="p">],</span>
+                        <span class="s2">&quot;categories&quot;</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="n">f</span><span class="p">,</span>
+                    <span class="bp">cls</span><span class="o">=</span><span class="n">PoseTrack21Evaluator</span><span class="o">.</span><span class="n">PoseTrackEncoder</span><span class="p">,</span>
+                    <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="p">)</span>
+
+    <span class="c1"># MOT helper functions</span>
+    <span class="k">def</span> <span class="nf">_mot_encoding</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detections_pred</span><span class="p">,</span> <span class="n">image_metadatas</span><span class="p">,</span> <span class="n">bbox_column</span><span class="p">):</span>
+        <span class="n">detections_pred</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">image_metadatas</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_metadatas</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+            <span class="n">image_metadatas</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">detections_pred</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">,</span>
+            <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span>
+            <span class="n">suffixes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;_y&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">len_before_drop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span>
+            <span class="n">subset</span><span class="o">=</span><span class="p">[</span>
+                <span class="s2">&quot;video_name&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;frame&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;track_id&quot;</span><span class="p">,</span>
+                <span class="n">bbox_column</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">how</span><span class="o">=</span><span class="s2">&quot;any&quot;</span><span class="p">,</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># drop detections that are in ignored regions</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">ignored</span> <span class="o">==</span> <span class="kc">False</span><span class="p">]</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_if_tracklet</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">is_tracklet</span> <span class="o">==</span> <span class="kc">True</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">len_before_drop</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Dropped </span><span class="si">{}</span><span class="s2"> rows with NA values&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">len_before_drop</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;track_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;track_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;bb_left&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">bbox_column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;bb_top&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">bbox_column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;bb_width&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">bbox_column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;bb_height&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">bbox_column</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">x</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_save_mot</span><span class="p">(</span><span class="n">mot_df</span><span class="p">,</span> <span class="n">save_path</span><span class="p">):</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;results&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># &lt;frame&gt;, &lt;id&gt;, &lt;bb_left&gt;, &lt;bb_top&gt;, &lt;bb_width&gt;, &lt;bb_height&gt;, &lt;conf&gt;, &lt;x&gt;, &lt;y&gt;, &lt;z&gt;</span>
+        <span class="n">videos_names</span> <span class="o">=</span> <span class="n">mot_df</span><span class="p">[</span><span class="s2">&quot;video_name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">video_name</span> <span class="ow">in</span> <span class="n">videos_names</span><span class="p">:</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">video_name</span><span class="si">}</span><span class="s2">.txt&quot;</span><span class="p">)</span>
+            <span class="n">file_df</span> <span class="o">=</span> <span class="n">mot_df</span><span class="p">[</span><span class="n">mot_df</span><span class="p">[</span><span class="s2">&quot;video_name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">video_name</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">file_df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="n">file_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s2">&quot;frame&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">file_df</span><span class="p">[</span>
+                    <span class="p">[</span>
+                        <span class="s2">&quot;frame&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;track_id&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;bb_left&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;bb_top&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;bb_width&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;bb_height&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;bbox_conf&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;x&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;y&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;z&quot;</span><span class="p">,</span>
+                    <span class="p">]</span>
+                <span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+                    <span class="n">file_path</span><span class="p">,</span>
+                    <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<div class="viewcode-block" id="PoseTrack21Evaluator.format_metric">
+<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.format_metric">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">format_metric</span><span class="p">(</span><span class="n">metric_name</span><span class="p">,</span> <span class="n">metric_value</span><span class="p">,</span> <span class="n">scale_factor</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">&quot;TP&quot;</span> <span class="ow">in</span> <span class="n">metric_name</span>
+            <span class="ow">or</span> <span class="s2">&quot;FN&quot;</span> <span class="ow">in</span> <span class="n">metric_name</span>
+            <span class="ow">or</span> <span class="s2">&quot;FP&quot;</span> <span class="ow">in</span> <span class="n">metric_name</span>
+            <span class="ow">or</span> <span class="s2">&quot;TN&quot;</span> <span class="ow">in</span> <span class="n">metric_name</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="n">metric_name</span> <span class="o">==</span> <span class="s2">&quot;MOTP&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">metric_value</span> <span class="o">*</span> <span class="n">scale_factor</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">metric_value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">metric_value</span> <span class="o">*</span> <span class="n">scale_factor</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_print_results</span><span class="p">(</span>
+        <span class="n">res_combined</span><span class="p">,</span>
+        <span class="n">res_by_video</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">scale_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">print_by_video</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="n">res_combined</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">PoseTrack21Evaluator</span><span class="o">.</span><span class="n">format_metric</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">res_combined</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">scale_factor</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">headers</span>
+        <span class="p">]</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">tabulate</span><span class="p">([</span><span class="n">data</span><span class="p">],</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s2">&quot;plain&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">print_by_video</span> <span class="ow">and</span> <span class="n">res_by_video</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">video_name</span><span class="p">,</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">res_by_video</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">video_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">video_name</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
+                    <span class="n">PoseTrack21Evaluator</span><span class="o">.</span><span class="n">format_metric</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">scale_factor</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">headers</span>
+                <span class="p">]</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">video_data</span><span class="p">)</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2"> by videos</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="o">+</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s2">&quot;plain&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="PoseTrack21Evaluator.compute_bbox_map">
+<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.compute_bbox_map">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">compute_bbox_map</span><span class="p">(</span><span class="n">detections_pred</span><span class="p">,</span> <span class="n">detections_gt</span><span class="p">,</span> <span class="n">metadatas</span><span class="p">,</span> <span class="n">bbox_column</span><span class="p">):</span>
+        <span class="n">images_ids</span> <span class="o">=</span> <span class="n">metadatas</span><span class="p">[</span><span class="n">metadatas</span><span class="o">.</span><span class="n">is_labeled</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">detections_pred</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span><span class="n">detections_pred</span><span class="o">.</span><span class="n">ignored</span> <span class="o">==</span> <span class="kc">False</span><span class="p">]</span>
+        <span class="n">metric</span> <span class="o">=</span> <span class="n">MeanAveragePrecision</span><span class="p">(</span><span class="n">box_format</span><span class="o">=</span><span class="s2">&quot;xywh&quot;</span><span class="p">,</span> <span class="n">iou_type</span><span class="o">=</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">image_id</span> <span class="ow">in</span> <span class="n">images_ids</span><span class="p">:</span>
+            <span class="n">targets_by_image</span> <span class="o">=</span> <span class="n">detections_gt</span><span class="p">[</span><span class="n">detections_gt</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">image_id</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">targets_by_image</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">targets_by_image</span><span class="o">.</span><span class="n">bbox_ltwh</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+                        <span class="p">),</span>
+                        <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">targets_by_image</span><span class="o">.</span><span class="n">category_id</span><span class="o">.</span><span class="n">values</span><span class="p">),</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+                <span class="n">preds_by_image</span> <span class="o">=</span> <span class="n">detections_pred</span><span class="p">[</span>
+                    <span class="n">detections_pred</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">image_id</span>
+                <span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">preds_by_image</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                    <span class="n">preds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">preds_by_image</span><span class="p">[</span><span class="n">bbox_column</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
+                                    <span class="nb">float</span>
+                                <span class="p">)</span>
+                            <span class="p">),</span>
+                            <span class="s2">&quot;scores&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                                <span class="n">preds_by_image</span><span class="o">.</span><span class="n">bbox_conf</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+                            <span class="p">),</span>
+                            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                                <span class="n">preds_by_image</span><span class="o">.</span><span class="n">category_id</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+                            <span class="p">),</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">preds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([]),</span>
+                            <span class="s2">&quot;scores&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([]),</span>
+                            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([]),</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+        <span class="n">metric</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">metric</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="PoseTrack21Evaluator.PoseTrackEncoder">
+<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.PoseTrackEncoder">[docs]</a>
+    <span class="k">class</span> <span class="nc">PoseTrackEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
+<div class="viewcode-block" id="PoseTrack21Evaluator.PoseTrackEncoder.default">
+<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.PoseTrackEncoder.default">[docs]</a>
+        <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span></div>
+</div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Baptiste Standaert, Vladimir Somers, Victor Joos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
