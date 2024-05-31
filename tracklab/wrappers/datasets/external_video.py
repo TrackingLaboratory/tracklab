@@ -117,7 +117,9 @@ class ExternalVideo(TrackingDataset):
             None,
         )
 
-        super().__init__(dataset_path, None, val_set, None, *args, **kwargs)
+        sets = {"val": val_set}
+
+        super().__init__(dataset_path, sets, *args, **kwargs)
 
     @staticmethod
     def get_frame_count(video_path):
