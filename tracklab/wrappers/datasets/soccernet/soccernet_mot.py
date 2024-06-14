@@ -204,7 +204,7 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
         video_metadata['categories'] = categories_list
 
     # Concatenate dataframes
-    video_metadata = pd.DataFrame(video_metadatas_list)
+    video_metadata = pd.DataFrame(video_metadatas_list)  # FIXME video_metadata ??
     image_metadata = pd.concat(image_metadata_list, ignore_index=True)
     detections = pd.concat(detections_list, ignore_index=True)
 
