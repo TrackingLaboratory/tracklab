@@ -1,4 +1,3 @@
-import glob
 import mimetypes
 
 import cv2
