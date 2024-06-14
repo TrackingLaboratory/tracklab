@@ -26,6 +26,10 @@ cfg:
   eval_reid_pose_tracking: False # Not working
   eval_mot: True
 
+  keypoints_column_for_eval: "keypoints_xyc"  # which keypoints column to use for evaluation
+  vis_kp_threshold: 0.3
+  min_num_vis_kp: 3
+  min_tracklet_length: 3
   bbox_column_for_eval: "bbox_ltwh"  # which bbox column to use for evaluation: {"bbox_ltwh", "track_bbox_kf_ltwh", ...}
   eval_pose_on_all: False  # Evaluation pose estimation on all detections. If set to false, will evaluate pose estimation only on tracked detections (i.e. detections with a defined 'track_id')
   print_by_video: False
