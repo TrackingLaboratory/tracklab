@@ -146,7 +146,7 @@ class VisualizationEngine(Callback):
                 break
             # retrieve results
             image_metadata = image_metadatas.loc[image_id]
-            image_gt = image_gts.loc[image_id]
+            image_gt = image_gts.get(image_id, None)
             image_pred = image_preds.loc[image_id]
             detections_pred = detections[
                 detections.image_id == image_metadata.name
