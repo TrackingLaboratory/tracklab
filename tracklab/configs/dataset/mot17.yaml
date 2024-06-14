@@ -1,11 +1,11 @@
 defaults:
   - default
 
-_target_: tracklab.wrappers.MOT20
+_target_: tracklab.wrappers.MOT17
 
-dataset_path: ${data_dir}/MOT20
+dataset_path: ${data_dir}/MOT17
 eval_set: "train"
 
 track_eval:
   dataset_class: MotChallenge2DBox
-  BENCHMARK: "MOT20"
+  BENCHMARK: "MOT17"
