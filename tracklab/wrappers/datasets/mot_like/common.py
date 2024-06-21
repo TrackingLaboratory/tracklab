@@ -13,9 +13,10 @@ log = logging.getLogger(__name__)
 
 class MOT(TrackingDataset):
     def __init__(self, dataset_path: str, categories_list: list, nvid: int = -1,
-                 vids_dict: list = None, *args, **kwargs):
+                 vids_dict: list = None, public_dets_subpath : str = None, *args, **kwargs):
         self.categories_list = categories_list
         self.dataset_path = Path(dataset_path)
+        self.public_dets_subpath = public_dets_subpath
         assert self.dataset_path.exists(), "'{}' directory does not exist".format(
             self.dataset_path
         )
@@ -43,11 +44,25 @@ class MOT(TrackingDataset):
         df['bbox_ltwh'] = df.apply(lambda row: np.array([row['left'], row['top'], row['width'], row['height']]), axis=1)
         return df[['image_id', 'track_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility']]
 
+    def read_motchallenge_result_formatted_file(self, file_path):
+        columns = ['image_id', 'track_id', 'left', 'top', 'width', 'height', 'bbox_conf', 'x', 'y', 'z']
+        df = pd.read_csv(file_path, header=None, names=columns)
+        df['bbox_ltwh'] = df.apply(lambda row: np.array([row['left'], row['top'], row['width'], row['height']]), axis=1)
+        df['category_id'] = 1
+        if df['bbox_conf'].max() > 1 and df['bbox_conf'].min() < 0:
+            log.warning("Warning: 'bbox_conf' from the public detections is not between 0 and 1.")
+            df['bbox_conf'] = 1/(1 + np.exp(-df['bbox_conf']))
+        elif df['bbox_conf'].max() < 0:
+            log.warning("Warning: 'bbox_conf' from the public detections is not between 0 and 1.")
+            df['bbox_conf'] = 1.0
+        return df[['image_id', 'bbox_ltwh', 'bbox_conf', 'category_id']]
+
 
     def load_set(self, dataset_path, nvid=-1, vids_filter_set=None):
         video_metadatas_list = []
         image_metadata_list = []
         detections_list = []
+        public_detections_list = []
         split = os.path.basename(dataset_path)  # Get the split name from the dataset path
         video_list = os.listdir(dataset_path)
         video_list.sort()
@@ -84,7 +99,19 @@ class MOT(TrackingDataset):
                     person_counter += len(detections_df['track_id'].unique())
                 else:
                     log.warning(
-                        f"Warning: The {video_folder} from {split} split does not contain annotations.")
+                        f"Warning: The {video_folder} from {split} split does not contain ground truth.")
+
+                # read public detections file
+                if self.public_dets_subpath is not None:
+                    det_path = os.path.join(video_folder_path, self.public_dets_subpath)
+                    if os.path.isfile(det_path):
+                        detections_df = self.read_motchallenge_result_formatted_file(det_path)
+                        detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
+                        detections_df['video_id'] = len(video_metadatas_list) + 1
+                        public_detections_list.append(detections_df)
+                    else:
+                        log.warning(
+                            f"Warning: The {video_folder} from {split} split does not contain public detections.")
 
                 # Append video metadata
                 nframes = int(seqinfo_data.get('seqLength', 0))
@@ -125,6 +152,14 @@ class MOT(TrackingDataset):
         else:
             detections = pd.DataFrame(
                 columns=['image_id', 'track_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility', 'person_id', 'video_id'])
+        if self.public_dets_subpath is not None:
+            if len(public_detections_list):
+                public_detections = pd.concat(public_detections_list, ignore_index=True)
+                public_detections = public_detections.sort_values(by=['video_id', 'image_id'],
+                                                    ascending=[True, True])
+            else:
+                public_detections = pd.DataFrame(
+                    columns=['image_id', 'bbox_ltwh', 'bbox_conf', 'video_id', 'category_id'])
 
         # Use video_id, image_id, track_id as unique id
         detections = detections.sort_values(by=['video_id', 'image_id', 'track_id'], ascending=[True, True, True])
@@ -154,9 +189,13 @@ class MOT(TrackingDataset):
         detections_column_ordered.extend(set(detections.columns) - set(detections_column_ordered))
         detections = detections[detections_column_ordered]
 
-        return TrackingSet(
+        tracking_set = TrackingSet(
             video_metadata,
             image_metadata,
             detections,
             image_gt,
         )
+        if self.public_dets_subpath is not None:
+            tracking_set.detections_public = public_detections
+
+        return tracking_set
