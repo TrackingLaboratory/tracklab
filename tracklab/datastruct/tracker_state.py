@@ -27,6 +27,7 @@ class TrackerState(AbstractContextManager):
             json_file=None,  # TODO merge with above behavior
             save_file=None,
             load_from_groundtruth=False,
+            load_from_public_dets=False,
             compression=zipfile.ZIP_STORED,
             bbox_format=None,
             pipeline=None,
@@ -38,6 +39,8 @@ class TrackerState(AbstractContextManager):
         self.image_pred = None
         self.detections_gt = tracking_set.detections_gt
         self.detections_pred = None
+        if hasattr(tracking_set, "detections_public"):
+            self.detections_public = tracking_set.detections_public
 
         self.load_file = Path(load_file) if load_file else None
         self.save_file = Path(save_file) if save_file else None
@@ -66,6 +69,9 @@ class TrackerState(AbstractContextManager):
         elif load_from_groundtruth:
             load_columns["image"] = set(self.image_gt.columns)
             load_columns["detection"] = set(self.detections_gt.columns)
+        elif load_from_public_dets:
+            load_columns["image"] = set(self.image_gt.columns)
+            load_columns["detection"] = set(self.detections_gt.columns)
 
         self.input_columns = defaultdict(set)
         self.output_columns = defaultdict(set)
@@ -77,7 +83,7 @@ class TrackerState(AbstractContextManager):
                 self.forget_columns[level] += getattr(module, "forget_columns", [])
 
         self.load_columns = {"detection": list(), "image": list()}
-        if self.load_file or load_from_groundtruth:
+        if self.load_file or load_from_groundtruth or load_from_public_dets:
             self.load_columns["detection"] = list(
                 (load_columns["detection"] - self.output_columns["detection"])
                 | self.input_columns["detection"]
@@ -102,6 +108,11 @@ class TrackerState(AbstractContextManager):
         if self.load_from_groundtruth:
             self.load_groundtruth(self.load_columns)
 
+        self.load_from_public_dets = load_from_public_dets
+        if self.load_from_public_dets:
+            self.load_public_dets(self.load_columns)
+
+
     def load_groundtruth(self, load_columns):
         from tracklab.engine.engine import merge_dataframes
         if self.pipeline.is_empty():
@@ -123,6 +134,12 @@ class TrackerState(AbstractContextManager):
             self.image_pred_gt = merge_dataframes(
                 self.image_metadatas.copy(), self.image_gt.copy()
             )[list(set(load_columns["image"]) | {"video_id", "file_path", "frame"})]
+
+
+    def load_public_dets(self, load_columns):
+        self.detections_pred_public = self.detections_public.copy()
+        self.image_pred_public = self.image_metadatas.copy()
+
 
     def load_detections_pred_from_json(self, json_file):
         anns_path = Path(json_file)
@@ -304,6 +321,9 @@ class TrackerState(AbstractContextManager):
         if self.load_from_groundtruth:
             video_detections = self.detections_pred_gt[self.detections_pred_gt.video_id == self.video_id]
             video_image_preds = self.image_pred_gt[self.image_pred_gt.video_id == self.video_id]
+        if self.load_from_public_dets:
+            video_detections = self.detections_public[self.detections_pred_public.video_id == self.video_id]
+            video_image_preds = self.image_pred_public[self.image_pred_public.video_id == self.video_id]
         if self.load_file is not None:
             if f"{self.video_id}.pkl" in self.zf["load"].namelist():
                 with self.zf["load"].open(f"{self.video_id}.pkl", "r") as fp:

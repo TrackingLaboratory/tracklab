@@ -5,6 +5,7 @@ _target_: tracklab.wrappers.DanceTrack
 
 dataset_path: ${data_dir}/DanceTrack
 eval_set: "val"
+public_dets_subpath: "det/yolox_dets.txt"
 
 track_eval:
   dataset_class: MotChallenge2DBox
