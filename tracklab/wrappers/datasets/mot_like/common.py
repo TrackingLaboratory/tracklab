@@ -24,7 +24,7 @@ class MOT(TrackingDataset):
         for set in ['train', 'val', 'test']:
             set_path = self.dataset_path / set
             if os.path.isdir(set_path):
-                sets_dict[set] = self.load_set(set_path, nvid, vids_dict["train"])
+                sets_dict[set] = self.load_set(set_path, nvid, vids_dict[set])
             else:
                 log.warning(f"Warning: the {set} set does not exist.")
                 sets_dict[set] = None
