@@ -5,6 +5,7 @@ _target_: tracklab.wrappers.MOT20
 
 dataset_path: ${data_dir}/MOT20
 eval_set: "train"
+public_dets_subpath: "det/yolox_dets.txt"  # det.txt for public and yolox.txt for private
 
 track_eval:
   dataset_class: MotChallenge2DBox
