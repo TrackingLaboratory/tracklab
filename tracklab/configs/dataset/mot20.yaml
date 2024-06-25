@@ -10,3 +10,4 @@ public_dets_subpath: "det/yolox_dets.txt"  # det.txt for public and yolox.txt fo
 track_eval:
   dataset_class: MotChallenge2DBox
   BENCHMARK: "MOT20"
+  DO_PREPROC: True
