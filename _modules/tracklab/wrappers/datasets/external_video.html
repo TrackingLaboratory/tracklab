@@ -167,8 +167,8 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">mimetypes</span><span class="o">.</span><span class="n">guess_type</span><span class="p">(</span><span class="n">video_path</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;video&#39;</span><span class="p">):</span>
                     <span class="k">continue</span>
                 <span class="n">nframes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_frame_count</span><span class="p">(</span><span class="n">video_path</span><span class="p">)</span>
-                <span class="n">video_id</span> <span class="o">=</span> <span class="n">i</span>
                 <span class="n">video_name</span> <span class="o">=</span> <span class="n">video_path</span><span class="o">.</span><span class="n">stem</span>
+                <span class="n">video_id</span> <span class="o">=</span> <span class="n">video_name</span>
                 <span class="n">image_metadata</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
                     <span class="p">[</span>
                         <span class="p">{</span>
@@ -209,11 +209,10 @@
             <span class="n">video_metadata</span><span class="p">,</span>
             <span class="n">image_metadata</span><span class="p">,</span>
             <span class="kc">None</span><span class="p">,</span>
+            <span class="n">image_metadata</span>
         <span class="p">)</span>
 
-        <span class="n">sets</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;val&quot;</span><span class="p">:</span> <span class="n">val_set</span><span class="p">}</span>
-
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">,</span> <span class="n">sets</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">,</span>  <span class="nb">dict</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val_set</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ExternalVideo.get_frame_count">
 <a class="viewcode-back" href="../../../../api/pbtrack.wrappers.datasets.html#tracklab.wrappers.datasets.external_video.ExternalVideo.get_frame_count">[docs]</a>
