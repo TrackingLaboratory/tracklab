@@ -2389,10 +2389,10 @@ files = [
 numpy = [
     {version = ">=1.21.0", markers = "python_version == \"3.9\" and platform_system == \"Darwin\" and platform_machine == \"arm64\""},
     {version = ">=1.19.3", markers = "platform_system == \"Linux\" and platform_machine == \"aarch64\" and python_version >= \"3.8\" and python_version < \"3.10\" or python_version > \"3.9\" and python_version < \"3.10\" or python_version >= \"3.9\" and platform_system != \"Darwin\" and python_version < \"3.10\" or python_version >= \"3.9\" and platform_machine != \"arm64\" and python_version < \"3.10\""},
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
-    {version = ">=1.23.5", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
     {version = ">=1.21.4", markers = "python_version >= \"3.10\" and platform_system == \"Darwin\" and python_version < \"3.11\""},
     {version = ">=1.21.2", markers = "platform_system != \"Darwin\" and python_version >= \"3.10\" and python_version < \"3.11\""},
+    {version = ">=1.23.5", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 
 [[package]]
@@ -2415,10 +2415,10 @@ files = [
 numpy = [
     {version = ">=1.21.0", markers = "python_version == \"3.9\" and platform_system == \"Darwin\" and platform_machine == \"arm64\""},
     {version = ">=1.19.3", markers = "platform_system == \"Linux\" and platform_machine == \"aarch64\" and python_version >= \"3.8\" and python_version < \"3.10\" or python_version > \"3.9\" and python_version < \"3.10\" or python_version >= \"3.9\" and platform_system != \"Darwin\" and python_version < \"3.10\" or python_version >= \"3.9\" and platform_machine != \"arm64\" and python_version < \"3.10\""},
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
-    {version = ">=1.23.5", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
     {version = ">=1.21.4", markers = "python_version >= \"3.10\" and platform_system == \"Darwin\" and python_version < \"3.11\""},
     {version = ">=1.21.2", markers = "platform_system != \"Darwin\" and python_version >= \"3.10\" and python_version < \"3.11\""},
+    {version = ">=1.23.5", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 
 [[package]]
@@ -2467,33 +2467,6 @@ tabulate = "*"
 [package.extras]
 all = ["Click", "colorama", "coverage", "docutils (==0.16.0)", "flake8", "interrogate", "model-index", "myst-parser", "opendatalab", "pandas", "pip (>=19.3)", "pytest", "pytorch-sphinx-theme", "requests", "rich", "sphinx (==4.0.2)", "sphinx-copybutton", "sphinx-markdown-tables", "tabulate"]
 tests = ["coverage", "flake8", "interrogate", "pytest"]
-
-[[package]]
-name = "openpifpaf"
-version = "0.13.11"
-description = "PifPaf: Composite Fields for Human Pose Estimation"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "openpifpaf-0.13.11.tar.gz", hash = "sha256:f15936201fe5180fddda9e42437d4c41d6884e6130387e9e67dfc79240dcc61b"},
-]
-
-[package.dependencies]
-importlib_metadata = "!=3.8.0"
-numpy = ">=1.16"
-pillow = "!=8.3.0"
-pysparkling = "*"
-python-json-logger = "*"
-torch = "1.13.1"
-torchvision = "0.14.1"
-
-[package.extras]
-coreml = ["coremltools (>=5.0b3)", "numpy (<1.24)"]
-dev = ["flameprof", "ipython (<8)", "jupyter-book (>=0.9.1)", "matplotlib (>=3.3)", "nbdime", "nbstripout", "scipy", "sphinx-book-theme", "wheel"]
-extras = ["openpifpaf-extras (>=0.0.3)"]
-onnx = ["onnx", "onnxruntime", "protobuf (<4)"]
-test = ["cpplint", "nbconvert (<7)", "nbstripout", "nbval", "opencv-python", "pycodestyle", "pylint (<2.9.4)", "pytest", "thop"]
-train = ["matplotlib (>=3.3)", "pycocotools (>=2.0.1,!=2.0.5,!=2.0.6)", "scipy", "xtcocotools (>=1.5)"]
 
 [[package]]
 name = "openxlab"
@@ -2572,8 +2545,8 @@ files = [
 [package.dependencies]
 numpy = [
     {version = ">=1.22.4", markers = "python_version < \"3.11\""},
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -3176,30 +3149,6 @@ files = [
 ]
 
 [[package]]
-name = "pysparkling"
-version = "0.6.2"
-description = "Pure Python implementation of the Spark RDD interface."
-optional = false
-python-versions = "*"
-files = [
-    {file = "pysparkling-0.6.2.tar.gz", hash = "sha256:74056d975fa06bb9c4a73c91e8f7e7115089249a8cdeb7692f9a7c7ec0dc0a44"},
-]
-
-[package.dependencies]
-python-dateutil = ">=2.8.0"
-pytz = ">=2019.3"
-
-[package.extras]
-hdfs = ["hdfs (>=2.0.0)"]
-http = ["requests (>=2.6.0)"]
-performance = ["matplotlib (>=1.5.3)"]
-s3 = ["boto (>=2.36.0)"]
-scripts = ["ipyparallel", "matplotlib", "pyspark"]
-sql = ["numpy", "pandas (>=0.23.2)"]
-streaming = ["tornado (>=4.3)"]
-tests = ["backports.tempfile (==1.0rc1)", "cloudpickle (>=0.1.0)", "isort", "memory-profiler (>=0.47)", "pycodestyle", "pylint", "pylzma", "pytest", "pytest-cov", "requests (>=2.6.0)", "tornado (>=4.3)"]
-
-[[package]]
 name = "pytest"
 version = "8.1.1"
 description = "pytest: simple powerful testing with Python"
@@ -3234,17 +3183,6 @@ files = [
 
 [package.dependencies]
 six = ">=1.5"
-
-[[package]]
-name = "python-json-logger"
-version = "2.0.7"
-description = "A python library adding a json log formatter"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "python-json-logger-2.0.7.tar.gz", hash = "sha256:23e7ec02d34237c5aa1e29a070193a4ea87583bb4e7f8fd06d3de8264c4b2e1c"},
-    {file = "python_json_logger-2.0.7-py3-none-any.whl", hash = "sha256:f380b826a991ebbe3de4d897aeec42760035ac760345e57b812938dc8b35e2bd"},
-]
 
 [[package]]
 name = "pytorch-lightning"
@@ -4046,6 +3984,29 @@ files = [
 ]
 
 [[package]]
+name = "sn-trackeval"
+version = "0.3.0"
+description = "Code for evaluating object tracking"
+optional = false
+python-versions = "*"
+files = [
+    {file = "sn_trackeval-0.3.0-py3-none-any.whl", hash = "sha256:c20d0e295e064c8dc6ef7e9ed12883fa36452f17e664578d669feecbe4289a1f"},
+    {file = "sn_trackeval-0.3.0.tar.gz", hash = "sha256:a3a5fe49eea4d0190f6e406edb6feb2e64efcdbc8673b3147055e7d6703d4597"},
+]
+
+[package.dependencies]
+matplotlib = "*"
+numpy = "*"
+opencv-python = "*"
+Pillow = "*"
+pycocotools = "*"
+pytest = "*"
+scikit-image = "*"
+scipy = "*"
+tabulate = "*"
+tqdm = "*"
+
+[[package]]
 name = "snowballstemmer"
 version = "2.2.0"
 description = "This package provides 29 stemmers for 28 languages generated from Snowball algorithms."
@@ -4592,25 +4553,6 @@ type = "directory"
 url = "plugins/track"
 
 [[package]]
-name = "trackeval"
-version = "1.0.dev1"
-description = "Code for evaluating object tracking"
-optional = false
-python-versions = "*"
-files = []
-develop = false
-
-[package.dependencies]
-numpy = "*"
-scipy = "*"
-
-[package.source]
-type = "git"
-url = "https://github.com/SoccerNet/sn-trackeval.git"
-reference = "HEAD"
-resolved_reference = "c0d3748e8b6395687d804b982dabf5d153247734"
-
-[[package]]
 name = "typing-extensions"
 version = "4.11.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -4634,18 +4576,17 @@ files = [
 
 [[package]]
 name = "ultralytics"
-version = "8.0.61"
-description = "Ultralytics YOLOv8"
+version = "8.0.100"
+description = "Ultralytics YOLOv8 for SOTA object detection, multi-object tracking, instance segmentation, pose estimation and image classification."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "ultralytics-8.0.61-py3-none-any.whl", hash = "sha256:159189c18e9253f287168d617d18a902c1b555683495d419f28c85ef818a874d"},
-    {file = "ultralytics-8.0.61.tar.gz", hash = "sha256:26860fbbf64262f8eb1e25103e83e6d0a2e39abefe4a1ef28aa853960181e9f7"},
+    {file = "ultralytics-8.0.100-py3-none-any.whl", hash = "sha256:6715ae74fdbff27e0c8f097c56ab81d747481f6e698854545763d21199414cd0"},
+    {file = "ultralytics-8.0.100.tar.gz", hash = "sha256:917b6f5f4aa68ec78a4d6cbebfddc982c099eb5df17dc7fab483ce4579d781b6"},
 ]
 
 [package.dependencies]
 matplotlib = ">=3.2.2"
-numpy = ">=1.21.6"
 opencv-python = ">=4.6.0"
 pandas = ">=1.1.4"
 Pillow = ">=7.1.2"
@@ -4661,9 +4602,8 @@ torchvision = ">=0.8.1"
 tqdm = ">=4.64.0"
 
 [package.extras]
-dev = ["check-manifest", "coverage", "mkdocs-material", "mkdocstrings[python]", "pytest", "pytest-cov"]
-export = ["coremltools (>=6.0)", "onnx", "onnxruntime", "onnxsim", "openvino-dev (>=2022.3)"]
-tf = ["onnx2tf", "sng4onnx", "tensorflow", "tflite-support"]
+dev = ["check-manifest", "coverage", "mkdocs-material", "mkdocs-redirects", "mkdocs-ultralytics-plugin", "mkdocstrings[python]", "pytest", "pytest-cov"]
+export = ["coremltools (>=6.0)", "openvino-dev (>=2022.3)", "tensorflowjs"]
 
 [[package]]
 name = "urllib3"
@@ -5059,4 +4999,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "359d4dc6c9e18b454313ce9848e18a8ac96b1292d8fccb123b6776564c719115"
+content-hash = "ab641c07eec3519e7be53a6ac6eb85e3cf878e6fdcf37bca7b1f3bc85ee80961"
