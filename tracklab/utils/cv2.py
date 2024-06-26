@@ -279,7 +279,7 @@ def draw_ignore_region(patch, image_metadata):
 def print_count_frame(patch, frame, nframes):
     draw_text(
         patch,
-        f"{frame}/{nframes}",
+        f"{frame+1}/{nframes}",
         (6, 15),
         fontFace=1,
         fontScale=2.0,
