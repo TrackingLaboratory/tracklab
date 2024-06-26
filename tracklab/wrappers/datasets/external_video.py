@@ -73,8 +73,8 @@ class ExternalVideo(TrackingDataset):
                 if not mimetypes.guess_type(video_path)[0].startswith('video'):
                     continue
                 nframes = self.get_frame_count(video_path)
-                video_id = i
                 video_name = video_path.stem
+                video_id = video_name
                 image_metadata.extend(
                     [
                         {
@@ -115,11 +115,10 @@ class ExternalVideo(TrackingDataset):
             video_metadata,
             image_metadata,
             None,
+            image_metadata
         )
 
-        sets = {"val": val_set}
-
-        super().__init__(dataset_path, sets, *args, **kwargs)
+        super().__init__(dataset_path,  dict(val=val_set), *args, **kwargs)
 
     @staticmethod
     def get_frame_count(video_path):
