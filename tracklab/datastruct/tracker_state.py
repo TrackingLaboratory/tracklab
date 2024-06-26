@@ -51,7 +51,7 @@ class TrackerState(AbstractContextManager):
         if self.load_file:
             with zipfile.ZipFile(self.load_file) as zf:
                 if "summary.json" in zf.namelist():
-                    with zf.open("summary.json") as fp:
+                    with zf.open("summary.json", force_zip64=True) as fp:
                         summary = json.load(fp)
                         if isinstance(summary["columns"], list):
                             load_columns["detection"] = set(summary["columns"])
@@ -60,10 +60,10 @@ class TrackerState(AbstractContextManager):
                 else:
                     image_file = next(f for f in zf.namelist() if "image" in f)
                     detection_file = next(f for f in zf.namelist() if "image" not in f)
-                    with zf.open(detection_file) as fp:
+                    with zf.open(detection_file, force_zip64=True) as fp:
                         dets = pickle.load(fp)
                         load_columns["detection"] = set(dets.columns)
-                    with zf.open(image_file) as fp:
+                    with zf.open(image_file, force_zip64=True) as fp:
                         images = pickle.load(fp)
                         load_columns["image"] = set(images.columns)
         elif load_from_groundtruth:
@@ -280,7 +280,7 @@ class TrackerState(AbstractContextManager):
         ), "The detections_pred should not be empty when saving"
         if f"{self.video_id}.pkl" not in self.zf["save"].namelist():
             if "summary.json" not in self.zf["save"].namelist():
-                with self.zf["save"].open("summary.json", "w") as fp:
+                with self.zf["save"].open("summary.json", "w", force_zip64=True) as fp:
                     summary = {"columns": {
                         "detection": list(self.detections_pred.columns),
                         "image": list(self.image_pred.columns),
@@ -290,13 +290,13 @@ class TrackerState(AbstractContextManager):
                         'utf-8')
                     fp.write(summary_bytes)
             if not self.detections_pred.empty:
-                with self.zf["save"].open(f"{self.video_id}.pkl", "w") as fp:
+                with self.zf["save"].open(f"{self.video_id}.pkl", "w", force_zip64=True) as fp:
                     detections_pred = self.detections_pred[
                         self.detections_pred.video_id == self.video_id
                         ]
                     pickle.dump(detections_pred, fp, protocol=pickle.DEFAULT_PROTOCOL)
             if not self.image_pred.empty:
-                with self.zf["save"].open(f"{self.video_id}_image.pkl", "w") as fp:
+                with self.zf["save"].open(f"{self.video_id}_image.pkl", "w", force_zip64=True) as fp:
                     image_pred = self.image_pred[
                         self.image_pred.video_id == self.video_id
                     ]
@@ -326,13 +326,13 @@ class TrackerState(AbstractContextManager):
             video_image_preds = self.image_pred_public[self.image_pred_public.video_id == self.video_id]
         if self.load_file is not None:
             if f"{self.video_id}.pkl" in self.zf["load"].namelist():
-                with self.zf["load"].open(f"{self.video_id}.pkl", "r") as fp:
+                with self.zf["load"].open(f"{self.video_id}.pkl", "r", force_zip64=True) as fp:
                     video_detections = pickle.load(fp)[self.load_columns["detection"]]
             else:
                 log.info(f"{self.video_id} detections not in pklz file.")
                 video_detections = pd.DataFrame()
             if f"{self.video_id}_image.pkl" in self.zf["load"].namelist():
-                with self.zf["load"].open(f"{self.video_id}_image.pkl", "r") as fp_image:
+                with self.zf["load"].open(f"{self.video_id}_image.pkl", "r", force_zip64=True) as fp_image:
                     video_image_preds = merge_dataframes(
                         pickle.load(fp_image), video_image_preds
                     )[self.load_columns["image"]]
