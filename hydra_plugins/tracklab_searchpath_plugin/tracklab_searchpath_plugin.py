@@ -10,7 +10,7 @@ class PbTrackSearchPathPlugin(SearchPathPlugin):
     def manipulate_search_path(self, search_path: ConfigSearchPath) -> None:
         # Appends the search path for tracklab plugins to the end of the search path
         groups = entry_points()
-        pbtrack_plugins = groups.get("tracklab_plugins", [])
+        pbtrack_plugins = groups.get("tracklab_plugin", [])
         for pbtrack_plugin in pbtrack_plugins:
             m = pbtrack_plugin.dist
             module = pbtrack_plugin.load()
