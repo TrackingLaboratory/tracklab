@@ -263,7 +263,7 @@ class TrackerState(AbstractContextManager):
         ), "The detections_pred should not be empty when saving"
         if f"{self.video_id}.pkl" not in self.zf["save"].namelist():
             if "summary.json" not in self.zf["save"].namelist():
-                with self.zf["save"].open("summary.json", "w") as fp:
+                with self.zf["save"].open("summary.json", "w", force_zip64=True) as fp:
                     summary = {"columns": {
                         "detection": list(self.detections_pred.columns),
                         "image": list(self.image_pred.columns),
@@ -273,13 +273,13 @@ class TrackerState(AbstractContextManager):
                         'utf-8')
                     fp.write(summary_bytes)
             if not self.detections_pred.empty:
-                with self.zf["save"].open(f"{self.video_id}.pkl", "w") as fp:
+                with self.zf["save"].open(f"{self.video_id}.pkl", "w", force_zip64=True) as fp:
                     detections_pred = self.detections_pred[
                         self.detections_pred.video_id == self.video_id
                         ]
                     pickle.dump(detections_pred, fp, protocol=pickle.DEFAULT_PROTOCOL)
             if not self.image_pred.empty:
-                with self.zf["save"].open(f"{self.video_id}_image.pkl", "w") as fp:
+                with self.zf["save"].open(f"{self.video_id}_image.pkl", "w", force_zip64=True) as fp:
                     image_pred = self.image_pred[
                         self.image_pred.video_id == self.video_id
                     ]
