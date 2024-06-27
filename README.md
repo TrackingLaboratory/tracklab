@@ -104,7 +104,6 @@ This command will create a directory called `outputs` which will have a `${exper
 All the output files (logs, models, visualization, ...) from a run will be put inside this directory.
 
 If you want to override some configuration parameters, e.g. to use another detection module or dataset, you can do so by modifying the corresponding parameters directly in the .yaml files under configs/.
-```bash
 
 All parameters are also configurable from the command-line, e.g. : (more info on Hydra's override grammar [here](https://hydra.cc/docs/advanced/override_grammar/basic/))
 ```bash
