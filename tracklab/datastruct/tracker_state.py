@@ -134,6 +134,8 @@ class TrackerState(AbstractContextManager):
             self.image_pred_gt = merge_dataframes(
                 self.image_metadatas.copy(), self.image_gt.copy()
             )[list(set(load_columns["image"]) | {"video_id", "file_path", "frame"})]
+        self.detections_pred_gt = self.detections_pred_gt.reset_index(drop=True)
+        self.detections_pred_gt['id'] = self.detections_pred_gt.index
 
 
     def load_public_dets(self, load_columns):
