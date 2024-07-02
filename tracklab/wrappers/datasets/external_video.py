@@ -114,7 +114,7 @@ class ExternalVideo(TrackingDataset):
             video_metadata,
             image_metadata,
             None,
-            image_metadata
+            image_metadata,
         )
 
         super().__init__(dataset_path,  dict(val=val_set), *args, **kwargs)

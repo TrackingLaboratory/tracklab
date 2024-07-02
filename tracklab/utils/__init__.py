@@ -90,6 +90,26 @@ class KeypointsDataFrameAccessor:
             lambda x: keypoints_in_bbox_coord(x, bbox_ltwh)
         )
 
+    def keypoints_bbox_xyc(self):
+        """Converts from keypoints in image coordinates to keypoints in bbox coordinates"""
+        return self._obj.apply(
+            lambda r: keypoints_in_bbox_coord(r.keypoints_xyc, r.bbox_ltwh), axis=1)
+
+    def add_negative_samples(self):
+        self._obj["id"] = self._obj.index
+        self._obj.reset_index(drop=True, inplace=True)
+        all_kps_in_img = np.array(list(self._obj.keypoints_xyc))
+        id_to_index = {k: v for v, k in enumerate(list(self._obj.id))}
+        self._obj["negative_kps"] = self._obj \
+            .apply(
+            lambda bb: keypoints_in_bbox_coord(
+                np.delete(all_kps_in_img, id_to_index[bb.id], axis=0), bb.bbox_ltwh),
+            axis=1) \
+            .apply(
+            lambda kp_xyc_bbox: kp_xyc_bbox[
+                kp_xyc_bbox[:, :, 2].sum(axis=1) > 0])  # remove non visibile skeletons
+        self._obj.set_index("id", inplace=True)
+        return self._obj
 
 @pd.api.extensions.register_series_accessor("keypoints")
 class KeypointsSeriesAccessor:
@@ -120,3 +140,7 @@ class KeypointsSeriesAccessor:
 
     def in_bbox_coord(self, bbox_ltwh):
         return keypoints_in_bbox_coord(self._obj.keypoints_xyc, bbox_ltwh)
+
+    def keypoints_bbox_xyc(self):
+        """Converts from keypoints in image coordinates to keypoints in bbox coordinates"""
+        return keypoints_in_bbox_coord(self._obj.keypoints_xyc, self._obj.bbox_ltwh)

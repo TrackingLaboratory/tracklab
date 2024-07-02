@@ -96,7 +96,8 @@ class VisualizationEngine(Callback):
             else:
                 detections = detections[detections.image_id == image_metadata.name]
                 image = self.draw_frame(image_metadata,
-                                        detections, ground_truths, "inf", image=image)
+                                        detections, ground_truths, nframes="inf",
+                                        image=image, image_gt=image_metadata, image_pred=image_metadata)
             if platform.system() == "Linux" and self.video_name not in self.windows:
                 self.windows.append(self.video_name)
                 cv2.namedWindow(str(self.video_name),

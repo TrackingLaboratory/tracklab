@@ -1,5 +1,10 @@
+import colorsys
+
 import cv2
 from functools import lru_cache
+
+import matplotlib.cm as cm
+
 from .coordinates import *
 
 
@@ -365,3 +370,41 @@ def draw_text(
         lineType=lineType,
     )
     return text_size
+
+
+def scale_lightness(rgb, scale_l=1.4):
+    # convert rgb to hls
+    h, l, s = colorsys.rgb_to_hls(*rgb)
+    # manipulate h, l, s values and return as rgb
+    return colorsys.hls_to_rgb(h, min(1, l * scale_l), s = s)
+
+def colored_body_parts_overlay(img, masks, clip=True, interpolation=cv2.INTER_CUBIC, alpha=0.28, mask_threshold=0.0, weight_scale=1, rgb=False):
+    width, height = img.shape[1], img.shape[0]
+    white_bckg = np.ones_like(img) * 255
+    for i in range(masks.shape[0]):
+        mask = cv2.resize(masks[i], dsize=(width, height), interpolation=interpolation)
+        if clip:
+            mask = np.clip(mask, 0, 1)
+        else:
+            mask = np.interp(mask, (mask.min(), mask.max()), (0, 255)).astype(np.uint8)
+        weight = mask
+        mask_alpha = np.ones_like(weight)
+        mask_alpha[mask < mask_threshold] = 0
+        mask_alpha = np.expand_dims(mask_alpha, 2)
+        weight = np.expand_dims(weight, 2) / weight_scale
+        color_img = np.zeros_like(img)
+        color = scale_lightness(cm.gist_rainbow(i / (len(masks)-1))[0:-1])
+        color_img[:] = np.flip(np.array(color)*255).astype(np.uint8)
+        white_bckg = white_bckg * (1 - mask_alpha * weight) + color_img * mask_alpha * weight
+    heatmap = masks.sum(axis=0).clip(0, 1)
+    heatmap = cv2.resize(heatmap, dsize=(width, height), interpolation=interpolation)
+    mask_alpha = heatmap
+    mask_alpha[heatmap < mask_threshold] = 0
+    mask_alpha = np.repeat(np.expand_dims(mask_alpha, 2), 3, 2)
+    white_bckg = white_bckg.astype(img.dtype)
+    if rgb:
+        white_bckg = cv2.cvtColor(white_bckg, cv2.COLOR_BGR2RGB)
+    masked_img = (
+            img * (1 - mask_alpha * alpha) + white_bckg * mask_alpha * alpha
+    )
+    return masked_img

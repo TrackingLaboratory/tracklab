@@ -53,7 +53,7 @@ class TopDownMMPose(DetectionLevelModule):
     def preprocess(self, image, detection: pd.Series, metadata: pd.Series):
         data_info = dict(img=cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
         data_info["bbox"] = detection.bbox.ltrb()[None]
-        data_info["bbox_score"] = detection.bbox_conf[None]
+        data_info["bbox_score"] = np.array(detection.bbox_conf)[None]
         data_info.update(self.model.dataset_meta)
 
         return self.test_pipeline(data_info)

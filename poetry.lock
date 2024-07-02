@@ -669,6 +669,21 @@ test = ["Pillow", "contourpy[test-no-images]", "matplotlib"]
 test-no-images = ["pytest", "pytest-cov", "pytest-xdist", "wurlitzer"]
 
 [[package]]
+name = "cosine_annealing_warmup"
+version = "2.0"
+description = "Cosine Annealing with Warmup for PyTorch"
+optional = false
+python-versions = "*"
+files = []
+develop = false
+
+[package.source]
+type = "git"
+url = "https://github.com/katsura-jp/pytorch-cosine-annealing-with-warmup"
+reference = "HEAD"
+resolved_reference = "12d03c07553aedd3d9e9155e2b3e31ce8c64081a"
+
+[[package]]
 name = "cycler"
 version = "0.12.1"
 description = "Composable style cycles"
@@ -1535,6 +1550,47 @@ files = [
     {file = "kiwisolver-1.4.5-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:11d011a7574eb3b82bcc9c1a1d35c1d7075677fdd15de527d91b46bd35e935ee"},
     {file = "kiwisolver-1.4.5.tar.gz", hash = "sha256:e57e563a57fb22a142da34f38acc2fc1a5c864bc29ca1517a88abc963e60d6ec"},
 ]
+
+[[package]]
+name = "kpreid"
+version = "1.2.5"
+description = "A library for deep learning person re-ID in PyTorch"
+optional = false
+python-versions = "*"
+files = []
+develop = false
+
+[package.dependencies]
+albumentations = "*"
+cosine_annealing_warmup = {git = "https://github.com/katsura-jp/pytorch-cosine-annealing-with-warmup"}
+Cython = "*"
+deepdiff = "*"
+flake8 = "*"
+future = "*"
+gdown = "*"
+h5py = "*"
+isort = "*"
+matplotlib = "*"
+monai = "*"
+numpy = "*"
+opencv-python = "*"
+pandas = "*"
+Pillow = "*"
+scipy = "*"
+segment_anything = {git = "https://github.com/facebookresearch/segment-anything.git"}
+six = "*"
+tabulate = "*"
+tb-nightly = "*"
+torchmetrics = "0.10.3"
+wandb = "*"
+yacs = "*"
+yapf = "*"
+
+[package.source]
+type = "git"
+url = "git@github.com:VlSomers/person-reid.git"
+reference = "dev-victor"
+resolved_reference = "8b67f7fb26e0afd66724d2017246d2bf0efae530"
 
 [[package]]
 name = "lap"
@@ -3742,6 +3798,25 @@ docs = ["ipykernel", "nbconvert", "numpydoc", "pydata_sphinx_theme (==0.10.0rc2)
 stats = ["scipy (>=1.7)", "statsmodels (>=0.12)"]
 
 [[package]]
+name = "segment_anything"
+version = "1.0"
+description = ""
+optional = false
+python-versions = "*"
+files = []
+develop = false
+
+[package.extras]
+all = ["matplotlib", "onnx", "onnxruntime", "opencv-python", "pycocotools"]
+dev = ["black", "flake8", "isort", "mypy"]
+
+[package.source]
+type = "git"
+url = "https://github.com/facebookresearch/segment-anything.git"
+reference = "HEAD"
+resolved_reference = "6fdee8f2727f4506cfbbe553e23b895e27956588"
+
+[[package]]
 name = "sentry-sdk"
 version = "2.0.1"
 description = "Python client for Sentry (https://sentry.io)"
@@ -4541,7 +4616,7 @@ telegram = ["requests"]
 
 [[package]]
 name = "track-bench-track"
-version = "1.0.1"
+version = "1.0.2"
 description = ""
 optional = false
 python-versions = "*"

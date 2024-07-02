@@ -4,43 +4,37 @@ import torch
 
 from omegaconf import OmegaConf
 from yacs.config import CfgNode as CN
+
+import kpreid
+from kpreid.data import ImageDataset
+from kpreid.data.datasets.keypoints_to_masks import KeypointsToMasks
+from kpreid.data.masks_transforms import masks_preprocess_all
+from kpreid.data.transforms import build_transforms
+from kpreid.tools.extract_part_based_features import extract_reid_features
 from .bpbreid_dataset import ReidDataset
 # FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
 from tracklab.utils.coordinates import rescale_keypoints, clip_keypoints_to_image
 from tracklab.utils.collate import default_collate
 
-from torchreid.scripts.main import build_config, build_torchreid_model_engine
-from torchreid.tools.feature_extractor import FeatureExtractor
-from torchreid.utils.imagetools import (
-    build_gaussian_heatmaps,
-)
-from tracklab.utils.collate import Unbatchable
+from kpreid.scripts.main import build_config, build_torchreid_model_engine, build_model
 
-import tracklab
 from pathlib import Path
 
+from kpreid.utils.tools import extract_test_embeddings
+from kpreid.data.datasets import configure_dataset_class
 
-import torchreid
-from torch.nn import functional as F
-from torchreid.data.masks_transforms import (
-    CocoToSixBodyMasks,
-    masks_preprocess_transforms,
-)
-from torchreid.utils.tools import extract_test_embeddings
-from torchreid.data.datasets import configure_dataset_class
-
-from torchreid.scripts.default_config import engine_run_kwargs
+from kpreid.scripts.default_config import engine_run_kwargs
 
 from ...pipeline.detectionlevel_module import DetectionLevelModule
 from ...utils.download import download_file
 
 
-class BPBReId(DetectionLevelModule):
+class KPReId(DetectionLevelModule):
     """
     """
 
     collate_fn = default_collate
-    input_columns = ["bbox_ltwh"]
+    input_columns = ["bbox_ltwh", "bbox_conf", "keypoints_xyc", "negative_kps"]
     output_columns = ["embeddings", "visibility_scores", "body_masks"]
 
     def __init__(
@@ -71,24 +65,24 @@ class BPBReId(DetectionLevelModule):
             "reid_config": self.dataset_cfg,
             "pose_model": None,
         }
-        torchreid.data.register_image_dataset(
+        kpreid.data.register_image_dataset(
             tracking_dataset.name,
             configure_dataset_class(ReidDataset, **additional_args),
             tracking_dataset.nickname,
         )
         self.cfg = CN(OmegaConf.to_container(cfg, resolve=True))
-        self.download_models(load_weights=self.cfg.model.load_weights,
-                             pretrained_path=self.cfg.model.bpbreid.hrnet_pretrained_path,
-                             backbone=self.cfg.model.bpbreid.backbone)
+        # self.download_models(load_weights=self.cfg.model.load_weights,
+        #                      pretrained_path=self.cfg.model.bpbreid.hrnet_pretrained_path,
+        #                      backbone=self.cfg.model.bpbreid.backbone)
         # set parts information (number of parts K and each part name),
         # depending on the original loaded masks size or the transformation applied:
         self.cfg.data.save_dir = save_path
         self.cfg.project.job_id = job_id
         self.cfg.use_gpu = torch.cuda.is_available()
-        self.cfg = build_config(config=self.cfg)
+        self.cfg = build_config(config_file=self.cfg)
         self.test_embeddings = self.cfg.model.bpbreid.test_embeddings
         # Register the PoseTrack21ReID dataset to Torchreid that will be instantiated when building Torchreid engine.
-        self._training_enabled = training_enabled
+        self.training_enabled = training_enabled
         self.feature_extractor = None
         self.model = None
         self.coco_transform = masks_preprocess_all[self.cfg.model.bpbreid.masks.preprocess]() if \
@@ -104,6 +98,7 @@ class BPBReId(DetectionLevelModule):
             )
         self.model = build_model(self.cfg, 0)
         self.model.eval()
+
         _, self.transforms, self.target_preprocess, self.prompt_preprocess = build_transforms(
             self.cfg.data.height,
             self.cfg.data.width,
@@ -201,7 +196,7 @@ class BPBReId(DetectionLevelModule):
 
     def train(self):
         self.engine, self.model = build_torchreid_model_engine(self.cfg)
-        if not self._training_enabled:
+        if not self.cfg.inference.enabled:
             self.engine.run(**engine_run_kwargs(self.cfg))
             self.model.eval()
         else:
