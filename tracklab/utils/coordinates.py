@@ -376,3 +376,16 @@ def xywh_to_ltwh(bbox, image_shape=None, rounded=False):
     if rounded:
         bbox = bbox.round().astype(int)
     return bbox
+
+
+def add_negative_samples(_df):
+    _df["id"] = _df.index
+    _df.reset_index(drop=True, inplace=True)
+    all_kps_in_img = np.array(list(_df.keypoints_xyc))
+    id_to_index = {k: v for v, k in enumerate(list(_df.id))}
+    pass
+    _df["negative_kps"] = _df\
+        .apply(lambda bb: keypoints_in_bbox_coord(np.delete(all_kps_in_img, id_to_index[bb.id], axis=0), bb.bbox_ltwh), axis=1)\
+        .apply(lambda kp_xyc_bbox: kp_xyc_bbox[kp_xyc_bbox[:, :, 2].sum(axis=1) > 0]) # remove non visibile skeletons
+    _df.set_index("id", inplace=True)
+    return _df

@@ -1,0 +1,20 @@
+_target_: tracklab.wrappers.track.heuristic_sort_api.HeuristicSORTAPI
+
+cfg:
+  min_hits: 1
+  max_wo_hits: 50
+
+  camera_motion_correction: True
+
+  use_pose_and_loc: True
+  pose_threshold: 0.3  # pose similarity threshold (based on aligned OKS)
+  loc_threshold: 0.7  # location similarity threshold (based on euclidean distance of centers)
+
+  use_appearance: True
+  app_threshold: 0.6  # appearance similarity threshold (based on cosine distance of features)
+
+  max_pose_and_loc_wo_hits: 5  # only used if use_pose_and_loc and use_appearance are True
+  sim_threshold: 0.2   # similarity threshold (based on concat of pose, loc and reid similarities)
+
+  min_vis_keypoints: 3
+  vis_keypoint_threshold: 0.3

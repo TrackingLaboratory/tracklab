@@ -4,15 +4,16 @@
 # to create the final config file. This item *must* be
 # the first element in the file.
 defaults:
-  - dataset: soccernet_gs
+  - dataset: external_video
   - eval: trackeval
   - engine: offline
   - state: no_save
   - visualization: save_videos
-  - modules/bbox_detector: yolov8
-  - modules/pose_bottomup: openpifpaf
-  - modules/reid: bpbreid
-  - modules/track: oc_sort
+  - modules/bbox_detector: yolox
+  - modules/pose_topdown: hrnet_posetrack18
+  - modules/reid: kpreid
+  - modules/track: heuristic_sort
+  - modules/utils@modules.neg_kps: negative_keypoints
   - _self_
 
 # Pipeline definition :
@@ -21,11 +22,13 @@ defaults:
 # Use 'pipeline: []' for an empty pipeline
 pipeline:
   - bbox_detector
+  - pose_topdown
+  - neg_kps
   - reid
   - track
 
 # Experiment name
-experiment_name: "tracklab"
+experiment_name: "test-kpr"
 
 # Path definitions
 data_dir: "${project_dir}/data"
