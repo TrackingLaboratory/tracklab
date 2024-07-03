@@ -1,0 +1,21 @@
+_target_: tracklab.wrappers.BotSORT
+
+cfg:
+  # weights can be downloaded from :
+  # https://github.com/mikel-brostrom/boxmot/tree/master
+  # https://drive.google.com/uc?id=1vduhq5DpN2q1g4fYEZfPI17MJeh9qyrA
+  model_weights: ${model_dir}/reid/osnet_x1_0_market_256x128_amsgrad_ep150_stp60_lr0.0015_b64_fb10_softmax_labelsmooth_flip.pt
+  fp16: false
+
+  min_confidence: 0.4
+
+  hyperparams:
+    appearance_thresh: 0.4818211117541298  # default = 0.25
+    cmc_method: sparseOptFlow  # default = sparseOptFlow
+    frame_rate: 30  # default = 30
+    lambda_: 0.9896143462366406  # default = 0.985
+    match_thresh: 0.22734550911325851  # default = 0.8
+    new_track_thresh: 0.21144301345190655  # default = 0.6
+    proximity_thresh: 0.5945380911899254  # default = 0.5
+    track_buffer: 60  # default = 30
+    track_high_thresh: 0.33824964456239337  # default = 0.45
