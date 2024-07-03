@@ -3,7 +3,7 @@ defaults:
 
 _target_: tracklab.wrappers.KPReId
 training_enabled: False
-batch_size: 4
+batch_size: 32
 job_id: "${oc.env:SLURM_JOBID,0}" # TODO
 save_path: reid
 use_keypoints_visibility_scores_for_reid: False
