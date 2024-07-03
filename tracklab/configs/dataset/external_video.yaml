@@ -1,11 +1,6 @@
-#defaults:
-#  - default
+defaults:
+  - default
 
-_target_: tracklab.wrappers.ExternalVideo
-dataset_path: ${data_dir}
-eval_set: "val"
-#video_path: "/home/vjoosdeterb/Downloads/ilids/AVSS_AB_EVAL_00.mp4"
-video_path: "/home/vjoosdeterb/Downloads/RTBF - RECONNAISSANCE-20231128T095239Z-001/RTBF - RECONNAISSANCE/030920231300_00.mp4"
-track_eval:
-  dataset_class: MotChallenge2DBox
-nframes: -1
+_target_: pbtrack.wrappers.ExternalVideo
+
+video_path: "/path/to/video.mp4"
