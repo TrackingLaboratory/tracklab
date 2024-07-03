@@ -67,7 +67,7 @@ def cv2_load_image(file_path):
             video_reader.set_filename(video_file)
         image = video_reader[int(frame_id)]
     else:
-        image = cv2.imread(str(file_path))
+        image = cv2.imread(file_path)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
 

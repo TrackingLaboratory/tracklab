@@ -1,6 +1,6 @@
 _target_: tracklab.engine.VideoOnlineTrackingEngine
 
-filename: "/home/vjoosdeterb/Downloads/ilids/AVSS_AB_EVAL_00.mp4"
+filename: "/path/to/video.mp4"
 target_fps: 1
 num_workers: ${num_cores}
 callbacks:
