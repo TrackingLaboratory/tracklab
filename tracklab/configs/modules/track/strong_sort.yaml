@@ -1,0 +1,21 @@
+_target_: tracklab.wrappers.StrongSORT
+
+cfg:
+  # weights can be downloaded from :
+  # https://github.com/mikel-brostrom/boxmot/tree/master
+  # https://drive.google.com/uc?id=1vduhq5DpN2q1g4fYEZfPI17MJeh9qyrA
+  model_weights: ${model_dir}/reid/osnet_x1_0_market_256x128_amsgrad_ep150_stp60_lr0.0015_b64_fb10_softmax_labelsmooth_flip.pt
+  fp16: false
+
+  min_confidence: 0.4
+  ecc: true  # default = true
+
+  hyperparams:
+    ema_alpha: 0.8962157769329083  # default = 0.9
+    max_age: 40  # default = 70
+    max_dist: 0.1594374041012136  # default = 0.2
+    max_iou_dist: 0.5431835667667874  # default = 0.7
+    max_unmatched_preds: 0  # default = 7
+    mc_lambda: 0.995  # default = 0.995
+    n_init: 3  # default = 3
+    nn_budget: 100  # default = 100
