@@ -161,6 +161,12 @@
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="tracklab.utils.KeypointsDataFrameAccessor.keypoints_bbox_xyc">
+<span class="sig-name descname"><span class="pre">keypoints_bbox_xyc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/utils.html#KeypointsDataFrameAccessor.keypoints_bbox_xyc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.utils.KeypointsDataFrameAccessor.keypoints_bbox_xyc" title="Link to this definition"></a></dt>
+<dd><p>Converts from keypoints in image coordinates to keypoints in bbox coordinates</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="tracklab.utils.KeypointsDataFrameAccessor.xy">
 <span class="sig-name descname"><span class="pre">xy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rounded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/utils.html#KeypointsDataFrameAccessor.xy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.utils.KeypointsDataFrameAccessor.xy" title="Link to this definition"></a></dt>
 <dd></dd></dl>
@@ -190,6 +196,12 @@
 <dt class="sig sig-object py" id="tracklab.utils.KeypointsSeriesAccessor.in_bbox_coord">
 <span class="sig-name descname"><span class="pre">in_bbox_coord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bbox_ltwh</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/utils.html#KeypointsSeriesAccessor.in_bbox_coord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.utils.KeypointsSeriesAccessor.in_bbox_coord" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.utils.KeypointsSeriesAccessor.keypoints_bbox_xyc">
+<span class="sig-name descname"><span class="pre">keypoints_bbox_xyc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/utils.html#KeypointsSeriesAccessor.keypoints_bbox_xyc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.utils.KeypointsSeriesAccessor.keypoints_bbox_xyc" title="Link to this definition"></a></dt>
+<dd><p>Converts from keypoints in image coordinates to keypoints in bbox coordinates</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tracklab.utils.KeypointsSeriesAccessor.xy">
@@ -543,6 +555,11 @@ If image_shape is provided, the bbox is clipped to the image dimensions and its 
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="tracklab.utils.cv2.colored_body_parts_overlay">
+<span class="sig-prename descclassname"><span class="pre">tracklab.utils.cv2.</span></span><span class="sig-name descname"><span class="pre">colored_body_parts_overlay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.28</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/utils/cv2.html#colored_body_parts_overlay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.utils.cv2.colored_body_parts_overlay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="tracklab.utils.cv2.crop_bbox_ltwh">
 <span class="sig-prename descclassname"><span class="pre">tracklab.utils.cv2.</span></span><span class="sig-name descname"><span class="pre">crop_bbox_ltwh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/utils/cv2.html#crop_bbox_ltwh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.utils.cv2.crop_bbox_ltwh" title="Link to this definition"></a></dt>
 <dd></dd></dl>
@@ -603,6 +620,11 @@ If image_shape is provided, the bbox is clipped to the image dimensions and its 
 <dl class="py function">
 <dt class="sig sig-object py" id="tracklab.utils.cv2.print_count_frame">
 <span class="sig-prename descclassname"><span class="pre">tracklab.utils.cv2.</span></span><span class="sig-name descname"><span class="pre">print_count_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">patch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nframes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/utils/cv2.html#print_count_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.utils.cv2.print_count_frame" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tracklab.utils.cv2.scale_lightness">
+<span class="sig-prename descclassname"><span class="pre">tracklab.utils.cv2.</span></span><span class="sig-name descname"><span class="pre">scale_lightness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rgb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_l</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/utils/cv2.html#scale_lightness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.utils.cv2.scale_lightness" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </section>
