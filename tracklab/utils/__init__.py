@@ -90,10 +90,6 @@ class KeypointsDataFrameAccessor:
             lambda x: keypoints_in_bbox_coord(x, bbox_ltwh)
         )
 
-    def keypoints_bbox_xyc(self):
-        """Converts from keypoints in image coordinates to keypoints in bbox coordinates"""
-        return self._obj.apply(
-            lambda r: keypoints_in_bbox_coord(r.keypoints_xyc, r.bbox_ltwh), axis=1)
 
 @pd.api.extensions.register_series_accessor("keypoints")
 class KeypointsSeriesAccessor:
@@ -124,7 +120,3 @@ class KeypointsSeriesAccessor:
 
     def in_bbox_coord(self, bbox_ltwh):
         return keypoints_in_bbox_coord(self._obj.keypoints_xyc, bbox_ltwh)
-
-    def keypoints_bbox_xyc(self):
-        """Converts from keypoints in image coordinates to keypoints in bbox coordinates"""
-        return keypoints_in_bbox_coord(self._obj.keypoints_xyc, self._obj.bbox_ltwh)

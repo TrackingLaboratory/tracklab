@@ -8,6 +8,7 @@ import pandas as pd
 import torch
 from lightning import Fabric
 
+from tracklab.engine import TrackingEngine
 from tracklab.engine.engine import merge_dataframes
 from tracklab.pipeline import Pipeline
 

@@ -19,10 +19,9 @@ class ByteTrack(ImageLevelModule):
     ]
     output_columns = ["track_id", "track_bbox_ltwh", "track_bbox_conf"]
 
-    def __init__(self, cfg, device, **kwargs):
-        super().__init__(batch_size=1)
+    def __init__(self, cfg, device, batch_size):
+        super().__init__(cfg, device, batch_size)
         self.cfg = cfg
-        self.device = device
         self.reset()
 
     def reset(self):
@@ -30,27 +29,20 @@ class ByteTrack(ImageLevelModule):
         self.model = byte_tracker.BYTETracker(**self.cfg.hyperparams)
 
     @torch.no_grad()
-    def preprocess(self, image, detections: pd.DataFrame, metadata: pd.Series):
-        processed_detections = []
-        if len(detections) == 0:
-            return {"input": []}
-        for det_id, detection in detections.iterrows():
-            ltrb = detection.bbox.ltrb()
-            conf = detection.bbox.conf()
-            cls = detection.category_id
-            tracklab_id = int(detection.name)
-            processed_detections.append(
-                np.array([*ltrb, conf, cls, tracklab_id])
-            )
+    def preprocess(self, detection: pd.Series, metadata: pd.Series):
+        ltrb = detection.bbox.ltrb()
+        conf = detection.bbox.conf()
+        cls = detection.category_id
+        tracklab_id = detection.name
         return {
-            "input": np.stack(processed_detections)
+            "input": np.array(
+                [ltrb[0], ltrb[1], ltrb[2], ltrb[3], conf, cls, tracklab_id]
+            ),
         }
 
     @torch.no_grad()
-    def process(self, batch, detections: pd.DataFrame, metadatas: pd.DataFrame):
-        if len(detections) == 0:
-            return []
-        inputs = batch["input"][0]  # Nx7 [l,t,r,b,conf,class,tracklab_id]
+    def process(self, batch, image, detections: pd.DataFrame):
+        inputs = batch["input"]  # Nx7 [l,t,r,b,conf,class,tracklab_id]
         inputs = inputs[inputs[:, 4] > self.cfg.min_confidence]
         results = self.model.update(inputs, None)
         results = np.asarray(results)  # N'x8 [l,t,r,b,track_id,class,conf,idx]

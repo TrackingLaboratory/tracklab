@@ -18,6 +18,7 @@ from tracklab.datastruct import TrackingDataset
 from tracklab.utils.coordinates import rescale_keypoints
 
 from tracklab.utils.cv2 import overlay_heatmap
+import tracklab
 
 from torchreid.data import ImageDataset
 from torchreid.utils.imagetools import (

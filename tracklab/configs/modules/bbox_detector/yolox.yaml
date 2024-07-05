@@ -2,4 +2,3 @@ _target_: tracklab.wrappers.bbox_detector.mmdetection_api.MMDetection
 config_name: yolox_x_8x8_300e_coco
 path_to_checkpoint: ${model_dir}/mmdet/${.config_name}.pth
 min_confidence: 0.4
-batch_size: 2

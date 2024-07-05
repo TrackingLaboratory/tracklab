@@ -3,7 +3,7 @@ _target_: tracklab.wrappers.BPBReId
 defaults:
   - dataset: default
 
-batch_size: 32
+batch_size: 64
 job_id: "${oc.env:SLURM_JOBID,0}" # TODO
 save_path: reid
 use_keypoints_visibility_scores_for_reid: False

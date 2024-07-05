@@ -4,13 +4,13 @@
 # to create the final config file. This item *must* be
 # the first element in the file.
 defaults:
-  - dataset: dancetrack
+  - dataset: soccernet_gs
   - eval: trackeval
   - engine: offline
   - state: no_save
   - visualization: save_videos
   - modules/bbox_detector: yolov8
-  - modules/pose_topdown: hrnet_posetrack18
+  - modules/pose_bottomup: openpifpaf
   - modules/reid: bpbreid
   - modules/track: oc_sort
   - _self_
@@ -21,6 +21,7 @@ defaults:
 # Use 'pipeline: []' for an empty pipeline
 pipeline:
   - bbox_detector
+  - reid
   - track
 
 # Experiment name
