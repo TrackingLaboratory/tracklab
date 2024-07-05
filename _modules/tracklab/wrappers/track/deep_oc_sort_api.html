@@ -98,8 +98,6 @@
 
 <span class="kn">import</span> <span class="nn">logging</span>
 
-<span class="kn">from</span> <span class="nn">tracklab.utils.cv2</span> <span class="kn">import</span> <span class="n">cv2_load_image</span>
-
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
@@ -113,10 +111,9 @@
     <span class="p">]</span>
     <span class="n">output_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;track_id&quot;</span><span class="p">,</span> <span class="s2">&quot;track_bbox_ltwh&quot;</span><span class="p">,</span> <span class="s2">&quot;track_bbox_conf&quot;</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 
 <div class="viewcode-block" id="DeepOCSORT.reset">
@@ -134,32 +131,24 @@
 <div class="viewcode-block" id="DeepOCSORT.preprocess">
 <a class="viewcode-back" href="../../../../api/pbtrack.wrappers.track.html#tracklab.wrappers.track.deep_oc_sort_api.DeepOCSORT.preprocess">[docs]</a>
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
-    <span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
-        <span class="n">processed_detections</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="p">[]}</span>
-        <span class="k">for</span> <span class="n">det_id</span><span class="p">,</span> <span class="n">detection</span> <span class="ow">in</span> <span class="n">detections</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-            <span class="n">ltrb</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">()</span>
-            <span class="n">conf</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">conf</span><span class="p">()</span>
-            <span class="bp">cls</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">category_id</span>
-            <span class="n">tracklab_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-            <span class="n">processed_detections</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">*</span><span class="n">ltrb</span><span class="p">,</span> <span class="n">conf</span><span class="p">,</span> <span class="bp">cls</span><span class="p">,</span> <span class="n">tracklab_id</span><span class="p">])</span>
-            <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detection</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+        <span class="n">ltrb</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">()</span>
+        <span class="n">conf</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">conf</span><span class="p">()</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">category_id</span>
+        <span class="n">tracklab_id</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">name</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">processed_detections</span><span class="p">)</span>
+            <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">ltrb</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ltrb</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ltrb</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ltrb</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">conf</span><span class="p">,</span> <span class="bp">cls</span><span class="p">,</span> <span class="n">tracklab_id</span><span class="p">]</span>
+            <span class="p">),</span>
         <span class="p">}</span></div>
 
 
 <div class="viewcode-block" id="DeepOCSORT.process">
 <a class="viewcode-back" href="../../../../api/pbtrack.wrappers.track.html#tracklab.wrappers.track.deep_oc_sort_api.DeepOCSORT.process">[docs]</a>
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
-    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">metadatas</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[]</span>
-        <span class="n">inputs</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Nx7 [l,t,r,b,conf,class,tracklab_id]</span>
+    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">]</span>  <span class="c1"># Nx7 [l,t,r,b,conf,class,tracklab_id]</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="n">inputs</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">min_confidence</span><span class="p">]</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">cv2_load_image</span><span class="p">(</span><span class="n">metadatas</span><span class="p">[</span><span class="s1">&#39;file_path&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
         <span class="n">results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>  <span class="c1"># N&#39;x8 [l,t,r,b,track_id,class,conf,idx]</span>
         <span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>

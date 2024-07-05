@@ -88,13 +88,8 @@
            <div itemprop="articleBody">
              
   <h1>Source code for tracklab.utils.cv2</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">colorsys</span>
-
-<span class="kn">import</span> <span class="nn">cv2</span>
+<span></span><span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span>
-
-<span class="kn">import</span> <span class="nn">matplotlib.cm</span> <span class="k">as</span> <span class="nn">cm</span>
-
 <span class="kn">from</span> <span class="nn">.coordinates</span> <span class="kn">import</span> <span class="o">*</span>
 
 
@@ -165,7 +160,7 @@
             <span class="n">video_reader</span><span class="o">.</span><span class="n">set_filename</span><span class="p">(</span><span class="n">video_file</span><span class="p">)</span>
         <span class="n">image</span> <span class="o">=</span> <span class="n">video_reader</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">frame_id</span><span class="p">)]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">image</span></div>
 
@@ -495,50 +490,6 @@
         <span class="n">lineType</span><span class="o">=</span><span class="n">lineType</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">text_size</span></div>
-
-
-
-<div class="viewcode-block" id="scale_lightness">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.scale_lightness">[docs]</a>
-<span class="k">def</span> <span class="nf">scale_lightness</span><span class="p">(</span><span class="n">rgb</span><span class="p">,</span> <span class="n">scale_l</span><span class="o">=</span><span class="mf">1.4</span><span class="p">):</span>
-    <span class="c1"># convert rgb to hls</span>
-    <span class="n">h</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">colorsys</span><span class="o">.</span><span class="n">rgb_to_hls</span><span class="p">(</span><span class="o">*</span><span class="n">rgb</span><span class="p">)</span>
-    <span class="c1"># manipulate h, l, s values and return as rgb</span>
-    <span class="k">return</span> <span class="n">colorsys</span><span class="o">.</span><span class="n">hls_to_rgb</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">l</span> <span class="o">*</span> <span class="n">scale_l</span><span class="p">),</span> <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="colored_body_parts_overlay">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.colored_body_parts_overlay">[docs]</a>
-<span class="k">def</span> <span class="nf">colored_body_parts_overlay</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_CUBIC</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.28</span><span class="p">,</span> <span class="n">mask_threshold</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">weight_scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">rgb</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">white_bckg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">masks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-        <span class="n">mask</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">masks</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="n">interpolation</span><span class="o">=</span><span class="n">interpolation</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">clip</span><span class="p">:</span>
-            <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">mask</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
-        <span class="n">weight</span> <span class="o">=</span> <span class="n">mask</span>
-        <span class="n">mask_alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
-        <span class="n">mask_alpha</span><span class="p">[</span><span class="n">mask</span> <span class="o">&lt;</span> <span class="n">mask_threshold</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">mask_alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">mask_alpha</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="n">weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">weight_scale</span>
-        <span class="n">color_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
-        <span class="n">color</span> <span class="o">=</span> <span class="n">scale_lightness</span><span class="p">(</span><span class="n">cm</span><span class="o">.</span><span class="n">gist_rainbow</span><span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">masks</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">color_img</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">color</span><span class="p">)</span><span class="o">*</span><span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
-        <span class="n">white_bckg</span> <span class="o">=</span> <span class="n">white_bckg</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mask_alpha</span> <span class="o">*</span> <span class="n">weight</span><span class="p">)</span> <span class="o">+</span> <span class="n">color_img</span> <span class="o">*</span> <span class="n">mask_alpha</span> <span class="o">*</span> <span class="n">weight</span>
-    <span class="n">heatmap</span> <span class="o">=</span> <span class="n">masks</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="n">heatmap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">heatmap</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="n">interpolation</span><span class="o">=</span><span class="n">interpolation</span><span class="p">)</span>
-    <span class="n">mask_alpha</span> <span class="o">=</span> <span class="n">heatmap</span>
-    <span class="n">mask_alpha</span><span class="p">[</span><span class="n">heatmap</span> <span class="o">&lt;</span> <span class="n">mask_threshold</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">mask_alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">mask_alpha</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-    <span class="n">white_bckg</span> <span class="o">=</span> <span class="n">white_bckg</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">rgb</span><span class="p">:</span>
-        <span class="n">white_bckg</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">white_bckg</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
-    <span class="n">masked_img</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">img</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mask_alpha</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">+</span> <span class="n">white_bckg</span> <span class="o">*</span> <span class="n">mask_alpha</span> <span class="o">*</span> <span class="n">alpha</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">masked_img</span></div>
 
 </pre></div>
 
