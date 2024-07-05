@@ -9,6 +9,8 @@ import strong_sort.strong_sort as strong_sort
 
 import logging
 
+from tracklab.utils.cv2 import cv2_load_image
+
 log = logging.getLogger(__name__)
 
 
@@ -20,9 +22,10 @@ class StrongSORT(ImageLevelModule):
     ]
     output_columns = ["track_id", "track_bbox_ltwh", "track_bbox_conf"]
 
-    def __init__(self, cfg, device, batch_size, **kwargs):
-        super().__init__(cfg, device, batch_size)
+    def __init__(self, cfg, device, **kwargs):
+        super().__init__(batch_size=1)
         self.cfg = cfg
+        self.device = device
         self.reset()
 
     def reset(self):
@@ -37,24 +40,32 @@ class StrongSORT(ImageLevelModule):
         self.prev_frame = None
 
     @torch.no_grad()
-    def preprocess(self, detection: pd.Series, metadata: pd.Series):
-        ltrb = detection.bbox.ltrb()
-        conf = detection.bbox.conf()
-        cls = detection.category_id
-        tracklab_id = detection.name
+    def preprocess(self, image, detections: pd.DataFrame, metadata: pd.Series):
+        processed_detections = []
+        if len(detections) == 0:
+            return {"input": []}
+        for det_id, detection in detections.iterrows():
+            ltrb = detection.bbox.ltrb()
+            conf = detection.bbox.conf()
+            cls = detection.category_id
+            tracklab_id = int(detection.name)
+            processed_detections.append(
+                np.array([*ltrb, conf, cls, tracklab_id])
+            )
         return {
-            "input": np.array(
-                [ltrb[0], ltrb[1], ltrb[2], ltrb[3], conf, cls, tracklab_id]
-            ),
+            "input": np.stack(processed_detections)
         }
 
     @torch.no_grad()
-    def process(self, batch, image, detections: pd.DataFrame):
+    def process(self, batch, detections: pd.DataFrame, metadatas: pd.DataFrame):
+        image = cv2_load_image(metadatas['file_path'].values[0])
         if self.cfg.ecc:
             if self.prev_frame is not None:
                 self.model.tracker.camera_update(self.prev_frame, image)
             self.prev_frame = image
-        inputs = batch["input"]  # Nx7 [l,t,r,b,conf,class,tracklab_id]
+        if len(detections) == 0:
+            return []
+        inputs = batch["input"][0]  # Nx7 [l,t,r,b,conf,class,tracklab_id]
         inputs = inputs[inputs[:, 4] > self.cfg.min_confidence]
         results = self.model.update(inputs, image)
         results = np.asarray(results)  # N'x9 [l,t,r,b,track_id,class,conf,queue,idx]

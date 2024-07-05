@@ -1,0 +1,26 @@
+_target_: tracklab.wrappers.DeepOCSORT
+
+cfg:
+  # weights can be downloaded from :
+  # https://github.com/mikel-brostrom/boxmot/tree/master
+  # https://drive.google.com/uc?id=1vduhq5DpN2q1g4fYEZfPI17MJeh9qyrA
+  model_weights: ${model_dir}/reid/osnet_x1_0_market_256x128_amsgrad_ep150_stp60_lr0.0015_b64_fb10_softmax_labelsmooth_flip.pt
+  fp16: false
+
+  min_confidence: 0.4
+
+  hyperparams:
+    det_thresh: 0
+    max_age: 50  # default = 30
+    min_hits: 1  # default = 3
+    iou_threshold: 0.22136877277096445  # default = 0.3
+    delta_t: 1  # default = 3
+    asso_func: giou  # default = iou
+    inertia: 0.3941737016672115  # default = 0.2
+    w_association_emb: 0.75  # default = 0.75
+    alpha_fixed_emb: 0.95  # default = 0.95
+    aw_param: 0.5  # default = 0.5
+    embedding_off: false  # default = false
+    cmc_off: false  # default = false
+    aw_off: false  # default = false
+    new_kf_off: false  # default = false

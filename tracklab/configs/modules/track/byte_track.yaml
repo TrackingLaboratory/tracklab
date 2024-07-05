@@ -1,0 +1,10 @@
+_target_: tracklab.wrappers.ByteTrack
+
+cfg:
+  min_confidence: 0.4
+
+  hyperparams:
+    track_thresh: 0.6  # tracking confidence threshold, default = 0.45
+    track_buffer: 30   # the frames for keep lost tracks, default = 25
+    match_thresh: 0.8  # matching threshold for tracking, default = 0.8
+    frame_rate: 30     # FPS, default = 30
