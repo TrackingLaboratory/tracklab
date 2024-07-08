@@ -11,7 +11,12 @@ packages = [
     {include = "oc_sort"},
     {include = "strong_sort"},
     {include = "heuristic_sort"},
+    {include = "dd_sort"}
 ]
+
+[tool.poetry.dependencies]
+pytorch-metric-learning = "2.5.0"
+transformers = "4.42.3"
 
 [build-system]
 requires = ["poetry-core"]

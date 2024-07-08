@@ -32,7 +32,7 @@ def main(cfg):
     if cfg.pipeline is not None:
         for name in cfg.pipeline:
             module = cfg.modules[name]
-            inst_module = instantiate(module, device=device, tracking_dataset=tracking_dataset)
+            inst_module = instantiate(module, device=device, tracking_dataset=tracking_dataset)  # FIXME tracking_dataset should be in training loop
             modules.append(inst_module)
 
     pipeline = Pipeline(models=modules)
@@ -40,7 +40,7 @@ def main(cfg):
     # Train tracking modules
     for module in modules:
         if module.training_enabled:
-            module.train()
+            module.train(tracking_dataset, pipeline, evaluator)
 
     # Test tracking
     if cfg.test_tracking:

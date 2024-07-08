@@ -18,7 +18,7 @@ from torch.utils.data import Dataset, DataLoader, default_collate
 from tqdm import tqdm
 
 from dd_sort.simformer.sampler import samplers
-from simformer.transforms import Transform, NoOp, OfflineTransforms
+from dd_sort.simformer.transforms import Transform, NoOp, OfflineTransforms
 from tracklab.datastruct import TrackingDataset, TrackingSet, TrackerState
 from tracklab.pipeline import Pipeline
 
@@ -243,7 +243,7 @@ class SimFormerDataModule(pl.LightningDataModule):
         self.tracking_sets = {}
         cfg_name = "_".join([f"{k}{v}" for k, v in self.cfg.items()])
         for ds_split in dataset_splits:
-            tracking_set: TrackingSet = getattr(tracking_dataset, f"{ds_split}_set")
+            tracking_set: TrackingSet = tracking_dataset.sets[ds_split]
             if tracking_set is None:
                 raise ValueError(f"This dataset doesn't have a {ds_split}.")
             self.tracking_sets[ds_split] = tracking_set
