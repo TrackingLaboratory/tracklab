@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-from simformer.transforms import OfflineTransforms
+from dd_sort.simformer.transforms import OfflineTransforms
 from tracklab.engine.engine import merge_dataframes
 from tracklab.utils.cv2 import cv2_load_image
 from posetrack21_mot.motmetrics.distances import iou_matrix

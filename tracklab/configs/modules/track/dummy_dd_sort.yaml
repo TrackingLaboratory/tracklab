@@ -1,0 +1,45 @@
+_target_: tracklab.wrappers.DDSORT
+
+train_cfg:
+  max_epochs: 10
+  use_wandb: ${use_wandb}
+  use_rich: ${use_rich}
+test_cfg:
+  min_hits: 1  # number of hits to become a tracklet
+  max_wo_hits: 50  # number of misses before removing from tracklet
+det_filter_cfg:
+  min_vis_keypoints: 3  # filter on inputs of the tracker
+  vis_keypoint_threshold: 0.3  # filter on inputs of the tracker
+  min_bbox_threshold: 0.1 # filter on inputs of the tracker
+checkpoint_path: null
+simformer:
+  _target_: dd_sort.DummySimFormer
+  emb_dim: 256
+  n_heads: 2
+  n_layers: 2
+  dim_feedforward: 512
+  dropout: 0.1
+  use_raw_embeddings: false  # use directly the foreground embeddings from bpbreid for the sim_matrix computation
+  # set to false to use the outputs embs from the simformer to compute the sim_matrix
+  train_cfg:
+    init_lr: 1e-3
+    weight_decay: 0.01
+datamodule:
+  _target_: dd_sort.SimFormerDataModule
+  dataset_splits: # should be a list containing train/val/test
+    - train
+    - val
+  path: ${dataset.dataset_path} # absolute path, otherwise it will be created for each job
+  tracker_states:
+    train: "${data_dir}/states/${experiment_name}.pklz"
+    val: "${data_dir}/states/${experiment_name}.pklz"
+    test: "${data_dir}/states/${experiment_name}.pklz"
+  name: ddsort  # name of the file for the gallery pickle
+  batch_size: 4
+  num_samples: 4
+  num_videos: null # how many videos you want samples from, null for all
+  samples_per_video: 100  # number of frame per video
+  std_age: 3  # std of the random choice for the age
+  max_length: 10  # max number of detections for a tracklet
+  # transforms: for the moment use the default
+  num_workers: ${num_cores}
