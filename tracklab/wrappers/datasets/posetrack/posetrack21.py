@@ -121,5 +121,7 @@ def fix_formatting(
     detections_gt = detections_gt.merge(
         image_metadatas[["video_id"]], how="left", left_on="image_id", right_index=True
     )
+    # FIXME bbox_conf should not be averaged on 17 keypoints but on 15 (2 are always zero-ed)
+    detections_gt["bbox_conf"] = detections_gt.keypoints_xyc.apply(lambda x: np.mean(x[:, 2]))
 
     return video_metadatas, image_metadatas, detections_gt

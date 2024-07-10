@@ -194,7 +194,7 @@ class KPReId(DetectionLevelModule):
         )
         return reid_df
 
-    def train(self, **kwargs):
+    def train(self, *args, **kwargs):
         self.engine, self.model = build_torchreid_model_engine(self.cfg)
         if not self.cfg.inference.enabled:
             self.engine.run(**engine_run_kwargs(self.cfg))

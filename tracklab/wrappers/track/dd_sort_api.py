@@ -32,6 +32,7 @@ class DDSORT(ImageLevelModule):
         checkpoint_path,
         tracking_dataset,
         override_cfg=None,
+        training_enabled: bool = False,
         **kwargs,
     ):
         super().__init__(batch_size=1)
@@ -44,6 +45,7 @@ class DDSORT(ImageLevelModule):
         self.ddsort = ddsort
         self.override_cfg = override_cfg
         self.datamodule_cfg = datamodule
+        self.training_enabled = training_enabled
 
         if checkpoint_path:
             self.simformer = type(self.simformer).load_from_checkpoint(
@@ -101,8 +103,8 @@ class DDSORT(ImageLevelModule):
         else:
             return []
 
-    def train(self, tracking_dataset, pipeline, **kwargs):
-        self.datamodule = instantiate(self.datamodule_cfg, tracking_dataset=tracking_dataset, modules=pipeline)
+    def train(self, tracking_dataset, pipeline, *args, **kwargs):
+        self.datamodule = instantiate(self.datamodule_cfg, tracking_dataset=tracking_dataset, pipeline=pipeline)
         save_best_auroc = pl.callbacks.ModelCheckpoint(
             monitor="val/sim_auroc",
             mode="max",

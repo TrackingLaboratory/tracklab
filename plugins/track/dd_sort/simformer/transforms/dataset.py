@@ -42,15 +42,15 @@ class FakeEngine:
     num_workers = 8
 
 
-def add_gt_reid_embeddings(df, metadatas, preds, tracker_state, **_):
-    reider = tracker_state.modules[tracker_state.module_names.index("re_identifier")]
-    reider.datapipe.update(metadatas, df)
+def add_gt_reid_embeddings(df, metadatas, preds, tracker_state, pipeline, **_):
+    image_filepaths = metadatas['file_path'].to_dict()
+    reider = next((mod for mod in pipeline if 'reid' in mod.__class__.__name__.lower()), None)  # FIXME shouldn't be searched like this
+    reider.datapipe.update(image_filepaths, metadatas, df)
     reids = []
     for idxs, batch in reider.dataloader(engine=FakeEngine()):
         idxs = idxs.cpu() if isinstance(idxs, torch.Tensor) else idxs
         batch_detections = df.loc[idxs]
-        reids.append(reider.process(batch, batch_detections))
-
+        reids.append(reider.process(batch, batch_detections, metadatas))
     return merge_dataframes(df, reids)
 
 

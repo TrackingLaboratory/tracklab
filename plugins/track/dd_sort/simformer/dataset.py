@@ -34,9 +34,9 @@ class SimFormerDataset(Dataset):
         ("bbox_ltwh", 4),
         ("bbox_conf", 1),
         ("keypoints_xyc", (17, 3)),
-        ("visibility_scores", 9),
+        ("visibility_scores", 2),
         ("age", 1),
-        ("embeddings", 4608),
+        ("embeddings", 512),
     ]
 
     def __init__(
@@ -81,14 +81,14 @@ class SimFormerDataset(Dataset):
         track_features, track_targets = self.features_targets(
             tracks, sample["image_id"]
         )
-        # video_id = np.array(int(df.video_id.unique()[0])).reshape(1)
+        video_id = np.array(int(df.video_id.unique()[0])).reshape(1)
         image_id = np.array(sample['image_id']).reshape(1)
         return {
             "track_feats": track_features,
             "track_targets": track_targets,
             "det_feats": det_features,
             "det_targets": det_targets,
-            # "video_id": video_id,
+            "video_id": video_id,
             "image_id": image_id,
         }
 
@@ -167,6 +167,7 @@ def collate_fn(batch, batch_size=np.nan):
         if isinstance(d, collections.abc.Mapping):
             for kk, dd in d.items():
                 num_samples = dd.shape[0] // batch_size
+                # FIXME it fails here on the last mini-batch from val cause the shape does not match
                 batch[k][kk] = dd.reshape(batch_size, num_samples, *dd.shape[1:])
         else:
             num_samples = d.shape[0] // batch_size
@@ -203,7 +204,7 @@ class SimFormerDataModule(pl.LightningDataModule):
         max_length: int = 50,
         transforms: List[Callable] = ("add_detections", "normalize2image"),
         online_transforms: Optional[Dict[str, Transform]] = None,
-        modules: Pipeline = None,
+        pipeline: Pipeline = None,
         tracker_states: Dict[str, Path] = None,
         batch_size: int = 128,
         num_samples: int = 8,
@@ -214,7 +215,7 @@ class SimFormerDataModule(pl.LightningDataModule):
         super().__init__()
         self.cfg_detections = dict(
             transforms=[t for t in transforms],
-            modules=str(modules),
+            pipeline=str(pipeline),
         )
         if num_videos is None:
             self.cfg = dict(spv=samples_per_video, age=std_age, ml=max_length)
@@ -257,11 +258,8 @@ class SimFormerDataModule(pl.LightningDataModule):
         self.transforms = OfflineTransforms.get_transforms(transforms) if transforms else []
         self.online_transforms = online_transforms
         self.datasets = {}
-        self.modules = modules
+        self.pipeline = pipeline
         self.tracker_states = tracker_states
-        self.state = {
-            "load_step": modules[-1].name,
-        }
 
     def prepare_data(self) -> None:
         """Generate data on one single node if it doesn't exist yet.
@@ -304,10 +302,10 @@ class SimFormerDataModule(pl.LightningDataModule):
 
     def train_dataloader(self):
         return DataLoader(
-            self.datasets["train"],
+            self.datasets["val"],
             num_workers=self.num_workers,
             collate_fn=partial(collate_fn, batch_size=self.batch_size),
-            batch_sampler=self.sampler(dataset=self.datasets["train"], batch_size=self.batch_size, num_samples=self.num_samples),
+            batch_sampler=self.sampler(dataset=self.datasets["val"], batch_size=self.batch_size, num_samples=self.num_samples),
             worker_init_fn=set_worker_sharing_strategy,
             pin_memory=True,
         )
@@ -347,14 +345,14 @@ class SimFormerDataModule(pl.LightningDataModule):
                 mode="a",
                 allowZip64=True,
             )
-            state = {**self.state, "load_file": self.tracker_states[ds_split]}
             tracker_state = TrackerState(
-                self.tracking_sets[ds_split], modules=self.modules, **state
+                self.tracking_sets[ds_split], pipeline=Pipeline([]), load_file=self.tracker_states[ds_split]
             )
             with tracker_state(video_id) as ts:
                 detections = video_detections
                 for transform in self.transforms:
-                    detections = transform(detections, metadatas, preds=ts.load(), tracker_state=ts)
+                    video_detections, video_image_preds = ts.load()
+                    detections = transform(detections, metadatas, preds=video_detections, tracker_state=ts, pipeline=self.pipeline)
             with save_zf.open(f"sample_{video_id}.pkl", "w") as fp:
                 pickle.dump(detections, fp, protocol=pickle.DEFAULT_PROTOCOL)
 
@@ -477,8 +475,8 @@ def create_samples_from_video(params):
                         "video_id": str(video_id),
                         "image_id": int(img_id),
                         "file_path": metadatas.loc[img_id].file_path,
-                        "detections": [int(x) for x in tracklet.index]
-                                      + [int(x) for x in detection.index],
+                        "detections": [x for x in tracklet.index]
+                                      + [x for x in detection.index],
                         "to_match": [0 for x in tracklet.index] + [1 for x in detection.index],
                         "id_switch": id_switch,
                     }
