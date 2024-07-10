@@ -1,6 +1,7 @@
 _target_: tracklab.wrappers.DDSORT
 
 _recursive_: False
+training_enabled: True
 
 train_cfg:
   use_wandb: ${use_wandb}
@@ -81,7 +82,7 @@ simformer:
       enable_ll: True
       checkpoint_path: null  # override the weights of this module using this path
       token_dim: ${...transformer_cfg.emb_dim}
-      feat_dim: 4617
+      feat_dim: 514
 
     MotionBertTokenizer:
       _target_: dd_sort.MotionBertTokenizer
@@ -136,12 +137,12 @@ datamodule:
   dataset_splits: # should be a list containing train/val/test
     - train
     - val
-  path: ${dataset.dataset_path}/ddsort # absolute path, otherwise it will be created for each job
+  path: ${project_dir}/states # absolute path, otherwise it will be created for each job
   tracker_states:
-    train: "${project_dir}/states/posetrack_train.pklz"
-    val: "${project_dir}/states/posetrack_val.pklz"
-    test: "${project_dir}/states/posetrack_val.pklz"
-  name: ddsort  # name of the file for the gallery pickle
+    train: "${project_dir}/states/posetrack21-train.pklz"
+    val: "${project_dir}/states/posetrack21-val.pklz"
+    test: "${project_dir}/states/posetrack21-val.pklz"
+  name: ddsort-posetrack  # name of the file for the gallery pickle
   batch_size: 8
   num_samples: 16
   num_videos: null # how many videos you want samples from, null for all
@@ -152,9 +153,12 @@ datamodule:
   sampler_args:
     ids_bias: 10
     mix_frames: False
-  transforms: # add_crops, normalize2image, add_gt_reid_embeddings, add_detections
-    - add_detections_with_id_switch
+  transforms:
+    - add_crops
     - normalize2image
+    - add_gt_reid_embeddings
+    #- add_detections
+    #- add_detections_with_id_switch
   num_workers: ${num_cores}
   online_transforms:
     train:

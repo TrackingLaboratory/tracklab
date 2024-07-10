@@ -112,10 +112,13 @@ class SmartLinearAppearance(Module):
         :param masks: [B, N, T]
         :return: new_embs [B, N, 1, 1792], new_vis [B, N, 1, 7], new_masks [B, N, 1]
         """
-        # fixme batch it
+        # FIXME batch it
         if embs.shape[-1] == 1792:  # FIXME temporary fix to handle two different reid models
             feature_dim = 256
             num_parts = 7
+        elif embs.shape[-1] == 512:
+            feature_dim = 256
+            num_parts = 2
         else:
             feature_dim = 512
             num_parts = 9

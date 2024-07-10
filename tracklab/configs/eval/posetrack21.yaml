@@ -35,10 +35,10 @@ cfg:
   print_by_video: False
 
   posetrack_trackers_folder: "eval/posetrack21"
-  posetrack_gt_folder: ${dataset.annotation_path}/val
+  posetrack_gt_folder: ${dataset.annotation_path}/${dataset.eval_set}
 
   mot_trackers_folder: "eval/mot"
-  mot_gt_folder: ${dataset.dataset_path}/posetrack_mot/mot/val
+  mot_gt_folder: ${dataset.dataset_path}/posetrack_mot/mot/${dataset.eval_set}
 
   use_parallel: True
   num_parallel_cores: ${num_cores}
