@@ -58,6 +58,10 @@ class ValSampler(Sampler):
                 samples = np.pad(samples, pad_width=(0, self.num_samples-len(samples)),
                                  constant_values=-1)
                 batched_samples.extend(samples)
+            if (len(batched_samples) % self.batch_size) != 0:
+                batched_samples = np.pad(batched_samples,
+                                         pad_width=(0, self.batch_size - (len(batched_samples) % self.batch_size)),
+                                         constant_values=-1)
             yield batched_samples
 
 
