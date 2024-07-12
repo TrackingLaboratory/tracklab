@@ -167,7 +167,6 @@ def collate_fn(batch, batch_size=np.nan):
         if isinstance(d, collections.abc.Mapping):
             for kk, dd in d.items():
                 num_samples = dd.shape[0] // batch_size
-                # FIXME it fails here on the last mini-batch from val cause the shape does not match
                 batch[k][kk] = dd.reshape(batch_size, num_samples, *dd.shape[1:])
         else:
             num_samples = d.shape[0] // batch_size
