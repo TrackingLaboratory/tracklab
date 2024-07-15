@@ -248,7 +248,7 @@
                 <span class="k">break</span>
             <span class="c1"># retrieve results</span>
             <span class="n">image_metadata</span> <span class="o">=</span> <span class="n">image_metadatas</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">image_id</span><span class="p">]</span>
-            <span class="n">image_gt</span> <span class="o">=</span> <span class="n">image_gts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">image_id</span><span class="p">]</span>
+            <span class="n">image_gt</span> <span class="o">=</span> <span class="n">image_gts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">image_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">image_pred</span> <span class="o">=</span> <span class="n">image_preds</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">image_id</span><span class="p">]</span>
             <span class="n">detections_pred</span> <span class="o">=</span> <span class="n">detections</span><span class="p">[</span>
                 <span class="n">detections</span><span class="o">.</span><span class="n">image_id</span> <span class="o">==</span> <span class="n">image_metadata</span><span class="o">.</span><span class="n">name</span>
