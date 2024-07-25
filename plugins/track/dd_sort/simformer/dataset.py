@@ -34,9 +34,9 @@ class SimFormerDataset(Dataset):
         ("bbox_ltwh", 4),
         ("bbox_conf", 1),
         ("keypoints_xyc", (17, 3)),
-        ("visibility_scores", 2),
+        ("visibility_scores", 6),
         ("age", 1),
-        ("embeddings", 512),
+        ("embeddings", 3072),
     ]
 
     def __init__(

@@ -116,6 +116,9 @@ class SmartLinearAppearance(Module):
         if embs.shape[-1] == 1792:  # FIXME temporary fix to handle two different reid models
             feature_dim = 256
             num_parts = 7
+        elif embs.shape[-1] == 3072:
+            feature_dim = 512
+            num_parts = 6
         elif embs.shape[-1] == 512:
             feature_dim = 256
             num_parts = 2

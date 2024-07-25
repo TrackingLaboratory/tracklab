@@ -4,16 +4,15 @@
 # to create the final config file. This item *must* be
 # the first element in the file.
 defaults:
-  - dataset: external_video
-  - eval: trackeval
+  - dataset: posetrack21
+  - eval: posetrack21
   - engine: offline
   - state: no_save
   - visualization: save_videos
   - modules/bbox_detector: yolox
   - modules/pose_topdown: hrnet_posetrack18
-  - modules/reid: kpreid
-  - modules/track: heuristic_sort
-  - modules/utils@modules.neg_kps: negative_keypoints
+  - modules/reid: bpbreid
+  - modules/track: dd_sort
   - _self_
 
 # Pipeline definition :
@@ -23,7 +22,6 @@ defaults:
 pipeline:
   - bbox_detector
   - pose_topdown
-  - neg_kps
   - reid
   - track
 
