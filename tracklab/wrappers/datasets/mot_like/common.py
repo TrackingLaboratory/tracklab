@@ -80,7 +80,7 @@ class MOT(TrackingDataset):
 
         image_counter = 0
         person_counter = 0
-        for video_folder in tqdm(sorted(video_list), desc=f"Loading MOT20 '{split}' set videos"):  # Sort videos by name
+        for video_folder in tqdm(sorted(video_list), desc=f"Loading MOT format '{split}' set videos"):  # Sort videos by name
             video_folder_path = os.path.join(dataset_path, video_folder)
             if os.path.isdir(video_folder_path):
                 # Read seqinfo.ini
