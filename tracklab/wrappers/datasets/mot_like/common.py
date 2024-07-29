@@ -91,7 +91,7 @@ class MOT(TrackingDataset):
                 gt_path = os.path.join(video_folder_path, 'gt', 'gt.txt')
                 if os.path.isfile(gt_path):
                     detections_df = self.read_motchallenge_formatted_file(gt_path)
-                    detections_df['person_id'] = detections_df['track_id'] - 1 + person_counter
+                    detections_df['person_id'] = detections_df['track_id'] + person_counter
                     detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
                     detections_df['video_id'] = len(video_metadatas_list) + 1
                     # detections_df['visibility'] = 1  # FIXME not sure to put it to 1
@@ -163,8 +163,9 @@ class MOT(TrackingDataset):
 
         # Use video_id, image_id, track_id as unique id
         detections = detections.sort_values(by=['video_id', 'image_id', 'track_id'], ascending=[True, True, True])
-        detections['id'] = detections['video_id'].astype(str) + "_" + detections['image_id'].astype(str) + "_" + detections[
-            'track_id'].astype(str)
+        #detections['id'] = detections['video_id'].astype(str) + "_" + \
+        #    detections['image_id'].astype(str) + "_" + detections['track_id'].astype(str)
+        detections['id'] = detections.index
 
         # Add category id to detections
         detections['category_id'] = detections['class']

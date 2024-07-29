@@ -50,8 +50,8 @@ simformer:
   transformer_cfg:
     _target_: dd_sort.Encoder  # {Identity, Encoder, Decoder, Perceptron}
     emb_dim: 1024
-    n_heads: 8
-    n_layers: 2
+    n_heads: 16
+    n_layers: 1
     dim_feedforward: 4096
     dropout: 0.1
     activation_fn: gelu
@@ -82,7 +82,7 @@ simformer:
       enable_ll: True
       checkpoint_path: null  # override the weights of this module using this path
       token_dim: ${...transformer_cfg.emb_dim}
-      feat_dim: 514
+      feat_dim: 3078
 
     MotionBertTokenizer:
       _target_: dd_sort.MotionBertTokenizer
@@ -154,9 +154,10 @@ datamodule:
     ids_bias: 10
     mix_frames: False
   transforms:
-    - add_crops
-    - normalize2image
     - add_gt_reid_embeddings
+    - add_gt_poses
+    - normalize2image
+    #- add_crops
     #- add_detections
     #- add_detections_with_id_switch
   num_workers: ${num_cores}

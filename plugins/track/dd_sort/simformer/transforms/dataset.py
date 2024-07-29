@@ -48,10 +48,24 @@ def add_gt_reid_embeddings(df, metadatas, preds, tracker_state, pipeline, **_):
     reider.datapipe.update(image_filepaths, metadatas, df)
     reids = []
     for idxs, batch in reider.dataloader(engine=FakeEngine()):
-        idxs = idxs.cpu() if isinstance(idxs, torch.Tensor) else idxs
+        idxs = idxs.cpu() if isinstance(idxs, torch.Tensor) else list(idxs)
         batch_detections = df.loc[idxs]
         reids.append(reider.process(batch, batch_detections, metadatas))
     return merge_dataframes(df, reids)
+
+def add_gt_poses(df, metadatas, preds, tracker_state, pipeline, **_):
+    """
+    check if poses are in the right coordinates format
+    """
+    image_filepaths = metadatas['file_path'].to_dict()
+    pose_model = next((mod for mod in pipeline if 'pose' in mod.__class__.__name__.lower()), None)  # FIXME shouldn't be searched like this
+    pose_model.datapipe.update(image_filepaths, metadatas, df)
+    poses = []
+    for idxs, batch in pose_model.dataloader(engine=FakeEngine()):
+        idxs = idxs.cpu() if isinstance(idxs, torch.Tensor) else list(idxs)
+        batch_detections = df.loc[idxs]
+        poses.append(pose_model.process(batch, batch_detections, metadatas))
+    return merge_dataframes(df, poses)
 
 
 def add_detections(df, metadatas, preds, tracker_state, **_):
@@ -101,6 +115,7 @@ def add_detections_with_id_switch(df, metadatas, preds, tracker_state, **_):
 OfflineTransforms.register("add_crops", add_crops)
 OfflineTransforms.register("normalize2image", normalize2image)
 OfflineTransforms.register("add_gt_reid_embeddings", add_gt_reid_embeddings)
+OfflineTransforms.register("add_gt_poses", add_gt_poses)
 OfflineTransforms.register("add_detections", add_detections)
 OfflineTransforms.register("add_detections_with_id_switch", add_detections_with_id_switch)
 
