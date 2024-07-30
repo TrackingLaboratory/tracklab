@@ -125,7 +125,7 @@ class DDSORT(ImageLevelModule):
             pl.callbacks.LearningRateMonitor(),
             # DisplayBatchSamples(self.datamodule.tracking_sets, True, enabled_steps=["train", "val", "test"]),
             PairsStatistics(),
-            # pl.callbacks.EarlyStopping(monitor="val/loss", patience=5, mode="min"),
+            pl.callbacks.EarlyStopping(monitor="val/loss", patience=5, mode="min"),
         ]
         if self.train_cfg.use_rich:
             callbacks.append(pl.callbacks.RichProgressBar())
