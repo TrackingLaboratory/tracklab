@@ -91,12 +91,26 @@ class TrackingDataset(ABC):
         assert len(tiny_video_metadatas) > 0, "No videos left after subsampling the tracking set"
         assert len(tiny_image_metadatas) > 0, "No images left after subsampling the tracking set"
 
-        return TrackingSet(
+        tiny_tracking_set = TrackingSet(
             tiny_video_metadatas,
             tiny_image_metadatas,
             tiny_detections,
             tiny_image_gt,
         )
+
+        if hasattr(tracking_set, "detections_public") and not tracking_set.detections_public.empty:
+            tiny_public_detections = tracking_set.detections_public[
+                tracking_set.detections_public.image_id.isin(tiny_image_metadatas.index)
+            ]
+            tiny_tracking_set.detections_public = tiny_public_detections
+
+        if hasattr(tracking_set, "detections_pred") and not tracking_set.detections_pred.empty:
+            tiny_pred_detections = tracking_set.detections_pred[
+                tracking_set.detections_pred.image_id.isin(tiny_image_metadatas.index)
+            ]
+            tiny_tracking_set.detections_pred = tiny_pred_detections
+
+        return tiny_tracking_set
 
 
     @staticmethod
