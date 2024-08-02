@@ -37,6 +37,7 @@ class PairsStatistics(pl.Callback):
         exp_manager.log({"distributions": wandb.Image(plt)})
         if self.plot:
             plt.show()
+        plt.close()
 
     def on_validation_batch_end(self,
                                 trainer: "pl.Trainer",
@@ -101,6 +102,7 @@ def plot_distributions_with_threshold(positive_similarities, negative_similariti
     # Weights for negative similarities to represent percentages
     weights_neg = np.ones_like(negative_similarities) / len(negative_similarities)
 
+    plt.figure()
     # Plot positive similarities in green
     plt.hist(positive_similarities, weights=weights_pos, color='green', alpha=0.5, bins=30, label='Positive Similarities')
     # Plot negative similarities in red

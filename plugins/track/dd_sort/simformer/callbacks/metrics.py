@@ -6,6 +6,8 @@ import wandb
 from torch import Tensor
 from torchmetrics import Metric
 
+import matplotlib.pyplot as plt
+
 log = logging.getLogger(__name__)
 
 
@@ -137,4 +139,5 @@ def log_roc(roc, auroc, pl_module, epoch, name):
     log_dict[f"val/{name}_auroc"] = b_auroc.item()
     pl_module.log_dict(log_dict, logger=True, on_step=False, on_epoch=True)
     pl_module.logger.experiment.log({f"val/{name}_ROC": wandb.Image(fig_)})
+    plt.close(fig_)
     return best_threshold
