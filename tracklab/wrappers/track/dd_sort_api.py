@@ -78,15 +78,18 @@ class DDSORT(ImageLevelModule):
             keep = (detection["bbox_conf"] >= self.min_bbox_threshold) and (
                 (detection["keypoints_xyc"][:, 2] != 0).sum() >= self.min_vis_keypoints)
             keep_flags.append(keep)
-        return {"keep_flags": np.stack(keep_flags)}
+        keep_flags = np.array(keep_flags)
+        return {"keep_flags": keep_flags}
 
     @torch.no_grad()
     def process(self, batch, detections: pd.DataFrame, metadatas: pd.DataFrame):
         keep = batch["keep_flags"][0]
+        if not len(keep):
+            return []
         pbtrack_ids = torch.tensor(detections.index, dtype=torch.int32)[keep]
         features = {}
         for feature_name in self.input_columns:
-            features[feature_name] = torch.tensor(np.stack(detections[feature_name])[keep], dtype=torch.float32).unsqueeze(0)
+            features[feature_name] = torch.tensor(np.stack(detections[feature_name])[list(keep)], dtype=torch.float32).unsqueeze(0)
         image = cv2_load_image(metadatas['file_path'].values[0])
         img_size = torch.tensor([image.shape[2], image.shape[1]])
         features["bbox_ltwh"] = normalize_bbox_torch(features["bbox_ltwh"], img_size)
