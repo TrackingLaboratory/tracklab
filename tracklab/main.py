@@ -103,10 +103,10 @@ def close_enviroment():
 
 
 def evaluate(cfg, evaluator, tracker_state):
-    if cfg.get("eval_tracking", True) and cfg.dataset.nframes == -1:
+    if cfg.get("eval_tracking", True):  # and cfg.dataset.nframes == -1:
         log.info("Starting evaluation.")
         evaluator.run(tracker_state)
-    elif cfg.get("eval_tracking", True) == False:
+    elif not cfg.get("eval_tracking", True):
         log.warning("Skipping evaluation because 'eval_tracking' was set to False.")
     else:
         log.warning(
