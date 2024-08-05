@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class MOT(TrackingDataset):
-    def __init__(self, dataset_path: str, categories_list: list, nvid: int = -1,
+    def __init__(self, dataset_path: str, categories_list: list, nvid: int = -1, nframes: int = -1,
                  vids_dict: list = None, public_dets_subpath : str = None, *args, **kwargs):
         self.categories_list = categories_list
         self.dataset_path = Path(dataset_path)
@@ -29,7 +29,7 @@ class MOT(TrackingDataset):
             else:
                 log.warning(f"Warning: the {set} set does not exist.")
                 sets_dict[set] = None
-        super().__init__(dataset_path, sets_dict, *args, **kwargs)
+        super().__init__(dataset_path, sets_dict, nvid, nframes, vids_dict, *args, **kwargs)
 
 
     def read_ini_file(self, file_path):

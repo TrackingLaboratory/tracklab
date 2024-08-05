@@ -329,19 +329,18 @@ class TrackerState(AbstractContextManager):
         if self.load_file is not None:
             if f"{self.video_id}.pkl" in self.zf["load"].namelist():
                 with self.zf["load"].open(f"{self.video_id}.pkl", "r", force_zip64=True) as fp:
-                    video_detections = pickle.load(fp)[self.load_columns["detection"]]
+                    video_detections = pickle.load(fp)[self.load_columns["detection"]]  # TODO see with Victor if this ok
+                    video_detections = video_detections[video_detections['image_id'].isin(video_image_preds.index)]  # load only detections from the required frames (nframes)
             else:
                 log.info(f"{self.video_id} detections not in pklz file.")
-                video_detections = pd.DataFrame()
+                video_detections = pd.DataFrame(columns=self.load_columns["detection"])
             if f"{self.video_id}_image.pkl" in self.zf["load"].namelist():
                 with self.zf["load"].open(f"{self.video_id}_image.pkl", "r", force_zip64=True) as fp_image:
-                    video_image_preds = merge_dataframes(
-                        pickle.load(fp_image), video_image_preds
-                    )[self.load_columns["image"]]
+                    #video_image_preds = merge_dataframes(pickle.load(fp_image), video_image_preds)[self.load_columns["image"]]
+                    video_images = pickle.load(fp_image)[self.load_columns["image"]]  # TODO see with Victor if this ok
+                    video_image_preds = video_images[video_images.id.isin(video_image_preds.index)]  # load only images from the required frames (nframes)
             else:
-                video_image_preds = self.image_metadatas[
-                    self.image_metadatas.video_id == self.video_id
-                    ]
+                video_image_preds = self.image_metadatas[self.image_metadatas.video_id == self.video_id]
         self.update(video_detections, video_image_preds)
         return video_detections, video_image_preds
 
