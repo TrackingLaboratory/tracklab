@@ -77,7 +77,7 @@ class SimMetrics(pl.Callback):
             accuracies[i] = (correct_tracks.sum() + correct_dets.sum()) / (self.running_tracks_mask.sum() + self.running_dets_mask.sum())
         computed_sim_threshold2 = thresholds[torch.argwhere(accuracies == torch.amax(accuracies)).flatten()[-1]]
         pl_module.computed_sim_threshold2 = computed_sim_threshold2
-        pl_module.log_dict({"computed_sim_threshold2": computed_sim_threshold2}, logger=True, on_step=False, on_epoch=True)
+        pl_module.log_dict({"val/computed_sim_threshold2": computed_sim_threshold2}, logger=True, on_step=False, on_epoch=True)
         log.info(f"Best computed_sim_threshold2 found on validation set: {pl_module.computed_sim_threshold2:.3f}")
 
 class ClsMetrics(pl.Callback):

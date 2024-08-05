@@ -383,3 +383,15 @@ class SimFormer(pl.LightningModule):
         if hasattr(self, "classifier"):
             callbacks.append(ClsMetrics())
         return callbacks
+
+    def on_save_checkpoint(self, checkpoint):
+        # Add custom attributes to the checkpoint dictionary
+        checkpoint['computed_sim_threshold'] = self.computed_sim_threshold
+        checkpoint['computed_sim_threshold2'] = self.computed_sim_threshold2
+        checkpoint['best_distr_overlap_threshold'] = self.best_distr_overlap_threshold
+
+    def on_load_checkpoint(self, checkpoint):
+        # Load custom attributes from the checkpoint dictionary
+        self.computed_sim_threshold = checkpoint.get('computed_sim_threshold', None)
+        self.computed_sim_threshold2 = checkpoint.get('computed_sim_threshold2', None)
+        self.best_distr_overlap_threshold = checkpoint.get('best_distr_overlap_threshold', None)

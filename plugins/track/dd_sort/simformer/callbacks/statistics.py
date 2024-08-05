@@ -22,8 +22,6 @@ class PairsStatistics(pl.Callback):
         pass
 
     def on_validation_epoch_end(self, trainer, pl_module):
-        exp_manager = trainer.logger.experiment
-
         # Determine best threshold
         best_threshold = find_threshold_overlap(self.positive_sim, self.negative_sim)
         plt = plot_distributions_with_threshold(self.positive_sim, self.negative_sim, best_threshold)
@@ -34,7 +32,7 @@ class PairsStatistics(pl.Callback):
         log_dict[f"val/distr_overlap_opt_th"] = best_threshold
         pl_module.log_dict(log_dict, logger=True, on_step=False, on_epoch=True)
 
-        exp_manager.log({"distributions": wandb.Image(plt)})
+        pl_module.logger.experiment.log({"val/sim_distr": wandb.Image(plt)})
         if self.plot:
             plt.show()
         plt.close()
@@ -116,7 +114,7 @@ def plot_distributions_with_threshold(positive_similarities, negative_similariti
     plt.xlabel("Similarity")
     plt.ylabel("Percentage of similarities")
     plt.title("Distributions of Positive and Negative Similarities")
-    plt.legend(loc='upper right')
+    plt.legend(loc='upper left')
 
     # Show the plot
     plt.tight_layout()
