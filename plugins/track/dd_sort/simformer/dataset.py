@@ -78,9 +78,7 @@ class SimFormerDataset(Dataset):
         tracks = df.loc[df.to_match == 0]
         dets = df.loc[df.to_match == 1]
         det_features, det_targets = self.features_targets(dets, sample["image_id"])
-        track_features, track_targets = self.features_targets(
-            tracks, sample["image_id"]
-        )
+        track_features, track_targets = self.features_targets(tracks, sample["image_id"])
         video_id = np.array(int(df.video_id.unique()[0])).reshape(1)
         image_id = np.array(sample['image_id']).reshape(1)
         return {
@@ -463,7 +461,7 @@ def create_samples_from_video(params):
                     tracklet = pd.DataFrame(columns=detections.columns)
                 detection = detections[detections.track_id == track_id]
                 assert len(detection) <= 1
-                if len(tracklet) == 0 and len(detection) == 0:
+                if len(tracklet) == 0 or len(detection) == 0:
                     continue
                 if len(detection) > 0 and hasattr(detection, "id_switch"):
                     id_switch = int(detection.id_switch.item())
