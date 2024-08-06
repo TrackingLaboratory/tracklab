@@ -65,6 +65,7 @@ class MOT(TrackingDataset):
         public_detections_list = []
         split = os.path.basename(dataset_path)  # Get the split name from the dataset path
         video_list = os.listdir(dataset_path)
+        video_list = [v for v in video_list if not v.startswith('.')]
         video_list.sort()
 
         if nvid > 0:

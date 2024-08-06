@@ -165,12 +165,10 @@ datamodule:
     train:
       _target_: dd_sort.simformer.transforms.Compose
       transforms:
-        _target_: dd_sort.simformer.transforms.Compose
-        transforms:
-          - _target_: dd_sort.simformer.transforms.RandomAgeTracklet
-            std_age: 5
-          - _target_: dd_sort.simformer.transforms.RandomLengthTracklet
-            max_length: 20
-          - _target_: dd_sort.simformer.transforms.RandomGapsTracklet
-            max_gap_size: 3
-            max_gaps: 2
+        - _target_: dd_sort.simformer.transforms.RandomAgeTracklet
+          std_age: 5
+        - _target_: dd_sort.simformer.transforms.RandomLengthTracklet
+          max_length: 20
+        - _target_: dd_sort.simformer.transforms.RandomGapsTracklet
+          max_gap_size: 3
+          max_gaps: 2

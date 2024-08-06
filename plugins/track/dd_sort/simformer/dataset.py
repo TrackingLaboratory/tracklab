@@ -301,10 +301,10 @@ class SimFormerDataModule(pl.LightningDataModule):
 
     def train_dataloader(self):
         return DataLoader(
-            self.datasets["val"],
+            self.datasets["train"],
             num_workers=self.num_workers,
             collate_fn=partial(collate_fn, batch_size=self.batch_size),
-            batch_sampler=self.sampler(dataset=self.datasets["val"], batch_size=self.batch_size, num_samples=self.num_samples),
+            batch_sampler=self.sampler(dataset=self.datasets["train"], batch_size=self.batch_size, num_samples=self.num_samples),
             worker_init_fn=set_worker_sharing_strategy,
             pin_memory=True,
         )
