@@ -24,9 +24,7 @@ def add_crops(df, metadatas, **_):
 
 
 def normalize2image(df, metadatas, **_):
-    image_shape = cv2_load_image(metadatas.loc[df.iloc[0].image_id].file_path).shape[
-        :-1
-    ]  # FIXME add image shape in image metadata
+    image_shape = cv2_load_image(metadatas.loc[df.iloc[0].image_id].file_path).shape[:-1]  # FIXME add image shape in image metadata
     image_shape = image_shape[::-1]  # CV2 gives shapes in (H, W) format, but keypoints/bbox are in (W, H) format
 
     def norm_kps(kps):

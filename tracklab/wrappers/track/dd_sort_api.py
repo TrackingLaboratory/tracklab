@@ -7,7 +7,7 @@ import torch
 
 from hydra.utils import instantiate
 from pathlib import Path
-from dd_sort import normalize_kps, normalize_bbox_torch, PairsStatistics
+from dd_sort import normalize_kps, normalize_bbox, PairsStatistics
 
 from tracklab.pipeline import ImageLevelModule
 from tracklab.utils.cv2 import cv2_load_image
@@ -91,9 +91,9 @@ class DDSORT(ImageLevelModule):
         for feature_name in self.input_columns:
             features[feature_name] = torch.tensor(np.stack(detections[feature_name])[list(keep)], dtype=torch.float32).unsqueeze(0)
         image = cv2_load_image(metadatas['file_path'].values[0])
-        img_size = torch.tensor([image.shape[2], image.shape[1]])
-        features["bbox_ltwh"] = normalize_bbox_torch(features["bbox_ltwh"], img_size)
-        features["keypoints_xyc"] = normalize_kps(features["keypoints_xyc"], img_size)
+        image_shape = torch.tensor(image.shape[:-1][::-1])
+        features["bbox_ltwh"] = normalize_bbox(features["bbox_ltwh"], image_shape)
+        features["keypoints_xyc"] = normalize_kps(features["keypoints_xyc"], image_shape)
         image_id = int(metadatas.index[0])
         results = self.tracker.update(features, pbtrack_ids, image_id, image)
         if results:

@@ -49,14 +49,10 @@ def unnormalize_bbox(bbox, image_shape):
 
 
 def normalize_bbox(bbox, image_shape):
-    return bbox / (list(image_shape) * 2)
-
-
-def normalize_bbox_torch(bbox, image_shape):
     return bbox / image_shape.repeat(2)
 
 
-def normalize_kps(kps, img_size):
+def normalize_kps(kps, image_shape):
     nm_kps = kps.clone()
-    nm_kps[..., :2] = kps[..., :2] / img_size
+    nm_kps[..., :2] = kps[..., :2] / image_shape
     return nm_kps
