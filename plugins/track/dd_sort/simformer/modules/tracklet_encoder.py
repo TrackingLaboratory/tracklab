@@ -80,21 +80,21 @@ class Tokenizer(Module):
             return tokens.squeeze(dim=2)
         else:
             assert isinstance(x, Tracklets), "Input must be either Detections or Tracklets."
-        B, N, S, E = tokens.shape
 
-        # Reshape input to (S+1, B*N, E)
-        src = tokens.transpose(1, 2).reshape(S, B * N, E)
+        # Apply positional encoding
+        src = self.pos_encoder(tokens, x.feats["age"], x.feats_masks)
+
+        # Reshape input to (S, B*N, E)
+        B, N, S, E = tokens.shape
+        src = src.permute(2, 0, 1, 3).reshape(S, B * N, E)
 
         # Add class_0 token
-        special_tokens = self.special_tokens.expand(-1, B*N, E)
+        special_tokens = self.special_tokens.expand(self.num_registers+1, B*N, E)
         src = torch.cat([special_tokens, src], dim=0)
 
         # Update mask to include class_0 token
         new_mask = torch.ones((B * N, self.num_registers + 1), dtype=torch.bool, device=x.feats_masks.device)
         src_mask = torch.cat([new_mask, x.feats_masks.reshape(B * N, -1)], dim=1)
-
-        # Apply positional encoding
-        src = self.pos_encoder(src) # FIXME check for age etc..
 
         # Apply transformer encoder
         output = self.transformer_encoder(src, src_key_padding_mask=~src_mask)
@@ -105,14 +105,23 @@ class Tokenizer(Module):
 
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, max_len=200):
+    def __init__(self, emb_dim, max_len=200):
         super().__init__()
+        self.emb_dim = emb_dim
         position = torch.arange(max_len).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model))
-        pe = torch.zeros(max_len, 1, d_model)
-        pe[:, 0, 0::2] = torch.sin(position * div_term)
-        pe[:, 0, 1::2] = torch.cos(position * div_term)
+        div_term = torch.exp(torch.arange(0, emb_dim, 2) * (-math.log(10000.0) / emb_dim))
+        pe = torch.zeros(max_len, emb_dim)
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe)
 
-    def forward(self, x):
-        return x + self.pe[:x.size(0)]
+    def forward(self, x, age, mask):
+        B, N, S, E = x.shape
+        x = x.view(B * N, S, E)
+        age = age.view(B * N, S).to(torch.long)
+        mask = mask.view(B * N, S)
+
+        # Ajouter l'encodage positionnel à x
+        x[mask] = x[mask] + self.pe[age[mask]]
+
+        return x.view(B, N, S, E)
