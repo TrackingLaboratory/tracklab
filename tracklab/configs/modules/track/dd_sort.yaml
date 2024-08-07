@@ -78,22 +78,32 @@ simformer:
     #  checkpoint_path: null  # override the weights of this module using this path
     SmartLinearAppearance:
       _target_: dd_sort.SmartLinearAppearance
-      _enabled_: True
+      _enabled_: False
       enable_ll: True
       checkpoint_path: null  # override the weights of this module using this path
       token_dim: ${...transformer_cfg.emb_dim}
       feat_dim: 3078
-
-    MotionBertTokenizer:
-      _target_: dd_sort.MotionBertTokenizer
-      _enabled_: False
-      checkpoint_path: ${model_dir}/MotionBERT/motionbert_42085620_still-dawn-1446.ckpt  # override the weights of this module using this path
-      mb_checkpoint_path: ${model_dir}/MotionBERT/motionbert_lite.bin  # init weights for training
-      freeze: False
+    #MotionBertTokenizer:
+    #  _target_: dd_sort.MotionBertTokenizer
+    #  _enabled_: False
+    #  checkpoint_path: ${model_dir}/MotionBERT/motionbert_42085620_still-dawn-1446.ckpt  # override the weights of this module using this path
+    #  mb_checkpoint_path: ${model_dir}/MotionBERT/motionbert_lite.bin  # init weights for training
+    #  freeze: False
+    #  token_dim: ${...transformer_cfg.emb_dim}
+    #  agg_strat: ema
+    #  pad_empty_frames: True  # Will pad each empty frame with 0s if True, or use a concatenation of all available skeletons if False
+    #  tracklet_max_age: 20  # Will use skeletons until this number of frames in the past, padding with 0s when necessary
+    Tokenizer:
+      _target_: dd_sort.Tokenizer
+      _enabled_: True
+      feat_dim: 3133
       token_dim: ${...transformer_cfg.emb_dim}
-      agg_strat: ema
-      pad_empty_frames: True  # Will pad each empty frame with 0s if True, or use a concatenation of all available skeletons if False
-      tracklet_max_age: 20  # Will use skeletons until this number of frames in the past, padding with 0s when necessary
+      emb_dim: ${...transformer_cfg.emb_dim}
+      n_heads: 8
+      n_layers: 2
+      dim_feedforward: 4096
+      dropout: 0.1
+      checkpoint_path: null  # override the weights of this module using this path
 
   classifier_cfg:
     # null for no classifier
