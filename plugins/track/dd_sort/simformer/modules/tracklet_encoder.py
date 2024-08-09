@@ -26,7 +26,7 @@ from .transformers import Module
 from ..simformer import Detections, Tracklets
 
 class LinearProjection(Module):
-    def __init__(self, token_dim: int, feat_dim: int = 3133):
+    def __init__(self, token_dim: int, feat_dim: int = 3133, tokenizer_checkpoint_path: str = None):
         super().__init__()
         self.token_dim = token_dim
         self.feat_dim = feat_dim
@@ -50,13 +50,44 @@ class LinearProjection(Module):
         # Project the concatenated features to token_dim
         tokens[x.feats_masks] = self.linear(cat_feats[x.feats_masks])
         return tokens
+    
+class MLP(Module):
+    def __init__(self, token_dim: int, feat_dim: int = 3133, tokenizer_checkpoint_path: str = None):
+        super().__init__()
+        self.token_dim = token_dim
+        self.feat_dim = feat_dim
+        
+        # Define a Multi-Layer Perceptron to project features to token_dim
+        self.mlp = nn.Sequential(
+            nn.Linear(feat_dim, feat_dim),
+            nn.ReLU(),
+            nn.Linear(feat_dim, token_dim)
+        )
+
+    def forward(self, x):
+        # Concatenate all the feature dimensions
+        cat_feats = torch.cat(
+            [x.feats["embeddings"],
+             x.feats["visibility_scores"],
+             x.feats["bbox_ltwh"],
+             x.feats["keypoints_xyc"].reshape(*x.feats_masks.shape, -1)],
+            dim=-1
+        )
+        tokens = torch.zeros(
+            (*cat_feats.shape[:-1], self.token_dim),
+            device=cat_feats.device,
+            dtype=torch.float32,
+        )
+        # Project the concatenated features to token_dim using the MLP
+        tokens[x.feats_masks] = self.mlp(cat_feats[x.feats_masks])
+        return tokens
 
 
 class Tokenizer(Module):
-    def __init__(self, token_dim, feat_dim, emb_dim, n_heads, n_layers, num_registers: int = 3, dim_feedforward=2048, dropout=0.1, checkpoint_path: str = None,
+    def __init__(self, token_dim, feat_dim, emb_dim, n_heads, n_layers, num_registers: int = 3, dim_feedforward=2048, dropout=0.1, checkpoint_path: str = None, tokenizer_checkpoint_path: str = None,
         **kwargs):
         super().__init__()
-        self.lin_proj = LinearProjection(token_dim, feat_dim)
+        self.lin_proj = MLP(token_dim, feat_dim, tokenizer_checkpoint_path)
         self.token_dim = token_dim
         self.feat_dim = feat_dim
 
@@ -81,27 +112,28 @@ class Tokenizer(Module):
         else:
             assert isinstance(x, Tracklets), "Input must be either Detections or Tracklets."
 
+        return tokens.mean(dim=2)
         # Apply positional encoding
-        src = self.pos_encoder(tokens, x.feats["age"], x.feats_masks)
-
-        # Reshape input to (S, B*N, E)
-        B, N, S, E = tokens.shape
-        src = src.permute(2, 0, 1, 3).reshape(S, B * N, E)
-
-        # Add class_0 token
-        special_tokens = self.special_tokens.expand(self.num_registers+1, B*N, E)
-        src = torch.cat([special_tokens, src], dim=0)
-
-        # Update mask to include class_0 token
-        new_mask = torch.ones((B * N, self.num_registers + 1), dtype=torch.bool, device=x.feats_masks.device)
-        src_mask = torch.cat([new_mask, x.feats_masks.reshape(B * N, -1)], dim=1)
-
-        # Apply transformer encoder
-        output = self.transformer_encoder(src, src_key_padding_mask=~src_mask)
-
-        # Extract class_0 token
-        class_0_output = output[0].reshape(B, N, E)
-        return class_0_output
+        #src = self.pos_encoder(tokens, x.feats["age"], x.feats_masks)
+        #
+        ## Reshape input to (S, B*N, E)
+        #B, N, S, E = tokens.shape
+        #src = src.permute(2, 0, 1, 3).reshape(S, B * N, E)
+        #
+        ## Add class_0 token
+        #special_tokens = self.special_tokens.expand(self.num_registers+1, B*N, E)
+        #src = torch.cat([special_tokens, src], dim=0)
+        #
+        ## Update mask to include class_0 token
+        #new_mask = torch.ones((B * N, self.num_registers + 1), dtype=torch.bool, device=x.feats_masks.device)
+        #src_mask = torch.cat([new_mask, x.feats_masks.reshape(B * N, -1)], dim=1)
+        #
+        ## Apply transformer encoder
+        #output = self.transformer_encoder(src, src_key_padding_mask=~src_mask)
+        #
+        ## Extract class_0 token
+        #class_0_output = output[0].reshape(B, N, E)
+        #return class_0_output
 
 
 class PositionalEncoding(nn.Module):
