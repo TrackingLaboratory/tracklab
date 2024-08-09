@@ -74,12 +74,19 @@ You might need to change your torch installation depending on your hardware. Ple
 Get into your repo and install the requirements with :
 
 ```bash
-pip install -e .
+pip3 install -e .
 mim install mmcv==2.0.1
 ```
 
 You might need to redo this if you update the repository, and some dependencies changed.
 
+If issues with ddsort updated code not being called (an older pip installed ddsort is being called), then proceed with the following:
+```bash
+pip3 uninstall track-bench-track
+cd plugins/track/
+pip3 install -e .
+```
+s`
 ### External dependencies
 
 - Get the **SoccerNet Tracking** dataset [here](https://github.com/SoccerNet/sn-tracking), rename the root folder as "SoccerNetMOT" and put it under the global dataset directory (specified under the `data_dir` config as explained below). Otherwise, you can modify the `dataset_path` config in [soccernet_mot.yaml](tracklab/configs/dataset/soccernet_mot.yaml) with your custom SoccerNet dataset directory.
