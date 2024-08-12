@@ -34,7 +34,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         pred_save_path = Path(self.cfg.dataset.TRACKERS_FOLDER) / f"{self.trackeval_dataset_name}-{self.eval_set}" / tracker_name
         self.tracking_dataset.save_for_eval(
             tracker_state.detections_pred,
-            tracker_state.image_pred,
+            tracker_state.image_metadatas,
             tracker_state.video_metadatas,
             pred_save_path,
             self.cfg.bbox_column_for_eval,
@@ -55,7 +55,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         if self.cfg.save_gt:
             self.tracking_dataset.save_for_eval(
                 tracker_state.detections_gt,
-                tracker_state.image_gt,
+                tracker_state.image_metadatas,
                 tracker_state.video_metadatas,
                 gt_save_path,
                 self.cfg.bbox_column_for_eval,
