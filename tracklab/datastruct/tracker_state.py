@@ -58,14 +58,17 @@ class TrackerState(AbstractContextManager):
                         else:
                             load_columns = {k:set(v) for k, v in summary["columns"].items()}
                 else:
-                    image_file = next(f for f in zf.namelist() if "image" in f)
+                    image_file = next((f for f in zf.namelist() if "image" in f), None)
                     detection_file = next(f for f in zf.namelist() if "image" not in f)
                     with zf.open(detection_file, force_zip64=True) as fp:
                         dets = pickle.load(fp)
                         load_columns["detection"] = set(dets.columns)
-                    with zf.open(image_file, force_zip64=True) as fp:
-                        images = pickle.load(fp)
-                        load_columns["image"] = set(images.columns)
+                    if image_file is not None:
+                        with zf.open(image_file, force_zip64=True) as fp:
+                            images = pickle.load(fp)
+                            load_columns["image"] = set(images.columns)
+                    else:
+                        load_columns["image"] = set()
         elif load_from_groundtruth:
             load_columns["image"] = set(self.image_gt.columns)
             load_columns["detection"] = set(self.detections_gt.columns)
