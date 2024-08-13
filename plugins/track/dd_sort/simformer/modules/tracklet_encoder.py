@@ -167,7 +167,7 @@ class Tokenizer(Module):
 
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, emb_dim, max_len=200):
+    def __init__(self, emb_dim, max_len=1000):
         super().__init__()
         self.emb_dim = emb_dim
         position = torch.arange(max_len).unsqueeze(1)
@@ -176,12 +176,14 @@ class PositionalEncoding(nn.Module):
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe)
+        self.max_len = max_len
 
     def forward(self, x, age, mask):
         B, N, S, E = x.shape
         x = x.view(B * N, S, E)
         age = age.view(B * N, S).to(torch.long)
         mask = mask.view(B * N, S)
+        age[mask] = age[mask].clamp(min=0, max=self.max_len)
 
         # Ajouter l'encodage positionnel à x
         x[mask] = x[mask] + self.pe[age[mask]]
