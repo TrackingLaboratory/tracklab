@@ -48,6 +48,7 @@ class Tracklet(object):
         """Stays in Tracked state"""
         self.last_det = detection
         self.detections.append(detection)
+        self.detections = self.detections[-50:]
         self.score = detection.score
         self.frame_id = frame_id
 
@@ -57,6 +58,7 @@ class Tracklet(object):
         """from Lost to Tracked state"""
         self.last_det = detection
         self.detections.append(detection)
+        self.detections = self.detections[-50:]
         self.score = detection.score
         self.frame_id = frame_id
 
@@ -289,7 +291,7 @@ class DDSORTBYTETracker(object):
         # get general sim_matrix
         if len(tracklets) > 0 and len(detections) > 0:
             batch = build_simformer_batch(
-                tracklets, detections, self.simformer.device, image, self.frame_id
+                tracklets, detections, self.simformer.device, image, self.frame_id-1
             )
             tracks, dets = self.simformer.predict_preprocess(batch)
             _, _, td_sim_matrix = self.simformer.forward(tracks, dets)
@@ -454,7 +456,7 @@ class DDSORTBYTETracker(object):
                 np.empty((0,)),
             )
 
-        batch = build_simformer_batch(tracklets, detections, self.simformer.device, image, self.frame_id)
+        batch = build_simformer_batch(tracklets, detections, self.simformer.device, image, self.frame_id-1)
         association_matrix, association_result, td_sim_matrix = self.simformer.predict_step(
             batch, self.frame_id
         )

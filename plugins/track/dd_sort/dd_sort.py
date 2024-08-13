@@ -42,6 +42,7 @@ class Tracklet(object):
 
     def update(self, detection):
         self.detections.append(detection)
+        self.detections = self.detections[-50:]
         # tracklet management
         self.hits += 1
         self.hit_streak += 1
@@ -230,7 +231,7 @@ class DDSORT(object):
                 'bbox_conf': torch.stack([t.padded_features("bbox_conf", T_max) for t in tracklets]).unsqueeze(2).unsqueeze(0).to(device=device),  # [1, N, T, 1]
                 'bbox_ltwh': torch.stack([t.padded_features("bbox_ltwh", T_max) for t in tracklets]).unsqueeze(0).to(device=device),  # [1, N, T, 4]
                 'keypoints_xyc': torch.stack([t.padded_features("keypoints_xyc", T_max) for t in tracklets]).unsqueeze(0).to(device=device),  # [1, N, T, 17, 3]
-                'age': self.frame_count - torch.stack([t.padded_features("frame_idx", T_max) for t in tracklets]).unsqueeze(2).unsqueeze(0).to(device=device),  # [1, N, T, 17, 3]
+                'age': self.frame_count - 1 - torch.stack([t.padded_features("frame_idx", T_max) for t in tracklets]).unsqueeze(2).unsqueeze(0).to(device=device),  # [1, N, T, 17, 3]
             },
             'track_masks': torch.stack([torch.cat([torch.ones(len(t.detections), dtype=torch.bool), torch.zeros(T_max - len(t.detections), dtype=torch.bool)]) for t in tracklets]).unsqueeze(0).to(device=device),  # [1, N, T]
         }
