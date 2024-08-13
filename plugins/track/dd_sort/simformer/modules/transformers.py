@@ -20,21 +20,23 @@ class Module(nn.Module):
             state_dict = OrderedDict(
                 (k.replace(module_name + ".", ""), v) for k, v in state_dict.items()
             )
-            try:
-                self.load_state_dict(state_dict)
-                log.info(f"Loaded checkpoint weights for {module_name} from `{checkpoint_path}`.")
-            except RuntimeError as re:
-                log.warning(
-                    f"Could not load checkpoint weights for {module_name} from `{checkpoint_path}`: {re}."
-                )
-                self.init_weights()
+            missing, unexpected = self.load_state_dict(state_dict, strict=False)
+            log.info(f"Loaded checkpoint weights for {module_name} from `{checkpoint_path}`.")
+            if missing:
+                log.warning(f"Missing keys while loading: {missing}. Initializing random weights for those.")
+            if unexpected:
+                log.warning(f"Unexpected keys while loading: {unexpected}. Initializing random weights for those.")
+            params_to_init = missing + unexpected
         else:
-            for p in self.parameters():
-                if p.dim() > 1:
-                    nn.init.xavier_uniform_(p)
+            params_to_init = self.named_modules()
+        for key in params_to_init:
+            module = dict(self.named_modules())
+            if key in module:
+                layer = module[key]
+                if layer.dim() > 1:
+                    nn.init.xavier_uniform_(layer)
                 else:
-                    nn.init.uniform_(p)
-            log.info(f"Initialized random weights for {module_name}.")
+                    nn.init.uniform_(layer)
 
 
 class Identity(Module):

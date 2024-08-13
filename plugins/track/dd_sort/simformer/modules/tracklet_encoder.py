@@ -25,6 +25,7 @@ import math
 from .transformers import Module
 from ..simformer import Detections, Tracklets
 
+
 class LinearProjection(Module):
     def __init__(self, token_dim: int, feat_dim: int = 3133, tokenizer_checkpoint_path: str = None):
         super().__init__()
@@ -52,13 +53,14 @@ class LinearProjection(Module):
         # Project the concatenated features to token_dim
         tokens[x.feats_masks] = self.linear(cat_feats[x.feats_masks])
         return tokens
-    
+
+
 class MLP(Module):
     def __init__(self, token_dim: int, feat_dim: int = 3133, tokenizer_checkpoint_path: str = None):
         super().__init__()
         self.token_dim = token_dim
         self.feat_dim = feat_dim
-        
+
         # Define a Multi-Layer Perceptron to project features to token_dim
         self.mlp = nn.Sequential(
             nn.Linear(feat_dim, feat_dim),
@@ -88,8 +90,9 @@ class MLP(Module):
 
 
 class Tokenizer(Module):
-    def __init__(self, token_dim, feat_dim, emb_dim, n_heads, n_layers, num_registers: int = 3, dim_feedforward=2048, dropout=0.1, checkpoint_path: str = None, tokenizer_checkpoint_path: str = None,
-        **kwargs):
+    def __init__(self, token_dim, feat_dim, emb_dim, n_heads, n_layers, num_registers: int = 3, dim_feedforward=4096,
+                 dropout=0.1, checkpoint_path: str = None, tokenizer_checkpoint_path: str = None,
+                 **kwargs):
         super().__init__()
         self.token_dim = token_dim
         self.feat_dim = feat_dim
@@ -116,23 +119,23 @@ class Tokenizer(Module):
         else:
             assert isinstance(x, Tracklets), "Input must be either Detections or Tracklets."
 
-        #return masked_mean(tokens, x.feats_masks, dim=2)  # torch.sum(tokens, dim=2)/torch.sum(x.feats_masks.unsqueeze(-1), dim=2)  # tokens.mean(dim=2)
+        # return masked_mean(tokens, x.feats_masks, dim=2)  # torch.sum(tokens, dim=2)/torch.sum(x.feats_masks.unsqueeze(-1), dim=2)  # tokens.mean(dim=2)
         # The problem is that even with that we do not have good perfs : IDF1 44.559 & AssA 25.95 
 
         B, N, S, E = tokens.shape
-        special_tokens = self.special_tokens.expand(self.num_registers+1, B * N, E)
+        special_tokens = self.special_tokens.expand(self.num_registers + 1, B * N, E)
         src = self.pos_encoder(tokens, x.feats["age"], x.feats_masks)
         src = src.permute(2, 0, 1, 3).reshape(S, B * N, E)
         src = torch.cat([src, special_tokens], dim=0)
-        new_mask = torch.ones((B * N, self.num_registers+1), dtype=torch.bool, device=x.feats_masks.device)
+        new_mask = torch.ones((B * N, self.num_registers + 1), dtype=torch.bool, device=x.feats_masks.device)
         src_mask = torch.cat([x.feats_masks.reshape(B * N, S), new_mask], dim=1)
 
         output = self.transformer_encoder(src, src_key_padding_mask=~src_mask)  # [S, B*N, E]
-        #output = output.permute(1, 0, 2).reshape(B, N, S+1, E)[:, :, :-1, :]
-        #mean1 = masked_mean(output, x.feats_masks, dim=2)
+        # output = output.permute(1, 0, 2).reshape(B, N, S+1, E)[:, :, :-1, :]
+        # mean1 = masked_mean(output, x.feats_masks, dim=2)
         output = output.permute(1, 0, 2).reshape(B, N, S + self.num_registers + 1, E)[:, :, -1, :]
         return output
-    
+
         # next steps :
         # train using MLP projection (done)
         # return last detection from tracklet (done)
@@ -145,25 +148,25 @@ class Tokenizer(Module):
         # (add more special tokens)
 
         # Apply positional encoding
-        #src = self.pos_encoder(tokens, x.feats["age"], x.feats_masks)
+        # src = self.pos_encoder(tokens, x.feats["age"], x.feats_masks)
         ## Reshape input to (S, B*N, E)
-        #B, N, S, E = tokens.shape
-        #src = src.permute(2, 0, 1, 3).reshape(S, B * N, E)
+        # B, N, S, E = tokens.shape
+        # src = src.permute(2, 0, 1, 3).reshape(S, B * N, E)
         #
         ## Add class_0 token
-        #special_tokens = self.special_tokens.expand(self.num_registers+1, B*N, E)
-        #src = torch.cat([special_tokens, src], dim=0)
+        # special_tokens = self.special_tokens.expand(self.num_registers+1, B*N, E)
+        # src = torch.cat([special_tokens, src], dim=0)
         #
         ## Update mask to include class_0 token
-        #new_mask = torch.ones((B * N, self.num_registers + 1), dtype=torch.bool, device=x.feats_masks.device)
-        #src_mask = torch.cat([new_mask, x.feats_masks.reshape(B * N, -1)], dim=1)
+        # new_mask = torch.ones((B * N, self.num_registers + 1), dtype=torch.bool, device=x.feats_masks.device)
+        # src_mask = torch.cat([new_mask, x.feats_masks.reshape(B * N, -1)], dim=1)
         #
         ## Apply transformer encoder
-        #output = self.transformer_encoder(src, src_key_padding_mask=~src_mask)
+        # output = self.transformer_encoder(src, src_key_padding_mask=~src_mask)
         #
         ## Extract class_0 token
-        #class_0_output = output[0].reshape(B, N, E)
-        #return class_0_output
+        # class_0_output = output[0].reshape(B, N, E)
+        # return class_0_output
 
 
 class PositionalEncoding(nn.Module):
@@ -189,6 +192,7 @@ class PositionalEncoding(nn.Module):
         x[mask] = x[mask] + self.pe[age[mask]]
 
         return x.view(B, N, S, E)
+
 
 def masked_mean(tensor, mask, dim):
     # Replace masked values with 0
