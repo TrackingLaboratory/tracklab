@@ -24,6 +24,7 @@ from tracklab.pipeline import Pipeline
 
 log = logging.getLogger(__name__)
 
+from functools import lru_cache
 
 def set_worker_sharing_strategy(worker_id: int) -> None:
     torch.multiprocessing.set_sharing_strategy("file_system")
@@ -63,14 +64,19 @@ class SimFormerDataset(Dataset):
         if self._zf is None:
             self._zf = zipfile.ZipFile(self.gallery_path, mode="r")
         return self._zf
+    
+    @lru_cache(maxsize=1)
+    def _load_pickle(self, sample_video_id):
+        with self.zf.open(sample_video_id, "r") as fp:
+            df = pickle.load(fp)
+        return df
 
     def __getitem__(self, idx):
         if idx == -1:
             return self.create_empty_input()
         else:
             sample = self.samples[idx]
-        with self.zf.open(sample["video_id"], "r") as fp:
-            df = pickle.load(fp)
+        df = self._load_pickle(sample["video_id"])
 
         df = df.loc[sample["detections"]]
         df["to_match"] = sample["to_match"]

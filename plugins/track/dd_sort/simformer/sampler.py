@@ -30,6 +30,7 @@ class SimFormerSampler(Sampler):
         samples = pd.DataFrame(self.samples)
         samples["random_index"] = samples.apply(lambda x: idxs[list(self.image_ids).index(x.image_id)], axis=1)
         samples = samples.sort_values("random_index")
+        #samples = samples.sort_values(["video_id"])
         indices = samples.index
         if len(indices) % self.dl_batch_size != 0:
             indices = np.pad(indices, (0, self.dl_batch_size - (len(indices) % self.dl_batch_size)), constant_values=-1)
