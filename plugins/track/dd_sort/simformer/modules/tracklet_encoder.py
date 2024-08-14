@@ -1,43 +1,23 @@
-"""
-On veut un nn.Module en pytorch
-
-Le detection tokenizer :
-x est l'input à la forward
-x.feats est un dict composé des keys "embeddings", "visibility_scores", "bbox_ltwh", "bbox_score", "keypoints_xyc"
-On veut un MLP (ou une projection linéaire) qui envoie ces features vers une dimension token_dim. On ne veut pas de couche de normalisation.
-
-L'idée est d'appliquer ceci pour l'ensemble des detections qui composent x.
-Une fois ces tokens obtenus, on garde les tokens liés aux detections. Ils deviendront x.tokens des detections.
-Pour ce qui est des tokens liés aux tracks, on les utilisera pour les encoder via un encoder.
-
-L'encoder de la tracklets  :
-On aligne chacune des detections liées à une tracklet auquels on vient encoder les timestamps respectifs de ses observations.
-(sin + cos positional encoding ?)
-On passe ces detections + un token class_0 dans un encoder (transformer) qui va encoder ces données.
-On récupère en output le token class_0 qui représente un descripteur de la tracklet.
-C'est lui qui deviendra le x.embs associé.
-"""
-
 import torch
 import torch.nn as nn
 import math
 
 from .transformers import Module
-from ..simformer import Detections, Tracklets
+from ..simformer import Detections
 
 
 class LinearProjection(Module):
-    def __init__(self, token_dim: int, feat_dim: int = 3133, tokenizer_checkpoint_path: str = None):
+    """
+    Project features of detections from feat_dim to token_dim using a linear projection.
+    """
+
+    def __init__(self, feat_dim: int, token_dim: int):
         super().__init__()
-        self.token_dim = token_dim
         self.feat_dim = feat_dim
-        # Define a linear layer to project features to token_dim
+        self.token_dim = token_dim
         self.linear = nn.Linear(feat_dim, token_dim)
 
-        self.init_weights(checkpoint_path=tokenizer_checkpoint_path, module_name="tokenizers.Tokenizer.lin_proj")
-
     def forward(self, x):
-        # Concatenate all the feature dimensions
         cat_feats = torch.cat(
             [x.feats["embeddings"],
              x.feats["visibility_scores"],
@@ -50,28 +30,27 @@ class LinearProjection(Module):
             device=cat_feats.device,
             dtype=torch.float32,
         )
-        # Project the concatenated features to token_dim
         tokens[x.feats_masks] = self.linear(cat_feats[x.feats_masks])
         return tokens
 
 
 class MLP(Module):
-    def __init__(self, token_dim: int, feat_dim: int = 3133, tokenizer_checkpoint_path: str = None):
-        super().__init__()
-        self.token_dim = token_dim
-        self.feat_dim = feat_dim
+    """
+    Project features of detections from feat_dim to token_dim using an MLP.
+    """
 
-        # Define a Multi-Layer Perceptron to project features to token_dim
+    def __init__(self, feat_dim: int, token_dim: int):
+        super().__init__()
+        self.feat_dim = feat_dim
+        self.token_dim = token_dim
+
         self.mlp = nn.Sequential(
             nn.Linear(feat_dim, feat_dim),
             nn.ReLU(),
             nn.Linear(feat_dim, token_dim)
         )
 
-        self.init_weights(checkpoint_path=tokenizer_checkpoint_path, module_name="tokenizers.Tokenizer.lin_proj")
-
     def forward(self, x):
-        # Concatenate all the feature dimensions
         cat_feats = torch.cat(
             [x.feats["embeddings"],
              x.feats["visibility_scores"],
@@ -84,89 +63,65 @@ class MLP(Module):
             device=cat_feats.device,
             dtype=torch.float32,
         )
-        # Project the concatenated features to token_dim using the MLP
         tokens[x.feats_masks] = self.mlp(cat_feats[x.feats_masks])
         return tokens
 
 
-class Tokenizer(Module):
-    def __init__(self, token_dim, feat_dim, emb_dim, n_heads, n_layers, num_registers: int = 3, dim_feedforward=4096,
-                 dropout=0.1, checkpoint_path: str = None, tokenizer_checkpoint_path: str = None,
-                 **kwargs):
-        super().__init__()
-        self.token_dim = token_dim
-        self.feat_dim = feat_dim
+class TrackletEncoder(Module):
+    """
+    Tokenize detections or tracklets into a single token.
+    Detections are simply projected into a token space using det_tokenizer.
+    Tracklets are projected into a token space using the projected detections by det_tokenizer and then encoded using a
+    transformer encoder.
+    """
 
+    def __init__(self, emb_dim, det_tokenizer, n_heads: int = 8, n_layers: int = 1, dim_feedforward=4096,
+                 num_registers: int = 3,
+                 dropout=0.1, checkpoint_path: str = None, use_only_det_tokenizer: bool = False, **kwargs):
+        super().__init__()
         self.emb_dim = emb_dim
         self.n_heads = n_heads
         self.n_layers = n_layers
         self.dim_feedforward = dim_feedforward
-        self.dropout = dropout
-
-        self.pos_encoder = PositionalEncoding(emb_dim)
-        encoder_layers = nn.TransformerEncoderLayer(emb_dim, n_heads, dim_feedforward, dropout)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, n_layers)
-        self.special_tokens = nn.Parameter(torch.randn(num_registers + 1, 1, emb_dim))
         self.num_registers = num_registers
+        self.dropout = dropout
+        self.use_only_det_tokenizer = use_only_det_tokenizer
 
-        self.init_weights(checkpoint_path=checkpoint_path, module_name="tokenizers.Tokenizer")
-        self.lin_proj = MLP(token_dim, feat_dim, tokenizer_checkpoint_path)
+        self.det_tokenizer = det_tokenizer
+        if not use_only_det_tokenizer:
+            self.pos_encoder = PositionalEncoding(emb_dim)
+            encoder_layers = nn.TransformerEncoderLayer(emb_dim, n_heads, dim_feedforward, dropout)
+            self.encoder = nn.TransformerEncoder(encoder_layers, n_layers)
+            self.registers_tokens = nn.Parameter(torch.randn(num_registers + 1, 1, emb_dim))
+
+        self.init_weights(checkpoint_path=checkpoint_path, module_name="tokenizers.TrackletEncoder")
 
     def forward(self, x):
-        tokens = self.lin_proj(x)
+        # handle the detections by simply projection them into a token space
+        tokens = self.det_tokenizer(x)
         if isinstance(x, Detections):
+            # job is done for the detections
             return tokens.squeeze(dim=2)
-        else:
-            assert isinstance(x, Tracklets), "Input must be either Detections or Tracklets."
 
-        # return masked_mean(tokens, x.feats_masks, dim=2)  # torch.sum(tokens, dim=2)/torch.sum(x.feats_masks.unsqueeze(-1), dim=2)  # tokens.mean(dim=2)
-        # The problem is that even with that we do not have good perfs : IDF1 44.559 & AssA 25.95 
+        # handle the tracklets
+        if self.use_only_det_tokenizer:
+            # return the mean of the detections (this is used to train the det_tokenizer)
+            return masked_mean(tokens, x.feats_masks, dim=2)
 
         B, N, S, E = tokens.shape
-        special_tokens = self.special_tokens.expand(self.num_registers + 1, B * N, E)
+
         src = self.pos_encoder(tokens, x.feats["age"], x.feats_masks)
         src = src.permute(2, 0, 1, 3).reshape(S, B * N, E)
-        src = torch.cat([src, special_tokens], dim=0)
+
+        registers_tokens = self.registers_tokens.expand(self.num_registers + 1, B * N, E)
+        src = torch.cat([src, registers_tokens], dim=0)
+
         new_mask = torch.ones((B * N, self.num_registers + 1), dtype=torch.bool, device=x.feats_masks.device)
         src_mask = torch.cat([x.feats_masks.reshape(B * N, S), new_mask], dim=1)
 
-        output = self.transformer_encoder(src, src_key_padding_mask=~src_mask)  # [S, B*N, E]
-        # output = output.permute(1, 0, 2).reshape(B, N, S+1, E)[:, :, :-1, :]
-        # mean1 = masked_mean(output, x.feats_masks, dim=2)
-        output = output.permute(1, 0, 2).reshape(B, N, S + self.num_registers + 1, E)[:, :, -1, :]
+        output = self.encoder(src, src_key_padding_mask=~src_mask)  # [S, B*N, E]
+        output = output.permute(1, 0, 2).reshape(B, N, S + self.num_registers + 1, E)[:, :, -1, :]  # [B, N, E]
         return output
-
-        # next steps :
-        # train using MLP projection (done)
-        # return last detection from tracklet (done)
-        # return tracklet.mean(done)
-        # use encoder w/ 1 special token(done) 62
-        # add pose encoding (done) 65
-        # try on class_0 (doing) 67
-        # try to train from scratch like that (doing) 68 - does not work
-        # add layers to transformer 70 : tried with 2 (ok-ish) - 71 : 4 (need way more training)
-        # (add more special tokens)
-
-        # Apply positional encoding
-        # src = self.pos_encoder(tokens, x.feats["age"], x.feats_masks)
-        ## Reshape input to (S, B*N, E)
-        # B, N, S, E = tokens.shape
-        # src = src.permute(2, 0, 1, 3).reshape(S, B * N, E)
-        #
-        ## Add class_0 token
-        # special_tokens = self.special_tokens.expand(self.num_registers+1, B*N, E)
-        # src = torch.cat([special_tokens, src], dim=0)
-        #
-        ## Update mask to include class_0 token
-        # new_mask = torch.ones((B * N, self.num_registers + 1), dtype=torch.bool, device=x.feats_masks.device)
-        # src_mask = torch.cat([new_mask, x.feats_masks.reshape(B * N, -1)], dim=1)
-        #
-        ## Apply transformer encoder
-        # output = self.transformer_encoder(src, src_key_padding_mask=~src_mask)
-        #
-        ## Extract class_0 token
-        # class_0_output = output[0].reshape(B, N, E)
-        # return class_0_output
 
 
 class PositionalEncoding(nn.Module):
@@ -188,7 +143,6 @@ class PositionalEncoding(nn.Module):
         mask = mask.view(B * N, S)
         age[mask] = age[mask].clamp(min=0, max=self.max_len)
 
-        # Ajouter l'encodage positionnel à x
         x[mask] = x[mask] + self.pe[age[mask]]
 
         return x.view(B, N, S, E)
@@ -211,3 +165,46 @@ def masked_mean(tensor, mask, dim):
     mean_result = sum_result / count
 
     return mean_result
+
+
+"""
+Rest of the file is kept for journaling the experiments and the code that was tried and did not work.
+
+# return masked_mean(tokens, x.feats_masks, dim=2)  # torch.sum(tokens, dim=2)/torch.sum(x.feats_masks.unsqueeze(-1), dim=2)  # tokens.mean(dim=2)
+# The problem is that even with that we do not have good perfs : IDF1 44.559 & AssA 25.95 
+
+
+# next steps :
+# train using MLP projection (done)
+# return last detection from tracklet (done)
+# return tracklet.mean(done)
+# use encoder w/ 1 special token(done) 62
+# add pose encoding (done) 65
+# try on class_0 (doing) 67
+# try to train from scratch like that (doing) 68 - does not work
+# add layers to transformer 70 : tried with 2 (ok-ish) - 71 : 4 (need way more training)
+# (add more special tokens)
+
+# Apply positional encoding
+# src = self.pos_encoder(tokens, x.feats["age"], x.feats_masks)
+## Reshape input to (S, B*N, E)
+# B, N, S, E = tokens.shape
+# src = src.permute(2, 0, 1, 3).reshape(S, B * N, E)
+#
+## Add class_0 token
+# registers_tokens = self.registers_tokens.expand(self.num_registers+1, B*N, E)
+# src = torch.cat([registers_tokens, src], dim=0)
+#
+## Update mask to include class_0 token
+# new_mask = torch.ones((B * N, self.num_registers + 1), dtype=torch.bool, device=x.feats_masks.device)
+# src_mask = torch.cat([new_mask, x.feats_masks.reshape(B * N, -1)], dim=1)
+#
+## Apply transformer encoder
+# output = self.encoder(src, src_key_padding_mask=~src_mask)
+#
+## Extract class_0 token
+# class_0_output = output[0].reshape(B, N, E)
+# output = output.permute(1, 0, 2).reshape(B, N, S+1, E)[:, :, :-1, :]
+# mean1 = masked_mean(output, x.feats_masks, dim=2)
+# return class_0_output
+"""

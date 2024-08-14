@@ -21,7 +21,7 @@ class Tracklet(object):
     # MOT benchmark requires positive:
     count = 1  # FIXME not thread safe
 
-    def __init__(self, detection):
+    def __init__(self, detection, max_gallery_size):
         self.last_detection = detection
         # self.token = detection.token
         self.detections = [detection]
@@ -34,6 +34,8 @@ class Tracklet(object):
         self.hit_streak = 0
         self.time_wo_hits = 0
 
+        self.max_gallery_size = max_gallery_size
+
     def forward(self):
         self.age += 1
         self.time_wo_hits += 1
@@ -42,7 +44,7 @@ class Tracklet(object):
 
     def update(self, detection):
         self.detections.append(detection)
-        self.detections = self.detections[-50:]
+        self.detections = self.detections[-self.max_gallery_size:]
         # tracklet management
         self.hits += 1
         self.hit_streak += 1
@@ -53,7 +55,8 @@ class Tracklet(object):
         features = torch.stack([getattr(det, name) for det in reversed(self.detections)])
         if features.shape[0] < size:
             features = torch.cat(
-                [features, torch.zeros(size - features.shape[0], *features.shape[1:], device=features.device) + float('nan')]
+                [features,
+                 torch.zeros(size - features.shape[0], *features.shape[1:], device=features.device) + float('nan')]
             )
         return features
 
@@ -80,16 +83,18 @@ def detect_change_of_view(prev_frame, actual_frame):  # TODO move elsewhere
 @torch.no_grad()
 class DDSORT(object):
     def __init__(
-        self,
-        simformer,
-        min_hits,
-        max_wo_hits,
-        camera_motion_correction=False,  # fixme
-        **kwargs,
+            self,
+            simformer,
+            min_hits,
+            max_wo_hits,
+            max_gallery_size=50,
+            camera_motion_correction=False,  # fixme
+            **kwargs,
     ):
         self.simformer = simformer.eval()
         self.min_hits = min_hits
         self.max_wo_hits = max_wo_hits
+        self.max_gallery_size = max_gallery_size
         self.camera_motion_correction = camera_motion_correction  # fixme
         self.tracklets = []
         self.frame_count = 0
@@ -110,7 +115,7 @@ class DDSORT(object):
                     image_id,
                     features_i,
                     pbtrack_ids[i],
-                    frame_idx=self.frame_count-1
+                    frame_idx=self.frame_count - 1
                 )
             )
 
@@ -137,7 +142,7 @@ class DDSORT(object):
 
         # create and initialise new tracklets for unmatched detections
         for i in unmatched_dets:
-            trk = Tracklet(detections[i])
+            trk = Tracklet(detections[i], self.max_gallery_size)
             self.tracklets.append(trk)
 
         # handle tracklets outputs and cleaning
@@ -156,7 +161,8 @@ class DDSORT(object):
                         "time_since_update": trk.time_wo_hits,
                         "state": trk.state,
                         "costs": {
-                            "S": {self.tracklets[j].id: sim for j, sim in enumerate(trk.last_detection.similarities.cpu().numpy())},
+                            "S": {self.tracklets[j].id: sim for j, sim in
+                                  enumerate(trk.last_detection.similarities.cpu().numpy())},
                             "St": self.simformer.sim_threshold,
                         }
                     }
@@ -215,25 +221,44 @@ class DDSORT(object):
             "images": [torch.from_numpy(image)],
             'image_id': detections[0].image_id,  # int
             "det_feats": {
-                'visibility_scores': torch.stack([det.visibility_scores for det in detections]).unsqueeze(1).unsqueeze(0).to(device=device),  # [1, N, 1, 7]
-                'embeddings': torch.stack([det.embeddings.flatten() for det in detections]).unsqueeze(1).unsqueeze(0).to(device=device),  # [1, N, 1, 7*D]
-                'index': torch.IntTensor([det.pbtrack_id for det in detections]).unsqueeze(1).unsqueeze(0).to(device=device),  # [1, N, 1]
-                'bbox_conf': torch.stack([det.bbox_conf for det in detections]).unsqueeze(1).unsqueeze(1).unsqueeze(0).to(device=device),  # [1, N, 1, 1]
-                'bbox_ltwh': torch.stack([det.bbox_ltwh for det in detections]).unsqueeze(1).unsqueeze(0).to(device=device),  # [1, N, 1, 4]
-                'keypoints_xyc': torch.stack([det.keypoints_xyc for det in detections]).unsqueeze(1).unsqueeze(0).to(device=device),  # [1, N, 1, 17, 3]
-                'age': torch.zeros(len(detections), device=device).unsqueeze(1).unsqueeze(1).unsqueeze(0),  # [B, N, 1, 17, 3]
+                'visibility_scores': torch.stack([det.visibility_scores for det in detections]).unsqueeze(1).unsqueeze(
+                    0).to(device=device),  # [1, N, 1, 7]
+                'embeddings': torch.stack([det.embeddings.flatten() for det in detections]).unsqueeze(1).unsqueeze(
+                    0).to(device=device),  # [1, N, 1, 7*D]
+                'index': torch.IntTensor([det.pbtrack_id for det in detections]).unsqueeze(1).unsqueeze(0).to(
+                    device=device),  # [1, N, 1]
+                'bbox_conf': torch.stack([det.bbox_conf for det in detections]).unsqueeze(1).unsqueeze(1).unsqueeze(
+                    0).to(device=device),  # [1, N, 1, 1]
+                'bbox_ltwh': torch.stack([det.bbox_ltwh for det in detections]).unsqueeze(1).unsqueeze(0).to(
+                    device=device),  # [1, N, 1, 4]
+                'keypoints_xyc': torch.stack([det.keypoints_xyc for det in detections]).unsqueeze(1).unsqueeze(0).to(
+                    device=device),  # [1, N, 1, 17, 3]
+                'age': torch.zeros(len(detections), device=device).unsqueeze(1).unsqueeze(1).unsqueeze(0),
+                # [B, N, 1, 17, 3]
             },
             'det_masks': torch.ones((1, len(detections), 1), device=device, dtype=torch.bool),  # [1, N, 1]
             "track_feats": {
-                'visibility_scores': torch.stack([t.padded_features("visibility_scores", T_max) for t in tracklets]).unsqueeze(0).to(device=device),  # [1, N, T, 7]
-                'embeddings': torch.stack([t.padded_features("embeddings", T_max).flatten(start_dim=1, end_dim=2) for t in tracklets]).unsqueeze(0).to(device=device),  # [1, N, T, 7*D]
-                'index': torch.stack([t.padded_features("pbtrack_id", T_max) for t in tracklets]).unsqueeze(0).to(device=device),  # [1, N, T]
-                'bbox_conf': torch.stack([t.padded_features("bbox_conf", T_max) for t in tracklets]).unsqueeze(2).unsqueeze(0).to(device=device),  # [1, N, T, 1]
-                'bbox_ltwh': torch.stack([t.padded_features("bbox_ltwh", T_max) for t in tracklets]).unsqueeze(0).to(device=device),  # [1, N, T, 4]
-                'keypoints_xyc': torch.stack([t.padded_features("keypoints_xyc", T_max) for t in tracklets]).unsqueeze(0).to(device=device),  # [1, N, T, 17, 3]
-                'age': self.frame_count - 1 - torch.stack([t.padded_features("frame_idx", T_max) for t in tracklets]).unsqueeze(2).unsqueeze(0).to(device=device),  # [1, N, T, 17, 3]
+                'visibility_scores': torch.stack(
+                    [t.padded_features("visibility_scores", T_max) for t in tracklets]).unsqueeze(0).to(device=device),
+                # [1, N, T, 7]
+                'embeddings': torch.stack(
+                    [t.padded_features("embeddings", T_max).flatten(start_dim=1, end_dim=2) for t in
+                     tracklets]).unsqueeze(0).to(device=device),  # [1, N, T, 7*D]
+                'index': torch.stack([t.padded_features("pbtrack_id", T_max) for t in tracklets]).unsqueeze(0).to(
+                    device=device),  # [1, N, T]
+                'bbox_conf': torch.stack([t.padded_features("bbox_conf", T_max) for t in tracklets]).unsqueeze(
+                    2).unsqueeze(0).to(device=device),  # [1, N, T, 1]
+                'bbox_ltwh': torch.stack([t.padded_features("bbox_ltwh", T_max) for t in tracklets]).unsqueeze(0).to(
+                    device=device),  # [1, N, T, 4]
+                'keypoints_xyc': torch.stack([t.padded_features("keypoints_xyc", T_max) for t in tracklets]).unsqueeze(
+                    0).to(device=device),  # [1, N, T, 17, 3]
+                'age': self.frame_count - 1 - torch.stack(
+                    [t.padded_features("frame_idx", T_max) for t in tracklets]).unsqueeze(2).unsqueeze(0).to(
+                    device=device),  # [1, N, T, 17, 3]
             },
-            'track_masks': torch.stack([torch.cat([torch.ones(len(t.detections), dtype=torch.bool), torch.zeros(T_max - len(t.detections), dtype=torch.bool)]) for t in tracklets]).unsqueeze(0).to(device=device),  # [1, N, T]
+            'track_masks': torch.stack([torch.cat([torch.ones(len(t.detections), dtype=torch.bool),
+                                                   torch.zeros(T_max - len(t.detections), dtype=torch.bool)]) for t in
+                                        tracklets]).unsqueeze(0).to(device=device),  # [1, N, T]
         }
         return batch
 

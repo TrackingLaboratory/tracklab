@@ -3,7 +3,6 @@ import logging
 
 import numpy as np
 
-
 log = logging.getLogger(__name__)
 
 
@@ -29,7 +28,7 @@ class TrackState(object):
 class Tracklet(object):
     _count = 0
 
-    def __init__(self, detection, frame_id):
+    def __init__(self, detection, frame_id, max_gallery_size):
         """Init state"""
         self.last_det = detection
         self.detections = [detection]
@@ -38,6 +37,8 @@ class Tracklet(object):
         self.frame_id = frame_id
         self.state = TrackState.Init
         self.track_id = -1
+
+        self.max_gallery_size = max_gallery_size
 
     def activate(self, detection, frame_id):
         """from Init to Tracked state"""
@@ -48,7 +49,7 @@ class Tracklet(object):
         """Stays in Tracked state"""
         self.last_det = detection
         self.detections.append(detection)
-        self.detections = self.detections[-50:]
+        self.detections = self.detections[-self.max_gallery_size:]
         self.score = detection.score
         self.frame_id = frame_id
 
@@ -58,7 +59,7 @@ class Tracklet(object):
         """from Lost to Tracked state"""
         self.last_det = detection
         self.detections.append(detection)
-        self.detections = self.detections[-50:]
+        self.detections = self.detections[-self.max_gallery_size:]
         self.score = detection.score
         self.frame_id = frame_id
 
@@ -101,13 +102,14 @@ class Tracklet(object):
 
 class DDSORTBYTETracker(object):
     def __init__(
-        self,
-        simformer,
-        det_high_thresh=0.4,
-        det_low_thresh=0.1,
-        max_time_lost=30,
-        simformer_call_strat: str = "3call",
-        **kwargs,
+            self,
+            simformer,
+            det_high_thresh=0.4,
+            det_low_thresh=0.1,
+            max_time_lost=30,
+            max_gallery_size=50,
+            simformer_call_strat: str = "3call",
+            **kwargs,
     ):
         self.init = []  # type: list[Tracklet]
         self.tracks = []  # type: list[Tracklet]
@@ -118,6 +120,7 @@ class DDSORTBYTETracker(object):
         self.det_high_thresh = det_high_thresh
         self.det_low_thresh = det_low_thresh
         self.max_time_lost = max_time_lost
+        self.max_gallery_size = max_gallery_size
 
         if simformer_call_strat == "3call":
             self.simformer_call_strat = self.three_call_simformer
@@ -276,7 +279,7 @@ class DDSORTBYTETracker(object):
             # self.removed.append(track)  # fixme do we want to log the not confirmed tracks?
         # Remaining high score detections are used to create new tracks in init state
         for idet in u_dets_remain:
-            track = Tracklet(dets_remain[idet], self.frame_id)
+            track = Tracklet(dets_remain[idet], self.frame_id, self.max_gallery_size)
             self.init.append(track)
         # Remove tracks that has not been matched for too long
         for track in self.lost:
@@ -291,7 +294,7 @@ class DDSORTBYTETracker(object):
         # get general sim_matrix
         if len(tracklets) > 0 and len(detections) > 0:
             batch = build_simformer_batch(
-                tracklets, detections, self.simformer.device, image, self.frame_id-1
+                tracklets, detections, self.simformer.device, image, self.frame_id - 1
             )
             tracks, dets = self.simformer.predict_preprocess(batch)
             _, _, td_sim_matrix = self.simformer.forward(tracks, dets)
@@ -411,7 +414,7 @@ class DDSORTBYTETracker(object):
             # self.removed.append(track)  # fixme do we want to log the not confirmed tracks?
         # Remaining high score detections are used to create new tracks in init state
         for idet in u_dets_remain:
-            track = Tracklet(detections[idet], self.frame_id)
+            track = Tracklet(detections[idet], self.frame_id, self.max_gallery_size)
             self.init.append(track)
         # Remove tracks that has not been matched for too long
         for track in self.lost:
@@ -456,7 +459,7 @@ class DDSORTBYTETracker(object):
                 np.empty((0,)),
             )
 
-        batch = build_simformer_batch(tracklets, detections, self.simformer.device, image, self.frame_id-1)
+        batch = build_simformer_batch(tracklets, detections, self.simformer.device, image, self.frame_id - 1)
         association_matrix, association_result, td_sim_matrix = self.simformer.predict_step(
             batch, self.frame_id
         )
@@ -532,7 +535,8 @@ def build_simformer_batch(tracklets, detections, device, image, frame_count):
             )
             .unsqueeze(0)
             .to(device=device),  # [B, N, T, 17, 3]
-            'age': frame_count - torch.stack([t.padded_features("frame_id", T_max) for t in tracklets]).unsqueeze(2).unsqueeze(0).to(device=device),  # [1, N, T, 17, 3]
+            'age': frame_count - torch.stack([t.padded_features("frame_id", T_max) for t in tracklets]).unsqueeze(
+                2).unsqueeze(0).to(device=device),  # [1, N, T, 17, 3]
         },
         "track_masks": torch.stack(
             [
