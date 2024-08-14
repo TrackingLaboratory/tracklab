@@ -58,14 +58,17 @@ class TrackerState(AbstractContextManager):
                         else:
                             load_columns = {k:set(v) for k, v in summary["columns"].items()}
                 else:
-                    image_file = next(f for f in zf.namelist() if "image" in f)
+                    image_file = next((f for f in zf.namelist() if "image" in f), None)
                     detection_file = next(f for f in zf.namelist() if "image" not in f)
                     with zf.open(detection_file, force_zip64=True) as fp:
                         dets = pickle.load(fp)
                         load_columns["detection"] = set(dets.columns)
-                    with zf.open(image_file, force_zip64=True) as fp:
-                        images = pickle.load(fp)
-                        load_columns["image"] = set(images.columns)
+                    if image_file is not None:
+                        with zf.open(image_file, force_zip64=True) as fp:
+                            images = pickle.load(fp)
+                            load_columns["image"] = set(images.columns)
+                    else:
+                        load_columns["image"] = set()
         elif load_from_groundtruth:
             load_columns["image"] = set(self.image_gt.columns)
             load_columns["detection"] = set(self.detections_gt.columns)
@@ -338,7 +341,7 @@ class TrackerState(AbstractContextManager):
                 with self.zf["load"].open(f"{self.video_id}_image.pkl", "r", force_zip64=True) as fp_image:
                     #video_image_preds = merge_dataframes(pickle.load(fp_image), video_image_preds)[self.load_columns["image"]]
                     video_images = pickle.load(fp_image)[self.load_columns["image"]]  # TODO see with Victor if this ok
-                    video_image_preds = video_images[video_images.id.isin(video_image_preds.index)]  # load only images from the required frames (nframes)
+                    video_image_preds = video_images[video_images.index.isin(video_image_preds.index)]  # load only images from the required frames (nframes)
             else:
                 video_image_preds = self.image_metadatas[self.image_metadatas.video_id == self.video_id]
         self.update(video_detections, video_image_preds)
