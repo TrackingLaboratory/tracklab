@@ -101,7 +101,7 @@ simformer:
       emb_dim: ${...transformer_cfg.emb_dim}
       n_heads: 8
       n_layers: 1
-      dim_feedforward: 4196
+      dim_feedforward: 4096
       num_registers: 3
       dropout: 0.1
       checkpoint_path: null  # override the weights of this module using this path
