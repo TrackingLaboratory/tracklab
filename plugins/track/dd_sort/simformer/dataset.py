@@ -271,7 +271,7 @@ class SimFormerDataModule(pl.LightningDataModule):
         in only one process (for example during multi-gpu training)
         """
         for ds_split in self.dataset_splits:
-            log.info(f"loading detections from {self.detections_paths[ds_split]}")
+            log.info(f"Loading detections from {self.detections_paths[ds_split]}")
             if not self.detections_paths[ds_split].exists():
                 self.generate_detections(self.detections, self.metadatas, ds_split)
 
