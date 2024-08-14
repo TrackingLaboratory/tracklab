@@ -48,7 +48,7 @@ simformer:
   _target_: dd_sort.SimFormer
 
   transformer_cfg:
-    _target_: dd_sort.Identity  # {Identity, Encoder, Decoder, Perceptron}
+    _target_: dd_sort.Decoder  # {Identity, Encoder, Decoder, Perceptron}
     emb_dim: 2048
     n_heads: 16
     n_layers: 1
@@ -105,7 +105,7 @@ simformer:
       dim_feedforward: 9192
       dropout: 0.1
       checkpoint_path: null  # override the weights of this module using this path
-      tokenizer_checkpoint_path: /globalscratch/ucl/elen/bstandae/new-tokenizer/2024-08-09/10-10-51/DDSort/tqq07497/checkpoints/epoch=15-sim_auroc=0.9480-loss=0.1487.ckpt
+      tokenizer_checkpoint_path: null
 
   classifier_cfg: null
     # null for no classifier
