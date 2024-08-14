@@ -31,8 +31,8 @@ track-bench-track = {path = "plugins/track", develop = true}
 mmengine = "^0.10.1"
 timm = "^0.9.12"
 # openpifpaf = "^0.13.11"  # FIXME : Removed until dependency is fixed
-torchreid = {git = "https://github.com/VlSomers/bpbreid"}
-# kpreid = {git = "git@github.com:VlSomers/person-reid.git", branch = "dev-victor"}
+#torchreid = {git = "https://github.com/VlSomers/bpbreid"}
+kpreid = {git = "git@github.com:VlSomers/person-reid.git", branch = "dev-victor", develop = true}
 soccernet = "^0.1.53"
 mmpose = "^1.2.0"
 sn-trackeval = ">=0.3.0" # {git = "https://github.com/SoccerNet/sn-trackeval.git"}
@@ -40,9 +40,9 @@ yt-dlp = ">2023.12.30"
 gdown = "^4.7.1"
 pandas = "^2.1.0"
 matplotlib = "<3.9.0"
-albumentations = "1.3.1"
-scipy = "1.12.0"
-torchmetrics = "1.3.0"
+albumentations = ">=1.3.1"
+scipy = ">=1.12.0"
+torchmetrics = ">=1.4.1"
 
 [tool.poetry.scripts]
 tracklab = 'tracklab.main:main'
