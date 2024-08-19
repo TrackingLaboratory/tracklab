@@ -8,6 +8,9 @@ log = logging.getLogger(__name__)
 
 
 class RandomGapsTracklet(Transform):
+    """
+    Add some gaps in the tracklet.
+    """
     def __init__(self,
                  max_gap_size: int = 1,
                  max_gaps: int = 1,
@@ -26,7 +29,10 @@ class RandomGapsTracklet(Transform):
             df = df.drop(df.index[start_idx:end_idx])
         return df
 
-class RandomAgeTracklet(Transform):
+class RandomObsGapTracklet(Transform):
+    """
+    Keep only detections that are older than a random value.
+    """
     def __init__(self, std_age: int = 5):
         super().__init__()
         self.std_age = std_age
@@ -39,6 +45,9 @@ class RandomAgeTracklet(Transform):
 
 
 class RandomLengthTracklet(Transform):
+    """
+    Keep only the last n detections of a random length n.
+    """
     def __init__(self, max_length: int = 10):
         super().__init__()
         self.max_length = max_length

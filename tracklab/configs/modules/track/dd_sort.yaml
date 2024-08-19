@@ -147,6 +147,8 @@ simformer:
       transforms:
         - _target_: dd_sort.simformer.transforms.AppMixup
           std: 0.005
+        - _target_: dd_sort.simformer.transforms.AppAddNoise
+          std: 0.005
 
 datamodule:
   _target_: dd_sort.SimFormerDataModule
@@ -170,8 +172,10 @@ datamodule:
     ids_bias: 10
     mix_frames: False
   transforms:
-    - add_gt_reid_embeddings
     - add_gt_poses
+    - add_gt_reid_embeddings
+    - add_last_obs_counter
+    - add_number_of_occlusions
     - normalize2image
     #- add_crops
     #- add_detections
@@ -181,10 +185,10 @@ datamodule:
     train:
       _target_: dd_sort.simformer.transforms.Compose
       transforms:
-        - _target_: dd_sort.simformer.transforms.RandomAgeTracklet
-          std_age: 5
         - _target_: dd_sort.simformer.transforms.RandomLengthTracklet
-          max_length: 20
+          max_length: 50
         - _target_: dd_sort.simformer.transforms.RandomGapsTracklet
-          max_gap_size: 3
+          max_gap_size: 5
           max_gaps: 2
+        - _target_: dd_sort.simformer.transforms.RandomObsGapTracklet
+          std_age: 5
