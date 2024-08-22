@@ -72,6 +72,7 @@ class SimFormerDataset(Dataset):
         return df
 
     def __getitem__(self, idx):
+        idx, image_id = idx
         if idx == -1:
             return self.create_empty_input()
         else:
@@ -79,14 +80,20 @@ class SimFormerDataset(Dataset):
         df = self._load_pickle(sample["video_id"])
 
         df = df.loc[sample["detections"]]
-        df["to_match"] = sample["to_match"]
+        df = df[df["image_id"] <= image_id]
+        assert df.image_id.is_monotonic_increasing, "Tracklets should be in chronological order"
+        df["to_match"] = 0
+        if len(df) > 0:
+            df["to_match"].iloc[-1] = 1
         df = self.transforms(df)
         tracks = df.loc[df.to_match == 0]
         dets = df.loc[df.to_match == 1]
-        det_features, det_targets = self.features_targets(dets, sample["image_id"])
-        track_features, track_targets = self.features_targets(tracks, sample["image_id"])
-        video_id = np.array(int(df.video_id.unique()[0])).reshape(1)
-        image_id = np.array(sample['image_id']).reshape(1)
+        assert df.image_id.is_monotonic_increasing, "Tracklets should be in chronological order after transform"
+        det_features, det_targets = self.features_targets(dets, image_id)
+        track_features, track_targets = self.features_targets(tracks, image_id)
+        video_id = sample["video_id"].split("_")[-1].split(".")[0]
+        video_id = np.array(int(video_id)).reshape(1)
+        image_id = np.array(image_id).reshape(1)
         return {
             "track_feats": track_features,
             "track_targets": track_targets,
@@ -254,9 +261,9 @@ class SimFormerDataModule(pl.LightningDataModule):
             self.metadatas[ds_split] = tracking_set.image_metadatas
             self.detections[ds_split] = tracking_set.detections_gt
             self.detections_paths[ds_split] = self.path / f"{self.name}_{ds_split}.pklz"
-            self.dataset_configs[ds_split] = self.path / f"{self.name}_{ds_split}_{cfg_name}.json"
+            self.dataset_configs[ds_split] = self.path / f"{self.name}_{ds_split}_tracklets.json"
             self.config_locks[ds_split] = FileLock(
-                self.path / f"{self.name}_{ds_split}_{cfg_name}.json.lock"
+                self.path / f"{self.name}_{ds_split}_tracklets.json.lock"
             )
         self.transforms = OfflineTransforms.get_transforms(transforms) if transforms else []
         self.online_transforms = online_transforms
@@ -304,11 +311,12 @@ class SimFormerDataModule(pl.LightningDataModule):
             )
 
     def train_dataloader(self):
+        sampler = self.sampler(dataset=self.datasets["train"], batch_size=self.batch_size, num_samples=self.num_samples)
         return DataLoader(
             self.datasets["train"],
             num_workers=self.num_workers,
             collate_fn=partial(collate_fn, batch_size=self.batch_size),
-            batch_sampler=self.sampler(dataset=self.datasets["train"], batch_size=self.batch_size, num_samples=self.num_samples),
+            batch_sampler=sampler,
             worker_init_fn=set_worker_sharing_strategy,
             pin_memory=True,
         )
@@ -371,12 +379,9 @@ class SimFormerDataModule(pl.LightningDataModule):
         for video_id in video_list:
             if video_id.endswith(".pkl"):
                 params.append(
-                    CreateSamplesParams(
+                    CreateTrackletParams(
                         detections_path=detections_path,
                         video_id=video_id,
-                        samples_per_video=self.samples_per_video,
-                        max_length=self.max_length,
-                        std_age=self.std_age,
                         metadatas=metadatas,
                     )
                 )
@@ -384,7 +389,7 @@ class SimFormerDataModule(pl.LightningDataModule):
             samples = list(
                 chain.from_iterable(
                     tqdm(
-                        pool.imap(create_samples_from_video, params, chunksize=1),
+                        pool.imap(create_tracklets_from_video, params, chunksize=1),
                         desc=f"Building track association {ds_split} set",
                         unit="video",
                         total=len(params),
@@ -405,6 +410,32 @@ class SimFormerDataModule(pl.LightningDataModule):
     #         df_sample = transform(df_sample, self.metadatas)
     #     return df_sample
 
+def create_tracklets_from_video(params):
+    detections_path, video_id, metadatas = params
+    video_id_num = int(video_id.split("_")[-1].split(".")[0])  # remove string stuff
+    samples = []
+    with zipfile.ZipFile(detections_path, mode="r") as detections_zf:
+        with detections_zf.open(video_id) as pkl:
+            video_detections = pickle.load(pkl)
+
+        for track_id, track_detections in video_detections.groupby("track_id"):
+            if track_id >= 0:
+                samples.append(
+                    {
+                        "video_id": str(video_id),
+                        "track_id": int(track_id),
+                        "global_track_id": int(video_id_num*1000) + int(track_id),
+                        "image_id": [int(x) for x in track_detections["image_id"]],
+                        "detections": [x for x in track_detections.index],
+                    }
+                )
+
+    return samples
+
+class CreateTrackletParams(NamedTuple):
+    detections_path: Path
+    video_id: str
+    metadatas: Any
 
 class CreateSamplesParams(NamedTuple):
     detections_path: Path
