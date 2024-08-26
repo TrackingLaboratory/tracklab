@@ -18,6 +18,7 @@ class SimFormerSampler(Sampler):
         self.dataset = dataset
         assert hasattr(dataset, "samples"), "You should define the samples"
         self.samples = self.dataset.samples
+        self.df_samples = pd.DataFrame(self.samples)
         assert len(np.unique([x["global_track_id"] for x in self.samples])) == len(self.samples), "All tracklets should have different IDs"
         self.track_ids = np.sort([x["global_track_id"] for x in self.samples])
         self.video_ids = np.sort(np.unique([x["video_id"] for x in self.samples]))
@@ -32,8 +33,7 @@ class SimFormerSampler(Sampler):
     def sample_generator(self):
         """Generator of tuples with sample_idx and random image_id"""
         random_video_ids = self.rng.choice(self.video_ids, len(self.video_ids), replace=False)
-        samples = pd.DataFrame(self.samples)
-
+        samples = self.df_samples  # pd.DataFrame(self.samples)
         for video_id in random_video_ids:
             video_samples = samples[samples["video_id"] == video_id]
             possible_image_ids = np.unique(np.concatenate(np.array(video_samples["image_id"])))
@@ -44,6 +44,13 @@ class SimFormerSampler(Sampler):
                 except IndexError:
                     sample_index = -1
                 yield sample_index, image_id
+
+        if len(random_video_ids) % self.batch_size != 0:
+            log.info(f"{len(random_video_ids)} {len(random_video_ids) % self.batch_size}")
+
+            for _ in range(self.batch_size - (len(random_video_ids) % self.batch_size)):
+                for _ in range(self.num_samples):
+                    yield -1, -1
 
     def __iter__(self):
         yield from batched(self.sample_generator(), self.dl_batch_size)
