@@ -31,6 +31,8 @@ class SporadicTrackletDropout(Transform):
         assert 0 <= self.p_drop <= 1, "'p_drop' must be in the range [0, 1]."
 
     def __call__(self, df):
+        if df.empty:
+            return df
         mask = self.rng.uniform(size=len(df)) > self.p_drop
         if mask.sum() == 0:
             mask[-1] = True
@@ -57,6 +59,8 @@ class StructuredTrackletDropout(Transform):
         self.max_num_windows = max_num_windows
 
     def __call__(self, df):
+        if df.empty:
+            return df
         drop_proposals = []
 
         indices = df.index.tolist()
