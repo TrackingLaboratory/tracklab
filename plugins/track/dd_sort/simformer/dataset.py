@@ -327,7 +327,7 @@ class SimFormerDataModule(pl.LightningDataModule):
             self.datasets["val"],
             collate_fn=partial(collate_fn, batch_size=self.batch_size),
             num_workers=self.num_workers,
-            batch_sampler=self.val_sampler(self.datasets["val"], self.batch_size),
+            batch_sampler=self.val_sampler(self.datasets["val"], batch_size=self.batch_size, num_samples=self.num_samples),
             worker_init_fn=set_worker_sharing_strategy,
             pin_memory=True,
         )
