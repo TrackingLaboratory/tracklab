@@ -110,6 +110,7 @@ simformer:
         _target_: dd_sort.MLP  # {MLP, LinearProjection}
         feat_dim: 3133
         token_dim: ${..emb_dim}
+        dropout: ${..dropout}
 
   classifier_cfg: null
     # null for no classifier
