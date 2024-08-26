@@ -1,3 +1,4 @@
+import numpy as np
 import logging
 
 from .transform import Transform
@@ -13,6 +14,7 @@ class MaxTrackletObs(Transform):
     def __init__(self, max_obs: int = 200):
         super().__init__()
         self.max_obs = max_obs
+        assert self.max_obs > 0, "'max_obs' must be greater than 0."
 
     def __call__(self, df):
         return df.tail(self.max_obs)
@@ -26,9 +28,12 @@ class SporadicTrackletDropout(Transform):
     def __init__(self, p_drop: float = 0.1):
         super().__init__()
         self.p_drop = p_drop
+        assert 0 <= self.p_drop <= 1, "'p_drop' must be in the range [0, 1]."
 
     def __call__(self, df):
         mask = self.rng.uniform(size=len(df)) > self.p_drop
+        if mask.sum() == 0:
+            mask[-1] = True
         return df[mask]
 
 
@@ -47,6 +52,7 @@ class StructuredTrackletDropout(Transform):
     def __init__(self, p_drop: float = 0.1, max_drop: int = 5, max_num_windows: int = 2):
         super().__init__()
         self.p_drop = p_drop
+        assert 0 <= self.p_drop <= 1, "'p_drop' must be in the range [0, 1]."
         self.max_drop = max_drop
         self.max_num_windows = max_num_windows
 
@@ -65,10 +71,14 @@ class StructuredTrackletDropout(Transform):
                 i += 1
 
         if self.max_num_windows != -1:
-            selected_drops = self.rng.choice(drop_proposals, size=min(self.max_num_windows, len(drop_proposals)),
-                                             replace=False)
+            selected_drops_idx = np.sort(
+                self.rng.choice(len(drop_proposals), size=min(self.max_num_windows, len(drop_proposals)),
+                                replace=False))
+            selected_drops = [drop_proposals[idx] for idx in selected_drops_idx]
         else:
             selected_drops = drop_proposals
 
         drop_indices = [idx for drop_range in selected_drops for idx in drop_range]
+        if len(drop_indices) >= len(df):
+            drop_indices = drop_indices[:-1]
         return df.drop(drop_indices)
