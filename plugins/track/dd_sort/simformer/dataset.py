@@ -45,10 +45,12 @@ class SimFormerDataset(Dataset):
         gallery_path,
         config_file,
         transforms: Optional[Transform] = None,
+        max_length: int = 50,
     ):
         self.gallery_path = Path(gallery_path)
         self.config_file = Path(config_file)
         self.transforms = transforms or NoOp()
+        self.max_length = max_length
         self._zf = None
         log.debug(f"gallery_path {self.gallery_path} cf {self.config_file}")
         with self.config_file.open() as fp:
@@ -86,6 +88,7 @@ class SimFormerDataset(Dataset):
         if len(df) > 0:
             df["to_match"].iloc[-1] = 1
         df = self.transforms(df)
+        df = df.tail(self.max_length)
         tracks = df.loc[df.to_match == 0]
         dets = df.loc[df.to_match == 1]
         assert df.image_id.is_monotonic_increasing, "Tracklets should be in chronological order after transform"
@@ -305,7 +308,7 @@ class SimFormerDataModule(pl.LightningDataModule):
         for dataset_split in self.dataset_splits:
             kwargs = {}
             if self.online_transforms is not None and dataset_split in self.online_transforms:
-                kwargs = dict(transforms=self.online_transforms[dataset_split])
+                kwargs = dict(transforms=self.online_transforms[dataset_split], max_length=self.max_length)
             self.datasets[dataset_split] = SimFormerDataset(
                 self.detections_paths[dataset_split], self.dataset_configs[dataset_split], **kwargs
             )
