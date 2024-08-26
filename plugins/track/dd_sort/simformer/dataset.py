@@ -26,6 +26,7 @@ log = logging.getLogger(__name__)
 
 from functools import lru_cache
 
+
 def set_worker_sharing_strategy(worker_id: int) -> None:
     torch.multiprocessing.set_sharing_strategy("file_system")
 
@@ -44,12 +45,12 @@ class SimFormerDataset(Dataset):
         self,
         gallery_path,
         config_file,
-        transforms: Optional[Transform] = None,
+        tracklet_transforms: Optional[Transform] = None,
         max_length: int = 50,
     ):
         self.gallery_path = Path(gallery_path)
         self.config_file = Path(config_file)
-        self.transforms = transforms or NoOp()
+        self.tracklet_transforms = tracklet_transforms or NoOp()
         self.max_length = max_length
         self._zf = None
         log.debug(f"gallery_path {self.gallery_path} cf {self.config_file}")
@@ -66,7 +67,7 @@ class SimFormerDataset(Dataset):
         if self._zf is None:
             self._zf = zipfile.ZipFile(self.gallery_path, mode="r")
         return self._zf
-    
+
     @lru_cache(maxsize=1)
     def _load_pickle(self, sample_video_id):
         with self.zf.open(sample_video_id, "r") as fp:
@@ -84,14 +85,11 @@ class SimFormerDataset(Dataset):
         df = df.loc[sample["detections"]]
         df = df[df["image_id"] <= image_id]
         assert df.image_id.is_monotonic_increasing, "Tracklets should be in chronological order"
-        df["to_match"] = 0
-        if len(df) > 0:
-            df["to_match"].iloc[-1] = 1
-        df = self.transforms(df)
-        df = df.tail(self.max_length)
-        tracks = df.loc[df.to_match == 0]
-        dets = df.loc[df.to_match == 1]
-        assert df.image_id.is_monotonic_increasing, "Tracklets should be in chronological order after transform"
+        dets = df.tail(1)
+        tracks = df.head(-1)
+        tracks = self.tracklet_transforms(tracks)
+        tracks = tracks.tail(self.max_length)
+        assert tracks.image_id.is_monotonic_increasing, "Tracklets should be in chronological order after transform"
         det_features, det_targets = self.features_targets(dets, image_id)
         track_features, track_targets = self.features_targets(tracks, image_id)
         video_id = sample["video_id"].split("_")[-1].split(".")[0]
@@ -199,35 +197,35 @@ class SimFormerDataModule(pl.LightningDataModule):
         samples_per_video: number of samples that will be created per video
         std_age: standard deviation of distribution of the ages of a generated tracklet
         max_length: maximum length of a generated tracklet
-        transforms: list of functions that will transform the given tracklets and det.
+        dataset_transforms: list of functions that will transform the given tracklets and det.
         reider: model that will create reid embeddings
 
     FIXME : reider should be created inside a transform
     """
 
     def __init__(
-        self,
-        tracking_dataset: TrackingDataset,
-        dataset_splits: List[str],
-        path: str,
-        name: str,
-        num_videos: Optional[int] = None,
-        samples_per_video: int = 10,
-        std_age: float = 3,
-        max_length: int = 50,
-        transforms: List[Callable] = ("add_detections", "normalize2image"),
-        online_transforms: Optional[Dict[str, Transform]] = None,
-        pipeline: Pipeline = None,
-        tracker_states: Dict[str, Path] = None,
-        batch_size: int = 128,
-        num_samples: int = 8,
-        num_workers: int = 8,
-        sampler: str = "simple",  # "simple", "hard", "harder"
-        sampler_args: dict = None,
+            self,
+            tracking_dataset: TrackingDataset,
+            dataset_splits: List[str],
+            path: str,
+            name: str,
+            num_videos: Optional[int] = None,
+            samples_per_video: int = 10,
+            std_age: float = 3,
+            max_length: int = 50,
+            dataset_transforms: List[Callable] = ("normalize2image",),
+            tracklet_transforms: Optional[Dict[str, Transform]] = None,
+            pipeline: Pipeline = None,
+            tracker_states: Dict[str, Path] = None,
+            batch_size: int = 128,
+            num_samples: int = 8,
+            num_workers: int = 8,
+            sampler: str = "simple",  # "simple", "hard", "harder"
+            sampler_args: dict = None,
     ):
         super().__init__()
         self.cfg_detections = dict(
-            transforms=[t for t in transforms],
+            dataset_transforms=[t for t in dataset_transforms],
             pipeline=str(pipeline),
         )
         if num_videos is None:
@@ -268,8 +266,8 @@ class SimFormerDataModule(pl.LightningDataModule):
             self.config_locks[ds_split] = FileLock(
                 self.path / f"{self.name}_{ds_split}_tracklets.json.lock"
             )
-        self.transforms = OfflineTransforms.get_transforms(transforms) if transforms else []
-        self.online_transforms = online_transforms
+        self.dataset_transforms = OfflineTransforms.get_transforms(dataset_transforms) if dataset_transforms else []
+        self.tracklet_transforms = tracklet_transforms
         self.datasets = {}
         self.pipeline = pipeline
         self.tracker_states = tracker_states
@@ -307,8 +305,8 @@ class SimFormerDataModule(pl.LightningDataModule):
     def setup(self, stage: str) -> None:
         for dataset_split in self.dataset_splits:
             kwargs = {}
-            if self.online_transforms is not None and dataset_split in self.online_transforms:
-                kwargs = dict(transforms=self.online_transforms[dataset_split], max_length=self.max_length)
+            if self.tracklet_transforms is not None and dataset_split in self.tracklet_transforms:
+                kwargs = dict(tracklet_transforms=self.tracklet_transforms[dataset_split], max_length=self.max_length)
             self.datasets[dataset_split] = SimFormerDataset(
                 self.detections_paths[dataset_split], self.dataset_configs[dataset_split], **kwargs
             )
@@ -350,9 +348,9 @@ class SimFormerDataModule(pl.LightningDataModule):
         save_zf.close()
 
         for video_id, video_detections in tqdm(
-            detections.groupby("video_id"),
-            desc=f"Generate detections for {ds_split} set",
-            unit="video",
+                detections.groupby("video_id"),
+                desc=f"Generate detections for {ds_split} set",
+                unit="video",
         ):
             save_zf = zipfile.ZipFile(
                 detections_path,
@@ -364,9 +362,10 @@ class SimFormerDataModule(pl.LightningDataModule):
             )
             with tracker_state(video_id) as ts:
                 detections = video_detections
-                for transform in self.transforms:
+                for data_trans in self.dataset_transforms:
                     video_detections, video_image_preds = ts.load()
-                    detections = transform(detections, metadatas, preds=video_detections, tracker_state=ts, pipeline=self.pipeline)
+                    detections = data_trans(detections, metadatas, preds=video_detections, tracker_state=ts,
+                                            pipeline=self.pipeline)
             with save_zf.open(f"sample_{video_id}.pkl", "w") as fp:
                 pickle.dump(detections, fp, protocol=pickle.DEFAULT_PROTOCOL)
 
@@ -413,6 +412,7 @@ class SimFormerDataModule(pl.LightningDataModule):
     #         df_sample = transform(df_sample, self.metadatas)
     #     return df_sample
 
+
 def create_tracklets_from_video(params):
     detections_path, video_id, metadatas = params
     video_id_num = int(video_id.split("_")[-1].split(".")[0])  # remove string stuff
@@ -427,7 +427,7 @@ def create_tracklets_from_video(params):
                     {
                         "video_id": str(video_id),
                         "track_id": int(track_id),
-                        "global_track_id": int(video_id_num*1000) + int(track_id),
+                        "global_track_id": int(video_id_num * 1000) + int(track_id),
                         "image_id": [int(x) for x in track_detections["image_id"]],
                         "detections": [x for x in track_detections.index],
                     }
@@ -435,10 +435,12 @@ def create_tracklets_from_video(params):
 
     return samples
 
+
 class CreateTrackletParams(NamedTuple):
     detections_path: Path
     video_id: str
     metadatas: Any
+
 
 class CreateSamplesParams(NamedTuple):
     detections_path: Path
@@ -474,7 +476,7 @@ def create_samples_from_video(params):
         image_ids_left = list(set(image_ids[2:]) - set(hard_chosen_image_ids))
         chosen_image_ids = sorted(
             list(rng.choice(image_ids_left,
-                            size=min(samples_per_video-len(hard_chosen_image_ids), len(image_ids_left)),
+                            size=min(samples_per_video - len(hard_chosen_image_ids), len(image_ids_left)),
                             replace=False
                             )
                  ) + hard_chosen_image_ids
@@ -512,9 +514,7 @@ def create_samples_from_video(params):
                         "video_id": str(video_id),
                         "image_id": int(img_id),
                         "file_path": metadatas.loc[img_id].file_path,
-                        "detections": [x for x in tracklet.index]
-                                      + [x for x in detection.index],
-                        "to_match": [0 for x in tracklet.index] + [1 for x in detection.index],
+                        "detections": [x for x in tracklet.index] + [x for x in detection.index],
                         "id_switch": id_switch,
                     }
                 )

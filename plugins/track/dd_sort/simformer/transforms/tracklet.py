@@ -1,59 +1,74 @@
 import logging
 
-import numpy as np
-
 from .transform import Transform
 
 log = logging.getLogger(__name__)
 
 
-class RandomGapsTracklet(Transform):
+class MaxTrackletObs(Transform):
     """
-    Add some gaps in the tracklet.
+    Limit the number of observations in the tracklet.
     """
-    def __init__(self,
-                 max_gap_size: int = 1,
-                 max_gaps: int = 1,
-                 ):
+
+    def __init__(self, max_obs: int = 200):
         super().__init__()
-        self.max_gap_size = max_gap_size
-        self.max_gaps = max_gaps
+        self.max_obs = max_obs
 
     def __call__(self, df):
-        gaps = self.rng.integers(self.max_gaps, endpoint=True)
-        gaps = min(gaps, len(df) // 2)
-        for _ in range(gaps):
-            start_idx = self.rng.integers(len(df))
-            length = self.rng.integers(1, self.max_gap_size, endpoint=True)
-            end_idx = min(len(df)-1, start_idx+length)
-            df = df.drop(df.index[start_idx:end_idx])
-        return df
+        return df.tail(self.max_obs)
 
-class RandomObsGapTracklet(Transform):
+
+class SporadicTrackletDropout(Transform):
     """
-    Keep only detections that are older than a random value.
+    Randomly drop some detections from the tracklet.
     """
-    def __init__(self, std_age: int = 5):
+
+    def __init__(self, p_drop: float = 0.1):
         super().__init__()
-        self.std_age = std_age
+        self.p_drop = p_drop
 
     def __call__(self, df):
-        cutoff_age = int(np.abs(self.rng.normal(0, self.std_age)))
-        age = df.image_id.max() - df.image_id
-        df = df[(age >= cutoff_age) | (df.to_match != 0)]
-        return df
+        mask = self.rng.uniform(size=len(df)) > self.p_drop
+        return df[mask]
 
 
-class RandomLengthTracklet(Transform):
+class StructuredTrackletDropout(Transform):
     """
-    Keep only the last n detections of a random length n.
+    This function randomly proposes windows of detections to drop from the tracklet.
+    It stores these proposed windows in a buffer and then randomly selects up to
+    max_num_windows from the buffer to drop. If max_num_windows is set to -1,
+    all proposed windows are dropped.
+
+    - p_drop: Probability of proposing a window for dropping.
+    - max_drop: Maximum number of detections to drop per window.
+    - max_num_windows: Maximum number of windows to drop. If -1, no limit is applied.
     """
-    def __init__(self, max_length: int = 10):
+
+    def __init__(self, p_drop: float = 0.1, max_drop: int = 5, max_num_windows: int = 2):
         super().__init__()
-        self.max_length = max_length
+        self.p_drop = p_drop
+        self.max_drop = max_drop
+        self.max_num_windows = max_num_windows
 
     def __call__(self, df):
-        length = int(self.rng.uniform(1, self.max_length))
-        cutoff = len(df) - (length + 1)
-        df = df.iloc[cutoff:]
-        return df
+        drop_proposals = []
+
+        indices = df.index.tolist()
+
+        i = 0
+        while i < len(indices):
+            if self.rng.uniform() < self.p_drop:
+                drop_length = self.rng.integers(1, self.max_drop + 1)
+                drop_proposals.append(indices[i:i + drop_length])
+                i += drop_length
+            else:
+                i += 1
+
+        if self.max_num_windows != -1:
+            selected_drops = self.rng.choice(drop_proposals, size=min(self.max_num_windows, len(drop_proposals)),
+                                             replace=False)
+        else:
+            selected_drops = drop_proposals
+
+        drop_indices = [idx for drop_range in selected_drops for idx in drop_range]
+        return df.drop(drop_indices)

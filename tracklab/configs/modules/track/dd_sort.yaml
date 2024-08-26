@@ -141,7 +141,7 @@ simformer:
     weight_decay: 1e-3
     alpha_loss: 1.0
 
-  transforms:
+  batch_transforms:
     train:
       _target_: dd_sort.simformer.transforms.Compose
       transforms:
@@ -152,26 +152,41 @@ simformer:
 
 datamodule:
   _target_: dd_sort.SimFormerDataModule
-  dataset_splits: # should be a list containing train/val/test
-    - train
-    - val
-  path: ${project_dir}/states # absolute path, otherwise it will be created for each job
-  tracker_states:
-    train: "${project_dir}/states/posetrack21-train.pklz"
-    val: "${project_dir}/states/posetrack21-val.pklz"
-    test: "${project_dir}/states/posetrack21-val.pklz"
-  name: ddsort-posetrack  # name of the file for the gallery pickle
+
+  ## Training parameters
   batch_size: 8
   num_samples: 16
   num_videos: null # how many videos you want samples from, null for all
   samples_per_video: 50  # number of frame per video
-  std_age: 10  # std of the random choice for the age
-  max_length: 20  # max number of detections for a tracklet
-  sampler: "simple"  # simple, hard or harder
-  sampler_args:
-    ids_bias: 10
-    mix_frames: False
-  transforms:
+  max_length: 50  # max number of detections for a tracklet
+  sampler: "simple"  # simple # broken : hard or harder
+  num_workers: ${num_cores}
+  tracklet_transforms:
+    train:
+      _target_: dd_sort.simformer.transforms.Compose
+      transforms:
+        - _target_: dd_sort.simformer.transforms.MaxTrackletObs
+          max_obs: 200
+        - _target_: dd_sort.simformer.transforms.SomeOf
+          min_choice: 1
+          transforms:
+            - _target_: dd_sort.simformer.transforms.SporadicTrackletDropout
+              p_drop: 0.1
+            - _target_: dd_sort.simformer.transforms.StructuredTrackletDropout
+              p_drop: 0.1
+              max_drop: 10
+              max_num_windows: 3
+
+  ## Dataset generation (for the .pklz files)
+  dataset_splits: # should be a list containing train/val/test
+    - train
+    - val
+  name: ddsort-dancetrack  # name of the file for the gallery pickle
+  path: ${project_dir}/states # absolute path, otherwise it will be created for each job
+  tracker_states:
+    train: "${project_dir}/states/dancetrack-train.pklz"
+    val: "${project_dir}/states/dancetrack-val.pklz"
+  dataset_transforms:
     - add_gt_poses
     - add_gt_reid_embeddings
     - add_last_obs_counter
@@ -180,15 +195,3 @@ datamodule:
     #- add_crops
     #- add_detections
     #- add_detections_with_id_switch
-  num_workers: ${num_cores}
-  online_transforms:
-    train:
-      _target_: dd_sort.simformer.transforms.Compose
-      transforms:
-        - _target_: dd_sort.simformer.transforms.RandomLengthTracklet
-          max_length: 50
-        - _target_: dd_sort.simformer.transforms.RandomGapsTracklet
-          max_gap_size: 5
-          max_gaps: 2
-        - _target_: dd_sort.simformer.transforms.RandomObsGapTracklet
-          std_age: 5
