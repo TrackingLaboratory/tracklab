@@ -145,10 +145,14 @@ simformer:
     train:
       _target_: dd_sort.simformer.transforms.Compose
       transforms:
-        - _target_: dd_sort.simformer.transforms.AppMixup
-          std: 0.005
-        - _target_: dd_sort.simformer.transforms.AppAddNoise
-          std: 0.005
+        - _target_: dd_sort.simformer.transforms.FeatsDetDropout
+          p_drop: 0.1  # probability of dropping a feature from the detections
+          allowed_feats:  # list of features that can be dropped
+            - "bbox_ltwh"
+            - "keypoints_xyc"
+            - "embeddings"
+            - "visibility_scores"
+          on_track_only: False  # apply the dropout only on the tracklet features (not on the detections)
 
 datamodule:
   _target_: dd_sort.SimFormerDataModule
@@ -171,9 +175,9 @@ datamodule:
           min_choice: 1
           transforms:
             - _target_: dd_sort.simformer.transforms.SporadicTrackletDropout
-              p_drop: 0.1
+              p_drop: 0.1  # probability of dropping a detection from the tracklet
             - _target_: dd_sort.simformer.transforms.StructuredTrackletDropout
-              p_drop: 0.1
+              p_drop: 0.1  # probability of dropping some windowed detections from the tracklet
               max_drop: 10
               max_num_windows: 3
 
