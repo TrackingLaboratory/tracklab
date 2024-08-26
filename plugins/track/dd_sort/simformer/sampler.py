@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class SimFormerSampler(Sampler):
-    def __init__(self, dataset, batch_size=128, num_samples=8, **kwargs):
+    def __init__(self, dataset, batch_size=128, num_samples=8, samples_per_video=1, **kwargs):
         super().__init__(dataset)
         self.rng = np.random.default_rng()
         self.dataset = dataset
@@ -21,7 +21,8 @@ class SimFormerSampler(Sampler):
         self.df_samples = pd.DataFrame(self.samples)
         assert len(np.unique([x["global_track_id"] for x in self.samples])) == len(self.samples), "All tracklets should have different IDs"
         self.track_ids = np.sort([x["global_track_id"] for x in self.samples])
-        self.video_ids = np.sort(np.unique([x["video_id"] for x in self.samples]))
+        self.samples_per_video = samples_per_video
+        self.video_ids = np.repeat(np.sort(np.unique([x["video_id"] for x in self.samples])), self.samples_per_video)
         # self.image_ids = np.sort(np.unique([x["image_id"] for x in self.samples]))
         self.batch_size = batch_size
         self.num_samples = num_samples
@@ -46,8 +47,6 @@ class SimFormerSampler(Sampler):
                 yield sample_index, image_id
 
         if len(random_video_ids) % self.batch_size != 0:
-            log.info(f"{len(random_video_ids)} {len(random_video_ids) % self.batch_size}")
-
             for _ in range(self.batch_size - (len(random_video_ids) % self.batch_size)):
                 for _ in range(self.num_samples):
                     yield -1, -1

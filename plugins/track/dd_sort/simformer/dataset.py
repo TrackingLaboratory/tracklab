@@ -312,7 +312,10 @@ class SimFormerDataModule(pl.LightningDataModule):
             )
 
     def train_dataloader(self):
-        sampler = self.sampler(dataset=self.datasets["train"], batch_size=self.batch_size, num_samples=self.num_samples)
+        sampler = self.sampler(dataset=self.datasets["train"],
+                               batch_size=self.batch_size,
+                               num_samples=self.num_samples,
+                               samples_per_video=self.samples_per_video)
         return DataLoader(
             self.datasets["train"],
             num_workers=self.num_workers,
@@ -323,11 +326,16 @@ class SimFormerDataModule(pl.LightningDataModule):
         )
 
     def val_dataloader(self):
+        sampler = self.val_sampler(dataset=self.datasets["val"],
+                               batch_size=self.batch_size,
+                               num_samples=self.num_samples,
+                               samples_per_video=self.samples_per_video)
+
         return DataLoader(
             self.datasets["val"],
             collate_fn=partial(collate_fn, batch_size=self.batch_size),
             num_workers=self.num_workers,
-            batch_sampler=self.val_sampler(self.datasets["val"], batch_size=self.batch_size, num_samples=self.num_samples),
+            batch_sampler=sampler,
             worker_init_fn=set_worker_sharing_strategy,
             pin_memory=True,
         )
