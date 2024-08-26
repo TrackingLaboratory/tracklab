@@ -1,6 +1,6 @@
 defaults:
   - default
 
-_target_: pbtrack.wrappers.ExternalVideo
+_target_: tracklab.wrappers.ExternalVideo
 
 video_path: "/path/to/video.mp4"

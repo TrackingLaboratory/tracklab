@@ -39,14 +39,16 @@ class MLP(Module):
     Project features of detections from feat_dim to token_dim using an MLP.
     """
 
-    def __init__(self, feat_dim: int, token_dim: int):
+    def __init__(self, feat_dim: int, token_dim: int, dropout : float = 0.0):
         super().__init__()
         self.feat_dim = feat_dim
         self.token_dim = token_dim
+        self.dropout = dropout
 
         self.mlp = nn.Sequential(
             nn.Linear(feat_dim, feat_dim),
             nn.ReLU(),
+            nn.Dropout(p=dropout),
             nn.Linear(feat_dim, token_dim)
         )
 

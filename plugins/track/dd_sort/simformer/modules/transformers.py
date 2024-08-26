@@ -29,10 +29,10 @@ class Module(nn.Module):
             params_to_init = missing + unexpected
         else:
             params_to_init = self.named_modules()
+        modules = dict(self.named_modules())
         for key in params_to_init:
-            module = dict(self.named_modules())
-            if key in module:
-                layer = module[key]
+            if key in modules:
+                layer = modules[key]
                 if layer.dim() > 1:
                     nn.init.xavier_uniform_(layer)
                 else:

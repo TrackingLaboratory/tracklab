@@ -1,6 +1,7 @@
 import logging
 from collections import OrderedDict
 from itertools import islice
+from math import ceil
 
 import numpy as np
 import pandas as pd
@@ -11,30 +12,47 @@ log = logging.getLogger(__name__)
 
 
 class SimFormerSampler(Sampler):
-    def __init__(self, dataset, batch_size=128, num_samples=8, **kwargs):
+    def __init__(self, dataset, batch_size=128, num_samples=8, samples_per_video=1, **kwargs):
         super().__init__(dataset)
         self.rng = np.random.default_rng()
         self.dataset = dataset
         assert hasattr(dataset, "samples"), "You should define the samples"
         self.samples = self.dataset.samples
-        self.image_ids = np.sort(np.unique([x["image_id"] for x in self.samples]))
+        self.df_samples = pd.DataFrame(self.samples)
+        assert len(np.unique([x["global_track_id"] for x in self.samples])) == len(self.samples), "All tracklets should have different IDs"
+        self.track_ids = np.sort([x["global_track_id"] for x in self.samples])
+        self.samples_per_video = samples_per_video
+        self.video_ids = np.repeat(np.sort(np.unique([x["video_id"] for x in self.samples])), self.samples_per_video)
+        # self.image_ids = np.sort(np.unique([x["image_id"] for x in self.samples]))
         self.batch_size = batch_size
         self.num_samples = num_samples
         self.dl_batch_size = batch_size * num_samples
 
     def __len__(self):
-        return (len(self.samples) + self.dl_batch_size - 1) // self.dl_batch_size
+        return ceil(len(self.video_ids) / self.batch_size)
+
+    def sample_generator(self):
+        """Generator of tuples with sample_idx and random image_id"""
+        random_video_ids = self.rng.choice(self.video_ids, len(self.video_ids), replace=False)
+        samples = self.df_samples  # pd.DataFrame(self.samples)
+        for video_id in random_video_ids:
+            video_samples = samples[samples["video_id"] == video_id]
+            possible_image_ids = np.unique(np.concatenate(np.array(video_samples["image_id"])))
+            image_id = self.rng.choice(possible_image_ids)
+            for i in range(self.num_samples):
+                try:
+                    sample_index = video_samples.index[i]
+                except IndexError:
+                    sample_index = -1
+                yield sample_index, image_id
+
+        if len(random_video_ids) % self.batch_size != 0:
+            for _ in range(self.batch_size - (len(random_video_ids) % self.batch_size)):
+                for _ in range(self.num_samples):
+                    yield -1, -1
 
     def __iter__(self):
-        idxs = self.rng.choice(len(self.image_ids), len(self.image_ids), replace=False)
-        samples = pd.DataFrame(self.samples)
-        samples["random_index"] = samples.apply(lambda x: idxs[list(self.image_ids).index(x.image_id)], axis=1)
-        samples = samples.sort_values("random_index")
-        #samples = samples.sort_values(["video_id"])
-        indices = samples.index
-        if len(indices) % self.dl_batch_size != 0:
-            indices = np.pad(indices, (0, self.dl_batch_size - (len(indices) % self.dl_batch_size)), constant_values=-1)
-        yield from batched(indices, self.dl_batch_size)
+        yield from batched(self.sample_generator(), self.dl_batch_size)
 
 
 class ValSampler(Sampler):
@@ -80,7 +98,7 @@ class HarderSimFormerSampler(SimFormerSampler):
     def __iter__(self):
         samples = pd.DataFrame(self.samples)
         if "id_switch" not in samples.columns:
-            raise ValueError("You should recreate the pklz with ''")
+            raise ValueError("You should recreate the pklz with 'id_switch'")
         p = samples.groupby("image_id").id_switch.sum() * self.ids_bias + 1
         p = p / p.sum()
         hard_percentage = p[samples.groupby("image_id").id_switch.sum() > 0].sum()
@@ -174,7 +192,7 @@ samplers = {
     "simple": SimFormerSampler,
     "hard": HardSimFormerSampler,
     "harder": HarderSimFormerSampler,
-    "val": ValSampler,
+    "val": SimFormerSampler,  # ValSampler,
     "random_frame": RandomFrameSampler,
 }
 
