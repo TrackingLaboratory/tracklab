@@ -80,14 +80,14 @@ class SimFormerDataset(Dataset):
             return self.create_empty_input()
         else:
             sample = self.samples[idx]
-        df = self._load_pickle(sample["video_id"])
+        video_df = self._load_pickle(sample["video_id"])
 
-        df = df.loc[sample["detections"]]
+        df = video_df.loc[sample["detections"]]
         df = df[df["image_id"] <= image_id]
         assert df.image_id.is_monotonic_increasing, "Tracklets should be in chronological order"
         dets = df.tail(1)
         tracks = df.head(-1)
-        tracks = self.tracklet_transforms(tracks)
+        tracks = self.tracklet_transforms(tracks, video_df=video_df)
         tracks = tracks.tail(self.max_length)
         assert tracks.image_id.is_monotonic_increasing, "Tracklets should be in chronological order after transform"
         det_features, det_targets = self.features_targets(dets, image_id)

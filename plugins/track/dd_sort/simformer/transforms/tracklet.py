@@ -16,7 +16,7 @@ class MaxTrackletObs(Transform):
         self.max_obs = max_obs
         assert self.max_obs > 0, "'max_obs' must be greater than 0."
 
-    def __call__(self, df):
+    def __call__(self, df, video_df):
         return df.tail(self.max_obs)
 
 
@@ -30,7 +30,7 @@ class SporadicTrackletDropout(Transform):
         self.p_drop = p_drop
         assert 0 <= self.p_drop <= 1, "'p_drop' must be in the range [0, 1]."
 
-    def __call__(self, df):
+    def __call__(self, df, video_df):
         if df.empty:
             return df
         mask = self.rng.uniform(size=len(df)) > self.p_drop
@@ -58,7 +58,7 @@ class StructuredTrackletDropout(Transform):
         self.max_drop = max_drop
         self.max_num_windows = max_num_windows
 
-    def __call__(self, df):
+    def __call__(self, df, video_df):
         if df.empty:
             return df
         drop_proposals = []
