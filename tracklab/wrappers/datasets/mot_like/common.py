@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 
+from multiprocessing import Pool
 from tqdm import tqdm
 from pathlib import Path
 
@@ -21,15 +22,22 @@ class MOT(TrackingDataset):
             self.dataset_path
         )
 
-        sets_dict = {}
-        for set in ['train', 'val', 'test']:
-            set_path = self.dataset_path / set
-            if os.path.isdir(set_path):
-                sets_dict[set] = self.load_set(set_path, nvid, vids_dict[set])
-            else:
-                log.warning(f"Warning: the {set} split does not exist.")
-                sets_dict[set] = None
+        set_names = ['train', 'val', 'test']
+        with Pool(processes=3) as pool:
+            args = [(set_name, self.dataset_path, nvid, vids_dict[set_name]) for set_name in set_names]
+            results = pool.map(self.load_set_wrapper, args)
+
+        sets_dict = {set_name: result for set_name, result in results}
         super().__init__(dataset_path, sets_dict, nvid, nframes, vids_dict, *args, **kwargs)
+
+    def load_set_wrapper(self, args):
+        set_name, dataset_path, nvid, vids_dict = args
+        set_path = dataset_path / set_name
+        if os.path.isdir(set_path):
+            return set_name, self.load_set(set_path, nvid, vids_dict)
+        else:
+            print(f"Warning: the {set_name} split does not exist.")
+            return set_name, None
 
     def read_ini_file(self, file_path):
         with open(file_path, 'r') as file:
