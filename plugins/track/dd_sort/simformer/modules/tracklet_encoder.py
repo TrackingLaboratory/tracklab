@@ -6,12 +6,48 @@ from .transformers import Module
 from ..simformer import Detections
 
 
+class LinearSum(Module):
+    def __init__(self, app_feat_dim: int, st_feat_dim: int, token_dim: int, **kwargs):
+        super().__init__()
+        self.app_feat_dim = app_feat_dim
+        self.st_feat_dim = st_feat_dim
+        self.token_dim = token_dim
+        self.app_linear = nn.Linear(app_feat_dim, token_dim)
+        self.st_linear = nn.Linear(st_feat_dim, token_dim)
+
+    def forward(self, x):
+        app_cat_feats = torch.cat(
+            [x.feats["embeddings"],
+             x.feats["visibility_scores"]],
+            dim=-1
+        )
+        app_tokens = torch.zeros(
+            (*app_cat_feats.shape[:-1], self.token_dim),
+            device=app_cat_feats.device,
+            dtype=torch.float32,
+        )
+        st_cat_feats = torch.cat(
+            [x.feats["bbox_ltwh"],
+             x.feats["keypoints_xyc"].reshape(*x.feats_masks.shape, -1)],
+            dim=-1
+        )
+        st_tokens = torch.zeros(
+            (*st_cat_feats.shape[:-1], self.token_dim),
+            device=st_cat_feats.device,
+            dtype=torch.float32,
+        )
+        app_tokens[x.feats_masks] = self.app_linear(app_cat_feats[x.feats_masks])
+        st_tokens[x.feats_masks] = self.st_linear(st_cat_feats[x.feats_masks])
+        tokens = app_tokens + st_tokens
+        return tokens
+
+
 class LinearProjection(Module):
     """
     Project features of detections from feat_dim to token_dim using a linear projection.
     """
 
-    def __init__(self, feat_dim: int, token_dim: int):
+    def __init__(self, feat_dim: int, token_dim: int, **kwargs):
         super().__init__()
         self.feat_dim = feat_dim
         self.token_dim = token_dim
@@ -39,7 +75,7 @@ class MLP(Module):
     Project features of detections from feat_dim to token_dim using an MLP.
     """
 
-    def __init__(self, feat_dim: int, token_dim: int, dropout : float = 0.0):
+    def __init__(self, feat_dim: int, token_dim: int, dropout: float = 0.1, **kwargs):
         super().__init__()
         self.feat_dim = feat_dim
         self.token_dim = token_dim
