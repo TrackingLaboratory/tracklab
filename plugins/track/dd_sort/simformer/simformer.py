@@ -135,7 +135,7 @@ class SimFormer(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         if "train" in self.batch_transforms:
-            batch = self.batch_transforms["train"](batch)
+            batch = self.batch_transforms["train"](batch, None)
 
         tracks, dets = self.train_val_preprocess(batch)
         tracks, dets, td_sim_matrix = self.forward(tracks, dets)
@@ -151,7 +151,7 @@ class SimFormer(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         if "val" in self.batch_transforms:
-            batch = self.batch_transforms["val"](batch)
+            batch = self.batch_transforms["val"](batch, None)
         tracks, dets = self.train_val_preprocess(batch)
         tracks, dets, td_sim_matrix = self.forward(tracks, dets)
         sim_loss, cls_loss = self.compute_loss(tracks, dets, td_sim_matrix)

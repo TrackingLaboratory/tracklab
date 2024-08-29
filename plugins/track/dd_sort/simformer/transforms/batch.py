@@ -21,7 +21,7 @@ class FeatsDetDropout(BatchTransform):
         self.allowed_feats = allowed_feats
         self.on_track_only = on_track_only
 
-    def __call__(self, batch):
+    def __call__(self, batch, *args):
         if 'det_feats' in batch and not self.on_track_only:
             batch['det_feats'] = self._apply_dropout(batch['det_feats'], batch['det_targets'])
 
@@ -57,7 +57,7 @@ class AppEmbNoise(BatchTransform):
         super().__init__()
         self.alpha = alpha
 
-    def __call__(self, batch):
+    def __call__(self, batch, *args):
         embs = batch["track_feats"]["embeddings"]  # [B, N, T, D]
         std = embs.std(dim=-1, keepdim=True)
         noise = torch.randn_like(embs, device=embs.device)
@@ -84,7 +84,7 @@ class BBoxShake(BatchTransform):
         super().__init__()
         self.alpha = alpha
 
-    def __call__(self, batch):
+    def __call__(self, batch, *args):
         bboxes = batch["track_feats"]["bbox_ltwh"]  # [B, N, T, 4]
 
         # Split the bboxes into components
@@ -129,7 +129,7 @@ class KeypointsShake(BatchTransform):
         super().__init__()
         self.alpha = alpha
 
-    def __call__(self, batch):
+    def __call__(self, batch, *args):
         keypoints = batch["track_feats"]["keypoints_xyc"]  # [B, N, T, 17, 3]
         bboxes = batch["track_feats"]["bbox_ltwh"]  # [B, N, T, 4]
 
