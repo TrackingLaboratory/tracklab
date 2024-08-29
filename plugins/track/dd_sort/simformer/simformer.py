@@ -56,19 +56,19 @@ class Detections(Tracklets):
 
 class SimFormer(pl.LightningModule):
     def __init__(
-        self,
-        transformer_cfg: DictConfig,
-        tokenizers_cfg: DictConfig,
-        classifier_cfg: DictConfig = None,
-        train_cfg: DictConfig = None,
-        transforms: DictConfig = None,
-        merge_token_strat: str = "sum",
-        sim_strat: str = "cosine",
-        assos_strat: str = "hungarian",
-        sim_threshold: int = 0.7,
-        tl_margin: float = 0.3,
-        loss_strat: str = "triplet",
-        contrastive_loss_strat: str = "inter_intra",
+            self,
+            transformer_cfg: DictConfig,
+            tokenizers_cfg: DictConfig,
+            classifier_cfg: DictConfig = None,
+            train_cfg: DictConfig = None,
+            batch_transforms: DictConfig = None,
+            merge_token_strat: str = "sum",
+            sim_strat: str = "cosine",
+            assos_strat: str = "hungarian",
+            sim_threshold: int = 0.7,
+            tl_margin: float = 0.3,
+            loss_strat: str = "triplet",
+            contrastive_loss_strat: str = "inter_intra",
     ):
         super().__init__()
         self.save_hyperparameters()
@@ -87,10 +87,10 @@ class SimFormer(pl.LightningModule):
         self.contrastive_loss_strat = contrastive_loss_strat
 
         # handle instantiation functions
-        if transforms is not None:
-            self.transforms = {n: instantiate(t) for n, t in transforms.items()}
+        if batch_transforms is not None:
+            self.batch_transforms = {n: instantiate(t) for n, t in batch_transforms.items()}
         else:
-            self.transforms = {}
+            self.batch_transforms = {}
 
         # merging
         if merge_token_strat in merge_token_strats:
@@ -134,8 +134,8 @@ class SimFormer(pl.LightningModule):
             self.alpha_loss = 1.0
 
     def training_step(self, batch, batch_idx):
-        if "train" in self.transforms:
-           batch = self.transforms["train"](batch)
+        if "train" in self.batch_transforms:
+            batch = self.batch_transforms["train"](batch)
 
         tracks, dets = self.train_val_preprocess(batch)
         tracks, dets, td_sim_matrix = self.forward(tracks, dets)
@@ -150,8 +150,8 @@ class SimFormer(pl.LightningModule):
         }
 
     def validation_step(self, batch, batch_idx):
-        if "val" in self.transforms:
-            batch = self.transforms["val"](batch)
+        if "val" in self.batch_transforms:
+            batch = self.batch_transforms["val"](batch)
         tracks, dets = self.train_val_preprocess(batch)
         tracks, dets, td_sim_matrix = self.forward(tracks, dets)
         sim_loss, cls_loss = self.compute_loss(tracks, dets, td_sim_matrix)
@@ -167,10 +167,11 @@ class SimFormer(pl.LightningModule):
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
         tracks, dets = self.predict_preprocess(batch)
         tracks, dets, td_sim_matrix = self.forward(tracks, dets)
-        assert self.sim_threshold or self.computed_sim_threshold, "sim_threshold must be manually set or evaluation mode must be activated for automatic computation of computed_sim_threshold"
-        threshold = self.sim_threshold if self.sim_threshold else self.computed_sim_threshold
+        assert self.sim_threshold or self.computed_sim_threshold2, "sim_threshold must be manually set or evaluation mode must be activated for automatic computation of computed_sim_threshold"
+        threshold = self.sim_threshold if self.sim_threshold else self.computed_sim_threshold2
         # best_cls_roc_threshold = self.best_roc_cls_threshold if self.best_roc_cls_threshold else self.det_threshold  # fixme
-        association_matrix, association_result = self.association(td_sim_matrix, tracks.masks, dets.masks, sim_threshold=threshold)
+        association_matrix, association_result = self.association(td_sim_matrix, tracks.masks, dets.masks,
+                                                                  sim_threshold=threshold)
         # plt = display_bboxes(tracks, dets, None, batch["images"])
         # plt.show()
         return association_matrix, association_result, td_sim_matrix
@@ -279,7 +280,7 @@ class SimFormer(pl.LightningModule):
 
                 if len(masked_det_embs) != 0 or len(masked_track_embs) != 0:
                     mask_sim_loss[h, i] = True
-                    
+
                     if self.loss_strat == "triplet":
                         if self.contrastive_loss_strat == "inter_intra":
                             # Compute embeddings loss on all tracks/detections (track_ids != 0)
@@ -291,14 +292,17 @@ class SimFormer(pl.LightningModule):
                             # Compute embeddings loss on all tracks/detections (track_ids != 0)
                             indices_tuple = self.emb_mining(masked_det_embs, masked_det_targets, masked_track_embs,
                                                             masked_track_targets)
-                            sim_loss[h, i] = self.sim_loss(masked_det_embs, masked_det_targets, indices_tuple, masked_track_embs,
-                                                        masked_track_targets)
+                            sim_loss[h, i] = self.sim_loss(masked_det_embs, masked_det_targets, indices_tuple,
+                                                           masked_track_embs,
+                                                           masked_track_targets)
                         elif self.contrastive_loss_strat == "valid_inter_intra":
                             # Compute embeddings loss on all valid tracks/detections (track_ids >= 0)
                             valid_tracks = masked_track_targets >= 0
                             valid_dets = masked_det_targets >= 0
-                            embeddings = torch.cat([masked_track_embs[valid_tracks], masked_det_embs[valid_dets]], dim=0)
-                            labels = torch.cat([masked_track_targets[valid_tracks], masked_det_targets[valid_dets]], dim=0)
+                            embeddings = torch.cat([masked_track_embs[valid_tracks], masked_det_embs[valid_dets]],
+                                                   dim=0)
+                            labels = torch.cat([masked_track_targets[valid_tracks], masked_det_targets[valid_dets]],
+                                               dim=0)
                             indices_tuple = self.emb_mining(embeddings, labels)
                             sim_loss[h, i] = self.sim_loss(embeddings, labels, indices_tuple)
                         elif self.contrastive_loss_strat == "valid_inter":
@@ -306,10 +310,11 @@ class SimFormer(pl.LightningModule):
                             valid_tracks = masked_track_targets >= 0
                             valid_dets = masked_det_targets >= 0
                             indices_tuple = self.emb_mining(masked_det_embs[valid_dets], masked_det_targets[valid_dets],
-                                                            masked_track_embs[valid_tracks], masked_track_targets[valid_tracks])
+                                                            masked_track_embs[valid_tracks],
+                                                            masked_track_targets[valid_tracks])
                             sim_loss[h, i] = self.sim_loss(masked_det_embs[valid_dets], masked_det_targets[valid_dets],
-                                                        indices_tuple, masked_track_embs[valid_tracks],
-                                                        masked_track_targets[valid_tracks])
+                                                           indices_tuple, masked_track_embs[valid_tracks],
+                                                           masked_track_targets[valid_tracks])
                         else:
                             raise NotImplementedError
                     elif self.loss_strat == "infoNCE":

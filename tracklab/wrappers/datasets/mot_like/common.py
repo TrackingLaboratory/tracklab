@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 
+from multiprocessing import Pool
 from tqdm import tqdm
 from pathlib import Path
 
@@ -13,7 +14,7 @@ log = logging.getLogger(__name__)
 
 class MOT(TrackingDataset):
     def __init__(self, dataset_path: str, categories_list: list, nvid: int = -1, nframes: int = -1,
-                 vids_dict: list = None, public_dets_subpath : str = None, *args, **kwargs):
+                 vids_dict: list = None, public_dets_subpath: str = None, *args, **kwargs):
         self.categories_list = categories_list
         self.dataset_path = Path(dataset_path)
         self.public_dets_subpath = public_dets_subpath
@@ -21,22 +22,27 @@ class MOT(TrackingDataset):
             self.dataset_path
         )
 
-        sets_dict = {}
-        for set in ['train', 'val', 'test']:
-            set_path = self.dataset_path / set
-            if os.path.isdir(set_path):
-                sets_dict[set] = self.load_set(set_path, nvid, vids_dict[set])
-            else:
-                log.warning(f"Warning: the {set} set does not exist.")
-                sets_dict[set] = None
+        set_names = ['train', 'val', 'test']
+        with Pool(processes=3) as pool:
+            args = [(set_name, self.dataset_path, nvid, vids_dict[set_name]) for set_name in set_names]
+            results = pool.map(self.load_set_wrapper, args)
+
+        sets_dict = {set_name: result for set_name, result in results}
         super().__init__(dataset_path, sets_dict, nvid, nframes, vids_dict, *args, **kwargs)
 
+    def load_set_wrapper(self, args):
+        set_name, dataset_path, nvid, vids_dict = args
+        set_path = dataset_path / set_name
+        if os.path.isdir(set_path):
+            return set_name, self.load_set(set_path, nvid, vids_dict)
+        else:
+            print(f"Warning: the {set_name} split does not exist.")
+            return set_name, None
 
     def read_ini_file(self, file_path):
         with open(file_path, 'r') as file:
             lines = file.readlines()
         return {k: v for line in lines if len((split_line := line.strip().split('='))) == 2 for k, v in [split_line]}
-
 
     def read_motchallenge_formatted_file(self, file_path):
         columns = ['image_id', 'track_id', 'left', 'top', 'width', 'height', 'bbox_conf', 'class', 'visibility']
@@ -51,12 +57,11 @@ class MOT(TrackingDataset):
         df['category_id'] = 1
         if df['bbox_conf'].max() > 1 and df['bbox_conf'].min() < 0:
             log.warning("Warning: 'bbox_conf' from the public detections is not between 0 and 1.")
-            df['bbox_conf'] = 1/(1 + np.exp(-df['bbox_conf']))
+            df['bbox_conf'] = 1 / (1 + np.exp(-df['bbox_conf']))
         elif df['bbox_conf'].max() < 0:
             log.warning("Warning: 'bbox_conf' from the public detections is not between 0 and 1.")
             df['bbox_conf'] = 1.0
         return df[['image_id', 'bbox_ltwh', 'bbox_conf', 'category_id']]
-
 
     def load_set(self, dataset_path, nvid=-1, vids_filter_set=None):
         video_metadatas_list = []
@@ -78,7 +83,10 @@ class MOT(TrackingDataset):
 
         image_counter = 0
         person_counter = 0
-        for video_folder in tqdm(sorted(video_list), desc=f"Loading MOT format '{split}' set videos"):  # Sort videos by name
+        warning_trigger_gt = False
+        warning_trigger_public_det = False
+        for video_folder in tqdm(sorted(video_list),
+                                 desc=f"Loading MOT format '{split}' set videos"):  # Sort videos by name
             video_folder_path = os.path.join(dataset_path, video_folder)
             if os.path.isdir(video_folder_path):
                 # Read seqinfo.ini
@@ -96,8 +104,9 @@ class MOT(TrackingDataset):
                     detections_list.append(detections_df)
                     person_counter += len(detections_df['track_id'].unique())
                 else:
-                    log.warning(
-                        f"Warning: The {video_folder} from {split} split does not contain ground truth.")
+                    if not warning_trigger_gt:
+                        warning_trigger_gt = True
+                        log.warning(f"Warning: The {split} split does not contain ground truth.")
 
                 # read public detections file
                 if self.public_dets_subpath is not None:
@@ -108,8 +117,9 @@ class MOT(TrackingDataset):
                         detections_df['video_id'] = len(video_metadatas_list) + 1
                         public_detections_list.append(detections_df)
                     else:
-                        log.warning(
-                            f"Warning: The {video_folder} from {split} split does not contain public detections.")
+                        if not warning_trigger_public_det:
+                            warning_trigger_public_det = True
+                            log.warning(f"Warning: The {split} split does not contain public detections.")
 
                 # Append video metadata
                 nframes = int(seqinfo_data.get('seqLength', 0))
@@ -149,19 +159,20 @@ class MOT(TrackingDataset):
             detections = pd.concat(detections_list, ignore_index=True)
         else:
             detections = pd.DataFrame(
-                columns=['image_id', 'track_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility', 'person_id', 'video_id'])
+                columns=['image_id', 'track_id', 'bbox_ltwh', 'bbox_conf', 'class', 'visibility', 'person_id',
+                         'video_id'])
         if self.public_dets_subpath is not None:
             if len(public_detections_list):
                 public_detections = pd.concat(public_detections_list, ignore_index=True)
                 public_detections = public_detections.sort_values(by=['video_id', 'image_id'],
-                                                    ascending=[True, True])
+                                                                  ascending=[True, True])
             else:
                 public_detections = pd.DataFrame(
                     columns=['image_id', 'bbox_ltwh', 'bbox_conf', 'video_id', 'category_id'])
 
         # Use video_id, image_id, track_id as unique id
         detections = detections.sort_values(by=['video_id', 'image_id', 'track_id'], ascending=[True, True, True])
-        #detections['id'] = detections['video_id'].astype(str) + "_" + \
+        # detections['id'] = detections['video_id'].astype(str) + "_" + \
         #    detections['image_id'].astype(str) + "_" + detections['track_id'].astype(str)
         detections['id'] = detections.index
 

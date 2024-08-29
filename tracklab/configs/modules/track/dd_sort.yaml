@@ -10,7 +10,7 @@ train_cfg:
   pl_trainer:
     max_epochs: 25
     precision: 32
-    gradient_clip_val: 0.1
+    gradient_clip_val: 0.2
     accumulate_grad_batches: 1  # 1 for no accumulation
     enable_progress_bar: True
     enable_model_summary: False
@@ -26,19 +26,21 @@ ddsort:
   #  _target_: dd_sort.DDSORT
   #  _enabled_: True
   #  min_hits: 1  # number of hits to become a tracklet
-  #  max_wo_hits: 50  # number of misses before removing from tracklet
+  #  max_wo_hits: 100  # number of misses before removing from tracklet
+  #  max_gallery_size: 50  # max number of observations in the gallery for each tracklet
   #  det_threshold: 0.1  # detection threshold
   bytetrack:  # bytetrack assoc()
     _target_: dd_sort.DDSORTBYTETracker
     _enabled_: True
     det_high_thresh: 0.4  # high detection threshold
     det_low_thresh: 0.1  # low detection threshold
-    max_time_lost: 30  # number of misses before removing from tracklet
+    max_time_lost: 100  # number of misses before removing from tracklet
+    max_gallery_size: 50  # max number of observations in the gallery for each tracklet
     simformer_call_strat: 3call  # {3call, 1call} 3call: call simformer 3 times, 1call: call simformer 1 time
 
 det_filter_cfg:
-  min_vis_keypoints: 3  # filter on inputs of the tracker
-  vis_keypoint_threshold: 0.3  # filter on inputs of the tracker
+  min_vis_keypoints: 1  # filter on inputs of the tracker
+  vis_keypoint_threshold: 0.1  # filter on inputs of the tracker
   min_bbox_threshold: 0.1 # filter on inputs of the tracker
 
 checkpoint_path: null  # overrides the checkpoint_paths from the submodules
@@ -48,13 +50,13 @@ simformer:
   _target_: dd_sort.SimFormer
 
   transformer_cfg:
-    _target_: dd_sort.Encoder  # {Identity, Encoder, Decoder, Perceptron}
-    emb_dim: 1024
-    n_heads: 16
+    _target_: dd_sort.Decoder  # {Identity, Encoder, Decoder, Perceptron}
+    emb_dim: 2048
+    n_heads: 8
     n_layers: 1
     dim_feedforward: 4096
     dropout: 0.1
-    activation_fn: gelu
+    activation_fn: relu
     use_processed_track_tokens: True  # use the processed track tokens instead of the input ones
     src_key_padding_mask: True  # use the `src_key_padding_mask` in the transformer instead of 'src_mask'
     checkpoint_path: null  # override the weights of this module using this path
@@ -76,99 +78,134 @@ simformer:
     #  feat_dim: 1799
     #  agg_strat: ema  # {ema, mean, last}
     #  checkpoint_path: null  # override the weights of this module using this path
-    SmartLinearAppearance:
-      _target_: dd_sort.SmartLinearAppearance
+    #SmartLinearAppearance:
+    #  _target_: dd_sort.SmartLinearAppearance
+    #  _enabled_: False
+    #  enable_ll: True
+    #  checkpoint_path: null  # override the weights of this module using this path
+    #  token_dim: ${...transformer_cfg.emb_dim}
+    #  feat_dim: 3078
+    #MotionBertTokenizer:
+    #  _target_: dd_sort.MotionBertTokenizer
+    #  _enabled_: False
+    #  checkpoint_path: ${model_dir}/MotionBERT/motionbert_42085620_still-dawn-1446.ckpt  # override the weights of this module using this path
+    #  mb_checkpoint_path: ${model_dir}/MotionBERT/motionbert_lite.bin  # init weights for training
+    #  freeze: False
+    #  token_dim: ${...transformer_cfg.emb_dim}
+    #  agg_strat: ema
+    #  pad_empty_frames: True  # Will pad each empty frame with 0s if True, or use a concatenation of all available skeletons if False
+    #  tracklet_max_age: 20  # Will use skeletons until this number of frames in the past, padding with 0s when necessary
+    TrackletEncoder:
+      _target_: dd_sort.TrackletEncoder
       _enabled_: True
-      enable_ll: True
+      emb_dim: ${...transformer_cfg.emb_dim}
+      n_heads: 8
+      n_layers: 1
+      dim_feedforward: 4096
+      num_registers: 3
+      dropout: 0.1
       checkpoint_path: null  # override the weights of this module using this path
-      token_dim: ${...transformer_cfg.emb_dim}
-      feat_dim: 3078
+      use_only_det_tokenizer: False  # do not use the transformer encoder to encode the tracklets (used to train the det_tokenizer)
+      det_tokenizer:
+        _target_: dd_sort.SepLinProjSum  # {CatMLP, CatLinProj, SepLinProjSum}
+        use_app: True
+        app_feat_dim: 3078
+        use_st: True
+        st_feat_dim: 55
+        token_dim: ${..emb_dim}
+        dropout: ${..dropout}
 
-    MotionBertTokenizer:
-      _target_: dd_sort.MotionBertTokenizer
-      _enabled_: False
-      checkpoint_path: ${model_dir}/MotionBERT/motionbert_42085620_still-dawn-1446.ckpt  # override the weights of this module using this path
-      mb_checkpoint_path: ${model_dir}/MotionBERT/motionbert_lite.bin  # init weights for training
-      freeze: False
-      token_dim: ${...transformer_cfg.emb_dim}
-      agg_strat: ema
-      pad_empty_frames: True  # Will pad each empty frame with 0s if True, or use a concatenation of all available skeletons if False
-      tracklet_max_age: 20  # Will use skeletons until this number of frames in the past, padding with 0s when necessary
-
-  classifier_cfg:
+  classifier_cfg: null
     # null for no classifier
     #_target_: dd_sort.LinearClassifier
     #_enabled_: True
     #emb_dim: ${..transformer_cfg.emb_dim}
     #checkpoint_path: null  # override the weights of this module using this path
-    _target_: dd_sort.MLPClassifier
-    _enabled_: True
-    checkpoint_path: null  # override the weights of this module using this path
-    emb_dim: ${..transformer_cfg.emb_dim}
-    hidden_dim: # must be a list that finishes with 1
-      - 128
-      - 1
-    activation_fn: relu
-    dropout: ${..transformer_cfg.dropout}
+    #_target_: dd_sort.MLPClassifier
+    #_enabled_: False
+    #checkpoint_path: null  # override the weights of this module using this path
+    #emb_dim: ${..transformer_cfg.emb_dim}
+    #hidden_dim: # must be a list that finishes with 1
+    #  - 128
+    #  - 1
+    #activation_fn: relu
+    #dropout: ${..transformer_cfg.dropout}
 
   merge_token_strat: sum
   sim_strat: cosine
   assos_strat: hungarian
   sim_threshold: 0.7  # sim_former similarity threshold for hungarian association (based on cosine distance of features). If 'null', threshold will be computed automatically
-  tl_margin: 0.5  # margin for triplet loss
+  tl_margin: 0.3  # margin for triplet loss
   loss_strat: triplet  # {triplet; infoNCE}
   contrastive_loss_strat: "valid_inter_intra"  # "inter": only det can be positive/negative of track and vice-versa, "inter_intra": det or track can be positive/negative of track and vice-versa
                                                # "valid_inter" or "valid_inter_intra": only valid det/track (track_ids >= 0)
 
   train_cfg: # AdamW
     init_lr: 1e-4
-    weight_decay: 1e-2
-    alpha_loss: 0.75
+    weight_decay: 1e-3
+    alpha_loss: 1.0
 
-  transforms:
+  batch_transforms:
     train:
       _target_: dd_sort.simformer.transforms.Compose
       transforms:
-        - _target_: dd_sort.simformer.transforms.AppMixup
-          std: 0.005
+        - _target_: dd_sort.simformer.transforms.AppEmbNoise
+          alpha: 0.1
+        - _target_: dd_sort.simformer.transforms.KeypointsShake
+          alpha: 0.05
+        - _target_: dd_sort.simformer.transforms.BBoxShake
+          alpha: 0.1
+        - _target_: dd_sort.simformer.transforms.FeatsDetDropout
+          p_drop: 0.1  # probability of dropping a feature from the detections
+          allowed_feats:  # list of features that can be dropped
+            - "bbox_ltwh"
+            - "keypoints_xyc"
+            - "embeddings"
+            - "visibility_scores"
+          on_track_only: True  # apply the dropout only on the tracklet features (not on the detections)
 
 datamodule:
   _target_: dd_sort.SimFormerDataModule
-  dataset_splits: # should be a list containing train/val/test
-    - train
-    - val
-  path: ${project_dir}/states # absolute path, otherwise it will be created for each job
-  tracker_states:
-    train: "${project_dir}/states/posetrack21-train.pklz"
-    val: "${project_dir}/states/posetrack21-val.pklz"
-    test: "${project_dir}/states/posetrack21-val.pklz"
-  name: ddsort-posetrack  # name of the file for the gallery pickle
+
+  ## Training parameters
   batch_size: 8
   num_samples: 16
   num_videos: null # how many videos you want samples from, null for all
   samples_per_video: 50  # number of frame per video
-  std_age: 5  # std of the random choice for the age
-  max_length: 12  # max number of detections for a tracklet
-  sampler: "harder"  # simple, hard or harder
-  sampler_args:
-    ids_bias: 10
-    mix_frames: False
-  transforms:
-    - add_gt_reid_embeddings
+  max_length: 50  # max number of detections for a tracklet
+  sampler: "simple"  # simple # broken : hard or harder
+  num_workers: ${num_cores}
+  tracklet_transforms:
+    train:
+      _target_: dd_sort.simformer.transforms.Compose
+      transforms:
+        - _target_: dd_sort.simformer.transforms.MaxTrackletObs
+          max_obs: 200
+        - _target_: dd_sort.simformer.transforms.SomeOf
+          min_choice: 1
+          transforms:
+            - _target_: dd_sort.simformer.transforms.SporadicTrackletDropout
+              p_drop: 0.1  # probability of dropping a detection from the tracklet
+            - _target_: dd_sort.simformer.transforms.StructuredTrackletDropout
+              p_drop: 0.1  # probability of dropping some windowed detections from the tracklet
+              max_drop: 10
+              max_num_windows: 3
+
+  ## Dataset generation (for the .pklz files)
+  dataset_splits: # should be a list containing train/val/test
+    - train
+    - val
+  name: ddsort-dancetrack  # name of the file for the gallery pickle
+  path: ${project_dir}/states # absolute path, otherwise it will be created for each job
+  tracker_states:
+    train: "${project_dir}/states/dancetrack-train.pklz"
+    val: "${project_dir}/states/dancetrack-val.pklz"
+  dataset_transforms:
     - add_gt_poses
+    - add_gt_reid_embeddings
+    - add_last_obs_counter
+    - add_number_of_occlusions
     - normalize2image
     #- add_crops
     #- add_detections
     #- add_detections_with_id_switch
-  num_workers: ${num_cores}
-  online_transforms:
-    train:
-      _target_: dd_sort.simformer.transforms.Compose
-      transforms:
-        - _target_: dd_sort.simformer.transforms.RandomAgeTracklet
-          std_age: 5
-        - _target_: dd_sort.simformer.transforms.RandomLengthTracklet
-          max_length: 20
-        - _target_: dd_sort.simformer.transforms.RandomGapsTracklet
-          max_gap_size: 3
-          max_gaps: 2
