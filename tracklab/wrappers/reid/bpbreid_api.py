@@ -1,38 +1,22 @@
-import gdown
 import numpy as np
 import pandas as pd
 import torch
 
 from omegaconf import OmegaConf
+from torchreid.data import ImageDataset, masks_preprocess_all
+from torchreid.data.datasets.image.occluded_posetrack21 import clip_keypoints_to_image
+from torchreid.data.datasets.keypoints_to_masks import KeypointsToMasks
+from torchreid.data.transforms import build_transforms
+from torchreid.scripts.builder import build_config, build_torchreid_model_engine, build_model
+from torchreid.scripts.default_config import engine_run_kwargs
 from yacs.config import CfgNode as CN
 from .bpbreid_dataset import ReidDataset
-# FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
-from tracklab.utils.coordinates import rescale_keypoints
 from tracklab.utils.collate import default_collate
-
-from torchreid.scripts.main import build_config, build_torchreid_model_engine
-from torchreid.tools.feature_extractor import FeatureExtractor
-from torchreid.utils.imagetools import (
-    build_gaussian_heatmaps,
-)
-from tracklab.utils.collate import Unbatchable
-
-import tracklab
 from pathlib import Path
-
-
-import torchreid
-from torch.nn import functional as F
-from torchreid.data.masks_transforms import (
-    CocoToSixBodyMasks,
-    masks_preprocess_transforms,
-)
 from torchreid.utils.tools import extract_test_embeddings
-from torchreid.data.datasets import configure_dataset_class
-
-from torchreid.scripts.default_config import engine_run_kwargs
-
+from torchreid.data.datasets import configure_dataset_class, register_image_dataset
 from ...pipeline.detectionlevel_module import DetectionLevelModule
+from ...utils.cv2 import cv2_load_image
 from ...utils.download import download_file
 
 
@@ -78,28 +62,59 @@ class BPBReId(DetectionLevelModule):
         additional_args = {
             "tracking_dataset": tracking_dataset,
             "reid_config": self.dataset_cfg,
-            "pose_model": None,
         }
-        torchreid.data.register_image_dataset(
+        register_image_dataset(
             tracking_dataset.name,
             configure_dataset_class(ReidDataset, **additional_args),
             tracking_dataset.nickname,
         )
         self.cfg = CN(OmegaConf.to_container(cfg, resolve=True))
-        self.download_models(load_weights=self.cfg.model.load_weights,
-                             pretrained_path=self.cfg.model.bpbreid.hrnet_pretrained_path,
-                             backbone=self.cfg.model.bpbreid.backbone)
+        # self.download_models(load_weights=self.cfg.model.load_weights,
+        #                      pretrained_path=self.cfg.model.backbone_pretrained_path,
+        #                      backbone=self.cfg.model.kpr.backbone)
         # set parts information (number of parts K and each part name),
         # depending on the original loaded masks size or the transformation applied:
         self.cfg.data.save_dir = save_path
         self.cfg.project.job_id = job_id
         self.cfg.use_gpu = torch.cuda.is_available()
         self.cfg = build_config(config=self.cfg)
-        self.test_embeddings = self.cfg.model.bpbreid.test_embeddings
+        self.test_embeddings = self.cfg.model.kpr.test_embeddings
         # Register the PoseTrack21ReID dataset to Torchreid that will be instantiated when building Torchreid engine.
         self.training_enabled = training_enabled
         self.feature_extractor = None
         self.model = None
+
+        self.coco_transform = masks_preprocess_all[self.cfg.model.kpr.masks.preprocess]() if \
+            self.cfg.model.kpr.masks.preprocess \
+        != 'none' else None
+
+        self.keypoints_to_prompt_masks = KeypointsToMasks(mode=self.cfg.model.kpr.keypoints.prompt_masks,
+                                                          vis_thresh=self.cfg.model.kpr.keypoints.vis_thresh,
+                                                          vis_continous=self.cfg.model.kpr.keypoints.vis_continous,
+                                                          )
+
+        self.keypoints_to_target_masks = KeypointsToMasks(mode=self.cfg.model.kpr.keypoints.target_masks,
+                                                          vis_thresh=self.cfg.model.kpr.keypoints.vis_thresh,
+                                                          vis_continous=False,
+                                                          )
+
+        self.model = build_model(self.cfg, 0)
+        self.model.eval()
+
+        _, self.transforms, self.target_preprocess, self.prompt_preprocess = build_transforms(
+            self.cfg.data.height,
+            self.cfg.data.width,
+            self.cfg,
+            transforms=self.cfg.data.transforms,
+            norm_mean=self.cfg.data.norm_mean,
+            norm_std=self.cfg.data.norm_std,
+            remove_background_mask=False,
+            masks_preprocess=self.cfg.model.kpr.masks.preprocess,
+            softmax_weight=self.cfg.model.kpr.masks.softmax_weight,
+            background_computation_strategy=self.cfg.model.kpr.masks.background_computation_strategy,
+            mask_filtering_threshold=self.cfg.model.kpr.masks.mask_filtering_threshold,
+            train_dir=None,
+        )
 
     def download_models(self, load_weights, pretrained_path, backbone):
         if Path(load_weights).stem == "bpbreid_market1501_hrnet32_10642":
@@ -117,60 +132,53 @@ class BPBReId(DetectionLevelModule):
         self, image, detection: pd.Series, metadata: pd.Series
     ):  # Tensor RGB (1, 3, H, W)
         mask_w, mask_h = 32, 64
+        image = cv2_load_image(metadata.file_path)
+
         l, t, r, b = detection.bbox.ltrb(
             image_shape=(image.shape[1], image.shape[0]), rounded=True
         )
         crop = image[t:b, l:r]
-        crop = Unbatchable([crop])
-        batch = {
-            "img": crop,
+
+        sample = {
+            "image": crop,
+            "keypoints_xyc": clip_keypoints_to_image(detection.keypoints.keypoints_bbox_xyc(),
+                                                     (crop.shape[1] - 1, crop.shape[0] - 1)),
+            "negative_kps": clip_keypoints_to_image(detection.negative_kps, (crop.shape[1] - 1, crop.shape[0] - 1)),
         }
-        if not self.cfg.model.bpbreid.learnable_attention_enabled:
-            bbox_ltwh = detection.bbox.ltwh(
-                image_shape=(image.shape[1], image.shape[0]), rounded=True
-            )
-            kp_xyc_bbox = detection.keypoints.in_bbox_coord(bbox_ltwh)
-            kp_xyc_mask = rescale_keypoints(
-                kp_xyc_bbox, (bbox_ltwh[2], bbox_ltwh[3]), (mask_w, mask_h)
-            )
-            if self.dataset_cfg.masks_mode == "gaussian_keypoints":
-                pixels_parts_probabilities = build_gaussian_heatmaps(
-                    kp_xyc_mask, mask_w, mask_h
-                )
-            else:
-                raise NotImplementedError
-            batch["masks"] = pixels_parts_probabilities
+
+        batch = ImageDataset.getitem(
+            sample,
+            self.cfg,
+            self.keypoints_to_prompt_masks,
+            self.prompt_preprocess,
+            self.keypoints_to_target_masks,
+            self.target_preprocess,
+            self.transforms,
+            load_masks=True,
+        )
 
         return batch
 
     @torch.no_grad()
     def process(self, batch, detections: pd.DataFrame, metadatas: pd.DataFrame):
-        im_crops = batch["img"]
-        im_crops = [im_crop.cpu().detach().numpy() for im_crop in im_crops]
-        if "masks" in batch:
-            external_parts_masks = batch["masks"]
-            external_parts_masks = external_parts_masks.cpu().detach().numpy()
-        else:
-            external_parts_masks = None
-        if self.feature_extractor is None:
-            self.feature_extractor = FeatureExtractor(
-                self.cfg,
-                model_path=self.cfg.model.load_weights,
-                device=self.device,
-                image_size=(self.cfg.data.height, self.cfg.data.width),
-                model=self.model,
-                verbose=False,  # FIXME @Vladimir
-            )
-        reid_result = self.feature_extractor(
-            im_crops, external_parts_masks=external_parts_masks
-        )
-        embeddings, visibility_scores, body_masks, _ = extract_test_embeddings(
-            reid_result, self.test_embeddings
+        args = {}
+        args["images"] = batch["image"]
+        if "prompt_masks" in batch:
+            args["prompt_masks"] = batch["prompt_masks"]
+        model_output = self.model(**args)
+
+        (
+            embeddings,
+            visibility_scores,
+            parts_masks,
+            pixels_cls_scores,
+        ) = extract_test_embeddings(
+            model_output, self.cfg.model.kpr.test_embeddings
         )
 
         embeddings = embeddings.cpu().detach().numpy()
         visibility_scores = visibility_scores.cpu().detach().numpy()
-        body_masks = body_masks.cpu().detach().numpy()
+        parts_masks = parts_masks.cpu().detach().numpy()
 
         if self.use_keypoints_visibility_scores_for_reid:
             kp_visibility_scores = batch["visibility_scores"].numpy()
@@ -185,7 +193,7 @@ class BPBReId(DetectionLevelModule):
             {
                 "embeddings": list(embeddings),
                 "visibility_scores": list(visibility_scores),
-                "body_masks": list(body_masks),
+                "body_masks": list(parts_masks),
             },
             index=detections.index,
         )

@@ -3,6 +3,8 @@ defaults:
 
 _target_: tracklab.wrappers.PoseTrack21
 
+name: "occ_PoseTrack21"
+nickname: "pt"
 dataset_path: ${data_dir}/PoseTrack21
 annotation_path: ${data_dir}/PoseTrack21/posetrack_data
 eval_set: "val"

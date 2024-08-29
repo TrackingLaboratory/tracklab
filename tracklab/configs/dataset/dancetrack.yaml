@@ -3,6 +3,8 @@ defaults:
 
 _target_: tracklab.wrappers.DanceTrack
 
+name: "dancetrack"
+nickname: "dt"
 dataset_path: ${data_dir}/DanceTrack
 eval_set: "val"
 public_dets_subpath: "det/yolox_dets.txt"

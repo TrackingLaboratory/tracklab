@@ -1552,7 +1552,7 @@ files = [
 ]
 
 [[package]]
-name = "kpreid"
+name = "torchreid"
 version = "1.2.5"
 description = "A library for deep learning person re-ID in PyTorch"
 optional = false

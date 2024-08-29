@@ -68,16 +68,13 @@ class MOT(TrackingDataset):
         video_list = [v for v in video_list if not v.startswith('.')]
         video_list.sort()
 
-        if nvid > 0:
-            video_list = video_list[:nvid]
-
         if vids_filter_set is not None and len(vids_filter_set) > 0:
             missing_videos = set(vids_filter_set) - set(video_list)
-            if missing_videos:
-                log.warning(
-                    f"Warning: The following videos provided in config 'dataset.vids_dict' do not exist in {split} set: {missing_videos}")
-
+            assert not missing_videos, f"The following videos provided in config 'dataset.vids_dict' do not exist in {split} set: {missing_videos}"
             video_list = [video for video in video_list if video in vids_filter_set]
+
+        if nvid > 0:
+            video_list = video_list[:nvid]
 
         image_counter = 0
         person_counter = 0

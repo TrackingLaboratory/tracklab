@@ -86,7 +86,7 @@ pip3 uninstall track-bench-track
 cd plugins/track/
 pip3 install -e .
 ```
-s`
+
 ### External dependencies
 
 - Get the **SoccerNet Tracking** dataset [here](https://github.com/SoccerNet/sn-tracking), rename the root folder as "SoccerNetMOT" and put it under the global dataset directory (specified under the `data_dir` config as explained below). Otherwise, you can modify the `dataset_path` config in [soccernet_mot.yaml](tracklab/configs/dataset/soccernet_mot.yaml) with your custom SoccerNet dataset directory.

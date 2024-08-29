@@ -2,8 +2,8 @@
 import numpy as np
 import torch
 
-from kpreid.metrics import compute_distance_matrix
-from kpreid.metrics.distance import compute_distance_matrix_using_bp_features
+from torchreid.metrics import compute_distance_matrix
+from torchreid.metrics.distance import compute_distance_matrix_using_bp_features
 from torch.nn import functional as F
 
 def _pdist(a, b):

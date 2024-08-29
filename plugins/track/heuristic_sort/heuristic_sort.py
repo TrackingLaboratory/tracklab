@@ -6,7 +6,7 @@ from scipy.optimize import linear_sum_assignment
 import cv2
 import torch
 from torch.nn import functional as F
-from kpreid.metrics.distance import compute_distance_matrix_using_bp_features
+from torchreid.metrics.distance import compute_distance_matrix_using_bp_features
 
 import logging
 

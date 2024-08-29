@@ -3,6 +3,8 @@ defaults:
 
 _target_: tracklab.wrappers.SportsMOT
 
+name: "sportsmot"
+nickname: "sm"
 dataset_path: ${data_dir}/SportsMOT
 eval_set: "val"
 
