@@ -74,3 +74,20 @@ class SomeOf(Transform):
             df = transform(df, video_df)
 
         return df
+
+class ProbabilisticTransform(Transform):
+    def __init__(self, transforms: List[Transform], probs: Optional[List[float]] = None):
+        super().__init__()
+        self.transforms = transforms
+        if probs is not None:
+            assert len(transforms) == len(probs), "Probs must have the same length as transforms."
+            self.probs = probs
+        else:
+            self.probs = [0.] * len(transforms)
+
+    def __call__(self, df: pd.DataFrame, video_df: pd.DataFrame):
+        self.set_rng()
+        for transform, prob in zip(self.transforms, self.probs):
+            if self.rng.random() < prob:
+                df = transform(df, video_df)
+        return df
