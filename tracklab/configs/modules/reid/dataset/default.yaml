@@ -1,13 +1,15 @@
-name: "PoseTrack21"
-nickname: "pt21"
+name: "${dataset.name}"
+nickname: "${dataset.nickname}"
+enable_human_parsing_labels: True
 fig_size: [384, 128]
 mask_size: [64, 32]
 max_crop_size: [256, 128]
 masks_mode: "pose_on_img_crops"
-enable_human_parsing_labels: False
 eval_metric: "default"  # {"mot_inter_intra_video", "mot_intra_video", "mot_inter_video"}
 multi_video_queries_only: False  # will be set to True by default if eval_metric is "mot_inter_video"
 columns: []
+sam_checkpoint: ""
+enable_sam: False
 
 train:
   set_name: "train"
