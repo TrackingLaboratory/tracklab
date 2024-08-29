@@ -11,7 +11,7 @@ defaults:
   - visualization: save_videos
   - modules/bbox_detector: yolox
   - modules/pose_topdown: hrnet_posetrack18
-  - modules/reid: bpbreid
+  - modules/reid: kpr
   - modules/track: dd_sort
   - _self_
 
