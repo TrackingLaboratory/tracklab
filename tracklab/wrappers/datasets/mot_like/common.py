@@ -25,8 +25,8 @@ class MOT(TrackingDataset):
 
         set_names = ['train', 'val', 'test']
         with Pool(processes=3) as pool:
-            args = [(set_name, self.dataset_path, nvid, vids_dict[set_name]) for set_name in set_names]
-            results = pool.map(self.load_set_wrapper, args)
+            pool_args = [(set_name, self.dataset_path, nvid, vids_dict[set_name]) for set_name in set_names]
+            results = pool.map(self.load_set_wrapper, pool_args)
 
         sets_dict = {set_name: result for set_name, result in results}
         super().__init__(dataset_path, sets_dict, nvid, nframes, vids_dict, *args, **kwargs)
