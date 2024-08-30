@@ -4652,9 +4652,9 @@ labels = ["detectron2 @ git+https://github.com/facebookresearch/detectron2.git",
 
 [package.source]
 type = "git"
-url = "https://github.com/VlSomers/bpbreid"
-reference = "HEAD"
-resolved_reference = "106ef5452e0737e0ec00b600c3b9e6127ce16eb6"
+url = "https://github.com/victorjoos/bpbreid"
+reference = "patch-1"
+resolved_reference = "3ea0c6a8f59c5c10b0c857e087e6f23f217fa829"
 
 [[package]]
 name = "torchvision"
@@ -5182,4 +5182,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "95eddef432784ffb4347224821bdbad515b535998110d83134ebf5eec8c4a2a5"
+content-hash = "8a975604ff7858f0ffb3b7069ffc6ec71e0a521b02b3da155cbca5eae762d66d"
