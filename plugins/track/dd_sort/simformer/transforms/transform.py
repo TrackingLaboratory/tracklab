@@ -2,6 +2,7 @@ from typing import List, Optional
 
 import numpy as np
 import pandas as pd
+from overrides import overrides
 from torch import nn
 
 
@@ -24,7 +25,9 @@ class Transform:
 
 
 class BatchTransform(Transform, nn.Module):
-    pass
+    @overrides
+    def __call__(self, batch):
+        raise NotImplementedError(f"{type(self).__name__} has not implemented the __call__ function.")
 
 
 class OfflineTransforms:
