@@ -209,11 +209,11 @@ datamodule:
     train: "${project_dir}/states/dancetrack-train.pklz"
     val: "${project_dir}/states/dancetrack-val.pklz"
   dataset_transforms:
-    - add_gt_poses
-    - add_gt_reid_embeddings
+#    - add_gt_poses
+#    - add_gt_reid_embeddings
+    - add_detections
+    - normalize2image
     - add_last_obs_counter
     - add_number_of_occlusions
-    - normalize2image
     #- add_crops
-    #- add_detections
     #- add_detections_with_id_switch
