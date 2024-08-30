@@ -149,14 +149,17 @@ def add_detections(df, metadatas, preds, tracker_state, **_):
     for image_id, image_df in df.groupby("image_id"):
         image_preds = preds.loc[preds.image_id == image_id].copy()
         disM = iou_matrix(np.array(image_df.bbox_ltwh.tolist()), np.array(image_preds.bbox_ltwh.tolist()),
-                          max_iou=0.5)  # np.stack crashed if len() == 0
+                          max_iou=0.3)  # np.stack crashed if len() == 0
         le, ri = linear_sum_assignment(disM)
 
-        image_preds["pred_track_id"] = image_preds["track_id"]
+        if "track_id" in image_preds.columns:
+            image_preds["pred_track_id"] = image_preds["track_id"]
         image_preds["track_id"] = -1 * np.arange(len(image_preds)) - 1
         image_preds["person_id"] = -1 * np.arange(len(image_preds)) - 1
+        image_preds["iou_dist_gt"] = np.nan
         image_preds["track_id"].iloc[ri] = image_df.track_id.iloc[le]
         image_preds["person_id"].iloc[ri] = image_df.person_id.iloc[le]
+        image_preds["iou_dist_gt"].iloc[ri] = disM[le, ri]
         new_preds.append(image_preds)
     new_df = merge_dataframes(pd.DataFrame(), new_preds)
     return new_df
