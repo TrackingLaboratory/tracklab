@@ -8,6 +8,7 @@ from tqdm import tqdm
 from pathlib import Path
 
 from tracklab.datastruct import TrackingDataset, TrackingSet
+from tracklab.utils import wandb
 
 log = logging.getLogger(__name__)
 
@@ -209,3 +210,21 @@ class MOT(TrackingDataset):
             tracking_set.detections_public = public_detections
 
         return tracking_set
+
+    def process_trackeval_results(self, results, dataset_config, eval_config):
+        if "SUMMARIES" in results and "pedestrian" in results["SUMMARIES"]:
+            res = {
+                f"tracking_summary/{k}": float(v) if '.' in v else int(v)
+                for _, metrics in results["SUMMARIES"]["pedestrian"].items()
+                for k, v in metrics.items()
+            }
+            wandb.log(res)
+
+        res_by_vid = {}
+        for video_name, video_data in results.items():
+            if video_name != "SUMMARIES":
+                for category, metrics in video_data["pedestrian"].items():
+                    for metric_name, metric_value in metrics.items():
+                        if not isinstance(metric_value, np.ndarray):  # Ignore np.array values
+                            res_by_vid[f"tracking_by_video/{video_name}/{metric_name}"] = metric_value
+        wandb.log(res_by_vid)

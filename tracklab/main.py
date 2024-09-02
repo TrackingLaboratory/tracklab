@@ -65,7 +65,7 @@ def main(cfg):
         if tracker_state.save_file is not None:
             log.info(f"Saved state at : {tracker_state.save_file.resolve()}")
 
-    close_enviroment()
+    close_environnement()
 
     return 0
 
@@ -80,7 +80,12 @@ def init_environment(cfg):
     # For Hydra and Slurm compatibility
     progress.use_rich = cfg.use_rich
     set_sharing_strategy()  # Do not touch
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # if torch.backends.mps.is_available():
+    #     device = "mps"
+    if torch.cuda.is_available():
+        device = "cuda"
+    else:
+        device = "cpu"
     log.info(f"Using device: '{device}'.")
     wandb.init(cfg)
     if cfg.print_config:
@@ -98,7 +103,7 @@ def init_environment(cfg):
     return device
 
 
-def close_enviroment():
+def close_environnement():
     wandb.finish()
 
 

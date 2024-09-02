@@ -5,7 +5,6 @@ import trackeval
 from pathlib import Path
 from tabulate import tabulate
 from tracklab.core import Evaluator as EvaluatorBase
-from tracklab.utils import wandb
 
 log = logging.getLogger(__name__)
 
@@ -101,8 +100,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         results = output_res[dataset.get_name()][tracker_name]
         # if the dataset has the process_trackeval_results method, use it to process the results
         if hasattr(self.tracking_dataset, 'process_trackeval_results'):
-            results = self.tracking_dataset.process_trackeval_results(results, dataset_config, eval_config)
-        wandb.log(results)
+            self.tracking_dataset.process_trackeval_results(results, dataset_config, eval_config)
 
 def _print_results(
     res_combined,

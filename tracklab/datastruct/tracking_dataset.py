@@ -5,6 +5,7 @@ from pathlib import Path
 from dataclasses import dataclass
 import pandas as pd
 
+from tracklab.utils import wandb
 
 log = logging.getLogger(__name__)
 
@@ -197,4 +198,4 @@ class TrackingDataset(ABC):
 
     def process_trackeval_results(self, results, dataset_config, eval_config):
         log.info(f"TrackEval results = {results}")
-        return results
+        wandb.log(results)
