@@ -2,6 +2,7 @@ from typing import List, Optional
 
 import numpy as np
 import pandas as pd
+from overrides import overrides
 from torch import nn
 
 
@@ -24,7 +25,9 @@ class Transform:
 
 
 class BatchTransform(Transform, nn.Module):
-    pass
+    @overrides
+    def __call__(self, batch):
+        raise NotImplementedError(f"{type(self).__name__} has not implemented the __call__ function.")
 
 
 class OfflineTransforms:
@@ -44,17 +47,18 @@ class Compose(Transform):
         super().__init__()
         self.transforms = transforms
 
-    def __call__(self, df: pd.DataFrame, video_df: pd.DataFrame):
+    def __call__(self, *args, **kwargs):
         self.set_rng()
+        a = args[0]
         for transform in self.transforms:
-            df = transform(df, video_df)
+            a = transform(*args, **kwargs)
 
-        return df
+        return a
 
 
 class NoOp(Transform):
-    def __call__(self, df, video_df):
-        return df
+    def __call__(self, *args, **kwargs):
+        return args[0]
 
 
 class SomeOf(Transform):
@@ -66,14 +70,15 @@ class SomeOf(Transform):
         self.min_choice = min_choice
         self.max_choice = max_choice or len(self.transforms)
 
-    def __call__(self, df: pd.DataFrame, video_df: pd.DataFrame):
+    def __call__(self, *args, **kwargs):
         self.set_rng()
+        a = args[0]
         size_choice = self.rng.integers(self.min_choice, self.max_choice)
         transforms = self.rng.choice(self.transforms, size=size_choice)
         for transform in transforms:
-            df = transform(df, video_df)
+            a = transform(*args, **kwargs)
 
-        return df
+        return a
 
 class ProbabilisticTransform(Transform):
     def __init__(self, transforms: List[Transform], probs: Optional[List[float]] = None):
@@ -85,9 +90,10 @@ class ProbabilisticTransform(Transform):
         else:
             self.probs = [0.] * len(transforms)
 
-    def __call__(self, df: pd.DataFrame, video_df: pd.DataFrame):
+    def __call__(self, *args, **kwargs):
         self.set_rng()
+        a = args[0]
         for transform, prob in zip(self.transforms, self.probs):
             if self.rng.random() < prob:
-                df = transform(df, video_df)
-        return df
+                a = transform(*args, **kwargs)
+        return a
