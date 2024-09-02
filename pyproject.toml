@@ -39,6 +39,7 @@ yt-dlp = ">2023.12.30"
 gdown = "^4.7.1"
 pandas = "^2.1.0"
 matplotlib = "<3.9.0"
+scikit-learn = "^1.5.1"
 
 [tool.poetry.scripts]
 tracklab = 'tracklab.main:main'
