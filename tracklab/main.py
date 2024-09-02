@@ -80,7 +80,12 @@ def init_environment(cfg):
     # For Hydra and Slurm compatibility
     progress.use_rich = cfg.use_rich
     set_sharing_strategy()  # Do not touch
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # if torch.backends.mps.is_available():
+    #     device = "mps"
+    if torch.cuda.is_available():
+        device = "cuda"
+    else:
+        device = "cpu"
     log.info(f"Using device: '{device}'.")
     wandb.init(cfg)
     if cfg.print_config:

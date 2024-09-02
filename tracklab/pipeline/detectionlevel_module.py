@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Any
 
+import torch
 import pandas as pd
 
 from tracklab.datastruct import EngineDatapipe
@@ -97,4 +98,5 @@ class DetectionLevelModule(Module):
             collate_fn=type(self).collate_fn,
             num_workers=engine.num_workers,
             persistent_workers=False,
+            #multiprocessing_context='fork' if torch.backends.mps.is_available() else None  # For mps
         )
