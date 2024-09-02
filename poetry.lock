@@ -4647,7 +4647,7 @@ description = "A library for deep learning person re-ID in PyTorch"
 optional = false
 python-versions = "*"
 files = []
-develop = true
+develop = false
 
 [package.dependencies]
 albumentations = "1.3.1"
@@ -4683,8 +4683,8 @@ yapf = "*"
 [package.source]
 type = "git"
 url = "git@github.com:VlSomers/person-reid.git"
-reference = "vic/torchmetrics-kprpr"
-resolved_reference = "17a854021f0326339ff7fb02a63adfd8acf49ea0"
+reference = "kpr-public-release"
+resolved_reference = "5a7b4267cc97a15a987721fee77b32b6b961fc43"
 
 [[package]]
 name = "torchvision"
@@ -5283,4 +5283,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "c098eb1c970f4d7d8e931b2389d8a8a6a5e446f29bd3c61d5e5896ead533c1eb"
+content-hash = "5c4ebfdcbe9022d482c68bc69e1bdd4f27efe2037936a1f32c56f148175da68e"
