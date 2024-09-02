@@ -8,7 +8,7 @@ packages = [{include = "tracklab"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-# openpifpaf = {git="https://github.com/PbTrack/openpifpaf", branch="pbtrack", develop=true, extras=["dev","train","test"]}
+openpifpaf = {git = "https://github.com/TrackingLaboratory/openpifpaf", branch="tracklab", develop=true}
 poseval = {git="https://github.com/TrackingLaboratory/poseval", branch="pbtrack", develop=true}
 posetrack21 = {path = "plugins/eval/PoseTrack21/posetrack21", develop = true}
 posetrack21_mot = {path = "plugins/eval/PoseTrack21/posetrack21_mot", develop = true}
