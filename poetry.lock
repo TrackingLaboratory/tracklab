@@ -1641,14 +1641,11 @@ python-versions = "*"
 files = []
 develop = false
 
-[package.extras]
-alldeps = ["numpy (>=1.10.1)"]
-
 [package.source]
 type = "git"
 url = "https://github.com/TrackingLaboratory/lap"
 reference = "HEAD"
-resolved_reference = "b02b664623fdfef5fd822b8ee0d1b2491ab945ed"
+resolved_reference = "6ec997bc248656e9e5247532bdb8e80e13038004"
 
 [[package]]
 name = "lazy-loader"
@@ -2847,7 +2844,7 @@ type = "directory"
 url = "plugins/eval/PoseTrack21/posetrack21"
 
 [[package]]
-name = "posetrack21_mot"
+name = "posetrack21-mot"
 version = "0.2"
 description = ""
 optional = false
