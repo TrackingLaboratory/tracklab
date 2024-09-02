@@ -310,7 +310,6 @@ class SimFormerDataModule(pl.LightningDataModule):
             if self.tracklet_transforms is not None and dataset_split in self.tracklet_transforms:
                 kwargs = dict(tracklet_transforms=self.tracklet_transforms[dataset_split], max_length=self.max_length)
             video_ids = [f"sample_{video_id}.pkl" for video_id in self.detections[dataset_split].video_id.unique()]
-            log.info(video_ids)
             self.datasets[dataset_split] = SimFormerDataset(
                 self.detections_paths[dataset_split],
                 self.dataset_configs[dataset_split],
