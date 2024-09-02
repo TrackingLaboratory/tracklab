@@ -65,7 +65,7 @@ def main(cfg):
         if tracker_state.save_file is not None:
             log.info(f"Saved state at : {tracker_state.save_file.resolve()}")
 
-    close_enviroment()
+    close_environnement()
 
     return 0
 
@@ -98,7 +98,7 @@ def init_environment(cfg):
     return device
 
 
-def close_enviroment():
+def close_environnement():
     wandb.finish()
 
 
