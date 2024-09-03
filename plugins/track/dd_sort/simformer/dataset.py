@@ -45,6 +45,7 @@ class SimFormerDataset(Dataset):
         self,
         gallery_path,
         config_file,
+        video_ids: List[str],
         tracklet_transforms: Optional[Transform] = None,
         max_length: int = 50,
     ):
@@ -56,6 +57,7 @@ class SimFormerDataset(Dataset):
         log.debug(f"gallery_path {self.gallery_path} cf {self.config_file}")
         with self.config_file.open() as fp:
             self.samples = json.load(fp)
+            self.samples = [s for s in self.samples if s["video_id"] in video_ids]
 
         self.count_ids = 0.0
 
@@ -307,8 +309,12 @@ class SimFormerDataModule(pl.LightningDataModule):
             kwargs = {}
             if self.tracklet_transforms is not None and dataset_split in self.tracklet_transforms:
                 kwargs = dict(tracklet_transforms=self.tracklet_transforms[dataset_split], max_length=self.max_length)
+            video_ids = [f"sample_{video_id}.pkl" for video_id in self.detections[dataset_split].video_id.unique()]
             self.datasets[dataset_split] = SimFormerDataset(
-                self.detections_paths[dataset_split], self.dataset_configs[dataset_split], **kwargs
+                self.detections_paths[dataset_split],
+                self.dataset_configs[dataset_split],
+                video_ids=video_ids,
+                **kwargs
             )
 
     def train_dataloader(self):

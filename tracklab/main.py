@@ -28,6 +28,8 @@ def main(cfg):
     tracking_dataset = instantiate(cfg.dataset)
     evaluator = instantiate(cfg.eval, tracking_dataset=tracking_dataset)
 
+    log.info(f"{tracking_dataset}")
+
     modules = []
     if cfg.pipeline is not None:
         for name in cfg.pipeline:
