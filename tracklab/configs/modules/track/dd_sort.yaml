@@ -133,7 +133,7 @@ simformer:
 
   merge_token_strat: sum
   sim_strat: cosine
-  assos_strat: hungarian
+  assos_strat: hungarian  # {hungarian; argmax}
   sim_threshold: 0.7  # sim_former similarity threshold for hungarian association (based on cosine distance of features). If 'null', threshold will be computed automatically
   tl_margin: 0.3  # margin for triplet loss
   loss_strat: triplet  # {triplet; infoNCE}

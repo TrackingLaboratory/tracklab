@@ -8,7 +8,7 @@ from hydra.utils import instantiate
 from omegaconf import DictConfig
 from pytorch_metric_learning import distances, losses, miners, reducers
 
-from .assignement_strats import hungarian_algorithm
+from .assignement_strats import hungarian_algorithm, argmax_algorithm
 from .callbacks import SimMetrics, ClsMetrics
 from .merge_token_strats import merge_token_strats
 from .similarity_metrics import similarity_metrics
@@ -107,6 +107,8 @@ class SimFormer(pl.LightningModule):
         # association
         if assos_strat == "hungarian":
             self.association = hungarian_algorithm
+        elif assos_strat == "argmax":
+            self.association = argmax_algorithm
         else:
             raise NotImplementedError
 

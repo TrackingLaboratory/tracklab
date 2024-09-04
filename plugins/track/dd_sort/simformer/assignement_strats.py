@@ -93,3 +93,73 @@ def greedy_assignment(td_sim_matrix, threshold):
             assigned_detections.add(j)
 
     return np.array(assignments) if len(assignments) > 0 else np.empty((0, 2), dtype=int)
+
+
+def argmax_algorithm(td_sim_matrix, valid_tracks, valid_dets, sim_threshold=0.0):
+    B, T, D = td_sim_matrix.shape
+    association_matrix = torch.zeros_like(td_sim_matrix, dtype=torch.bool)
+    association_result = []
+    for b in range(B):
+        if valid_tracks[b].sum() > 0 and valid_dets[b].sum() > 0:
+            sim_matrix_masked = td_sim_matrix[b, valid_tracks[b], :][:, valid_dets[b]]
+            sim_matrix_masked[sim_matrix_masked < sim_threshold] = 0.0
+            row_idx, col_idx = argmax_assignment(sim_matrix_masked.cpu())
+
+            valid_rows = torch.nonzero(valid_tracks[b]).squeeze(dim=1).cpu()
+            valid_cols = torch.nonzero(valid_dets[b]).squeeze(dim=1).cpu()
+            matched_td_indices = np.array(list(zip(valid_rows[row_idx], valid_cols[col_idx])))
+
+            unmatched_trackers = [t.item() for t in valid_rows if t.item() not in set(valid_rows[row_idx].tolist())]
+            unmatched_detections = [d.item() for d in valid_cols if d.item() not in set(valid_cols[col_idx].tolist())]
+
+            matches = []
+            for m in matched_td_indices:
+                if td_sim_matrix[b, m[0], m[1]] < sim_threshold:
+                    unmatched_trackers.append(m[0])
+                    unmatched_detections.append(m[1])
+                else:
+                    association_matrix[b, m[0], m[1]] = True
+                    matches.append(m)
+            matched_td_indices = np.array(matches)
+        else:
+            matched_td_indices = np.empty((0, 2), dtype=int)
+            unmatched_trackers = []
+            unmatched_detections = []
+            if valid_tracks[b].sum() > 0:
+                unmatched_trackers = torch.nonzero(valid_tracks[b]).squeeze(dim=1).tolist()
+            elif valid_dets[b].sum() > 0:
+                unmatched_detections = torch.nonzero(valid_dets[b]).squeeze(dim=1).tolist()
+        association_result.append(
+            {
+                "matched_td_indices": matched_td_indices,
+                "unmatched_trackers": unmatched_trackers,
+                "unmatched_detections": unmatched_detections,
+            }
+        )
+    return association_matrix, association_result
+
+def argmax_assignment(sim_matrix):
+    sim_matrix = sim_matrix.cpu()
+
+    col_idx = sim_matrix.argmax(dim=1).numpy()
+    row_idx = torch.arange(sim_matrix.size(0)).numpy()
+
+    assignment = {}
+    for i in range(len(row_idx)):
+        row = row_idx[i]
+        col = col_idx[i]
+        cost = sim_matrix[row, col].item()
+
+        if col in assignment:
+            prev_row, prev_cost = assignment[col]
+            if cost > prev_cost:
+                assignment[col] = (row, cost)
+        else:
+            assignment[col] = (row, cost)
+
+    final_row_idx = []
+    final_col_idx = []
+    for col, (row, cost) in assignment.items():
+        final_row_idx.append(row)
+        final_col_idx.append(col)
+    return final_row_idx, final_col_idx
