@@ -86,6 +86,7 @@ def load_annotations(anns_path):
         pd.DataFrame(detections_gt),
     )
 
+available_keypoints = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 
 def fix_formatting(
     video_metadatas, image_metadatas, detections_gt, dataset_path, posetrack_version
@@ -118,6 +119,8 @@ def fix_formatting(
         lambda x: np.reshape(np.array(x), (-1, 3))
     )
     detections_gt.set_index("id", drop=True, inplace=True)
+    # compute detection visiblity as average keypoints visibility
+    detections_gt["visibility"] = detections_gt.keypoints_xyc.apply(lambda x: x[available_keypoints, 2].mean())
     detections_gt = detections_gt.merge(
         image_metadatas[["video_id"]], how="left", left_on="image_id", right_index=True
     )
