@@ -63,10 +63,7 @@ class TrackingDataset(ABC):
         for set_name, split_idx in set_split_idxs.items():
             self.set_splits[set_name] = []
             self._split_set(set_name)
-            self.change_set_split(set_name, split_idx)
-
-    def change_set_split(self, set_name, split_idx):
-        self.sets[set_name] = self.set_splits[set_name][split_idx]
+            self.sets[set_name] = self.set_splits[set_name][split_idx]
 
     def _split_set(self, set_name, num_splits=2):
         video_groups = [[] for i in range(num_splits)]
@@ -247,5 +244,6 @@ class TrackingDataset(ABC):
     def __str__(self):
         set_str = []
         for set_name, set_data in self.sets.items():
-            set_str.append(f"{set_name} set: {len(set_data.video_metadatas)}")
+            if set_data is not None:
+                set_str.append(f"{set_name} set: {len(set_data.video_metadatas)}")
         return self.__class__.__name__ + "= " + "; ".join(set_str)
