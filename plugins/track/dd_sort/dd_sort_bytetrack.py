@@ -28,7 +28,7 @@ class TrackState(object):
 class Tracklet(object):
     _count = 0
 
-    def __init__(self, detection, frame_id, max_gallery_size):
+    def __init__(self, detection, frame_id, max_gallery_size, min_hits):
         """Init state"""
         self.last_det = detection
         self.detections = [detection]
@@ -39,11 +39,20 @@ class Tracklet(object):
         self.track_id = -1
 
         self.max_gallery_size = max_gallery_size
+        self.min_hits = min_hits
 
     def activate(self, detection, frame_id):
         """from Init to Tracked state"""
-        self.track_id = self.next_id()
-        self.update(detection, frame_id)
+        self.last_det = detection
+        self.detections.append(detection)
+        self.detections = self.detections[-self.max_gallery_size:]
+        self.score = detection.score
+        self.frame_id = frame_id
+        if len(self.detections) > self.min_hits:
+            self.state = TrackState.Tracked
+            self.track_id = self.next_id()
+        else:
+            self.state = TrackState.Init
 
     def update(self, detection, frame_id):
         """Stays in Tracked state"""
@@ -108,6 +117,7 @@ class DDSORTBYTETracker(object):
             det_low_thresh=0.1,
             max_time_lost=30,
             max_gallery_size=50,
+            min_hits=3,
             simformer_call_strat: str = "3call",
             **kwargs,
     ):
@@ -121,6 +131,7 @@ class DDSORTBYTETracker(object):
         self.det_low_thresh = det_low_thresh
         self.max_time_lost = max_time_lost
         self.max_gallery_size = max_gallery_size
+        self.min_hits = min_hits
 
         if simformer_call_strat == "3call":
             self.simformer_call_strat = self.three_call_simformer
@@ -271,7 +282,8 @@ class DDSORTBYTETracker(object):
             det.similarities = td_sim_matrix[:, idet]
             det.similarities_track_idx = [t.track_id for t in init_tracks_pool]
             track.activate(det, self.frame_id)
-            self.tracks.append(track)
+            if track.state == TrackState.Tracked:
+                self.tracks.append(track)
         # Init tracks not matched with any detection are marked as removed
         for itrack in u_unconfirmed:
             track = init_tracks_pool[itrack]
@@ -279,7 +291,7 @@ class DDSORTBYTETracker(object):
             # self.removed.append(track)  # fixme do we want to log the not confirmed tracks?
         # Remaining high score detections are used to create new tracks in init state
         for idet in u_dets_remain:
-            track = Tracklet(dets_remain[idet], self.frame_id, self.max_gallery_size)
+            track = Tracklet(dets_remain[idet], self.frame_id, self.max_gallery_size, self.min_hits)
             self.init.append(track)
         # Remove tracks that has not been matched for too long
         for track in self.lost:
@@ -406,7 +418,8 @@ class DDSORTBYTETracker(object):
             det.similarities = td_sim_matrix[0, :, idet]
             det.similarities_track_idx = [t.track_id for t in self.init]
             track.activate(det, self.frame_id)
-            self.tracks.append(track)
+            if track.state == TrackState.Tracked:
+                self.tracks.append(track)
         # Init tracks not matched with any detection are marked as removed
         for itrack in u_unconfirmed:
             track = tracklets[itrack]
@@ -414,7 +427,7 @@ class DDSORTBYTETracker(object):
             # self.removed.append(track)  # fixme do we want to log the not confirmed tracks?
         # Remaining high score detections are used to create new tracks in init state
         for idet in u_dets_remain:
-            track = Tracklet(detections[idet], self.frame_id, self.max_gallery_size)
+            track = Tracklet(detections[idet], self.frame_id, self.max_gallery_size, self.min_hits)
             self.init.append(track)
         # Remove tracks that has not been matched for too long
         for track in self.lost:
