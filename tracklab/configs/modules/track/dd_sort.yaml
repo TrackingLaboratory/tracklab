@@ -36,7 +36,8 @@ ddsort:
     det_low_thresh: 0.1  # low detection threshold
     max_time_lost: 100  # number of misses before removing from tracklet
     max_gallery_size: 50  # max number of observations in the gallery for each tracklet
-    simformer_call_strat: 3call  # {3call, 1call} 3call: call simformer 3 times, 1call: call simformer 1 time
+    min_hits: 1  # number of hits to become a tracklet
+    simformer_call_strat: 1call  # {3call, 1call} 3call: call simformer 3 times, 1call: call simformer 1 time
 
 det_filter_cfg:
   min_vis_keypoints: 1  # filter on inputs of the tracker
@@ -133,7 +134,7 @@ simformer:
 
   merge_token_strat: sum
   sim_strat: cosine
-  assos_strat: hungarian
+  assos_strat: hungarian  # {hungarian; argmax}
   sim_threshold: 0.7  # sim_former similarity threshold for hungarian association (based on cosine distance of features). If 'null', threshold will be computed automatically
   tl_margin: 0.3  # margin for triplet loss
   loss_strat: triplet  # {triplet; infoNCE}
