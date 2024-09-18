@@ -34,7 +34,7 @@ class LinearAppearance(Module):
 
     def forward(self, x):
         feats, masks = x.feats, x.feats_masks
-        feats = torch.cat([feats["embeddings"], feats["visibility_scores"]], dim=3)
+        feats = torch.cat([feats["embeddings"].flatten(start_dim=-2, end_dim=-1), feats["visibility_scores"]], dim=3)
         if self.enable_ll:
             tokens = torch.zeros(
                 (feats.shape[0], feats.shape[1], feats.shape[2], self.token_dim),
@@ -92,7 +92,7 @@ class SmartLinearAppearance(Module):
         embs, vis, masks = x.feats["embeddings"], x.feats["visibility_scores"], x.feats_masks
         if masks.shape[2] > 1:
             embs, vis, masks = self.smart(embs, vis, masks)
-        feats = torch.cat([embs, vis], dim=3)
+        feats = torch.cat([embs.flatten(start_dim=-2, end_dim=-1), vis], dim=3)
         if self.enable_ll:
             tokens = torch.zeros(
                 (embs.shape[0], embs.shape[1], 1, self.token_dim),
@@ -107,26 +107,14 @@ class SmartLinearAppearance(Module):
 
     def smart(self, embs, vis, masks, alpha=0.9):
         """
-        :param embs: [B, N, T, 1792]
-        :param vis: [B, N, T, 7]
+        :param embs: [B, N, T, num_parts, emb_dim]
+        :param vis: [B, N, T, num_parts]
         :param masks: [B, N, T]
-        :return: new_embs [B, N, 1, 1792], new_vis [B, N, 1, 7], new_masks [B, N, 1]
+        :return: new_embs [B, N, 1, num_parts, emb_dim], new_vis [B, N, 1, num_parts], new_masks [B, N, 1]
         """
         # FIXME batch it
-        if embs.shape[-1] == 1792:  # FIXME temporary fix to handle two different reid models
-            feature_dim = 256
-            num_parts = 7
-        elif embs.shape[-1] == 3072:
-            feature_dim = 512
-            num_parts = 6
-        elif embs.shape[-1] == 512:
-            feature_dim = 256
-            num_parts = 2
-        else:
-            feature_dim = 512
-            num_parts = 9
         new_embeddings = torch.zeros(
-            (embs.shape[0], embs.shape[1], 1, embs.shape[3]),
+            (embs.shape[0], embs.shape[1], 1, embs.shape[-2], embs.shape[-1]),
             device=embs.device,
             dtype=torch.float32,
         )
@@ -140,8 +128,8 @@ class SmartLinearAppearance(Module):
             for n in range(masks.shape[1]):
                 for t in range(masks.shape[2]):
                     if masks[b, n, t]:
-                        tracklet_features = new_embeddings[b, n, 0].reshape((num_parts, feature_dim))
-                        detection_features = embs[b, n, t].reshape((num_parts, feature_dim))
+                        tracklet_features = new_embeddings[b, n, 0]
+                        detection_features = embs[b, n, t]
 
                         xor = torch.logical_xor(new_vis[b, n, 0], vis[b, n, t])
                         ema_scores_tracklet = (
@@ -151,10 +139,10 @@ class SmartLinearAppearance(Module):
                             1 - alpha
                         ) + xor * vis[b, n, t]
                         smooth_feat = (
-                            ema_scores_tracklet.unsqueeze(dim=1) * tracklet_features
-                            + ema_scores_detection.unsqueeze(dim=1) * detection_features
+                            ema_scores_tracklet.unsqueeze(1) * tracklet_features
+                            + ema_scores_detection.unsqueeze(1) * detection_features
                         )
-                        new_embeddings[b, n, 0] = smooth_feat.reshape(-1)
+                        new_embeddings[b, n, 0] = smooth_feat
 
                         smooth_visibility_scores = torch.maximum(new_vis[b, n, 0], vis[b, n, t])
                         new_vis[b, n, 0] = smooth_visibility_scores

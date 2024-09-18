@@ -33,12 +33,12 @@ def set_worker_sharing_strategy(worker_id: int) -> None:
 
 class SimFormerDataset(Dataset):
     feature_columns = [
+        ("age", 1),
         ("bbox_ltwh", 4),
         ("bbox_conf", 1),
         ("keypoints_xyc", (17, 3)),
         ("visibility_scores", 6),
-        ("age", 1),
-        ("embeddings", 3072),
+        ("embeddings", (6, 128)),
     ]
 
     def __init__(
@@ -112,12 +112,13 @@ class SimFormerDataset(Dataset):
         for feature_name, feature_dim in self.feature_columns:
             if len(df) > 0:
                 feature = np.stack(df[feature_name]).astype(np.float32)
-                if feature_name == "keypoints_xyc":  # TODO nicer solution?
+                if feature_name in ["keypoints_xyc", "embeddings"]:  # TODO nicer solution?
                     features[feature_name] = feature
                 else:
                     features[feature_name] = feature.reshape(len(df), -1)
             else:
-                dim = (0, feature_dim) if feature_name != "keypoints_xyc" else (0, *feature_dim)
+                dim = (0, feature_dim) if feature_name not in ["keypoints_xyc", "embeddings"] \
+                    else (0, *feature_dim)
                 features[feature_name] = np.empty(dim, dtype=np.float32)
         features["index"] = df.index.to_numpy()
         targets = np.array(df["person_id"].to_numpy().astype(np.float32))
@@ -143,7 +144,7 @@ class SimFormerDataset(Dataset):
 def empty_features(feature_columns):
     features = {}
     for feature_name, feature_dim in feature_columns:
-        dim = (0, feature_dim) if feature_name != "keypoints_xyc" else (0, *feature_dim)
+        dim = (0, feature_dim) if feature_name not in ["keypoints_xyc", "embeddings"] else (0, *feature_dim)
         features[feature_name] = np.empty(dim, dtype=np.float32)
     features["index"] = np.empty((0,), dtype=np.int64)
     return features

@@ -108,13 +108,18 @@ simformer:
       checkpoint_path: null  # override the weights of this module using this path
       use_only_det_tokenizer: False  # do not use the transformer encoder to encode the tracklets (used to train the det_tokenizer)
       det_tokenizer:
-        _target_: dd_sort.SepLinProjSum  # {CatMLP, CatLinProj, SepLinProjSum}
-        use_app: True
-        app_feat_dim: 3078
-        use_st: True
-        st_feat_dim: 55
+        _target_: dd_sort.DetTokenizer
+        _recursive_: False
         token_dim: ${..emb_dim}
-        dropout: ${..dropout}
+        feats_tokenizers:
+          - _target_: dd_sort.BBoxLinProj
+            use_conf: True
+          - _target_: dd_sort.KeypointsLinProj
+            use_conf: True
+          - _target_: dd_sort.EmbeddingsLinProj
+            use_parts: False
+            num_parts: 5
+            emb_size: 512
 
   classifier_cfg: null
     # null for no classifier

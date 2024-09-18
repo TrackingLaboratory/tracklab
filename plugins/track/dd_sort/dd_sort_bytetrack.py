@@ -492,7 +492,7 @@ def build_simformer_batch(tracklets, detections, device, image, frame_count):
             .unsqueeze(1)
             .unsqueeze(0)
             .to(device=device),  # [1, N, 1, 7]
-            "embeddings": torch.stack([det.embeddings.flatten() for det in detections])  # FIXME no flatten
+            "embeddings": torch.stack([det.embeddings for det in detections])  # FIXME no flatten
             .unsqueeze(1)
             .unsqueeze(0)
             .to(device=device),  # [1, N, 1, 7*D]
@@ -525,12 +525,7 @@ def build_simformer_batch(tracklets, detections, device, image, frame_count):
             )
             .unsqueeze(0)
             .to(device=device),  # [1, N, T, 7]
-            "embeddings": torch.stack(
-                [
-                    t.padded_features("embeddings", T_max).flatten(start_dim=1, end_dim=2)
-                    for t in tracklets
-                ]
-            )
+            "embeddings": torch.stack([t.padded_features("embeddings", T_max) for t in tracklets])
             .unsqueeze(0)
             .to(device=device),  # [1, N, T, 7*D]
             "index": torch.stack([t.padded_features("pbtrack_id", T_max) for t in tracklets])

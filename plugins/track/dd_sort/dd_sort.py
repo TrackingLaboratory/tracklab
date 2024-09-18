@@ -223,7 +223,7 @@ class DDSORT(object):
             "det_feats": {
                 'visibility_scores': torch.stack([det.visibility_scores for det in detections]).unsqueeze(1).unsqueeze(
                     0).to(device=device),  # [1, N, 1, 7]
-                'embeddings': torch.stack([det.embeddings.flatten() for det in detections]).unsqueeze(1).unsqueeze(
+                'embeddings': torch.stack([det.embeddings for det in detections]).unsqueeze(1).unsqueeze(
                     0).to(device=device),  # [1, N, 1, 7*D]
                 'index': torch.IntTensor([det.pbtrack_id for det in detections]).unsqueeze(1).unsqueeze(0).to(
                     device=device),  # [1, N, 1]
@@ -242,7 +242,7 @@ class DDSORT(object):
                     [t.padded_features("visibility_scores", T_max) for t in tracklets]).unsqueeze(0).to(device=device),
                 # [1, N, T, 7]
                 'embeddings': torch.stack(
-                    [t.padded_features("embeddings", T_max).flatten(start_dim=1, end_dim=2) for t in
+                    [t.padded_features("embeddings", T_max) for t in
                      tracklets]).unsqueeze(0).to(device=device),  # [1, N, T, 7*D]
                 'index': torch.stack([t.padded_features("pbtrack_id", T_max) for t in tracklets]).unsqueeze(0).to(
                     device=device),  # [1, N, T]
