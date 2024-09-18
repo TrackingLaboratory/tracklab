@@ -118,8 +118,6 @@ simformer:
             use_conf: True
           - _target_: dd_sort.EmbeddingsLinProj
             use_parts: False
-            num_parts: 5
-            emb_size: 512
 
   classifier_cfg: null
     # null for no classifier
