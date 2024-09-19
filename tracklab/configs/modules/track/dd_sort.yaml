@@ -149,25 +149,6 @@ simformer:
     weight_decay: 1e-3
     alpha_loss: 1.0
 
-  batch_transforms:
-    train:
-      _target_: dd_sort.simformer.transforms.Compose
-      transforms:
-        - _target_: dd_sort.simformer.transforms.AppEmbNoise
-          alpha: 0.1
-        - _target_: dd_sort.simformer.transforms.KeypointsShake
-          alpha: 0.05
-        - _target_: dd_sort.simformer.transforms.BBoxShake
-          alpha: 0.1
-        - _target_: dd_sort.simformer.transforms.FeatsDetDropout
-          p_drop: 0.1  # probability of dropping a feature from the detections
-          allowed_feats:  # list of features that can be dropped
-            - "bbox_ltwh"
-            - "keypoints_xyc"
-            - "embeddings"
-            - "visibility_scores"
-          on_track_only: True  # apply the dropout only on the tracklet features (not on the detections)
-
 datamodule:
   _target_: dd_sort.SimFormerDataModule
 
@@ -186,7 +167,7 @@ datamodule:
         - _target_: dd_sort.simformer.transforms.MaxTrackletObs
           max_obs: 200
         - _target_: dd_sort.simformer.transforms.ProbabilisticTransform
-          probs: [0.5, 0.5]
+          probs: [0.5]
           transforms:
           - _target_: dd_sort.simformer.transforms.SwapRandomDetections
             p_swap: 0.1
@@ -220,7 +201,6 @@ datamodule:
             - "embeddings"
             - "visibility_scores"
           on_track_only: True  # apply the dropout only on the tracklet features (not on the detections)
-
   ## Dataset generation (for the .pklz files)
   dataset_splits: # should be a list containing train/val/test
     - train
