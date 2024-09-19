@@ -13,6 +13,7 @@ from matplotlib import patches, pyplot as plt
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 from pathlib import Path
 
+from dd_sort import SimFormer
 from tracklab.utils import coordinates
 from tracklab.utils.cv2 import cv2_load_image, draw_text
 
@@ -37,7 +38,8 @@ class VisualizeTrackletBatches(pl.Callback):
         step = "train"
         if step not in self.enabled_steps:
             return
-        self.display_batch(batch, outputs, step, batch_idx)
+        association_matrix, association_result = self.compute_association(pl_module, outputs)
+        self.display_batch(batch, outputs, association_result, step, batch_idx)
 
     def on_validation_batch_end(
         self,
@@ -51,9 +53,18 @@ class VisualizeTrackletBatches(pl.Callback):
         step = "val"
         if step not in self.enabled_steps:
             return
-        self.display_batch(batch, outputs, step, batch_idx)
+        association_matrix, association_result = self.compute_association(pl_module, outputs)
+        self.display_batch(batch, outputs, association_result, step, batch_idx)
 
-    def display_batch(self, batch, outputs, step, batch_idx) -> None:
+    @staticmethod
+    def compute_association(pl_module: SimFormer, outputs):
+        tracks = outputs["tracks"]
+        dets = outputs["dets"]
+        threshold = pl_module.sim_threshold if pl_module.sim_threshold else pl_module.computed_sim_threshold2
+        association = pl_module.association(outputs["td_sim_matrix"].detach(), tracks.masks, dets.masks, sim_threshold=threshold)
+        return association
+
+    def display_batch(self, batch, outputs, association_result, step, batch_idx) -> None:
         output_images = []
         batch_size = self.batch_size or len(batch["image_id"])
         for sample_idx in range(batch_size):
@@ -79,7 +90,7 @@ class VisualizeTrackletBatches(pl.Callback):
 
             output_image = self.display_sample(batch, sample_idx, image_path,
                                                track_image_paths,
-                                               track_image_paths_dict)
+                                               track_image_paths_dict, association_result[sample_idx])
             output_images.append(output_image)
 
         max_height = max([i.shape[0] for i in output_images])
@@ -100,7 +111,7 @@ class VisualizeTrackletBatches(pl.Callback):
         plt.close()
 
     def display_sample(self, batch, sample_idx, image_path, track_image_paths,
-                       track_image_paths_dict):
+                       track_image_paths_dict, association_result):
         target_image = cv2_load_image(image_path)
         track_images_dict = {}
         image_per_age = {}
@@ -133,7 +144,8 @@ class VisualizeTrackletBatches(pl.Callback):
                                        batch["det_targets"][sample_idx],
                                        batch["det_feats"]["bbox_ltwh"][sample_idx],
                                        age=0,
-                                       index=len(ages)
+                                       index=len(ages),
+                                       association_result=association_result
                                        )
         output_images.append(target_image)
 
@@ -155,7 +167,7 @@ class VisualizeTrackletBatches(pl.Callback):
         #     cv2.polylines(output_image, [tracklet_line], isClosed=False, color=color, thickness=2)
         return output_image
 
-    def draw_frame(self, image, dets, track_ids, bboxes, age, index):
+    def draw_frame(self, image, dets, track_ids, bboxes, age, index, association_result=None):
         for det_track, det_idx in dets:
             track_id = int(track_ids[
                                det_track, det_idx])  # batch["track_targets"][sample_idx, det_track, det_idx])
