@@ -1,3 +1,8 @@
+import logging
+from collections import defaultdict
+from itertools import accumulate
+
+import cv2
 import pytorch_lightning as pl
 import numpy as np
 import torch
@@ -6,7 +11,182 @@ from typing import Optional, Any
 from PIL import Image
 from matplotlib import patches, pyplot as plt
 from pytorch_lightning.utilities.types import STEP_OUTPUT
+from pathlib import Path
 
+from tracklab.utils import coordinates
+from tracklab.utils.cv2 import cv2_load_image, draw_text
+
+log = logging.getLogger(__name__)
+
+
+class VisualizeTrackletBatches(pl.Callback):
+    def __init__(self, tracking_sets, enabled_steps=None, max_batch_size=None, max_frames=None):
+        self.tracking_sets = tracking_sets
+        self.enabled_steps = enabled_steps
+        self.epoch = 0
+        self.batch_size = max_batch_size
+        self.max_frames = max_frames
+
+    def on_train_epoch_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self.epoch += 1
+
+    def on_train_batch_end(
+            self, trainer: "pl.Trainer", pl_module: "pl.LightningModule",
+            outputs: STEP_OUTPUT, batch: Any, batch_idx: int
+    ) -> None:
+        step = "train"
+        if step not in self.enabled_steps:
+            return
+        self.display_batch(batch, outputs, step, batch_idx)
+
+    def display_batch(self, batch, outputs, step, batch_idx) -> None:
+        output_images = []
+        batch_size = self.batch_size or len(batch["image_id"])
+        for sample_idx in range(batch_size):
+            image_id = batch['image_id'][sample_idx, 0, 0].cpu().numpy()
+            track_image_paths = []
+            track_image_paths_dict = {}
+            if image_id == -1:
+                continue
+            image_path = self.tracking_sets[step].image_metadatas.loc[
+                image_id].file_path
+            for track_idx in range(len(batch["image_id"][sample_idx])):
+                track_image_paths.append([])
+                for det_idx in range(
+                        len(batch["track_feats"]["image_id"][sample_idx, track_idx])):
+                    img_id = batch["track_feats"]["image_id"][
+                        sample_idx, track_idx, det_idx, 0].cpu().numpy()
+                    if np.isnan(img_id):
+                        continue
+                    img_path = self.tracking_sets[step].image_metadatas.loc[
+                        img_id].file_path
+                    track_image_paths[track_idx].append(img_path)
+                    track_image_paths_dict[track_idx, det_idx] = img_path
+
+            output_image = self.display_sample(batch, sample_idx, image_path,
+                                               track_image_paths,
+                                               track_image_paths_dict)
+            output_images.append(output_image)
+
+        max_height = max([i.shape[0] for i in output_images])
+        fig, axs = plt.subplots(ncols=len(output_images),
+                                # figsize=(int(max_height/1080)*5, 3*len(output_images)),
+                                figsize=(
+                                6 * len(output_images), int(max_height / 1080) * 5),
+                                # sharey=True,
+                                squeeze=False,
+                                layout="constrained")
+        axs = axs.flatten()
+        for image, ax in zip(output_images, axs):
+            ax.imshow(image)
+            ax.set_anchor("N")
+        save_path = Path(f"visualization/{step}_epoch{self.epoch}_{batch_idx}.pdf")
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(save_path)
+        plt.close()
+
+    def display_sample(self, batch, sample_idx, image_path, track_image_paths,
+                       track_image_paths_dict):
+        target_image = cv2_load_image(image_path)
+        track_images_dict = {}
+        image_per_age = {}
+        dets_per_age = defaultdict(list)
+        for k, track_image_path in track_image_paths_dict.items():
+            age = int(batch["track_feats"]["age"][sample_idx, k[0], k[1]])
+            if age not in image_per_age:
+                image_per_age[age] = cv2_load_image(track_image_path)
+            track_images_dict[k] = image_per_age[
+                age]  # cv2_load_image(track_image_path)
+            dets_per_age[age].append(k)
+
+        track_ids = []
+        ages = sorted(image_per_age.keys(), reverse=False)
+        num_images = len(ages)
+        cols = 4
+        rows = int(np.ceil(num_images / cols))
+        grid_size = int(np.ceil(np.sqrt(num_images)))
+        img_h = target_image.shape[0]
+        self.track_ids = []
+        self.tracklet_lines = defaultdict(list)
+        self.tracklet_colors = {}
+        output_images = []
+
+        target_image = self.draw_frame(target_image,
+                                       [(i, 0) for i in
+                                        range(len(batch["det_targets"][sample_idx])) if
+                                        not np.isnan(
+                                            batch["det_targets"][sample_idx, i].cpu())],
+                                       batch["det_targets"][sample_idx],
+                                       batch["det_feats"]["bbox_ltwh"][sample_idx],
+                                       age=0,
+                                       index=len(ages)
+                                       )
+        output_images.append(target_image)
+
+        for i, age in enumerate(ages):
+            if self.max_frames is not None and i > self.max_frames:
+                break
+            image = image_per_age[age]
+            out_image = self.draw_frame(image, dets_per_age[age],
+                                        batch["track_targets"][sample_idx],
+                                        batch["track_feats"]["bbox_ltwh"][sample_idx],
+                                        age, i)
+            output_images.append(image)
+
+
+        output_image = np.concatenate(output_images, axis=0)
+        # for track_id, tracklet_line in self.tracklet_lines.items():
+        #     color = self.tracklet_colors[track_id]
+        #     tracklet_line = np.array(tracklet_line)
+        #     cv2.polylines(output_image, [tracklet_line], isClosed=False, color=color, thickness=2)
+        return output_image
+
+    def draw_frame(self, image, dets, track_ids, bboxes, age, index):
+        for det_track, det_idx in dets:
+            track_id = int(track_ids[
+                               det_track, det_idx])  # batch["track_targets"][sample_idx, det_track, det_idx])
+            if track_id not in self.track_ids:
+                self.track_ids.append(track_id)
+                self.tracklet_colors[track_id] = np.array(
+                    plt.cm.tab10(self.track_ids.index(track_id))) * 255
+            color = self.tracklet_colors[
+                track_id]  # np.array(plt.cm.tab10(track_ids.index(track_id))) * 255
+            det = bboxes[
+                det_track, det_idx].cpu().numpy()  # batch["track_feats"]["bbox_ltwh"][sample_idx, det_track, det_idx]
+            ltrb = coordinates.bbox_ltwh2ltrb(det * np.array(
+                [image.shape[1], image.shape[0], image.shape[1], image.shape[0]]))
+            l, t, r, b = [int(x) for x in ltrb]
+            center = (np.mean((l, r)).astype(int), (np.mean((t, b)).astype(int) + (
+                        index * image.shape[
+                    0])))  # find the center of the bbox modified by image position
+            self.tracklet_lines[track_id].append(center)
+            cv2.rectangle(image, (l, t), (r, b), color=color, thickness=3)
+            draw_text(
+                image,
+                f"ID: {track_id}",
+                (r - 5, t - 15),
+                fontFace=cv2.FONT_HERSHEY_DUPLEX,
+                fontScale=1,
+                thickness=1,
+                alignH="r",
+                alignV="t",
+                color_txt=color,
+                color_bg=(255, 255, 255),
+                alpha_bg=0.5,
+            )
+        draw_text(image,
+                  f"AGE: {age}",
+                  (20, 20),
+                  fontFace=cv2.FONT_HERSHEY_DUPLEX,
+                  fontScale=1,
+                  thickness=1,
+                  alignH="l",
+                  alignV="t",
+                  color_txt=(0, 0, 0),
+                  color_bg=(255, 255, 255),
+                  alpha_bg=0.5,
+                  )
+        return image
 
 class DisplayBatchSamples(pl.Callback):
     def __init__(self, tracking_sets, plot=False, enabled_steps=None):
@@ -66,7 +246,6 @@ class DisplayBatchSamples(pl.Callback):
         if step not in self.enabled_steps:
             return
         self.display_batch(batch, outputs, step)
-        pass
 
     def display_batch(self, batch, outputs, step):
         image_ids = batch['image_id'][:, 0, 0].cpu().numpy()

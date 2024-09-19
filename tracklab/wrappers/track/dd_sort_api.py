@@ -33,6 +33,7 @@ class DDSORT(ImageLevelModule):
         tracking_dataset,
         override_cfg=None,
         training_enabled: bool = False,
+        callbacks=None,
         **kwargs,
     ):
         super().__init__(batch_size=1)
@@ -46,6 +47,7 @@ class DDSORT(ImageLevelModule):
         self.override_cfg = override_cfg
         self.datamodule_cfg = datamodule
         self.training_enabled = training_enabled
+        self.callbacks = callbacks
 
         if checkpoint_path:
             self.simformer = type(self.simformer).load_from_checkpoint(
@@ -130,6 +132,8 @@ class DDSORT(ImageLevelModule):
             PairsStatistics(),
             pl.callbacks.EarlyStopping(monitor="val/loss", patience=5, mode="min", check_on_train_epoch_end=False),
         ]
+        if self.callbacks is not None:
+            callbacks.extend([instantiate(cb, tracking_sets=self.datamodule.tracking_sets) for cb in self.callbacks])
         if self.train_cfg.use_rich:
             callbacks.append(pl.callbacks.RichProgressBar())
         if self.train_cfg.use_wandb:
