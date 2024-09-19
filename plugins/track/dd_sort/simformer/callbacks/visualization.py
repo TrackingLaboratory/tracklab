@@ -71,6 +71,7 @@ class VisualizeTrackletBatches(pl.Callback):
     def display_batch(self, batch, outputs, association_result, step, batch_idx) -> None:
         output_images = []
         batch_size = self.batch_size or len(batch["image_id"])
+        file_names = []
         for sample_idx in range(batch_size):
             image_id = batch['image_id'][sample_idx, 0, 0].cpu().numpy()
             track_image_paths = []
@@ -79,6 +80,7 @@ class VisualizeTrackletBatches(pl.Callback):
                 continue
             image_path = self.tracking_sets[step].image_metadatas.loc[
                 image_id].file_path
+            file_names.append(f"{Path(image_path).parents[1].name}/{Path(image_path).name}")
             for track_idx in range(len(batch["image_id"][sample_idx])):
                 track_image_paths.append([])
                 for det_idx in range(
@@ -106,8 +108,9 @@ class VisualizeTrackletBatches(pl.Callback):
                                 squeeze=False,
                                 layout="constrained")
         axs = axs.flatten()
-        for image, ax in zip(output_images, axs):
+        for name, image, ax in zip(file_names, output_images, axs):
             ax.imshow(image)
+            ax.set_title(name)
             ax.set_anchor("N")
         save_path = Path(f"visualization/{step}_epoch{self.epoch}_{batch_idx}.pdf")
         save_path.parent.mkdir(parents=True, exist_ok=True)
