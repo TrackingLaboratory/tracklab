@@ -39,6 +39,20 @@ class VisualizeTrackletBatches(pl.Callback):
             return
         self.display_batch(batch, outputs, step, batch_idx)
 
+    def on_validation_batch_end(
+        self,
+        trainer: "pl.Trainer",
+        pl_module: "pl.LightningModule",
+        outputs: STEP_OUTPUT,
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int = 0,
+    ) -> None:
+        step = "val"
+        if step not in self.enabled_steps:
+            return
+        self.display_batch(batch, outputs, step, batch_idx)
+
     def display_batch(self, batch, outputs, step, batch_idx) -> None:
         output_images = []
         batch_size = self.batch_size or len(batch["image_id"])
