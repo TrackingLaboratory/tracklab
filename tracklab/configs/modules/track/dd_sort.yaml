@@ -201,6 +201,7 @@ datamodule:
             - "embeddings"
             - "visibility_scores"
           on_track_only: True  # apply the dropout only on the tracklet features (not on the detections)
+          dropout_type: "random" # "random", "zeroes"
   ## Dataset generation (for the .pklz files)
   dataset_splits: # should be a list containing train/val/test
     - train

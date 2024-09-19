@@ -15,11 +15,13 @@ class FeatsDetDropout(BatchTransform):
         track_targets : torch.Tensor [B, N, T] (padded are nan)
     """
 
-    def __init__(self, p_drop: float = 0.1, allowed_feats: list = [], on_track_only: bool = False):
+    def __init__(self, p_drop: float = 0.1, allowed_feats: list = [],
+                 on_track_only: bool = False, dropout_type: str = "random"):
         super().__init__()
         self.p_drop = p_drop
         self.allowed_feats = allowed_feats
         self.on_track_only = on_track_only
+        self.dropout_type = dropout_type
 
     def __call__(self, batch):
         if 'det_feats' in batch and not self.on_track_only:
@@ -38,8 +40,24 @@ class FeatsDetDropout(BatchTransform):
                                      device=targets.device)
         for i, feat in enumerate(features):
             if feat in self.allowed_feats:
-                features[feat][drop_mask & (dropped_feat == i)] = 0.
+                min_feat, max_feat = nanmin(features[feat]), nanmax(features[feat])
+                if self.dropout_type == "random" and min_feat < max_feat:
+                    values = torch.distributions.uniform.Uniform(min_feat, max_feat).sample(features[feat][drop_mask & (dropped_feat == i)].shape)
+                else:
+                    values = 0.
+                features[feat][drop_mask & (dropped_feat == i)] = values
         return features
+
+def nanmax(tensor):
+    min_value = torch.finfo(tensor.dtype).min
+    output = tensor.nan_to_num(min_value).max()
+    return output
+
+
+def nanmin(tensor):
+    max_value = torch.finfo(tensor.dtype).max
+    output = tensor.nan_to_num(max_value).min()
+    return output
 
 
 class AppEmbNoise(BatchTransform):
