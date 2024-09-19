@@ -223,6 +223,7 @@ class SimFormerDataModule(pl.LightningDataModule):
             max_length: int = 50,
             dataset_transforms: List[Callable] = ("normalize2image",),
             tracklet_transforms: Optional[Dict[str, Transform]] = None,
+            batch_transforms: Optional[Dict[str, Transform]] = None,
             pipeline: Pipeline = None,
             tracker_states: Dict[str, Path] = None,
             batch_size: int = 128,
@@ -276,6 +277,7 @@ class SimFormerDataModule(pl.LightningDataModule):
             )
         self.dataset_transforms = OfflineTransforms.get_transforms(dataset_transforms) if dataset_transforms else []
         self.tracklet_transforms = tracklet_transforms
+        self.batch_transforms = batch_transforms
         self.datasets = {}
         self.pipeline = pipeline
         self.tracker_states = tracker_states
@@ -351,6 +353,21 @@ class SimFormerDataModule(pl.LightningDataModule):
             worker_init_fn=set_worker_sharing_strategy,
             pin_memory=True,
         )
+
+    def on_before_batch_transfer(self, batch: Any, dataloader_idx: int) -> Any:
+        return batch
+
+    def on_after_batch_transfer(self, batch: Any, dataloader_idx: int) -> Any:
+        split = "val"
+        if self.trainer.validating:
+            split = "val"
+        elif self.trainer.testing:
+            split = "test"
+        elif self.trainer.training:
+            split = "train"
+        if split in self.batch_transforms:
+            batch = self.batch_transforms[split](batch)
+        return batch
 
     def generate_detections(self, detections, metadatas, ds_split):
         detections = detections[ds_split]
