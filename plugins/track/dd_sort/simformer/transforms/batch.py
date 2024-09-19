@@ -182,13 +182,22 @@ class KeypointsShake(BatchTransform):
 
 class SwapDetections(BatchTransform):
 
-    def __init__(self, swap_prob=0.1):
+    def __init__(self, swap_prob=0.1, max_proportion=0.3):
         super().__init__()
         self.swap_prob = swap_prob
+        self.max_prop = max_proportion
 
     def __call__(self, batch):
         batch_ages = batch["track_feats"]["age"]
         swap_mask = torch.rand(batch_ages.shape, device=batch_ages.device) < self.swap_prob
+        prop = self.max_prop
+        indices_over = ((swap_mask.count_nonzero(dim=2)/swap_mask.shape[2])[:,:,0]>prop).nonzero()
+        for idxs in indices_over:
+            a = swap_mask[idxs[0], idxs[1], :, 0]
+            indices = torch.nonzero(a)[:,0]
+            excess = int(len(indices) - swap_mask.shape[2]*prop)
+            indices = indices[:excess]
+            swap_mask[idxs[0], idxs[1], indices, 0] = False
         for b_idx in range(batch_ages.shape[0]):
             unique_ages = torch.unique(batch_ages[b_idx])
             unique_ages = unique_ages[~torch.isnan(unique_ages)]
@@ -197,7 +206,7 @@ class SwapDetections(BatchTransform):
                 positions = age_mask.nonzero()
                 # log.info(f"pos ({len(positions)}): {positions}")
                 if len(positions) < 2:
-                    log.info(f"Not enough positions to swap age {age} sample {b_idx}")
+                    log.debug(f"Not enough positions to swap age {age} sample {b_idx}")
                     continue
                 perm = torch.randperm(len(positions))
                 while not torch.all(perm[:-1]>perm[1:]):

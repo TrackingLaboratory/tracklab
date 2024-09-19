@@ -180,7 +180,8 @@ datamodule:
       _target_: dd_sort.simformer.transforms.Compose
       transforms:
         - _target_: dd_sort.simformer.transforms.SwapDetections
-          swap_prob: 0.2
+          swap_prob: 0.4
+          max_proportion: 0.3
         - _target_: dd_sort.simformer.transforms.AppEmbNoise
           alpha: 0.1
         - _target_: dd_sort.simformer.transforms.KeypointsShake
