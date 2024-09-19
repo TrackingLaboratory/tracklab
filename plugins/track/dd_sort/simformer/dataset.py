@@ -39,6 +39,7 @@ class SimFormerDataset(Dataset):
         ("keypoints_xyc", (17, 3)),
         ("visibility_scores", 6),
         ("embeddings", (6, 128)),
+        ("image_id", 1)
     ]
 
     def __init__(
