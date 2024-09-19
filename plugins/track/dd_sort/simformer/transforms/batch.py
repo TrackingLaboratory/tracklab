@@ -1,6 +1,10 @@
+import logging
+
 import torch
 
 from dd_sort.simformer.transforms import BatchTransform
+
+log = logging.getLogger(__name__)
 
 
 class FeatsDetDropout(BatchTransform):
@@ -173,4 +177,44 @@ class KeypointsShake(BatchTransform):
         shaken_keypoints = torch.stack([shaken_x, shaken_y, c], dim=-1)
 
         batch["track_feats"]["keypoints_xyc"] = shaken_keypoints
+        return batch
+
+
+class SwapDetections(BatchTransform):
+
+    def __init__(self, swap_prob=0.1):
+        super().__init__()
+        self.swap_prob = swap_prob
+
+    def __call__(self, batch):
+        batch_ages = batch["track_feats"]["age"]
+        swap_mask = torch.rand(batch_ages.shape, device=batch_ages.device) < self.swap_prob
+        for b_idx in range(batch_ages.shape[0]):
+            unique_ages = torch.unique(batch_ages[b_idx])
+            unique_ages = unique_ages[~torch.isnan(unique_ages)]
+            for age in unique_ages:
+                age_mask = ((batch_ages[b_idx] == age) & swap_mask[b_idx])[:, :, 0]
+                positions = age_mask.nonzero()
+                # log.info(f"pos ({len(positions)}): {positions}")
+                if len(positions) < 2:
+                    log.info(f"Not enough positions to swap age {age} sample {b_idx}")
+                    continue
+                perm = torch.randperm(len(positions))
+                while not torch.all(perm[:-1]>perm[1:]):
+                    perm = torch.randperm(len(positions))
+                shuffled_positions = positions[perm]
+                track_ids = batch["track_targets"]
+
+                for k, v in batch["track_feats"].items():
+                    if v.dim() == 3:
+                        v[b_idx, positions[:, 0], positions[:, 1]] = v[
+                                                                        b_idx,
+                                                                        shuffled_positions[
+                                                                        :, 0],
+                                                                        shuffled_positions[
+                                                                        :, 1]]
+                    else:
+                        v[b_idx, positions[:, 0], positions[:, 1], :] = v[
+                            b_idx, shuffled_positions[:, 0], shuffled_positions[:, 1], :]
+
         return batch

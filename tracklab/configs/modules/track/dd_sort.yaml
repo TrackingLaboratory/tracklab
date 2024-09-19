@@ -167,14 +167,6 @@ datamodule:
         - _target_: dd_sort.simformer.transforms.MaxTrackletObs
           max_obs: 200
         - _target_: dd_sort.simformer.transforms.ProbabilisticTransform
-          probs: [0.5]
-          transforms:
-          - _target_: dd_sort.simformer.transforms.SwapRandomDetections
-            p_swap: 0.1
-            max_swap_prop: 0.3
-          - _target_: dd_sort.simformer.transforms.SwapOccludedDetections
-            max_swap_prop: 0.3
-        - _target_: dd_sort.simformer.transforms.ProbabilisticTransform
           probs: [0.5, 0.5]
           transforms:
             - _target_: dd_sort.simformer.transforms.SporadicTrackletDropout
@@ -187,6 +179,8 @@ datamodule:
     train:
       _target_: dd_sort.simformer.transforms.Compose
       transforms:
+        - _target_: dd_sort.simformer.transforms.SwapDetections
+          swap_prob: 0.2
         - _target_: dd_sort.simformer.transforms.AppEmbNoise
           alpha: 0.1
         - _target_: dd_sort.simformer.transforms.KeypointsShake
