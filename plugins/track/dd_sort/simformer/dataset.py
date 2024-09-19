@@ -60,6 +60,7 @@ class SimFormerDataset(Dataset):
             self.samples = [s for s in self.samples if s["video_id"] in video_ids]
 
         self.count_ids = 0.0
+        self.global_track_id = 0
 
     def __len__(self):
         return len(self.samples)
@@ -86,6 +87,13 @@ class SimFormerDataset(Dataset):
 
         df = video_df.loc[sample["detections"]]
         df = df[df["image_id"] <= image_id]
+        if (df.track_id.unique() < 0).all():
+            df.track_id = -self.global_track_id
+        else:
+            df.track_id = self.global_track_id
+        self.global_track_id += 1.
+        self.global_track_id %= 1e5
+
         assert df.image_id.is_monotonic_increasing, "Tracklets should be in chronological order"
         dets = df.tail(1)
         tracks = df.head(-1)
@@ -107,7 +115,7 @@ class SimFormerDataset(Dataset):
         }
 
     def features_targets(self, df, current_image_id):
-        df["age"] = current_image_id - df["image_id"]
+        df.loc[:, "age"] = current_image_id - df["image_id"]
         features = {}
         for feature_name, feature_dim in self.feature_columns:
             if len(df) > 0:
@@ -121,11 +129,7 @@ class SimFormerDataset(Dataset):
                     else (0, *feature_dim)
                 features[feature_name] = np.empty(dim, dtype=np.float32)
         features["index"] = df.index.to_numpy()
-        targets = np.array(df["person_id"].to_numpy().astype(np.float32))
-        if (df.person_id.unique() < 0).all():
-            self.count_ids -= 1.
-            targets[:] = self.count_ids
-            self.count_ids %= -1e5
+        targets = np.array(df["track_id"].to_numpy().astype(np.float32))
         return features, targets
 
     def create_empty_input(self):
