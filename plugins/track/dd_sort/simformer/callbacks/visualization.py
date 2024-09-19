@@ -173,16 +173,13 @@ class VisualizeTrackletBatches(pl.Callback):
 
     def draw_frame(self, image, dets, track_ids, bboxes, age, index, association_result=None):
         for det_track, det_idx in dets:
-            track_id = int(track_ids[
-                               det_track, det_idx])  # batch["track_targets"][sample_idx, det_track, det_idx])
+            track_id = int(track_ids[det_track, det_idx])
             if track_id not in self.track_ids:
                 self.track_ids.append(track_id)
                 self.tracklet_colors[track_id] = np.array(
                     plt.cm.tab10(self.track_ids.index(track_id))) * 255
-            color = self.tracklet_colors[
-                track_id]  # np.array(plt.cm.tab10(track_ids.index(track_id))) * 255
-            det = bboxes[
-                det_track, det_idx].cpu().numpy()  # batch["track_feats"]["bbox_ltwh"][sample_idx, det_track, det_idx]
+            color = self.tracklet_colors[track_id]
+            det = bboxes[det_track, det_idx].cpu().numpy()
             ltrb = coordinates.bbox_ltwh2ltrb(det * np.array(
                 [image.shape[1], image.shape[0], image.shape[1], image.shape[0]]))
             l, t, r, b = [int(x) for x in ltrb]
