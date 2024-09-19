@@ -220,7 +220,7 @@ datamodule:
 callbacks:
   - _target_: dd_sort.simformer.callbacks.visualization.VisualizeTrackletBatches
     steps: # "train", "val"
-      train: null # null to visualize all, otherwise first N
-      val: null
+      train: 5 # null to visualize all, otherwise first N
+      val: 5
     max_batch_size: null
     max_frames: null
