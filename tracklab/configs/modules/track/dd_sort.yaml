@@ -223,6 +223,8 @@ datamodule:
     #- add_detections_with_id_switch
 callbacks:
   - _target_: dd_sort.simformer.callbacks.visualization.VisualizeTrackletBatches
-    enabled_steps: ["train"] # "train", "val"
+    steps: # "train", "val"
+      train: null # null to visualize all, otherwise first N
+      val: null
     max_batch_size: null
     max_frames: null

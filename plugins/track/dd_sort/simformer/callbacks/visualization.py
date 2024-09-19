@@ -21,9 +21,9 @@ log = logging.getLogger(__name__)
 
 
 class VisualizeTrackletBatches(pl.Callback):
-    def __init__(self, tracking_sets, enabled_steps=None, max_batch_size=None, max_frames=None):
+    def __init__(self, tracking_sets, steps=None, max_batch_size=None, max_frames=None):
         self.tracking_sets = tracking_sets
-        self.enabled_steps = enabled_steps
+        self.steps = steps
         self.epoch = 0
         self.batch_size = max_batch_size
         self.max_frames = max_frames
@@ -36,7 +36,9 @@ class VisualizeTrackletBatches(pl.Callback):
             outputs: STEP_OUTPUT, batch: Any, batch_idx: int
     ) -> None:
         step = "train"
-        if step not in self.enabled_steps:
+        if step not in self.steps:
+            return
+        if self.steps[step] is not None and batch_idx + 1 > self.steps[step]:
             return
         association_matrix, association_result = self.compute_association(pl_module, outputs)
         self.display_batch(batch, outputs, association_result, step, batch_idx)
@@ -51,7 +53,9 @@ class VisualizeTrackletBatches(pl.Callback):
         dataloader_idx: int = 0,
     ) -> None:
         step = "val"
-        if step not in self.enabled_steps:
+        if step not in self.steps:
+            return
+        if self.steps[step] is not None and batch_idx + 1 > self.steps[step]:
             return
         association_matrix, association_result = self.compute_association(pl_module, outputs)
         self.display_batch(batch, outputs, association_result, step, batch_idx)
