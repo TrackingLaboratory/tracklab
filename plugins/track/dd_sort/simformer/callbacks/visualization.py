@@ -154,6 +154,9 @@ class VisualizeTrackletBatches(pl.Callback):
                                        index=len(ages),
                                        association_result=association_result
                                        )
+        t = 5
+        br = [x-t for x in target_image.shape[:2]][::-1]
+        target_image = cv2.rectangle(target_image,(t,t), br, (255,0,0), thickness=t*2)
         output_images.append(target_image)
 
         for i, age in enumerate(ages):
