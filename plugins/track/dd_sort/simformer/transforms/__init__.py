@@ -2,4 +2,4 @@ from .transform import Transform, BatchTransform, OfflineTransforms, Compose, So
 from . import dataset
 from .tracklet import MaxTrackletObs, SporadicTrackletDropout, StructuredTrackletDropout, SwapRandomDetections, \
     SwapOccludedDetections
-from .batch import FeatsDetDropout, AppEmbNoise, BBoxShake, KeypointsShake
+from .batch import FeatsDetDropout, AppEmbNoise, BBoxShake, KeypointsShake, SwapDetections
