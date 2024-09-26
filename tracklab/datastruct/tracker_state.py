@@ -340,8 +340,7 @@ class TrackerState(AbstractContextManager):
                 video_detections = pd.DataFrame(columns=self.load_columns["detection"])
             if f"{self.video_id}_image.pkl" in self.zf["load"].namelist():
                 with self.zf["load"].open(f"{self.video_id}_image.pkl", "r", force_zip64=True) as fp_image:
-                    #video_image_preds = merge_dataframes(pickle.load(fp_image), video_image_preds)[self.load_columns["image"]]
-                    video_images = pandas.read_pickle(fp_image)[self.load_columns["image"]]  # TODO see with Victor if this ok
+                    video_images = merge_dataframes(pandas.read_pickle(fp_image), video_image_preds)[self.load_columns["image"]]
                     video_image_preds = video_images[video_images.index.isin(video_image_preds.index)]  # load only images from the required frames (nframes)
             else:
                 video_image_preds = self.image_metadatas[self.image_metadatas.video_id == self.video_id]
