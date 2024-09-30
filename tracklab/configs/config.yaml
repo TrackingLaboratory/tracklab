@@ -45,11 +45,16 @@ model_dir: "${project_dir}/pretrained_models"
 num_cores: 4
 use_wandb: False
 use_rich: True
+job_id: ${hydra:runtime.seed}  # to be replaced by slurm job id
 
 # Flags
 test_tracking: True
 print_config: False
 eval_tracking: True
+
+wandb:
+  notes: "" # add some notes about the experiment here to be displayed on wandb table
+  tags: []  # add tag to organize wandb experiments
 
 # configure Hydra to use the current working directory
 # and set up the output directory according to experiment_name
