@@ -14,6 +14,9 @@ class PoseTrack21(TrackingDataset):
     Test set: ??? images
     """
 
+    name = "posetrack21"
+    nickname = "ptt"
+
     def __init__(
         self,
         dataset_path: str,
@@ -94,7 +97,7 @@ def fix_formatting(
     image_id = "image_id" if posetrack_version == 21 else "frame_id"
 
     # Videos
-    video_metadatas.set_index("id", drop=True, inplace=True)
+    video_metadatas.set_index("id", drop=False, inplace=True)
 
     # Images
     image_metadatas.drop([image_id, "nframes"], axis=1, inplace=True)
@@ -108,7 +111,7 @@ def fix_formatting(
         columns={"vid_id": "video_id", "file_name": "file_path"},
         inplace=True,
     )
-    image_metadatas.set_index("id", drop=True, inplace=True)
+    image_metadatas.set_index("id", drop=False, inplace=True)
 
     # Detections
     detections_gt.drop(["bbox_head"], axis=1, inplace=True)
@@ -118,7 +121,7 @@ def fix_formatting(
     detections_gt.keypoints_xyc = detections_gt.keypoints_xyc.apply(
         lambda x: np.reshape(np.array(x), (-1, 3))
     )
-    detections_gt.set_index("id", drop=True, inplace=True)
+    detections_gt.set_index("id", drop=False, inplace=True)
     # compute detection visiblity as average keypoints visibility
     detections_gt["visibility"] = detections_gt.keypoints_xyc.apply(lambda x: x[available_keypoints, 2].mean())
     detections_gt = detections_gt.merge(
