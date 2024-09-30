@@ -28,9 +28,13 @@ class StrongSORT(object):
         w_kfgd=1,
         w_reid=1,
         w_st=1,
+        use_only_foreground_embedding=False,
+        disable_second_stage=False,
+        disable_gating=False,
     ):
         self.max_dist = max_dist
         self.min_bbox_confidence = min_bbox_confidence
+        self.use_only_foreground_embedding = use_only_foreground_embedding
         metric = NearestNeighborDistanceMetric("part_based", self.max_dist, nn_budget)
         self.tracker = Tracker(
             metric,
@@ -48,6 +52,9 @@ class StrongSORT(object):
             w_kfgd=w_kfgd,
             w_reid=w_reid,
             w_st=w_st,
+            use_only_foreground_embedding=use_only_foreground_embedding,
+            disable_second_stage=disable_second_stage,
+            disable_gating=disable_gating,
         )
 
     def update(
@@ -61,24 +68,54 @@ class StrongSORT(object):
         frame,
         keypoints=None,
     ):
+        """
+        Rough overview of the update method:
+        1. predict forward each existing tracklet (KF, etc)
+        2. perform data association between existing tracklets and new detections
+        3. update all track with matched det: Tentative (hits < n_init) -> Confirmed -> Deleted (time_since_update > max_age or not hit after Tentative)
+        4. mark unmatched tracks as missed -> if tentative (=too young), then delete, if too old, delete.
+        5. init track with unmatched dets
+        6. update track list by removing dead tracklets
+        7. update the distance metric object with new/deleted tracks and their new features (already ema)
+        8. return all tracks, except unconfirmed ones, or ones that were not matched in this step
+        """
         # generate detections
-        detections = [
-            Detection(
-                ids[i].cpu().detach().numpy(),
-                np.asarray(bbox_ltwh[i].cpu().detach().numpy(), dtype=float),
-                conf.cpu().detach().numpy(),
-                {
-                    "reid_features": np.asarray(
-                        reid_features[i].cpu().detach().numpy(), dtype=np.float32
-                    ),
-                    "visibility_scores": np.asarray(
-                        visibility_scores[i].cpu().detach().numpy()
-                    ),
-                },
-                keypoints=keypoints[i].cpu().detach().numpy() if keypoints is not None else None,
-            )
-            for i, conf in enumerate(confidences)
-        ]
+        if self.use_only_foreground_embedding:
+            detections = [
+                Detection(
+                    ids[i].cpu().detach().numpy(),
+                    np.asarray(bbox_ltwh[i].cpu().detach().numpy(), dtype=float),
+                    conf.cpu().detach().numpy(),
+                    {
+                        "reid_features": np.asarray(
+                            reid_features[i].cpu().detach().numpy()[:1], dtype=np.float32
+                        ),
+                        "visibility_scores": np.asarray(
+                            visibility_scores[i].cpu().detach().numpy()[:1]
+                        ),
+                    },
+                    keypoints=keypoints[i].cpu().detach().numpy() if keypoints is not None else None,
+                )
+                for i, conf in enumerate(confidences)
+            ]
+        else:
+            detections = [
+                Detection(
+                    ids[i].cpu().detach().numpy(),
+                    np.asarray(bbox_ltwh[i].cpu().detach().numpy(), dtype=float),
+                    conf.cpu().detach().numpy(),
+                    {
+                        "reid_features": np.asarray(
+                            reid_features[i].cpu().detach().numpy(), dtype=np.float32
+                        ),
+                        "visibility_scores": np.asarray(
+                            visibility_scores[i].cpu().detach().numpy()
+                        ),
+                    },
+                    keypoints=keypoints[i].cpu().detach().numpy() if keypoints is not None else None,
+                )
+                for i, conf in enumerate(confidences)
+            ]
 
         detections = self.filter_detections(detections)
 
