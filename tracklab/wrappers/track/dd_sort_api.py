@@ -71,12 +71,15 @@ class DDSORT(ImageLevelModule):
     def preprocess(self, image, detections: pd.DataFrame, metadata: pd.Series):
         keep_flags = []
         for det_id, detection in detections.iterrows():
-            detection["keypoints_xyc"][
-                detection["keypoints_xyc"][:, 2] < self.vis_keypoint_threshold,
-                2,
-            ] = 0
-            keep = (detection["bbox_conf"] >= self.min_bbox_threshold) and (
-                (detection["keypoints_xyc"][:, 2] != 0).sum() >= self.min_vis_keypoints)
+            if 'keypoints_xyc' in detection and self.vis_keypoint_threshold is not None:
+                detection["keypoints_xyc"][
+                    detection["keypoints_xyc"][:, 2] < self.vis_keypoint_threshold,
+                    2,
+                ] = 0
+                keep = (detection["bbox_conf"] >= self.min_bbox_threshold) and (
+                    (detection["keypoints_xyc"][:, 2] != 0).sum() >= self.min_vis_keypoints)
+            else:
+                keep = (detection["bbox_conf"] >= self.min_bbox_threshold)
             keep_flags.append(keep)
         keep_flags = np.array(keep_flags)
         return {"keep_flags": keep_flags}
@@ -89,11 +92,13 @@ class DDSORT(ImageLevelModule):
         pbtrack_ids = torch.tensor(detections.index, dtype=torch.int32)[keep]
         features = {}
         for feature_name in self.input_columns:
-            features[feature_name] = torch.tensor(np.stack(detections[feature_name])[list(keep)], dtype=torch.float32).unsqueeze(0)
+            if feature_name in detections:
+                features[feature_name] = torch.tensor(np.stack(detections[feature_name])[list(keep)], dtype=torch.float32).unsqueeze(0)
         image = cv2_load_image(metadatas['file_path'].values[0])
         image_shape = torch.tensor(image.shape[:-1][::-1])
         features["bbox_ltwh"] = normalize_bbox(features["bbox_ltwh"], image_shape)
-        features["keypoints_xyc"] = normalize_kps(features["keypoints_xyc"], image_shape)
+        if "keypoints_xyc" in features:
+            features["keypoints_xyc"] = normalize_kps(features["keypoints_xyc"], image_shape)
         image_id = int(metadatas.index[0])
         results = self.tracker.update(features, pbtrack_ids, image_id, image)
         if results:
