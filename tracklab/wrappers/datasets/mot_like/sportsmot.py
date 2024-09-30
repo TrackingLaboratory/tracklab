@@ -10,6 +10,12 @@ categories_list = [
 
 
 class SportsMOT(MOT):
+    # 45 train videos
+    # 45 val videos
+    # 150 test videos
+    name = "SportsMOT"
+    nickname = "sm"
+
     def __init__(self, dataset_path: str, nvid: int = -1, nframes: int = -1,
                  vids_dict: list = None, public_dets_subpath : str = None, *args, **kwargs):
         log.info(f"Loading SportsMOT dataset from {dataset_path}.")

@@ -21,6 +21,9 @@ categories_list = [
 
 
 class MOT17(MOT):
+    name = "MOT17"
+    nickname = "m17"
+
     def __init__(self, dataset_path: str, nvid: int = -1, nframes: int = -1,
                  vids_dict: list = None, public_dets_subpath : str = None, *args, **kwargs):
         log.info(f"Loading MOT17 dataset from {dataset_path}.")

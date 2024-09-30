@@ -10,6 +10,12 @@ categories_list = [
 
 
 class DanceTrack(MOT):
+    # 40 train videos
+    # 25 val videos
+    # 35 test videos
+    name = "DanceTrack"
+    nickname = "dt"
+
     def __init__(self, dataset_path: str, nvid: int = -1, nframes: int = -1,
                  vids_dict: list = None, public_dets_subpath : str = None, *args, **kwargs):
         log.info(f"Loading DanceTrack dataset from {dataset_path}.")
