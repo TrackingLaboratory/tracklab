@@ -114,7 +114,9 @@ class MOT(TrackingDataset):
                     det_path = os.path.join(video_folder_path, self.public_dets_subpath)
                     if os.path.isfile(det_path):
                         detections_df = self.read_motchallenge_result_formatted_file(det_path)
-                        detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
+                        if detections_df['image_id'].min() == 1:
+                            detections_df['image_id'] = detections_df['image_id'] - 1
+                        detections_df['image_id'] = detections_df['image_id'] + image_counter
                         detections_df['video_id'] = len(video_metadatas_list) + 1
                         public_detections_list.append(detections_df)
                     else:
