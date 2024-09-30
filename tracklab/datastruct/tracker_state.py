@@ -255,6 +255,10 @@ class TrackerState(AbstractContextManager):
         self.update(detections, image_pred)
         self.save()
 
+    def on_dataset_track_end(self, engine: "TrackingEngine"):
+        log.info("Tracking ended, final TrackerState stats:")
+        self.display_stats()
+
     def update(self, detections: pd.DataFrame, image_metadata):
         if self.detections_pred is None:
             self.detections_pred = detections
@@ -335,7 +339,7 @@ class TrackerState(AbstractContextManager):
                 with self.zf["load"].open(f"{self.video_id}.pkl", "r", force_zip64=True) as fp:
                     video_detections = pandas.read_pickle(fp)[self.load_columns["detection"]]  # TODO see with Victor if this ok
                     video_detections = video_detections[video_detections['image_id'].isin(video_image_preds.index)]  # load only detections from the required frames (nframes)
-            else:
+            else:  # TODO throw error?
                 log.info(f"{self.video_id} detections not in pklz file.")
                 video_detections = pd.DataFrame(columns=self.load_columns["detection"])
             if f"{self.video_id}_image.pkl" in self.zf["load"].namelist():
@@ -363,3 +367,9 @@ class TrackerState(AbstractContextManager):
                 columns=self.forget_columns,
                 errors="ignore"
             )
+
+    def display_stats(self):
+        log.info(f"Total # detections: {len(self.detections_pred)} (GT={len(self.detections_gt)})")
+        if "track_id" in self.detections_pred.columns:
+            log.info(f"Total # detections with track_id: {len(self.detections_pred.dropna(subset=['track_id']))} (GT={len(self.detections_gt.dropna(subset=['track_id']))})")
+            log.info(f"Total # track_ids: {len(self.detections_pred.track_id.unique())} (GT={len(self.detections_gt.person_id.unique())})")
