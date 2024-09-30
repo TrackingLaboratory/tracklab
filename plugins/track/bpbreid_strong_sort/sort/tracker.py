@@ -282,7 +282,20 @@ class Tracker:
             }
 
             targets = np.array([tracks[i].track_id for i in track_indices])
-            cost_matrix_reid = self.metric.distance(features, targets)  # NO thresholding until here -> ONLY REID DISTANCE
+            cost_matrix_reid = self.metric.distance(features, targets)
+            # print("BPBREID STRONGSORT")
+            # print("DETECTIONS")
+            # print([dets[i].confidence for i in detection_indices])
+            # print([dets[i].id for i in detection_indices])
+            # print([dets[i].ltwh[0] for i in detection_indices])
+            # print([dets[i].feature["reid_features"][0, 1] for i in detection_indices])
+            # print("TRACKS")
+            # print([tracks[i].last_detection.confidence for i in track_indices])
+            # print([tracks[i].last_detection.id for i in track_indices])
+            # print([tracks[i].last_detection.ltwh[0] for i in track_indices])
+            # print([tracks[i].last_detection.feature["reid_features"][0, 1] for i in track_indices])
+            # print("COST MATRIX")
+            # print(cost_matrix_reid)# NO thresholding until here -> ONLY REID DISTANCE
             cost_matrix = linear_assignment.gate_cost_matrix(  # KF gating applied, too big values are set to INFTY
                 cost_matrix_reid, tracks, dets, track_indices, detection_indices, only_position=self.only_position, mc_lambda=self.mc_lambda, disable_gating=self.disable_gating
             )

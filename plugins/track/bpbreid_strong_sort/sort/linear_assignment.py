@@ -51,6 +51,10 @@ def min_cost_matching(
 
     cost_matrix = distance_metric(  # return cost matrix gated by KM (too big IOU set to INF)
         tracks, detections, track_indices, detection_indices)
+    # sim_matrix = 1-cost_matrix
+    # print min, mean,  max cost:
+    # print(f"cost_matrix min cost: {np.min(cost_matrix)}, mean cost: {np.mean(cost_matrix)}, max cost: {np.max(cost_matrix)}")
+    # print(f"1-cost_matrix min cost: {np.min(sim_matrix)}, mean cost: {np.mean(sim_matrix)}, max cost: {np.max(sim_matrix)}")
     cost_matrix_thresh = cost_matrix.copy()
     cost_matrix_thresh[cost_matrix_thresh > max_distance] = max_distance + 1e-5  # FIXME GATE by reid max_dist threshold, why not inf?
     row_indices, col_indices = linear_sum_assignment(cost_matrix_thresh)
@@ -70,6 +74,14 @@ def min_cost_matching(
             unmatched_detections.append(detection_idx)
         else:
             matches.append((track_idx, detection_idx))
+    # match_matrix = np.zeros_like(cost_matrix, dtype=bool)
+    # match_matrix[tuple(zip(*matches))] = True
+    # print("match_matrix")
+    # print(match_matrix)
+    # print("association_result")
+    # print(matches)
+    # print(unmatched_tracks)
+    # print(unmatched_detections)
     return matches, unmatched_tracks, unmatched_detections, cost_matrix
 
 

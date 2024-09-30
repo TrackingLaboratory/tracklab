@@ -57,6 +57,12 @@ def hungarian_algorithm(td_sim_matrix, valid_tracks, valid_dets, sim_threshold=0
                 "unmatched_detections": unmatched_detections,
             }
         )
+    # print("association_matrix")
+    # print(association_matrix.cpu().numpy())
+    # print("association_result")
+    # print(association_result[0]["matched_td_indices"].tolist())
+    # print(association_result[0]["unmatched_trackers"])
+    # print(association_result[0]["unmatched_detections"])
     return association_matrix, association_result
 
 
