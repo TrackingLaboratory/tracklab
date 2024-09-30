@@ -62,7 +62,7 @@ class DDSORT(ImageLevelModule):
     def reset(self):
         """Reset the tracker state to start tracking in a new video."""
         self.tracker = [
-            instantiate(v, self.simformer.to(self.device))
+            instantiate(v, self.simformer.to(self.device))  # Instantiate DDSort or DDSortByteTracker
             for k, v in self.ddsort.items()
             if v["_enabled_"]
         ][0]
