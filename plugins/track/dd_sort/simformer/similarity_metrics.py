@@ -51,6 +51,25 @@ def euclidean_sim_matrix(track_embs, track_masks, det_embs, det_masks):
     return td_sim_matrix
 
 
+def norm_euclidean_sim_matrix(track_embs, track_masks, det_embs, det_masks):
+    """
+    track_embs: Tensor [B, T(+P), E]
+    track_masks: Tensor [B, T(+P)]
+    det_embs: Tensor [B, D(+P), E]
+    det_masks: Tensor [B, D(+P)]
+
+    returns:
+    td_sim_matrix: Tensor [B, T(+P), D(+P)]
+        padded pairs are set to -inf
+    """
+    track_embs = F.normalize(track_embs, p=2, dim=-1)
+    det_embs = F.normalize(det_embs, p=2, dim=-1)
+    td_sim_matrix = torch.cdist(track_embs, det_embs, p=2)
+    td_sim_matrix = 1 - td_sim_matrix/2
+    td_sim_matrix[~(track_masks.unsqueeze(2) * det_masks.unsqueeze(1))] = -float("inf")
+    return td_sim_matrix
+
+
 def iou_sim_matrix(track_bboxes, track_masks, det_bboxes, det_masks):
     """
     Computes batched IoU between two sets of bounding boxes.
@@ -97,6 +116,8 @@ def iou_sim_matrix(track_bboxes, track_masks, det_bboxes, det_masks):
 similarity_metrics = {
     "cosine": cosine_sim_matrix,
     "euclidean": euclidean_sim_matrix,
+    "norm_euclidean": norm_euclidean_sim_matrix,
     "iou": iou_sim_matrix,
     "random": random_sim_matrix,
+    "default_for_each_token_type": None,  # a specific similarity metric among above ones will be chosen for each token type
 }
