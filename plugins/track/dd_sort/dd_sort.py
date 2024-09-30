@@ -60,6 +60,13 @@ class Tracklet(object):
             )
         return features
 
+    def __str__(self):
+        return (f"Tracklet(id={self.id}, state={self.state}, age={self.age}, "
+                f"hits={self.hits}, hit_streak={self.hit_streak}, "
+                f"time_wo_hits={self.time_wo_hits}, "
+                f"num_detections={len(self.detections)})")
+
+
 
 def detect_change_of_view(prev_frame, actual_frame):  # TODO move elsewhere
     # Perform frame differencing
@@ -100,6 +107,16 @@ class DDSORT(object):
         self.frame_count = 0
 
     def update(self, features, pbtrack_ids, image_id, image):
+        """
+        Rough overview of the update method:
+        1. forward each tracklet, update {age, time_wo_hits, hit_streak}
+        2. perform data association between existing tracklets and new detections
+        3. update all track with matched det: update detections list, last_detection, hits, hit_streak, time_wo_hits
+        4. init track with unmatched dets
+        5. update state of all tracklets: init ( hit_streak < min_hits) -> active -> lost (time_wo_hits < max_wo_hits) -> dead
+        6. update track list by removing dead tracklets
+        7. return all active tracks
+        """
         self.frame_count += 1
 
         # camera motion compensation
