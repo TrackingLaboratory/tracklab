@@ -35,7 +35,7 @@ class Tracklet(object):
         self.score = detection.score
         self.start_frame = frame_id
         self.frame_id = frame_id
-        self.state = TrackState.Init
+        self.state = TrackState.Init if min_hits < 1 else TrackState.Tracked
         self.track_id = -1
 
         self.max_gallery_size = max_gallery_size
@@ -519,7 +519,7 @@ def build_simformer_batch(tracklets, detections, device, image, frame_count):
         "det_masks": torch.ones(
             (1, len(detections), 1), device=device, dtype=torch.bool
         ),  # [1, N, 1]
-        "track_feats": {
+        "track_feats": {  # detections in reverse order: most recent one at index 0 and oldest one at index T-1
             "visibility_scores": torch.stack(
                 [t.padded_features("visibility_scores", T_max) for t in tracklets]
             )
