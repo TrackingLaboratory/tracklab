@@ -32,7 +32,7 @@ def set_worker_sharing_strategy(worker_id: int) -> None:
 
 
 class SimFormerDataset(Dataset):
-    feature_columns = [
+    feature_columns = [  # FIXME compute automatically from elsewhere
         ("bbox_ltwh", 4),
         ("bbox_conf", 1),
         ("keypoints_xyc", (17, 3)),
@@ -51,6 +51,8 @@ class SimFormerDataset(Dataset):
     ):
         self.gallery_path = Path(gallery_path)
         self.config_file = Path(config_file)
+        assert self.gallery_path.exists(), f"Gallery path {self.gallery_path} does not exist"
+        assert self.config_file.exists(), f"Config file {self.config_file} does not exist"
         self.tracklet_transforms = tracklet_transforms or NoOp()
         self.max_length = max_length
         self._zf = None
@@ -97,6 +99,7 @@ class SimFormerDataset(Dataset):
         video_id = sample["video_id"].split("_")[-1].split(".")[0]
         video_id = np.array(int(video_id)).reshape(1)
         image_id = np.array(image_id).reshape(1)
+        # detections of a tracklet are given in reserve order: index 0 = oldest detection and -1 = newest detection, i.e. temporally closer to image_id.
         return {
             "track_feats": track_features,
             "track_targets": track_targets,
