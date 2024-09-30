@@ -7,17 +7,15 @@ import torch.nn.functional as F
 from .utils import convert_ltwh_to_ltrb
 
 
-def cosine_sim_matrix(tracks_embs, tracks_masks, dets_embs, dets_masks):
+def cosine_sim_matrix(track_embs, track_masks, det_embs, det_masks):
     """
     Compute the cosine similarity between the tokens of dets and tracks.
     tracks are on dim = 1 and dets on dim = 2
     masked pairs are set to -inf
     """
-    tracks_embs = F.normalize(tracks_embs, dim=2)
-    dets_embs = F.normalize(dets_embs, dim=2)
-    td_sim_matrix = F.cosine_similarity(tracks_embs.unsqueeze(2), dets_embs.unsqueeze(1), dim=3)
+    td_sim_matrix = F.cosine_similarity(track_embs.unsqueeze(2), det_embs.unsqueeze(1), dim=3)
     td_sim_matrix = (td_sim_matrix + 1) / 2
-    td_sim_matrix[~(tracks_masks.unsqueeze(2) * dets_masks.unsqueeze(1))] = -float("inf")
+    td_sim_matrix[~(track_masks.unsqueeze(2) * det_masks.unsqueeze(1))] = -float("inf")
     return td_sim_matrix
 
 
