@@ -179,13 +179,27 @@ class SimFormer(pl.LightningModule):
         return association_matrix, association_result, td_sim_matrix
 
     def forward(self, tracks, dets):
-        tracks, dets = self.tokenize(tracks, dets)
-        tracks, dets = self.merge(tracks, dets)
-        tracks, dets = self.transformer(tracks, dets)
+        tracks, dets = self.tokenize(tracks, dets)  # feats -> list(tokens)
+        tracks, dets = self.merge(tracks, dets)  # list(tokens) -> tokens
+        tracks, dets = self.transformer(tracks, dets)  # tokens -> embs
         if hasattr(self, "classifier"):
             dets = self.classifier(dets)
 
-        td_sim_matrix = self.similarity(tracks, dets)
+        td_sim_matrix = self.similarity(tracks, dets)  # embs -> sim_matrix
+
+        # print("SIMFORMER")
+        # print("DETECTIONS")
+        # print([c for c in dets.feats['bbox_conf'][0, :, 0, 0].cpu().numpy()])
+        # print([c for c in dets.feats['index'][0, :, 0].cpu().numpy()])
+        # print([c for c in dets.feats['bbox_ltwh'][0, :, 0, 0].cpu().numpy()])
+        # print([c for c in dets.feats['embeddings'][0, :, 0, 1].cpu().numpy()])
+        # print("TRACKS")
+        # print([c for c in tracks.feats['bbox_conf'][0, :, 0, 0].cpu().numpy()])
+        # print([c for c in tracks.feats['index'][0, :, 0].cpu().numpy()])
+        # print([c for c in tracks.feats['bbox_ltwh'][0, :, 0, 0].cpu().numpy()])
+        # print([c for c in tracks.feats['embeddings'][0, :, 0, 1].cpu().numpy()])
+        # print("COST MATRIX")
+        # print(td_sim_matrix.cpu().numpy())
         return tracks, dets, td_sim_matrix
 
     def train_val_preprocess(self, batch):  # TODO merge with predict_preprocess, compute det/trask masks in getitem
@@ -236,8 +250,12 @@ class SimFormer(pl.LightningModule):
         # FIXME similarity_metric should be a list, a different metric could be used for each type of token
         if isinstance(tracks.embs, dict):
             td_sim_matrix = []
-            for (_, t), (_, d) in zip(tracks.embs.items(), dets.embs.items()):
-                td_sim_matrix.append(self.similarity_metric(t, tracks.masks, d, dets.masks))
+            for (tokenizer_name, t), (_, d) in zip(tracks.embs.items(), dets.embs.items()):
+                if self.sim_strat == "default_for_each_token_type":
+                    sm = similarity_metrics[self.tokenizers[tokenizer_name].default_similarity_metric]
+                    td_sim_matrix.append(sm(t, tracks.masks, d, dets.masks))
+                else:
+                    td_sim_matrix.append(self.similarity_metric(t, tracks.masks, d, dets.masks))
             td_sim_matrix = torch.stack(td_sim_matrix).mean(dim=0)
         else:
             td_sim_matrix = self.similarity_metric(tracks.embs, tracks.masks, dets.embs, dets.masks)
@@ -374,7 +392,7 @@ class SimFormer(pl.LightningModule):
         )
         scheduler = transformers.get_cosine_schedule_with_warmup(
             optimizer,
-            num_warmup_steps=self.trainer.estimated_stepping_batches / 10,
+            num_warmup_steps=self.trainer.estimated_stepping_batches / 10,  # FIXME very slow, call a lot of get_items
             num_training_steps=self.trainer.estimated_stepping_batches,
         )
         return {
