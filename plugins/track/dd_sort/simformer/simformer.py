@@ -82,6 +82,8 @@ class SimFormer(pl.LightningModule):
         self.computed_sim_threshold2 = None
         self.best_distr_overlap_threshold = None
         self.sim_threshold = sim_threshold
+        self.final_tracking_threshold = sim_threshold
+        log.info(f"SimFormer initialized with final_tracking_threshold={sim_threshold} from yaml config. Will be overwritten later by an optimized threshold if SimFormer validation is enabled.")
         self.tl_margin = tl_margin
         self.loss_strat = loss_strat
         self.contrastive_loss_strat = contrastive_loss_strat
@@ -169,11 +171,9 @@ class SimFormer(pl.LightningModule):
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
         tracks, dets = self.predict_preprocess(batch)
         tracks, dets, td_sim_matrix = self.forward(tracks, dets)
-        assert self.sim_threshold or self.computed_sim_threshold2, "sim_threshold must be manually set or evaluation mode must be activated for automatic computation of computed_sim_threshold"
-        threshold = self.sim_threshold if self.sim_threshold else self.computed_sim_threshold2
         # best_cls_roc_threshold = self.best_roc_cls_threshold if self.best_roc_cls_threshold else self.det_threshold  # fixme
         association_matrix, association_result = self.association(td_sim_matrix, tracks.masks, dets.masks,
-                                                                  sim_threshold=threshold)
+                                                                  sim_threshold=self.final_tracking_threshold)
         # plt = display_bboxes(tracks, dets, None, batch["images"])
         # plt.show()
         return association_matrix, association_result, td_sim_matrix
@@ -420,3 +420,10 @@ class SimFormer(pl.LightningModule):
         self.computed_sim_threshold = checkpoint.get('computed_sim_threshold', None)
         self.computed_sim_threshold2 = checkpoint.get('computed_sim_threshold2', None)
         self.best_distr_overlap_threshold = checkpoint.get('best_distr_overlap_threshold', None)
+
+    def on_validation_end(self):
+        # self.final_tracking_threshold = self.computed_sim_threshold2
+        self.final_tracking_threshold = self.computed_sim_threshold
+        # self.final_tracking_threshold = self.best_distr_overlap_threshold
+        log.info(f"Final tracking threshold set to {self.final_tracking_threshold}")
+        return

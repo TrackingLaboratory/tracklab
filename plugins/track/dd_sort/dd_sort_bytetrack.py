@@ -347,9 +347,7 @@ class DDSORTBYTETracker(object):
             (torch.ones(1, len(dets_high)), torch.zeros(1, len(dets_low))), dim=1
         ).to(dtype=torch.bool, device=self.simformer.device)
         threshold = (
-            self.simformer.sim_threshold
-            if self.simformer.sim_threshold
-            else self.simformer.computed_sim_threshold
+            self.simformer.final_tracking_threshold
         )
 
         # First association: dets with high score and active tracks + lost
