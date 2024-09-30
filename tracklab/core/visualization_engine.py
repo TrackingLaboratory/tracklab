@@ -353,6 +353,7 @@ class VisualizationEngine(Callback):
             if (
                 hasattr(detection, "matched_with")
                 and detection.matched_with is not None
+                and not pd.isna(detection.matched_with)
                 and is_matched
             ):
                 l, t, r, b = detection.bbox.ltrb(
