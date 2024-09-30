@@ -1,0 +1,13 @@
+defaults:
+  - default@dancetrack
+
+dancetrack:
+  _target_: tracklab.wrappers.DanceTrack
+
+  dataset_path: ${data_dir}/DanceTrack
+  eval_set: "val"
+  public_dets_subpath: "det/my_det.txt"  # TODO to lod det from txt and not run YOLO -> tracklab/configs/state/load_public_dets.yaml (load_from_public_dets config) + not put yolox in pipeline
+
+  track_eval:
+    dataset_class: MotChallenge2DBox
+    BENCHMARK: "DanceTrack"

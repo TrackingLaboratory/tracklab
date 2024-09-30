@@ -4,7 +4,10 @@
 # to create the final config file. This item *must* be
 # the first element in the file.
 defaults:
-  - dataset: dancetrack
+  - datasets:
+    - dancetrack
+    - sportsmot
+    - posetrack21
   - eval: trackeval
   - engine: offline
   - state: no_save
@@ -14,6 +17,9 @@ defaults:
   - modules/reid: kpr
   - modules/track: dd_sort
   - _self_
+
+# configure dataset here:
+dataset: ${datasets.dancetrack}  # FIXME difficult to erase configs under dataset.{...}
 
 # Pipeline definition :
 # - Defines the order in which the modules will be called

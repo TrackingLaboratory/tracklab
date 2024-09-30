@@ -1,0 +1,13 @@
+defaults:
+  - default@sportsmot
+
+sportsmot:
+  _target_: tracklab.wrappers.SportsMOT
+
+  dataset_path: ${data_dir}/SportsMOT
+  eval_set: "val"
+  public_dets_subpath: "det/dets.txt"
+
+  track_eval:
+    dataset_class: MotChallenge2DBox
+    BENCHMARK: "SportsMOT"
