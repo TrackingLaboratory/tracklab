@@ -11,6 +11,7 @@ from ..motionbert.posetrack2h36m import posetrack2h36m
 
 
 class MotionBertTokenizer(Module):
+    default_similarity_metric = "cosine"
 
     def __init__(self, token_dim: int, mb_checkpoint_path, tracklet_max_age, pad_empty_frames, enable_ll=True, freeze=False, checkpoint_path: str = None, **kwargs):
         super().__init__()
@@ -99,12 +100,15 @@ class LastBboxTokenizer(Module):
     """
     The last bbox of a tracklet will be directly encoded with the MLP to produce the output token.
     """
-    def __init__(self, feat_dim: int, token_dim: int, hidden_channels: List[int], freeze=False, checkpoint_path: str = None, **kwargs):
+
+    def __init__(self, feat_dim: int, token_dim: int, hidden_channels: List[int], freeze=False, checkpoint_path: str = None, no_mlp = False, **kwargs):
         super().__init__()
         self.feat_dim = feat_dim
         self.token_dim = token_dim
         self.hidden_channels = hidden_channels
         self.freeze = freeze
+        self.no_mlp = no_mlp
+        self.default_similarity_metric = "iou" if self.no_mlp else "cosine"
         self.mlp = MLP(
             in_channels=self.feat_dim,
             hidden_channels=self.hidden_channels+[self.token_dim],
@@ -122,6 +126,8 @@ class LastBboxTokenizer(Module):
 
     def forward(self, tracklets):
         last_bboxes = tracklets.feats['bbox_ltwh'][:, :, 0]
+        if self.no_mlp:
+            return last_bboxes
         valid_last_bboxes_mask = tracklets.feats_masks[..., 0].flatten()
         valid_last_bboxes = last_bboxes.flatten(0, 1)[valid_last_bboxes_mask]
         valid_bbox_features = self.mlp(valid_last_bboxes)
@@ -129,6 +135,75 @@ class LastBboxTokenizer(Module):
         bbox_features[valid_last_bboxes_mask] = valid_bbox_features
         bbox_features = bbox_features.unflatten(0, tracklets.feats_masks[..., 0].shape)
         return bbox_features
+
+
+# class KFTokenizer(Module):  # TODO
+#     """
+#     The last bbox of a tracklet will be directly encoded with the MLP to produce the output token.
+#     """
+#     default_similarity_metric = "cosine"
+# 
+#     def __init__(self, feat_dim: int, token_dim: int, hidden_channels: List[int], freeze=False, checkpoint_path: str = None, **kwargs):
+#         super().__init__()
+#         self.feat_dim = feat_dim
+#         self.token_dim = token_dim
+#         self.hidden_channels = hidden_channels
+#         self.freeze = freeze
+#         self.mlp = MLP(
+#             in_channels=self.feat_dim,
+#             hidden_channels=self.hidden_channels+[self.token_dim],
+#             norm_layer=nn.BatchNorm1d,
+#             activation_layer=nn.ReLU,
+#             bias=True,
+#         )
+# 
+#         self.init_weights(checkpoint_path=checkpoint_path, module_name="tokenizers.MotionBertTokenizer")
+# 
+#         if self.freeze:
+#             for param in self.parameters():
+#                 param.requires_grad = False
+# 
+# 
+#     def forward(self, tracklets):
+#         last_bboxes = tracklets.feats['bbox_ltwh'][:, :, 0]
+#         valid_last_bboxes_mask = tracklets.feats_masks[..., 0].flatten()
+#         valid_last_bboxes = last_bboxes.flatten(0, 1)[valid_last_bboxes_mask]
+#         standard_img_shape = [1920, 1080]  # FIXME
+#         start_time = time.time()
+#         tracklets_bbox_ltwh = dets_for_track_feats['bbox_ltwh'].cpu().numpy()
+#         dets_bbox_ltwh = det_feats['bbox_ltwh']
+#         tracklets_age = dets_for_track_feats['age'].squeeze(-1).cpu().numpy()
+# 
+#         predictions = []
+#         for t_idx, tracklet_bbox_ltwh in enumerate(tracklets_bbox_ltwh):
+#             bbox_ltwh = tracklet_bbox_ltwh[0]
+#             bbox_ltrb = bbox_ltwh2ltrb(bbox_ltwh)
+#             bbox_ltrb = unnormalize_bbox(bbox_ltrb, standard_img_shape)
+#             tracklet_kf = KalmanBoxTracker(bbox_ltrb)
+#             detections_per_age = {age: bbox_ltwh for age, bbox_ltwh in
+#                                   zip(tracklets_age[t_idx, 1:], tracklet_bbox_ltwh[1:]) if age > 0}
+#             oldest = int(tracklets_age[t_idx, 0])
+#             for age in range(oldest, 0, -1):
+#                 if age in detections_per_age:
+#                     bbox_ltwh = detections_per_age[age]
+#                     bbox_ltrb = bbox_ltwh2ltrb(bbox_ltwh)
+#                     bbox_ltrb = unnormalize_bbox(bbox_ltrb, standard_img_shape)
+#                     tracklet_kf.update(bbox_ltrb)
+#                 else:
+#                     tracklet_kf.update(None)
+#             predicted_bbox_ltrb = tracklet_kf.predict()[0]
+#             if np.any(np.isnan(predicted_bbox_ltrb)):
+#                 predicted_bbox_ltrb = tracklet_kf.history_observations[-1]
+#             predicted_bbox_ltrb = normalize_bbox(predicted_bbox_ltrb, standard_img_shape)
+#             predicted_bbox_ltwh = ltrb_to_ltwh(predicted_bbox_ltrb)
+#             predictions.append(predicted_bbox_ltwh)
+#         predictions = np.stack(predictions, axis=0)
+#         tracks_pred_bbox_ltwh = torch.from_numpy(predictions).to(det_feats['bbox_ltwh'].device)
+#         tracks_pred_bbox_ltwh = tracks_pred_bbox_ltwh.unsqueeze(1)
+#         detections_features = dets_bbox_ltwh.to(det_feats['bbox_ltwh'].dtype)
+#         tracklets_features = tracks_pred_bbox_ltwh.to(det_feats['bbox_ltwh'].dtype)
+#         exec_time = time.time() - start_time
+#         self.total_time += exec_time
 
 
 #
