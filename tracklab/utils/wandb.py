@@ -55,6 +55,8 @@ def init(cfg):
         kwargs = {}
         if "wandb" in cfg:
             kwargs = cfg.wandb
+            if "name" in kwargs:
+                kwargs["name"] = str(kwargs["name"])
         cfg = OmegaConf.to_container(cfg, resolve=True)
         wandb.init(project=cfg["experiment_name"], config=cfg, **kwargs)
 
