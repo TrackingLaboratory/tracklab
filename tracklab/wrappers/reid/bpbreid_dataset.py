@@ -119,11 +119,14 @@ class ReidDataset(ImageDataset):
         self.masks_dir = masks_dir
         self.column_mapping = {}
 
-        self.eval_metric = self.reid_config.eval_metric
+        self.eval_metric = self.reid_config.eval_metric if tracking_dataset.name != 'posetrack21' else 'mot_inter_intra_video'
         self.multi_video_queries_only = self.reid_config.multi_video_queries_only
 
         val_set = self.tracking_dataset.sets[self.reid_config.test.set_name]
         train_set = self.tracking_dataset.sets[self.reid_config.train.set_name]
+        if self.reid_config.train.set_name in self.tracking_dataset.set_split_idxs:
+            set_split_idx = self.tracking_dataset.set_split_idxs[self.reid_config.train.set_name]
+            self.reid_dir = self.reid_dir + "_" + str(set_split_idx)
 
         self.occluded_dataset = occluded_dataset
         self.sam_checkpoint = osp.abspath(osp.expanduser(self.reid_config.sam_checkpoint))
@@ -186,6 +189,8 @@ class ReidDataset(ImageDataset):
 
         super().__init__(train, query, gallery, config=config, **kwargs)
 
+        self.name = tracking_dataset.name
+
     def build_reid_set(self, tracking_set, reid_config, split, is_test_set):
         """
         Build ReID metadata for a given MOT dataset split.
@@ -247,7 +252,8 @@ class ReidDataset(ImageDataset):
 
         # Load reid masks metadata into existing ground truth detections dataframe
         self.load_reid_annotations(detections, masks_anns_filepath, ["masks_path"])
-        self.load_reid_annotations(detections, kps_anns_filepath, ["kp_path"])
+        if not "keypoints_xyc" in detections.columns:
+            self.load_reid_annotations(detections, kps_anns_filepath, ["kp_path"])
 
         # Sampling of detections to be used to create the ReID dataset
         if self.enable_dataset_sampling_loading:
@@ -283,7 +289,8 @@ class ReidDataset(ImageDataset):
             )
         else:
             detections["masks_path"] = ''
-            detections["kp_path"] = ''
+            if not "keypoints_xyc" in detections.columns:
+                detections["kp_path"] = ''
 
         # Add 0-based pid column (for Torchreid compatibility) to sampled detections
         self.add_pid_column(detections)
@@ -299,7 +306,8 @@ class ReidDataset(ImageDataset):
 
         # Turn path into absolute path
         detections['masks_path'] = detections['masks_path'].apply(lambda x: str(reid_mask_path / x) if x and x is not np.nan else None)
-        detections['kp_path'] = detections['kp_path'].apply(lambda x: str(reid_kp_path / x) if x and x is not np.nan else None)
+        if not "keypoints_xyc" in detections.columns:
+            detections['kp_path'] = detections['kp_path'].apply(lambda x: str(reid_kp_path / x) if x and x is not np.nan else None)
         detections['reid_crop_path'] = detections['reid_crop_path'].apply(lambda x: str(reid_img_path / x) if x and x is not np.nan else None)
 
     def save_dataset_sampling(self, detections, dataset_sampling_path):
@@ -702,14 +710,15 @@ class ReidDataset(ImageDataset):
                     np.save(str(abs_masks_filepath), masks_gt_crop)
 
                     # save skeletons on disk
-                    rel_kps_filepath = Path(video_id, filename + self.kps_ext)
-                    abs_kps_filepath = Path(
-                        kps_save_path, rel_kps_filepath
-                    )
-                    abs_kps_filepath.parent.mkdir(parents=True, exist_ok=True)
-                    skeletons_json = create_skeletons_json(keypoints_xyc, negative_kps_xyc)
-                    with open(abs_kps_filepath, "w") as fp:
-                        json.dump(skeletons_json, fp)
+                    if not "keypoints_xyc" in gt_dets.columns:
+                        rel_kps_filepath = Path(video_id, filename + self.kps_ext)
+                        abs_kps_filepath = Path(
+                            kps_save_path, rel_kps_filepath
+                        )
+                        abs_kps_filepath.parent.mkdir(parents=True, exist_ok=True)
+                        skeletons_json = create_skeletons_json(keypoints_xyc, negative_kps_xyc)
+                        with open(abs_kps_filepath, "w") as fp:
+                            json.dump(skeletons_json, fp)
 
                     # save image crop with human parsing heatmaps overlayed on disk for visualization/debug purpose
                     img_with_heatmap = colored_body_parts_overlay(
@@ -734,7 +743,8 @@ class ReidDataset(ImageDataset):
                     cv2.imwrite(str(kps_img_filepath), img_crop_kps)
                     # record human parsing metadata for later json dump
                     gt_dets.at[det_metadata.Index, "masks_path"] = str(rel_masks_filepath)
-                    gt_dets.at[det_metadata.Index, "kp_path"] = str(rel_kps_filepath)
+                    if not "keypoints_xyc" in gt_dets.columns:
+                        gt_dets.at[det_metadata.Index, "kp_path"] = str(rel_kps_filepath)
                     pbar.update(1)
         log.info(
             'Saving reid human parsing annotations as json to "{}"'.format(
@@ -743,8 +753,9 @@ class ReidDataset(ImageDataset):
         )
         masks_anns_filepath.parent.mkdir(parents=True, exist_ok=True)
         gt_dets[["id", "masks_path"]].to_json(masks_anns_filepath)
-        kps_anns_filepath.parent.mkdir(parents=True, exist_ok=True)
-        gt_dets[["id", "kp_path"]].to_json(kps_anns_filepath)
+        if not "keypoints_xyc" in gt_dets.columns:
+            kps_anns_filepath.parent.mkdir(parents=True, exist_ok=True)
+            gt_dets[["id", "kp_path"]].to_json(kps_anns_filepath)
 
     def compute_sam_mask(self, predictor, img_crop, keypoints_xyc_crop, neg_kps_xyc):
         predictor.set_image(img_crop, image_format="BGR")
@@ -813,16 +824,15 @@ class ReidDataset(ImageDataset):
     def to_torchreid_dataset_format(self, dataframes):
         results = []
         for df in dataframes:
-            columns = ["pid", "camid", "video_id", "img_path", "masks_path", "kp_path", "reid_crop_width", "reid_crop_height"]
             df = df.copy()  # to avoid SettingWithCopyWarning
             # use video id as camera id: camid is used at inference to filter out gallery samples given a query sample
             df["camid"] = pd.Categorical(df.video_id, categories=df.video_id.unique()).codes
+            df["videoid"] = pd.Categorical(df.video_id, categories=df.video_id.unique()).codes
             df["img_path"] = df["reid_crop_path"]
             if "keypoints_xyc" in df.columns:
                 df["keypoints_xyc"] = df.apply(lambda r: kp_img_to_kp_bbox(r.keypoints_xyc, r.bbox_ltwh), axis=1)
                 df["keypoints_xyc"] = df.apply(lambda r: rescale_keypoints(r.keypoints_xyc, (r.bbox_ltwh[2], r.bbox_ltwh[3]), (r.reid_crop_width, r.reid_crop_height)), axis=1)
                 df["negative_kps"] = df.apply(lambda r: rescale_keypoints(r.negative_kps, (r.bbox_ltwh[2], r.bbox_ltwh[3]), (r.reid_crop_width, r.reid_crop_height)), axis=1)
-                columns = columns + ["negative_kps", "occ_level", "keypoints_xyc", "visibility"]
 
             # remove bbox_head as it is not available for each sample
             # df to list of dict
@@ -830,9 +840,12 @@ class ReidDataset(ImageDataset):
             # use only necessary annotations: using them all caused a
             # 'RuntimeError: torch.cat(): input types can't be cast to the desired output type Long' in collate.py
             # -> still has to be fixed
-            data_list = sorted_df[
-                columns
-            ]
+            sorted_df['datasetid'] = 'occluded_posetrack'
+            filter_cols = ["pid", "camid", "video_id", "img_path", "masks_path", "kp_path", "visibility", "keypoints_xyc", "reid_crop_width", "reid_crop_height", "negative_kps", "occ_level", "datasetid", "videoid"]
+            for col in filter_cols:
+                if col not in sorted_df.columns:
+                    filter_cols.remove(col)
+            data_list = sorted_df[filter_cols]
             data_list = data_list.to_dict("records")
             results.append(data_list)
         return results
