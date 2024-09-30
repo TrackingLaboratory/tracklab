@@ -70,7 +70,7 @@ class SimFormerDataset(Dataset):
             self._zf = zipfile.ZipFile(self.gallery_path, mode="r")
         return self._zf
 
-    @lru_cache(maxsize=1)
+    @lru_cache(maxsize=1000)
     def _load_pickle(self, sample_video_id):
         with self.zf.open(sample_video_id, "r") as fp:
             df = pickle.load(fp)
