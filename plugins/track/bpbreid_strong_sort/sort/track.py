@@ -154,7 +154,12 @@ class Track:
         tracklet_features = self.features[-1]['reid_features']
         tracklet_vis_scores = self.features[-1]['visibility_scores']
 
-        xor = np.logical_xor(tracklet_vis_scores, detection_vis_scores)
+        # For a given body part P, if:
+        # - P is visible in both the tracklet and the detection, xor = False and ema_scores_tracklet=ema_alpha and ema_scores_detection=1-ema_alpha -> both tracklet and det features are used in a normal EMA update step
+        # - P is visible in the tracklet but not in the detection, xor = True and ema_scores_tracklet=1 and ema_scores_detection=0 -> smooth_feat=tracklet_features
+        # - P is visible in the detection but not in the tracklet, xor = True and ema_scores_tracklet=0 and ema_scores_detection=1 -> smooth_feat=detection_features
+        # - P is not visible in both the tracklet and the detection, xor = False and ema_scores_tracklet=0 and ema_scores_detection=0 -> smooth_feat=1 (TODO why?)
+        xor = np.logical_xor(tracklet_vis_scores, detection_vis_scores)  # True only if one of the two is True
         ema_scores_tracklet = (tracklet_vis_scores * detection_vis_scores) * np.float32(
             self.ema_alpha) + xor * tracklet_vis_scores
         ema_scores_detection = (tracklet_vis_scores * detection_vis_scores) * np.float32(
@@ -162,7 +167,7 @@ class Track:
         smooth_feat = np.expand_dims(ema_scores_tracklet, 1) * tracklet_features + np.expand_dims(
             ema_scores_detection, 1) * detection_features
         smooth_visibility_scores = np.maximum(tracklet_vis_scores, detection_vis_scores)
-        smooth_feat[np.logical_and(ema_scores_tracklet == 0., ema_scores_detection == 0.)] = 1
+        # smooth_feat[np.logical_and(ema_scores_tracklet == 0., ema_scores_detection == 0.)] = 1  # commented out, don't know what was the purpose, apparently does not affet performande quid
         # smooth_feat /= np.linalg.norm(smooth_feat, axis=-1, keepdims=True)  # TODO can cause div by 0 + check if norm is already performed in compute_distance_matrix_using_bp_features
         self.features = [{
             'reid_features': smooth_feat,
