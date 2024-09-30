@@ -171,15 +171,15 @@ class DDSORT(object):
                 actives.append(
                     {
                         "pbtrack_id": trk.last_detection.pbtrack_id.item(),
-                        "track_id": trk.id,
+                        "track_id": trk.id,  # id is computed from a counter
                         "hits": trk.hits,
                         "age": trk.age,
-                        "matched_with": ("S", trk.last_detection.similarity_with_tracklet.cpu().numpy()),
+                        "matched_with": ("S", trk.last_detection.similarity_with_tracklet.cpu().numpy()) if trk.last_detection.similarity_with_tracklet is not None else None,
                         "time_since_update": trk.time_wo_hits,
                         "state": trk.state,
                         "costs": {
                             "S": {self.tracklets[j].id: sim for j, sim in
-                                  enumerate(trk.last_detection.similarities.cpu().numpy())},
+                                  enumerate(trk.last_detection.similarities.cpu().numpy())} if trk.last_detection.similarities is not None else None,
                             "St": self.simformer.sim_threshold,
                         }
                     }
@@ -210,27 +210,27 @@ class DDSORT(object):
         unmatched_dets = association_result[0]["unmatched_detections"]
         return matched, unmatched_trks, unmatched_dets, td_sim_matrix.squeeze(0)
 
-    def matched_td_indices(self, tracklet_detection_matrix):
-        # Convert the input matrix to a PyTorch tensor
-        matrix_tensor = torch.tensor(tracklet_detection_matrix, dtype=torch.float32)
-
-        # Find matched pairs (tracklet, detection)
-        matched_pairs = []
-        while matrix_tensor.sum() > 0:
-            max_val, max_idx = torch.max(matrix_tensor, dim=1)
-            tracklet_idx = torch.argmax(max_val)
-            detection_idx = max_idx[tracklet_idx].item()
-
-            if max_val[tracklet_idx] > 0:
-                matched_pairs.append((tracklet_idx, detection_idx))
-                matrix_tensor[tracklet_idx, :] = 0
-                matrix_tensor[:, detection_idx] = 0
-
-        # Find unmatched detections and tracklets
-        unmatched_dets = torch.nonzero(matrix_tensor.sum(dim=0)).squeeze().tolist()
-        unmatched_trks = torch.nonzero(matrix_tensor.sum(dim=1)).squeeze().tolist()
-
-        return matched_pairs, unmatched_dets, unmatched_trks
+    # def matched_td_indices(self, tracklet_detection_matrix):
+    #     # Convert the input matrix to a PyTorch tensor
+    #     matrix_tensor = torch.tensor(tracklet_detection_matrix, dtype=torch.float32)
+    #
+    #     # Find matched pairs (tracklet, detection)
+    #     matched_pairs = []
+    #     while matrix_tensor.sum() > 0:
+    #         max_val, max_idx = torch.max(matrix_tensor, dim=1)
+    #         tracklet_idx = torch.argmax(max_val)
+    #         detection_idx = max_idx[tracklet_idx].item()
+    #
+    #         if max_val[tracklet_idx] > 0:
+    #             matched_pairs.append((tracklet_idx, detection_idx))
+    #             matrix_tensor[tracklet_idx, :] = 0
+    #             matrix_tensor[:, detection_idx] = 0
+    #
+    #     # Find unmatched detections and tracklets
+    #     unmatched_dets = torch.nonzero(matrix_tensor.sum(dim=0)).squeeze().tolist()
+    #     unmatched_trks = torch.nonzero(matrix_tensor.sum(dim=1)).squeeze().tolist()
+    #
+    #     return matched_pairs, unmatched_dets, unmatched_trks
 
     def build_simformer_batch(self, tracklets, detections, device, image):  # TODO UGLY - refactor
         T_max = np.array([len(t.detections) for t in tracklets]).max()
