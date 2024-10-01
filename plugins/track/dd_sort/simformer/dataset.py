@@ -145,7 +145,7 @@ class SimFormerDataset(Dataset):
 def empty_features(feature_columns):
     features = {}
     for feature_name, feature_dim in feature_columns:
-        dim = (0, feature_dim) if feature_name != "keypoints_xyc" else (0, *feature_dim)
+        dim = (0, feature_dim) if not isinstance(feature_dim, tuple) else (0, *feature_dim)
         features[feature_name] = np.empty(dim, dtype=np.float32)
     features["index"] = np.empty((0,), dtype=np.int64)
     return features
