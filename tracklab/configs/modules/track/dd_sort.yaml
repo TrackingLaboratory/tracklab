@@ -94,20 +94,22 @@ simformer:
     LinearAppearance:
       _target_: dd_sort.LinearAppearance
       _enabled_: True
+      checkpoint_path: null  # override the weights of this module using this path
       enable_ll: True
       token_dim: ${...transformer_cfg.emb_dim}
       feat_dim: 128
       agg_strat: ema  # {ema, mean, last}
       alpha: 0.1
-      checkpoint_path: null  # override the weights of this module using this path
+      only_foreground: True
     SmartLinearAppearance:
       _target_: dd_sort.SmartLinearAppearance
       _enabled_: False
+      checkpoint_path: null  # override the weights of this module using this path
       enable_ll: True
       token_dim: ${...transformer_cfg.emb_dim}
       feat_dim: 128
-      checkpoint_path: null  # override the weights of this module using this path
       alpha: 0.9
+      only_foreground: True
     LastBboxTokenizer:
       _target_: dd_sort.LastBboxTokenizer
       _enabled_: True

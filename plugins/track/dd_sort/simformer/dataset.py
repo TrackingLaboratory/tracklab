@@ -38,7 +38,7 @@ class SimFormerDataset(Dataset):
         ("keypoints_xyc", (17, 3)),
         ("visibility_scores", 6),
         ("age", 1),
-        ("embeddings", 3072),
+        ("embeddings", (6, 128)),
     ]
 
     def __init__(
@@ -115,12 +115,11 @@ class SimFormerDataset(Dataset):
         for feature_name, feature_dim in self.feature_columns:
             if len(df) > 0:
                 feature = np.stack(df[feature_name]).astype(np.float32)
-                if feature_name == "keypoints_xyc":  # TODO nicer solution?
-                    features[feature_name] = feature
-                else:
-                    features[feature_name] = feature.reshape(len(df), -1)
+                if not isinstance(feature_dim, tuple):
+                    feature = feature.reshape(len(df), -1)
+                features[feature_name] = feature
             else:
-                dim = (0, feature_dim) if feature_name != "keypoints_xyc" else (0, *feature_dim)
+                dim = (0, feature_dim) if not isinstance(feature_dim, tuple) else (0, *feature_dim)
                 features[feature_name] = np.empty(dim, dtype=np.float32)
         features["index"] = df.index.to_numpy()
         targets = np.array(df["person_id"].to_numpy().astype(np.float32))

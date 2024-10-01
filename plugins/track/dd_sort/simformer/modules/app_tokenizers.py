@@ -15,6 +15,7 @@ class LinearAppearance(Module):
         enable_ll: bool = True,
         agg_strat: str = "ema",
         checkpoint_path: str = None,
+        only_foreground: bool = False,
         **kwargs
     ):
         super().__init__()
@@ -22,6 +23,7 @@ class LinearAppearance(Module):
         self.feat_dim = feat_dim
         self.enable_ll = enable_ll
         self.alpha = alpha
+        self.only_foreground = only_foreground
         if agg_strat == "ema":
             self.aggregation_fn = self.ema
         elif agg_strat == "mean":
@@ -40,13 +42,15 @@ class LinearAppearance(Module):
         feats, masks = x.feats, x.feats_masks
         # feats = torch.cat([feats["embeddings"], feats["visibility_scores"]], dim=3)
         feats = feats["embeddings"]
+        if self.only_foreground:
+            feats = feats[:, :, :, 0]
         if self.enable_ll:
             tokens = torch.zeros(
                 (feats.shape[0], feats.shape[1], feats.shape[2], self.token_dim),
                 device=feats.device,
                 dtype=torch.float32,
             )
-            tokens[masks] = self.linear(feats[masks])
+            tokens[masks] = self.linear(feats[masks])  # TODO linear before agg?
         else:
             tokens = feats
         if masks.shape[2] > 1:
@@ -87,7 +91,7 @@ class LinearAppearance(Module):
     #     ema = ema.sum(dim=2, keepdim=True)
     #     return ema
 
-    def ema(self, tokens, masks, alpha=0.9):  # TODO: make it work with multiple part embes and vis scores
+    def ema(self, tokens, masks, alpha=0.9):  # TODO: make it work with multiple part embs and vis scores
         # Ensure masks are of type float and unsqueezed for broadcasting over the token dimension D
         masks = masks.unsqueeze(-1).float()  # Shape [B, N, T, 1]
 
@@ -131,18 +135,30 @@ class LinearAppearance(Module):
 
 
 class SmartLinearAppearance(Module):
-    def __init__(self, token_dim: int, feat_dim: int = 1799, enable_ll: bool = True, checkpoint_path: str = None, alpha=0.9, **kwargs):
+    def __init__(self,
+                 token_dim: int,
+                 feat_dim: int = 1799,
+                 enable_ll: bool = True,
+                 checkpoint_path: str = None,
+                 alpha=0.9,
+                 only_foreground=False,
+                 **kwargs
+                 ):
         super().__init__()
         self.token_dim = token_dim
         self.feat_dim = feat_dim
         self.enable_ll = enable_ll
         self.linear = nn.Linear(feat_dim, token_dim)
         self.alpha = alpha
+        self.only_foreground = only_foreground
 
         self.init_weights(checkpoint_path=checkpoint_path, module_name="tokenizers.SmartLinearAppearance")
 
     def forward(self, x):
         embs, vis, masks = x.feats["embeddings"], x.feats["visibility_scores"], x.feats_masks
+        if self.only_foreground:
+            embs = embs[:, :, :, :1]
+            vis = vis[:, :, :, :1]
         if masks.shape[2] > 1:
             embs, vis, masks = self.smart(embs, vis, masks, self.alpha)
         # feats = torch.cat([embs, vis], dim=3)  # keep modalities separate: vis score cannot be simply appended
@@ -153,6 +169,9 @@ class SmartLinearAppearance(Module):
                 device=feats.device,
                 dtype=torch.float32,
             )
+            feats = torch.sum(feats * vis.unsqueeze(-1), dim=3, keepdim=True)  # TODO do better -> transformer
+            feats = feats.squeeze(dim=3)
+            vis = vis.any(dim=-1)
             tokens[masks] = self.linear(feats[masks])
         else:
             tokens = feats
@@ -166,23 +185,8 @@ class SmartLinearAppearance(Module):
         :param masks: [B, N, T]
         :return: new_embs [B, N, 1, 1792], new_vis [B, N, 1, 7], new_masks [B, N, 1]
         """
-        if embs.shape[-1] == 1792:  # FIXME temporary fix to handle two different reid models
-            feature_dim = 256
-            num_parts = 7
-        elif embs.shape[-1] == 3072:
-            feature_dim = 512
-            num_parts = 6
-        elif embs.shape[-1] == 512:
-            feature_dim = 256
-            num_parts = 2
-        elif embs.shape[-1] == 512:
-            feature_dim = 256
-            num_parts = 2
-        else:
-            feature_dim = 128
-            num_parts = 1
         new_embeddings = torch.zeros(
-            (embs.shape[0], embs.shape[1], 1, embs.shape[3]),
+            (embs.shape[0], embs.shape[1], 1, embs.shape[3], embs.shape[4]),
             device=embs.device,
             dtype=torch.float32,
         )
@@ -202,8 +206,8 @@ class SmartLinearAppearance(Module):
                         # - P is visible in the detection but not in the tracklet, xor = True and ema_scores_tracklet=0 and ema_scores_detection=1 -> smooth_feat=detection_features
                         # - P is not visible in both the tracklet and the detection, xor = False and ema_scores_tracklet=0 and ema_scores_detection=0 -> smooth_feat=1 (TODO why?)
 
-                        tracklet_features = new_embeddings[b, n, 0].reshape((num_parts, feature_dim))
-                        detection_features = embs[b, n, t].reshape((num_parts, feature_dim))
+                        tracklet_features = new_embeddings[b, n, 0]
+                        detection_features = embs[b, n, t]
 
                         xor = torch.logical_xor(new_vis[b, n, 0], vis[b, n, t])
                         ema_scores_tracklet = (
@@ -216,7 +220,7 @@ class SmartLinearAppearance(Module):
                             ema_scores_tracklet.unsqueeze(dim=1) * tracklet_features
                             + ema_scores_detection.unsqueeze(dim=1) * detection_features
                         )
-                        new_embeddings[b, n, 0] = smooth_feat.reshape(-1)
+                        new_embeddings[b, n, 0] = smooth_feat
 
                         smooth_visibility_scores = torch.maximum(new_vis[b, n, 0], vis[b, n, t])
                         new_vis[b, n, 0] = smooth_visibility_scores
