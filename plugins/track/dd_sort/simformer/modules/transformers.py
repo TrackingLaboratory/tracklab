@@ -91,6 +91,7 @@ class Encoder(Module):
         checkpoint_path: str = None,
         use_processed_track_tokens: bool = True,
         src_key_padding_mask: bool = True,
+        disable_track_det_token: bool = False,
         *args,
         **kwargs,
     ):
@@ -103,6 +104,7 @@ class Encoder(Module):
         self.activation_fn = activation_fn
         self.use_processed_track_tokens = use_processed_track_tokens
         self.src_key_padding_mask = src_key_padding_mask
+        self.disable_track_det_token = disable_track_det_token
 
         self.det_encoder = nn.Parameter(torch.zeros(emb_dim), requires_grad=True)
         self.track_encoder = nn.Parameter(torch.zeros(emb_dim), requires_grad=True)
@@ -118,8 +120,9 @@ class Encoder(Module):
         self.init_weights(checkpoint_path=checkpoint_path, module_name="transformer")
 
     def forward(self, tracks, dets):
-        tracks.tokens[tracks.masks] += self.track_encoder
-        dets.tokens[dets.masks] += self.det_encoder
+        if not self.disable_track_det_token:
+            tracks.tokens[tracks.masks] += self.track_encoder
+            dets.tokens[dets.masks] += self.det_encoder
 
         assert not torch.any(torch.isnan(tracks.tokens))  # FIXME still nans from MB or reid?
         assert not torch.any(torch.isnan(dets.tokens))
