@@ -75,6 +75,7 @@ simformer:
     use_processed_track_tokens: True  # use the processed track tokens instead of the input ones
     src_key_padding_mask: True  # use the `src_key_padding_mask` in the transformer instead of 'src_mask'
     checkpoint_path: null  # override the weights of this module using this path
+    disable_track_det_token: False # do not add learned tracklets/detections tokens to the input sequence
 
 #  transformer_cfg:
 #    _target_: dd_sort.Transformer
