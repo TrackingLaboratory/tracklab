@@ -425,5 +425,5 @@ class SimFormer(pl.LightningModule):
         # self.final_tracking_threshold = self.computed_sim_threshold2
         self.final_tracking_threshold = self.computed_sim_threshold
         # self.final_tracking_threshold = self.best_distr_overlap_threshold
-        log.info(f"Final tracking threshold set to {self.final_tracking_threshold}")
+        log.info(f"final_tracking_threshold set to {self.final_tracking_threshold}")
         return
