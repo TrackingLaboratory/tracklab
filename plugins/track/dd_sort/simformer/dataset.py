@@ -32,14 +32,13 @@ def set_worker_sharing_strategy(worker_id: int) -> None:
 
 
 class SimFormerDataset(Dataset):
-    feature_columns = [
-        ("age", 1),
+    feature_columns = [  # FIXME compute automatically from elsewhere
         ("bbox_ltwh", 4),
         ("bbox_conf", 1),
         ("keypoints_xyc", (17, 3)),
         ("visibility_scores", 6),
+        ("age", 1),
         ("embeddings", (6, 128)),
-        ("image_id", 1)
     ]
 
     def __init__(
@@ -52,6 +51,8 @@ class SimFormerDataset(Dataset):
     ):
         self.gallery_path = Path(gallery_path)
         self.config_file = Path(config_file)
+        assert self.gallery_path.exists(), f"Gallery path {self.gallery_path} does not exist"
+        assert self.config_file.exists(), f"Config file {self.config_file} does not exist"
         self.tracklet_transforms = tracklet_transforms or NoOp()
         self.max_length = max_length
         self._zf = None
@@ -72,7 +73,7 @@ class SimFormerDataset(Dataset):
             self._zf = zipfile.ZipFile(self.gallery_path, mode="r")
         return self._zf
 
-    @lru_cache(maxsize=1)
+    @lru_cache(maxsize=1000)
     def _load_pickle(self, sample_video_id):
         with self.zf.open(sample_video_id, "r") as fp:
             df = pickle.load(fp)
@@ -106,6 +107,7 @@ class SimFormerDataset(Dataset):
         video_id = sample["video_id"].split("_")[-1].split(".")[0]
         video_id = np.array(int(video_id)).reshape(1)
         image_id = np.array(image_id).reshape(1)
+        # detections of a tracklet are given in reserve order: index 0 = oldest detection and -1 = newest detection, i.e. temporally closer to image_id.
         return {
             "track_feats": track_features,
             "track_targets": track_targets,
@@ -121,13 +123,11 @@ class SimFormerDataset(Dataset):
         for feature_name, feature_dim in self.feature_columns:
             if len(df) > 0:
                 feature = np.stack(df[feature_name]).astype(np.float32)
-                if feature_name in ["keypoints_xyc", "embeddings"]:  # TODO nicer solution?
-                    features[feature_name] = feature
-                else:
-                    features[feature_name] = feature.reshape(len(df), -1)
+                if not isinstance(feature_dim, tuple):
+                    feature = feature.reshape(len(df), -1)
+                features[feature_name] = feature
             else:
-                dim = (0, feature_dim) if feature_name not in ["keypoints_xyc", "embeddings"] \
-                    else (0, *feature_dim)
+                dim = (0, feature_dim) if not isinstance(feature_dim, tuple) else (0, *feature_dim)
                 features[feature_name] = np.empty(dim, dtype=np.float32)
         features["index"] = df.index.to_numpy()
         targets = np.array(df["track_id"].to_numpy().astype(np.float32))
@@ -149,7 +149,7 @@ class SimFormerDataset(Dataset):
 def empty_features(feature_columns):
     features = {}
     for feature_name, feature_dim in feature_columns:
-        dim = (0, feature_dim) if feature_name not in ["keypoints_xyc", "embeddings"] else (0, *feature_dim)
+        dim = (0, feature_dim) if not isinstance(feature_dim, tuple) else (0, *feature_dim)
         features[feature_name] = np.empty(dim, dtype=np.float32)
     features["index"] = np.empty((0,), dtype=np.int64)
     return features

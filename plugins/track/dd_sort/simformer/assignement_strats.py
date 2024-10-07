@@ -22,7 +22,8 @@ def hungarian_algorithm(td_sim_matrix, valid_tracks, valid_dets, sim_threshold=0
     for b in range(B):
         if valid_tracks[b].sum() > 0 and valid_dets[b].sum() > 0:
             sim_matrix_masked = td_sim_matrix[b, valid_tracks[b], :][:, valid_dets[b]]
-            sim_matrix_masked[sim_matrix_masked < sim_threshold] = 0.0
+            # sim_matrix_masked[sim_matrix_masked < sim_threshold] = 0.0  # work less well than below
+            sim_matrix_masked[sim_matrix_masked < sim_threshold] = sim_threshold - 1e-5  # it is done like this in BPBreIDStrongSORT
             row_idx, col_idx = linear_sum_assignment(-sim_matrix_masked.cpu())
 
             valid_rows = torch.nonzero(valid_tracks[b]).squeeze(dim=1).cpu()
@@ -56,6 +57,12 @@ def hungarian_algorithm(td_sim_matrix, valid_tracks, valid_dets, sim_threshold=0
                 "unmatched_detections": unmatched_detections,
             }
         )
+    # print("association_matrix")
+    # print(association_matrix.cpu().numpy())
+    # print("association_result")
+    # print(association_result[0]["matched_td_indices"].tolist())
+    # print(association_result[0]["unmatched_trackers"])
+    # print(association_result[0]["unmatched_detections"])
     return association_matrix, association_result
 
 

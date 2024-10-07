@@ -74,12 +74,8 @@ class MOT(TrackingDataset):
         video_list = [v for v in video_list if not v.startswith('.')]
         video_list.sort()
 
-        if vids_filter_set is not None and len(vids_filter_set) > 0:
-            missing_videos = set(vids_filter_set) - set(video_list)
-            assert not missing_videos, f"The following videos provided in config 'dataset.vids_dict' do not exist in {split} set: {missing_videos}"
-            video_list = [video for video in video_list if video in vids_filter_set]
-
         if nvid > 0:
+            assert vids_filter_set is None or len(vids_filter_set) == 0, "Cannot use both 'nvid' and 'vids_dict' arguments at the same time."
             video_list = video_list[:nvid]
 
         image_counter = 0
@@ -114,7 +110,9 @@ class MOT(TrackingDataset):
                     det_path = os.path.join(video_folder_path, self.public_dets_subpath)
                     if os.path.isfile(det_path):
                         detections_df = self.read_motchallenge_result_formatted_file(det_path)
-                        detections_df['image_id'] = detections_df['image_id'] - 1 + image_counter
+                        if detections_df['image_id'].min() == 1:
+                            detections_df['image_id'] = detections_df['image_id'] - 1
+                        detections_df['image_id'] = detections_df['image_id'] + image_counter
                         detections_df['video_id'] = len(video_metadatas_list) + 1
                         public_detections_list.append(detections_df)
                     else:
@@ -200,6 +198,19 @@ class MOT(TrackingDataset):
         detections_column_ordered.extend(set(detections.columns) - set(detections_column_ordered))
         detections = detections[detections_column_ordered]
 
+        # filter out videos not in vids_filter_set
+        # FIXME should normally be done before loading the videos, but cannot do that because it would change some ids from one run to the other, since image_id, person_id etc are computed with a counter.
+        if vids_filter_set is not None and len(vids_filter_set) > 0:
+            missing_videos = set(vids_filter_set) - set(video_list)
+            assert not missing_videos, f"The following videos provided in config 'dataset.vids_dict' do not exist in {split} set: {missing_videos}"
+            video_list = [video for video in video_list if video in vids_filter_set]
+            # get video ids
+            video_ids = set(video_metadata[video_metadata['name'].isin(video_list)]['id'].tolist())
+            # filter out detections, image_metadata and video_metadata
+            detections = detections[detections['video_id'].isin(video_ids)]
+            image_metadata = image_metadata[image_metadata['video_id'].isin(video_ids)]
+            video_metadata = video_metadata[video_metadata['id'].isin(video_ids)]
+
         tracking_set = TrackingSet(
             video_metadata,
             image_metadata,
@@ -214,7 +225,7 @@ class MOT(TrackingDataset):
     def process_trackeval_results(self, results, dataset_config, eval_config):
         if "SUMMARIES" in results and "pedestrian" in results["SUMMARIES"]:
             res = {
-                f"tracking_summary/{k}": float(v) if '.' in v else int(v)
+                f"{k}": float(v) if '.' in v else int(v)
                 for _, metrics in results["SUMMARIES"]["pedestrian"].items()
                 for k, v in metrics.items()
             }

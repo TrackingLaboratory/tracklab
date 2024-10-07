@@ -4,7 +4,10 @@
 # to create the final config file. This item *must* be
 # the first element in the file.
 defaults:
-  - dataset: dancetrack
+  - datasets:
+    - dancetrack
+    - sportsmot
+    - posetrack21
   - eval: trackeval
   - engine: offline
   - state: no_save
@@ -14,6 +17,9 @@ defaults:
   - modules/reid: kpr
   - modules/track: dd_sort
   - _self_
+
+# configure dataset here:
+dataset: ${datasets.dancetrack}  # FIXME difficult to erase configs under dataset.{...}
 
 # Pipeline definition :
 # - Defines the order in which the modules will be called
@@ -39,11 +45,16 @@ model_dir: "${project_dir}/pretrained_models"
 num_cores: 4
 use_wandb: False
 use_rich: True
+job_id: ${hydra:runtime.seed}  # to be replaced by slurm job id
 
 # Flags
 test_tracking: True
 print_config: False
 eval_tracking: True
+
+wandb:
+  notes: "" # add some notes about the experiment here to be displayed on wandb table
+  tags: []  # add tag to organize wandb experiments
 
 # configure Hydra to use the current working directory
 # and set up the output directory according to experiment_name

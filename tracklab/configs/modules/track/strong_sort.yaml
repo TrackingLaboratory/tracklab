@@ -4,7 +4,9 @@ cfg:
   # weights can be downloaded from :
   # https://github.com/mikel-brostrom/boxmot/tree/master
   # https://drive.google.com/uc?id=1vduhq5DpN2q1g4fYEZfPI17MJeh9qyrA
-  model_weights: ${model_dir}/reid/osnet_x1_0_market_256x128_amsgrad_ep150_stp60_lr0.0015_b64_fb10_softmax_labelsmooth_flip.pt
+#  model_weights: ${model_dir}/osnet_x1_0_market1501.pt
+  model_weights: ${model_dir}/osnet_ibn_x1_0_msmt17.pt
+#  model_weights: ${model_dir}/osnet_x1_0_msmt17.pt
   fp16: false
 
   min_confidence: 0.4

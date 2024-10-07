@@ -7,6 +7,8 @@ batch_size: 32
 job_id: "${oc.env:SLURM_JOBID,0}" # TODO
 save_path: reid
 use_keypoints_visibility_scores_for_reid: False
+datasets: ${datasets}
+
 cfg:
   project:
     name: "simformer_kpr"

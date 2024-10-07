@@ -1,0 +1,5 @@
+_target_: tracklab.wrappers.Oracle
+# Oracle tracker -> will assign each detection the track_id of the iou-closest GT
+cfg:
+  eval_set: ${dataset.eval_set}
+  return_gt: False

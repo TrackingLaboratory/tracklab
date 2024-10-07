@@ -91,6 +91,7 @@ class Encoder(Module):
         checkpoint_path: str = None,
         use_processed_track_tokens: bool = True,
         src_key_padding_mask: bool = True,
+        disable_track_det_token: bool = False,
         *args,
         **kwargs,
     ):
@@ -103,6 +104,7 @@ class Encoder(Module):
         self.activation_fn = activation_fn
         self.use_processed_track_tokens = use_processed_track_tokens
         self.src_key_padding_mask = src_key_padding_mask
+        self.disable_track_det_token = disable_track_det_token
 
         self.det_encoder = nn.Parameter(torch.zeros(emb_dim), requires_grad=True)
         self.track_encoder = nn.Parameter(torch.zeros(emb_dim), requires_grad=True)
@@ -118,15 +120,16 @@ class Encoder(Module):
         self.init_weights(checkpoint_path=checkpoint_path, module_name="transformer")
 
     def forward(self, tracks, dets):
-        tracks.tokens[tracks.masks] += self.track_encoder
-        dets.tokens[dets.masks] += self.det_encoder
+        if not self.disable_track_det_token:
+            tracks.tokens[tracks.masks] += self.track_encoder
+            dets.tokens[dets.masks] += self.det_encoder
 
         assert not torch.any(torch.isnan(tracks.tokens))  # FIXME still nans from MB or reid?
         assert not torch.any(torch.isnan(dets.tokens))
 
         src = torch.cat(
             [dets.tokens, tracks.tokens, self.cls.repeat(dets.masks.shape[0], 1, 1)], dim=1
-        )  # FIXME CLS not needed
+        )  # FIXME CLS not needed?
         src = self.src_drop(self.src_norm(src))
 
         if self.src_key_padding_mask:
@@ -261,3 +264,96 @@ class Decoder(Module):
         mem_mask = mem_mask.repeat_interleave(self.n_heads, dim=0)
 
         return tgt_mask, mem_mask
+
+
+class SimpleDecoder(Module):  # FIXME oes not work, use CLS token
+    def __init__(
+        self,
+        emb_dim: int = 1024,
+        n_heads: int = 8,
+        n_layers: int = 6,
+        dim_feedforward: int = 4096,
+        dropout: int = 0.1,
+        activation_fn: str = "gelu",
+        checkpoint_path: str = None,
+        **kwargs,
+    ):
+        super().__init__()
+        self.emb_dim = emb_dim
+        self.n_heads = n_heads
+        self.n_layers = n_layers
+        self.dim_feedforward = dim_feedforward
+        self.dropout = dropout
+        self.activation_fn = activation_fn
+
+        decoder_layers = nn.TransformerDecoderLayer(
+            emb_dim, n_heads, dim_feedforward, dropout, batch_first=True, activation=activation_fn
+        )
+        self.decoder = nn.TransformerDecoder(decoder_layers, n_layers)
+
+        self.init_weights(checkpoint_path=checkpoint_path, module_name="transformer")
+
+    def forward(self, tracks, dets):
+
+        dets.embs = self.decoder(dets.tokens, tracks.tokens, tgt_key_padding_mask=dets.masks, memory_key_padding_mask=tracks.masks)
+        tracks.embs = tracks.tokens
+
+        return tracks, dets
+
+
+class Transformer(Module):  # FIXME oes not work, use CLS token
+    def __init__(
+        self,
+        emb_dim: int = 1024,
+        n_heads: int = 8,
+        n_e_layers: int = 6,
+        n_d_layers: int = 6,
+        dim_feedforward: int = 4096,
+        dropout: int = 0.1,
+        activation_fn: str = "gelu",
+        checkpoint_path: str = None,
+        **kwargs,
+    ):
+        super().__init__()
+        self.emb_dim = emb_dim
+        self.n_heads = n_heads
+        self.n_e_layers = n_e_layers
+        self.n_d_layers = n_d_layers
+        self.dim_feedforward = dim_feedforward
+        self.dropout = dropout
+        self.activation_fn = activation_fn
+
+        self.transformer = nn.Transformer(
+            d_model = emb_dim, #  : int = 512,
+            nhead = n_heads, #  : int = 8,
+            num_encoder_layers = n_e_layers, #  : int = 6,
+            num_decoder_layers = n_d_layers, #  : int = 6,
+            dim_feedforward = dim_feedforward, #  : int = 2048,
+            dropout = dropout, #  : float = 0.1,
+            activation = activation_fn, #  : Union[str, Callable[[Tensor], Tensor]] = F.relu,
+            batch_first = True, #  : bool = False,
+            # custom_encoder = , #  : Optional[Any] = None,
+            # custom_decoder = , #  : Optional[Any] = None,
+            # layer_norm_eps = , #  : float = 1e-5,
+            # norm_first = , #  : bool = False,
+            # device = , #   = None,
+            # dtype = , #   = None
+        )
+
+        if checkpoint_path: # because nn.Transformer already init params with xavier
+            self.init_weights(checkpoint_path=checkpoint_path, module_name="transformer")
+
+    def forward(self, tracks, dets):
+        dets.embs = self.transformer(
+            src=tracks.tokens,
+            tgt=dets.tokens,
+            # src_mask=,
+            # tgt_mask=,
+            # memory_mask=,
+            src_key_padding_mask=tracks.masks,
+            tgt_key_padding_mask=dets.masks,
+            memory_key_padding_mask=tracks.masks,
+        )
+        tracks.embs = tracks.tokens  # TODO try to use output of encoder for track embeds
+
+        return tracks, dets

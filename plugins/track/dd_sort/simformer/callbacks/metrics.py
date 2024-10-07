@@ -60,6 +60,8 @@ class SimMetrics(pl.Callback):
         best_roc_threshold = log_roc(self.roc, self.auroc, pl_module, trainer.current_epoch, "sim")
         pl_module.computed_sim_threshold = best_roc_threshold
         log.info(f"Best computed_sim_threshold found on validation set: {best_roc_threshold:.3f}")
+        pl_module.log_dict({"val/best_roc_threshold": best_roc_threshold}, logger=True, on_step=False,
+                           on_epoch=True)
         pl_module.log_dict(
             {"val/sim_acc": self.acc.compute().item()}, logger=True, on_step=False, on_epoch=True
         )

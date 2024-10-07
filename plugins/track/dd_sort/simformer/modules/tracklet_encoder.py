@@ -86,6 +86,7 @@ class TrackletEncoder(Module):
     Tracklets are projected into a token space using the projected detections by det_tokenizer and then encoded using a
     transformer encoder.
     """
+    default_similarity_metric = "cosine"
 
     def __init__(self, emb_dim, det_tokenizer, n_heads: int = 8, n_layers: int = 1, dim_feedforward=4096,
                  num_registers: int = 3, dropout=0.1, checkpoint_path: str = None, use_only_det_tokenizer: bool = False,

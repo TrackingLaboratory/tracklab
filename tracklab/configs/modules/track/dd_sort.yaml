@@ -8,41 +8,41 @@ train_cfg:
   use_rich: ${use_rich}
   evaluate_only: False   # activate to skip training and eval only
   pl_trainer:
-    max_epochs: 25
+    max_epochs: 20
     precision: 32
-    gradient_clip_val: 0.2
+    gradient_clip_val: 0.
     accumulate_grad_batches: 1  # 1 for no accumulation
     enable_progress_bar: True
-    enable_model_summary: False
+    enable_model_summary: True
     profiler: null  # "simple" or "advanced", activate to display time profiling info
     num_sanity_val_steps: 0  # sanity run of val batches before training
-    log_every_n_steps: 1  # default 50
+    log_every_n_steps: 50  # default 50
     check_val_every_n_epochs: 1  # default 1
-    val_check_interval: 1.0  # default 1.0
+    val_check_interval: null  # default 1.0
     fast_dev_run: False
 
 ddsort:
-  #sort:  # naive assoc()
-  #  _target_: dd_sort.DDSORT
-  #  _enabled_: True
-  #  min_hits: 1  # number of hits to become a tracklet
-  #  max_wo_hits: 100  # number of misses before removing from tracklet
-  #  max_gallery_size: 50  # max number of observations in the gallery for each tracklet
-  #  det_threshold: 0.1  # detection threshold
+  sort:  # naive assoc()
+    _target_: dd_sort.DDSORT
+    _enabled_: True
+    det_threshold: 0.  # detection threshold  # TODO CHECK IF USEFUL
+    min_hits: 0  # number of hits to become a tracklet  # TODO 1
+    max_wo_hits: 300  # number of misses before removing from tracklet
+    max_gallery_size: 100  # max number of observations in the gallery for each tracklet
   bytetrack:  # bytetrack assoc()
     _target_: dd_sort.DDSORTBYTETracker
-    _enabled_: True
-    det_high_thresh: 0.4  # high detection threshold
-    det_low_thresh: 0.1  # low detection threshold
-    max_time_lost: 100  # number of misses before removing from tracklet
-    max_gallery_size: 50  # max number of observations in the gallery for each tracklet
-    min_hits: 1  # number of hits to become a tracklet
+    _enabled_: False
     simformer_call_strat: 1call  # {3call, 1call} 3call: call simformer 3 times, 1call: call simformer 1 time
+    det_high_thresh: 0.4  # high detection threshold
+    det_low_thresh: 0.  # low detection threshold
+    min_hits: 0  # number of hits to become a tracklet
+    max_time_lost: 300  # number of misses before removing from tracklet
+    max_gallery_size: 100  # max number of observations in the gallery for each tracklet
 
 det_filter_cfg:
-  min_vis_keypoints: 1  # filter on inputs of the tracker
-  vis_keypoint_threshold: 0.1  # filter on inputs of the tracker
-  min_bbox_threshold: 0.1 # filter on inputs of the tracker
+  min_vis_keypoints: null  # filter on inputs of the tracker
+  vis_keypoint_threshold: null  # filter on inputs of the tracker
+  min_bbox_threshold: 0.1 # filter on inputs of the tracker  # TODO why different from BBSS?
 
 checkpoint_path: null  # overrides the checkpoint_paths from the submodules
 override_cfg: null  # null if you do not want to override args from the checkpoints
@@ -50,42 +50,76 @@ override_cfg: null  # null if you do not want to override args from the checkpoi
 simformer:
   _target_: dd_sort.SimFormer
 
+  merge_token_strat: sum  # identity sum concat
+  sim_strat: cosine  # cosine, iou, norm_euclidean, euclidean, default_for_each_token_type
+  assos_strat: hungarian
+#  sim_threshold: 0.5  # sim_former similarity threshold for track/det association: pair with a similarity (in the 0->1 range) lower than this value cannot be matched. If 'null', threshold will be computed automatically.
+  tl_margin: 0.2  # margin for triplet loss
+  loss_strat: infoNCE  # {triplet; infoNCE}
+  contrastive_loss_strat: "inter"  # "inter": only det can be positive/negative of track and vice-versa, "inter_intra": det or track can be positive/negative of track and vice-versa
+                                               # "valid_inter" or "valid_inter_intra": only valid det/track (track_ids >= 0)
+
+  train_cfg: # AdamW  # BUSCA: reduce LR by factor 10 after 20th epoch (max = 25 epochs), MOTIP 18ep and lr divided by 20 after 10th and 16th epoch # TODO add lower lr
+    init_lr: 1e-4   # BUSCA = 0.00002, MOTIP = 1e-4
+    weight_decay: 0.001  # BUSCA = 1e-5, MOTIP = 5*1e-4
+    alpha_loss: .75
+
   transformer_cfg:
-    _target_: dd_sort.Decoder  # {Identity, Encoder, Decoder, Perceptron}
-    emb_dim: 2048
-    n_heads: 8
-    n_layers: 1
-    dim_feedforward: 4096
+    _target_: dd_sort.Encoder  # {Identity, Encoder, Decoder, SimpleDecoder, Perceptron, Transformer}
+    emb_dim: 1024  # BUSCA trans internal dim = 512 (output resnet = 512), MOTIP hidden_dim=256
+    n_heads: 16  # BUSCA = 4, MOTIP = 8
+    n_layers: 3  # BUSCA = 4, MOTIP = 6
+    dim_feedforward: 4096  # BUSCA = 1024, MOTIP dim_feedforward = 512
     dropout: 0.1
-    activation_fn: relu
+    activation_fn: gelu
     use_processed_track_tokens: True  # use the processed track tokens instead of the input ones
     src_key_padding_mask: True  # use the `src_key_padding_mask` in the transformer instead of 'src_mask'
     checkpoint_path: null  # override the weights of this module using this path
+    disable_track_det_token: False # do not add learned tracklets/detections tokens to the input sequence
 
-#  transformer_cfg:  # Perceptron to simply pass the merged tokens through a MLP
-#    _target_: dd_sort.Perceptron  # {Identity, Encoder, Decoder, Perceptron}
-#    checkpoint_path: null
+#  transformer_cfg:
+#    _target_: dd_sort.Transformer
 #    emb_dim: 1024
-#    n_layers: 2
-#    dim_feedforward: 2048
+#    n_heads: 16
+#    n_e_layers: 3
+#    n_d_layers: 3
+#    dim_feedforward: 4096
+#    dropout: 0.1
+#    activation_fn: gelu
+#    use_processed_track_tokens: True  # use the processed track tokens instead of the input ones
+#    src_key_padding_mask: True  # use the `src_key_padding_mask` in the transformer instead of 'src_mask'
+#    checkpoint_path: null  # override the weights of this module using this path
 
   # Declare the list of tokenizers to use here. Tokenizer key is arbitrary
   tokenizers_cfg:
-    #LinearAppearance:
-    #  _target_: dd_sort.LinearAppearance
-    #  _enabled_: True
-    #  enable_ll: True
-    #  token_dim: ${...transformer_cfg.emb_dim}
-    #  feat_dim: 1799
-    #  agg_strat: ema  # {ema, mean, last}
-    #  checkpoint_path: null  # override the weights of this module using this path
-    #SmartLinearAppearance:
-    #  _target_: dd_sort.SmartLinearAppearance
-    #  _enabled_: False
-    #  enable_ll: True
-    #  checkpoint_path: null  # override the weights of this module using this path
-    #  token_dim: ${...transformer_cfg.emb_dim}
-    #  feat_dim: 3078
+    LinearAppearance:
+      _target_: dd_sort.LinearAppearance
+      _enabled_: True
+      checkpoint_path: null  # override the weights of this module using this path
+      enable_ll: True
+      token_dim: ${...transformer_cfg.emb_dim}
+      feat_dim: 128
+      agg_strat: ema  # {ema, mean, last}
+      alpha: 0.1
+      only_foreground: True
+#    SmartLinearAppearance:
+#      _target_: dd_sort.SmartLinearAppearance
+#      _enabled_: False
+#      checkpoint_path: null  # override the weights of this module using this path
+#      enable_ll: True
+#      token_dim: ${...transformer_cfg.emb_dim}
+#      feat_dim: 128
+#      alpha: 0.9
+#      only_foreground: True
+    LastBboxTokenizer:
+      _target_: dd_sort.LastBboxTokenizer
+      _enabled_: True
+      checkpoint_path: null  # override the weights of this module using this path
+      freeze: False
+      feat_dim: 4
+      token_dim: ${...transformer_cfg.emb_dim}
+      hidden_channels: [256]
+      no_mlp: False
     #MotionBertTokenizer:
     #  _target_: dd_sort.MotionBertTokenizer
     #  _enabled_: False
@@ -96,28 +130,28 @@ simformer:
     #  agg_strat: ema
     #  pad_empty_frames: True  # Will pad each empty frame with 0s if True, or use a concatenation of all available skeletons if False
     #  tracklet_max_age: 20  # Will use skeletons until this number of frames in the past, padding with 0s when necessary
-    TrackletEncoder:
-      _target_: dd_sort.TrackletEncoder
-      _enabled_: True
-      emb_dim: ${...transformer_cfg.emb_dim}
-      n_heads: 8
-      n_layers: 1
-      dim_feedforward: 4096
-      num_registers: 3
-      dropout: 0.1
-      checkpoint_path: null  # override the weights of this module using this path
-      use_only_det_tokenizer: False  # do not use the transformer encoder to encode the tracklets (used to train the det_tokenizer)
-      det_tokenizer:
-        _target_: dd_sort.DetTokenizer
-        _recursive_: False
-        token_dim: ${..emb_dim}
-        feats_tokenizers:
-          - _target_: dd_sort.BBoxLinProj
-            use_conf: True
-          - _target_: dd_sort.KeypointsLinProj
-            use_conf: True
-          - _target_: dd_sort.EmbeddingsLinProj
-            use_parts: False
+#    TrackletEncoder:
+#      _target_: dd_sort.TrackletEncoder
+#      _enabled_: True
+#      emb_dim: ${...transformer_cfg.emb_dim}
+#      n_heads: 8
+#      n_layers: 1
+#      dim_feedforward: 4096
+#      num_registers: 3
+#      dropout: 0.1
+#      checkpoint_path: null  # override the weights of this module using this path
+#      use_only_det_tokenizer: False  # do not use the transformer encoder to encode the tracklets (used to train the det_tokenizer)
+#      det_tokenizer:
+#        _target_: dd_sort.DetTokenizer
+#        _recursive_: False
+#        token_dim: ${..emb_dim}
+#        feats_tokenizers:
+#          - _target_: dd_sort.BBoxLinProj
+#            use_conf: True
+#          - _target_: dd_sort.KeypointsLinProj
+#            use_conf: True
+#          - _target_: dd_sort.EmbeddingsLinProj
+#            use_parts: False
 
   classifier_cfg: null
     # null for no classifier
@@ -135,43 +169,34 @@ simformer:
     #activation_fn: relu
     #dropout: ${..transformer_cfg.dropout}
 
-  merge_token_strat: sum
-  sim_strat: cosine
-  assos_strat: hungarian  # {hungarian; argmax}
-  sim_threshold: 0.7  # sim_former similarity threshold for hungarian association (based on cosine distance of features). If 'null', threshold will be computed automatically
-  tl_margin: 0.3  # margin for triplet loss
-  loss_strat: triplet  # {triplet; infoNCE}
-  contrastive_loss_strat: "valid_inter_intra"  # "inter": only det can be positive/negative of track and vice-versa, "inter_intra": det or track can be positive/negative of track and vice-versa
-                                               # "valid_inter" or "valid_inter_intra": only valid det/track (track_ids >= 0)
-
-  train_cfg: # AdamW
-    init_lr: 1e-4
-    weight_decay: 1e-3
-    alpha_loss: 1.0
-
 datamodule:
   _target_: dd_sort.SimFormerDataModule
 
   ## Training parameters
-  batch_size: 8
-  num_samples: 16
+  sampler: "simple"  # simple, hard or harder
   num_videos: null # how many videos you want samples from, null for all
+  num_workers: 8
+#  num_workers: ${num_cores}
+  # Params impacting the size of a training sample:
+  max_length: 50  # max number of detections for a tracklet (keep 'max_length' most recent detections in a tracklet after all transforms have been applied to it)
+  # Params impacting the size of a batch:
+  batch_size: 32  # number of training samples in a batch. A training samples = a data association example in a given frame (i.e. a similarity matrix representing a single online tracking step)
+  num_samples: 128  # number of tracklets/dets pairs in a training sample
+  # Params impacting the size of an epoch:
   samples_per_video: 50  # number of frame per video
-  max_length: 50  # max number of detections for a tracklet
-  sampler: "simple"  # simple # broken : hard or harder
-  num_workers: ${num_cores}
-  tracklet_transforms:
+
+  tracklet_transforms:  # transformers related to one pair tracklet-det
     train:
       _target_: dd_sort.simformer.transforms.Compose
       transforms:
-        - _target_: dd_sort.simformer.transforms.MaxTrackletObs
+        - _target_: dd_sort.simformer.transforms.MaxTrackletObs  # tracklet in between 'max_obs' and 0 before current timestamp
           max_obs: 200
         - _target_: dd_sort.simformer.transforms.ProbabilisticTransform
-          probs: [0.5, 0.5]
+          probs: [0.5, 0.5]  # proba for the next two transforms
           transforms:
             - _target_: dd_sort.simformer.transforms.SporadicTrackletDropout
               p_drop: 0.1  # probability of dropping a detection from the tracklet
-            - _target_: dd_sort.simformer.transforms.StructuredTrackletDropout
+            - _target_: dd_sort.simformer.transforms.StructuredTrackletDropout  # create holes (successive dets) in tracklet
               p_drop: 0.1  # probability of dropping some windowed detections from the tracklet
               max_drop: 10
               max_num_windows: 3
@@ -203,20 +228,24 @@ datamodule:
   dataset_splits: # should be a list containing train/val/test
     - train
     - val
-  name: ddsort-dancetrack  # name of the file for the gallery pickle
-  path: ${project_dir}/states # absolute path, otherwise it will be created for each job
-  tracker_states:
-    train: "${project_dir}/states/dancetrack-train.pklz"
-    val: "${project_dir}/states/dancetrack-val.pklz"
-  dataset_transforms:
-#    - add_gt_poses
-#    - add_gt_reid_embeddings
-    - add_detections
-    - normalize2image
-    - add_last_obs_counter
-    - add_number_of_occlusions
-    #- add_crops
-    #- add_detections_with_id_switch
+  name: ddsort-kpr-dancetrack  # name of the file for the gallery pickle, if exists, use it, if does not create it with below config
+#  name: ddsort-kpr-sportsmot  # Uncomment for SportsMOT
+  path: ${dataset.dataset_path}/states/simformer_training # absolute path, otherwise it will be created for each job (where the pklz with above name is located)
+  tracker_states:  # when using real detections for training
+      train: "${dataset.dataset_path}/states/kpr/train-my_det-hrnetposetrack18-kpr-ocsort.pklz"  # Uncomment for Dancetrack
+      val: "${dataset.dataset_path}/states/kpr/val-my_det-hrnetposetrack18-kpr-ocsort.pklz"  # Uncomment for Dancetrack
+#    train: "${dataset.dataset_path}/states/kpr/train-public_dets-hrnetposetrack18-kpr-ocsort.pklz"  # Uncomment for SportsMOT
+#    val: "${dataset.dataset_path}/states/kpr/val-public_dets-hrnetposetrack18-kpr-ocsort.pklz"  # Uncomment for SportsMOT
+  dataset_transforms:  # to generate pcklz, use "name" config above to name output pklz
+#    - add_gt_poses  # apply pose model on GT bbox
+#    - add_gt_reid_embeddings  # apply reid model on GT bbox
+    - add_detections  # va chercher vrais detection dans pcklz donné dans "tracker_states" et match avec GT using IOU
+    - normalize2image  # normalize bbox 0->1
+  # add keypoints -> avant normalize2image
+    - add_last_obs_counter  # add columns (int) to tell for how long tracklet not seen (proxy to occlusion/dissapearance)
+    - add_number_of_occlusions  # if 0.5 IOU with another det, +1 to a new column occlusion counter
+    #- add_crops  # add image in pklz, not do
+    #- add_detections_with_id_switch  # broken
 callbacks:
   - _target_: dd_sort.simformer.callbacks.visualization.VisualizeTrackletBatches
     steps: # "train", "val"

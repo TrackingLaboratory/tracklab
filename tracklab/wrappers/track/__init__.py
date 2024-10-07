@@ -5,3 +5,4 @@ from .oc_sort_api import OCSORT
 from .deep_oc_sort_api import DeepOCSORT
 from .bpbreid_strong_sort_api import BPBReIDStrongSORT
 from .dd_sort_api import DDSORT
+from .oracle_api import Oracle

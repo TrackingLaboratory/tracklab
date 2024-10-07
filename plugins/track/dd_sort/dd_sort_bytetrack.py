@@ -35,7 +35,7 @@ class Tracklet(object):
         self.score = detection.score
         self.start_frame = frame_id
         self.frame_id = frame_id
-        self.state = TrackState.Init
+        self.state = TrackState.Init if min_hits < 1 else TrackState.Tracked
         self.track_id = -1
 
         self.max_gallery_size = max_gallery_size
@@ -347,9 +347,7 @@ class DDSORTBYTETracker(object):
             (torch.ones(1, len(dets_high)), torch.zeros(1, len(dets_low))), dim=1
         ).to(dtype=torch.bool, device=self.simformer.device)
         threshold = (
-            self.simformer.sim_threshold
-            if self.simformer.sim_threshold
-            else self.simformer.computed_sim_threshold
+            self.simformer.final_tracking_threshold
         )
 
         # First association: dets with high score and active tracks + lost
@@ -519,7 +517,7 @@ def build_simformer_batch(tracklets, detections, device, image, frame_count):
         "det_masks": torch.ones(
             (1, len(detections), 1), device=device, dtype=torch.bool
         ),  # [1, N, 1]
-        "track_feats": {
+        "track_feats": {  # detections in reverse order: most recent one at index 0 and oldest one at index T-1
             "visibility_scores": torch.stack(
                 [t.padded_features("visibility_scores", T_max) for t in tracklets]
             )

@@ -22,14 +22,7 @@ from ...utils.download import download_file
 
 class BPBReId(DetectionLevelModule):
     """
-    TODO:
-        why bbox move after strong_sort?
-        training
-        batch process
-        save config + commit hash with model weights
-        model download from URL: HRNet etc
-        save folder: uniform with reconnaissance
-        wandb support
+
     """
 
     collate_fn = default_collate
@@ -39,35 +32,38 @@ class BPBReId(DetectionLevelModule):
     def __init__(
         self,
         cfg,
-        tracking_dataset,
         dataset,
+        datasets,
         device,
         save_path,
         job_id,
         use_keypoints_visibility_scores_for_reid,
         training_enabled,
         batch_size,
+        *args,
+        **kwargs
     ):
         super().__init__(batch_size)
         self.cfg = cfg
         self.device = device
-        tracking_dataset.name = dataset.name
-        tracking_dataset.nickname = dataset.nickname
-        self.dataset_cfg = dataset
-        self.use_keypoints_visibility_scores_for_reid = (
-            use_keypoints_visibility_scores_for_reid
-        )
-        tracking_dataset.name = self.dataset_cfg.name
-        tracking_dataset.nickname = self.dataset_cfg.nickname
-        additional_args = {
-            "tracking_dataset": tracking_dataset,
-            "reid_config": self.dataset_cfg,
-        }
-        register_image_dataset(
-            tracking_dataset.name,
-            configure_dataset_class(ReidDataset, **additional_args),
-            tracking_dataset.nickname,
-        )
+
+        # registering Tracklab's datasets with Torchreid (only the ones required by Torchreid)
+        all_configured_datasets = set(cfg.data.sources + cfg.data.targets)  # all datasets required by Torchreid
+        tracking_datasets = [d for _, d in datasets.items() if d.name in all_configured_datasets]
+        for tracking_dataset in tracking_datasets:
+            self.dataset_cfg = dataset
+            self.use_keypoints_visibility_scores_for_reid = use_keypoints_visibility_scores_for_reid
+            additional_args = {
+                "tracking_dataset": tracking_dataset,
+                "reid_config": self.dataset_cfg,
+            }
+            print(f"Registering dataset {tracking_dataset.name}")
+            TorchreidDataset = type(tracking_dataset.name, (ReidDataset,), {})  #
+            register_image_dataset(
+                tracking_dataset.name,
+                configure_dataset_class(TorchreidDataset, **additional_args),
+                tracking_dataset.nickname,
+            )
         self.cfg = CN(OmegaConf.to_container(cfg, resolve=True))
         # self.download_models(load_weights=self.cfg.model.load_weights,
         #                      pretrained_path=self.cfg.model.backbone_pretrained_path,
@@ -141,10 +137,13 @@ class BPBReId(DetectionLevelModule):
 
         sample = {
             "image": crop,
-            "keypoints_xyc": clip_keypoints_to_image(detection.keypoints.keypoints_bbox_xyc(),
-                                                     (crop.shape[1] - 1, crop.shape[0] - 1)),
-            "negative_kps": clip_keypoints_to_image(detection.negative_kps, (crop.shape[1] - 1, crop.shape[0] - 1)),
         }
+
+        if "keypoints" in detection:
+            sample["keypoints_xyc"] = clip_keypoints_to_image(detection.keypoints.keypoints_bbox_xyc(),
+                                                     (crop.shape[1] - 1, crop.shape[0] - 1))
+        if "negative_kps" in detection:
+            sample["negative_kps"] = clip_keypoints_to_image(detection.negative_kps, (crop.shape[1] - 1, crop.shape[0] - 1))
 
         batch = ImageDataset.getitem(
             sample,
@@ -180,14 +179,14 @@ class BPBReId(DetectionLevelModule):
         visibility_scores = visibility_scores.cpu().detach().numpy()
         parts_masks = parts_masks.cpu().detach().numpy()
 
-        if self.use_keypoints_visibility_scores_for_reid:
-            kp_visibility_scores = batch["visibility_scores"].numpy()
-            if visibility_scores.shape[1] > kp_visibility_scores.shape[1]:
-                kp_visibility_scores = np.concatenate(
-                    [np.ones((visibility_scores.shape[0], 1)), kp_visibility_scores],
-                    axis=1,
-                )
-            visibility_scores = np.float32(kp_visibility_scores)
+        # if self.use_keypoints_visibility_scores_for_reid:
+        #     kp_visibility_scores = batch["visibility_scores"].numpy()
+        #     if visibility_scores.shape[1] > kp_visibility_scores.shape[1]:
+        #         kp_visibility_scores = np.concatenate(
+        #             [np.ones((visibility_scores.shape[0], 1)), kp_visibility_scores],
+        #             axis=1,
+        #         )
+        #     visibility_scores = np.float32(kp_visibility_scores)
 
         reid_df = pd.DataFrame(
             {

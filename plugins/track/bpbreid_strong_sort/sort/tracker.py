@@ -58,6 +58,9 @@ class Tracker:
         w_st=1,
         only_position_for_kf_gating=False,
         max_kalman_prediction_without_update=7,
+        use_only_foreground_embedding=False,
+        disable_second_stage=False,
+        disable_gating=False,
     ):
         self.metric = metric
         if motion_criterium == "iou":
@@ -82,6 +85,9 @@ class Tracker:
         self.w_reid = w_reid
         self.w_st = w_st
         self.matching_strategy = matching_strategy
+        self.use_only_foreground_embedding = use_only_foreground_embedding
+        self.disable_second_stage = disable_second_stage
+        self.disable_gating = disable_gating
 
         self.tracks = []
         self._next_id = 1
@@ -276,9 +282,22 @@ class Tracker:
             }
 
             targets = np.array([tracks[i].track_id for i in track_indices])
-            cost_matrix_reid = self.metric.distance(features, targets)  # NO thresholding until here -> ONLY REID DISTANCE
+            cost_matrix_reid = self.metric.distance(features, targets)
+            # print("BPBREID STRONGSORT")
+            # print("DETECTIONS")
+            # print([dets[i].confidence for i in detection_indices])
+            # print([dets[i].id for i in detection_indices])
+            # print([dets[i].ltwh[0] for i in detection_indices])
+            # print([dets[i].feature["reid_features"][0, 1] for i in detection_indices])
+            # print("TRACKS")
+            # print([tracks[i].last_detection.confidence for i in track_indices])
+            # print([tracks[i].last_detection.id for i in track_indices])
+            # print([tracks[i].last_detection.ltwh[0] for i in track_indices])
+            # print([tracks[i].last_detection.feature["reid_features"][0, 1] for i in track_indices])
+            # print("COST MATRIX")
+            # print(cost_matrix_reid)# NO thresholding until here -> ONLY REID DISTANCE
             cost_matrix = linear_assignment.gate_cost_matrix(  # KF gating applied, too big values are set to INFTY
-                cost_matrix_reid, tracks, dets, track_indices, detection_indices, only_position=self.only_position, mc_lambda=self.mc_lambda
+                cost_matrix_reid, tracks, dets, track_indices, detection_indices, only_position=self.only_position, mc_lambda=self.mc_lambda, disable_gating=self.disable_gating
             )
 
             return cost_matrix
@@ -303,34 +322,37 @@ class Tracker:
             detections,
             confirmed_tracks,
         )
+        self.add_matching_information(detections, self.tracks, "R", confirmed_tracks, list(range(len(detections))), matches_a, gated_reid_cost_matrix)
 
         # Associate remaining tracks together with unconfirmed tracks using spatio-temporal (st) distance metric.
-        iou_track_candidates = unconfirmed_tracks + [
-            k for k in unmatched_tracks_a if self.tracks[k].time_since_update == 1
-        ]
-        unmatched_tracks_a = [
-            k for k in unmatched_tracks_a if self.tracks[k].time_since_update != 1
-        ]
-        (
-            matches_b,
-            unmatched_tracks_b,
-            unmatched_detections_b,
-            st_cost_matrix
-        ) = linear_assignment.min_cost_matching(
-            self.motion_cost,
-            self.motion_max_distance,
-            self.tracks,
-            detections,
-            iou_track_candidates,
-            unmatched_detections_a,
-        )
+        if not self.disable_second_stage:
+            iou_track_candidates = unconfirmed_tracks + [
+                k for k in unmatched_tracks_a if self.tracks[k].time_since_update == 1
+            ]
+            unmatched_tracks_a = [
+                k for k in unmatched_tracks_a if self.tracks[k].time_since_update != 1
+            ]
+            (
+                matches_b,
+                unmatched_tracks_b,
+                unmatched_detections_b,
+                st_cost_matrix
+            ) = linear_assignment.min_cost_matching(
+                self.motion_cost,
+                self.motion_max_distance,
+                self.tracks,
+                detections,
+                iou_track_candidates,
+                unmatched_detections_a,
+            )
 
-        self.add_matching_information(detections, self.tracks, "R", confirmed_tracks, list(range(len(detections))), matches_a, gated_reid_cost_matrix)
-        self.add_matching_information(detections, self.tracks, "S", iou_track_candidates, unmatched_detections_a, matches_b, st_cost_matrix)
-
-        matches = matches_a + matches_b
-        unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
-        return matches, unmatched_tracks, unmatched_detections_b
+            self.add_matching_information(detections, self.tracks, "S", iou_track_candidates, unmatched_detections_a, matches_b, st_cost_matrix)
+            matches = matches_a + matches_b
+            unmatched_tracks = list(set(unmatched_tracks_a + unmatched_tracks_b))
+            return matches, unmatched_tracks, unmatched_detections_b
+        else:
+            unmatched_tracks = unmatched_tracks_a + unconfirmed_tracks
+            return matches_a, unmatched_tracks, unmatched_detections_a
 
     def bot_sort_matching(self, detections):
         """

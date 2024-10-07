@@ -51,6 +51,10 @@ def min_cost_matching(
 
     cost_matrix = distance_metric(  # return cost matrix gated by KM (too big IOU set to INF)
         tracks, detections, track_indices, detection_indices)
+    # sim_matrix = 1-cost_matrix
+    # print min, mean,  max cost:
+    # print(f"cost_matrix min cost: {np.min(cost_matrix)}, mean cost: {np.mean(cost_matrix)}, max cost: {np.max(cost_matrix)}")
+    # print(f"1-cost_matrix min cost: {np.min(sim_matrix)}, mean cost: {np.mean(sim_matrix)}, max cost: {np.max(sim_matrix)}")
     cost_matrix_thresh = cost_matrix.copy()
     cost_matrix_thresh[cost_matrix_thresh > max_distance] = max_distance + 1e-5  # FIXME GATE by reid max_dist threshold, why not inf?
     row_indices, col_indices = linear_sum_assignment(cost_matrix_thresh)
@@ -70,6 +74,14 @@ def min_cost_matching(
             unmatched_detections.append(detection_idx)
         else:
             matches.append((track_idx, detection_idx))
+    # match_matrix = np.zeros_like(cost_matrix, dtype=bool)
+    # match_matrix[tuple(zip(*matches))] = True
+    # print("match_matrix")
+    # print(match_matrix)
+    # print("association_result")
+    # print(matches)
+    # print(unmatched_tracks)
+    # print(unmatched_detections)
     return matches, unmatched_tracks, unmatched_detections, cost_matrix
 
 
@@ -131,7 +143,7 @@ def matching_cascade(
 
 def gate_cost_matrix(
         cost_matrix, tracks, detections, track_indices, detection_indices,
-        gated_cost=INFTY_COST, only_position=False, mc_lambda=0.995):
+        gated_cost=INFTY_COST, only_position=False, mc_lambda=0.995, disable_gating=False):
     """Invalidate infeasible entries in cost matrix based on the state
     distributions obtained by Kalman filtering.
     Parameters
@@ -170,6 +182,7 @@ def gate_cost_matrix(
     for row, track_idx in enumerate(track_indices):
         track = tracks[track_idx]
         gating_distance = track.kf.gating_distance(track.mean, track.covariance, measurements, only_position)
-        cost_matrix[row, gating_distance > gating_threshold] = gated_cost  # This removes physically impossible association
+        if not disable_gating:
+            cost_matrix[row, gating_distance > gating_threshold] = gated_cost  # This removes physically impossible association
         cost_matrix[row] = mc_lambda * cost_matrix[row] + (1 - mc_lambda) * gating_distance
     return cost_matrix
