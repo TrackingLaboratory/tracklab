@@ -19,7 +19,7 @@ class TrackEvalEvaluator(EvaluatorBase):
         self.cfg = cfg
         self.tracking_dataset = tracking_dataset
         self.eval_set = eval_set
-        self.trackeval_dataset_name = type(self.tracking_dataset).__name__
+        self.trackeval_dataset_name = cfg.dataset.dataset_class
         self.trackeval_dataset_class = getattr(trackeval.datasets, cfg.dataset.dataset_class)
         self.show_progressbar = show_progressbar
         self.dataset_path = dataset_path
