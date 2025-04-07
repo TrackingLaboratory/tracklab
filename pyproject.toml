@@ -30,7 +30,7 @@ dependencies = [
     "rich",
     "tabulate",
     "sn-trackeval>=0.3.0",
-    "tracklab-lap",
+    "lap",
 ]
 
 [project.scripts]
