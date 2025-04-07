@@ -19,11 +19,16 @@ from tracklab.utils.coordinates import rescale_keypoints
 
 from tracklab.utils.cv2 import overlay_heatmap
 
-from torchreid.data import ImageDataset
-from torchreid.utils.imagetools import (
-    gkern,
-    build_gaussian_heatmaps,
-)
+try:
+    from torchreid.data import ImageDataset
+    from torchreid.utils.imagetools import (
+        gkern,
+        build_gaussian_heatmaps,
+    )
+except:
+    torchreid = None
+    ImageDataset = object
+
 import logging
 
 log = logging.getLogger(__name__)

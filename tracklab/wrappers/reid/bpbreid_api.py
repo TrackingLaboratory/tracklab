@@ -4,33 +4,37 @@ import pandas as pd
 import torch
 
 from omegaconf import OmegaConf
-from yacs.config import CfgNode as CN
 from .bpbreid_dataset import ReidDataset
 # FIXME this should be removed and use KeypointsSeriesAccessor and KeypointsFrameAccessor
 from tracklab.utils.coordinates import rescale_keypoints
 from tracklab.utils.collate import default_collate
 
-from torchreid.scripts.main import build_config, build_torchreid_model_engine
-from torchreid.tools.feature_extractor import FeatureExtractor
-from torchreid.utils.imagetools import (
-    build_gaussian_heatmaps,
-)
+try:
+    from yacs.config import CfgNode as CN
+    import torchreid
+    from torchreid.scripts.main import build_config, build_torchreid_model_engine
+    from torchreid.tools.feature_extractor import FeatureExtractor
+    from torchreid.utils.imagetools import (
+        build_gaussian_heatmaps,
+    )
+    from torchreid.data.masks_transforms import (
+        CocoToSixBodyMasks,
+        masks_preprocess_transforms,
+    )
+    from torchreid.utils.tools import extract_test_embeddings
+    from torchreid.data.datasets import configure_dataset_class
+
+    from torchreid.scripts.default_config import engine_run_kwargs
+except ImportError:
+    torchreid = None
+
 from tracklab.utils.collate import Unbatchable
 
 import tracklab
 from pathlib import Path
 
 
-import torchreid
 from torch.nn import functional as F
-from torchreid.data.masks_transforms import (
-    CocoToSixBodyMasks,
-    masks_preprocess_transforms,
-)
-from torchreid.utils.tools import extract_test_embeddings
-from torchreid.data.datasets import configure_dataset_class
-
-from torchreid.scripts.default_config import engine_run_kwargs
 
 from ...pipeline.detectionlevel_module import DetectionLevelModule
 from ...utils.download import download_file

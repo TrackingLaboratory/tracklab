@@ -9,7 +9,7 @@ from .kalman_filter import KalmanFilter
 # from fast_reid.fast_reid_interfece import FastReIDInterface
 
 from deep_oc_sort.reid_multibackend import ReIDDetectMultiBackend
-from ultralytics.yolo.utils.ops import xyxy2xywh, xywh2xyxy
+from ultralytics.utils.ops import xyxy2xywh, xywh2xyxy
 
 
 class STrack(BaseTrack):

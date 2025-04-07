@@ -2,7 +2,10 @@ import os
 from pathlib import Path
 
 import requests
-from mim.utils import get_installed_path
+try:
+    from mim.utils import get_installed_path
+except ImportError:
+    get_installed_path = lambda x: "."
 from tqdm import tqdm
 
 import logging
