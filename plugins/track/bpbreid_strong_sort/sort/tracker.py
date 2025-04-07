@@ -8,7 +8,7 @@ from . import oks_matching
 from .track import Track
 import logging
 
-from plugins.track.bpbreid_strong_sort.ecc import ECC, get_matrix
+from bpbreid_strong_sort.ecc import ECC, get_matrix
 
 log = logging.getLogger(__name__)
 
