@@ -96,7 +96,8 @@ class VisualizationEngine(Callback):
             else:
                 detections = detections[detections.image_id == image_metadata.name]
                 image = self.draw_frame(image_metadata,
-                                        detections, ground_truths, "inf", image=image)
+                                        detections, ground_truths, nframes="inf",
+                                        image=image, image_gt=image_metadata, image_pred=image_metadata)
             if platform.system() == "Linux" and self.video_name not in self.windows:
                 self.windows.append(self.video_name)
                 cv2.namedWindow(str(self.video_name),
@@ -217,9 +218,15 @@ class VisualizationEngine(Callback):
         return patch
 
     def _draw_detection(self, patch, detection, is_prediction):
-        is_matched = pd.notna(detection.track_id)
+        if not hasattr(detection, "track_id"):
+            is_matched = False
+        else:
+            is_matched = pd.notna(detection.track_id)
 
         if not is_matched and not self.cfg.prediction.draw_unmatched:
+            return
+
+        if is_prediction and self.cfg.prediction.min_bbox_confidence is not None and detection.bbox_conf < self.cfg.prediction.min_bbox_confidence:
             return
 
         # colors
@@ -352,6 +359,7 @@ class VisualizationEngine(Callback):
             if (
                 hasattr(detection, "matched_with")
                 and detection.matched_with is not None
+                and not pd.isna(detection.matched_with)
                 and is_matched
             ):
                 l, t, r, b = detection.bbox.ltrb(
@@ -450,12 +458,12 @@ class VisualizationEngine(Callback):
 
     def _colors(self, detection, is_prediction):
         cmap = prediction_cmap if is_prediction else ground_truth_cmap
-        if pd.isna(detection.track_id):
+        if hasattr(detection, "track_id") and pd.isna(detection.track_id):
             color_bbox = self.cfg.bbox.color_no_id
             color_text = self.cfg.text.color_no_id
             color_keypoint = self.cfg.keypoint.color_no_id
             color_skeleton = self.cfg.skeleton.color_no_id
-        else:
+        elif hasattr(detection, "track_id"):
             color_key = "color_prediction" if is_prediction else "color_ground_truth"
             color_id = cmap[int(detection.track_id) % len(cmap)]
             color_bbox = (
@@ -474,6 +482,11 @@ class VisualizationEngine(Callback):
                 if self.cfg.skeleton[color_key] is not None
                 else color_id
             )
+        else:
+            if is_prediction:
+                color_bbox, color_text, color_keypoint, color_skeleton = 4*([0, 0, 0], )
+            else:
+                color_bbox, color_text, color_keypoint, color_skeleton = 4*([0, 255, 0], )
         return color_bbox, color_text, color_keypoint, color_skeleton
 
     def _update_video(self, patch, video_name):

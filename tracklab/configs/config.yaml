@@ -23,12 +23,20 @@ pipeline:
   - bbox_detector
   - track
 
+dataset:
+  nframes: -1
+  nvid: 1
+
+
+
 # Experiment name
 experiment_name: "tracklab"
 
 # Path definitions
 data_dir: "${project_dir}/data"
 model_dir: "${project_dir}/pretrained_models"
+#data_dir: "/globalscratch/ucl/elen/bstandae/shared_datasets"
+#model_dir: "/globalscratch/ucl/elen/vjoosdtb/reconAIssance/pretrained_models"
 
 # Machine configuration
 num_cores: 4

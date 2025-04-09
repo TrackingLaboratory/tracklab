@@ -14,6 +14,9 @@ class PoseTrack21(TrackingDataset):
     Test set: ??? images
     """
 
+    name = "posetrack21"
+    nickname = "ptt"
+
     def __init__(
         self,
         dataset_path: str,

@@ -15,12 +15,10 @@ cfg:
     draw_keypoints: False
     draw_skeleton: False
     draw_unmatched: False
-    display_jersey_number: True
-    display_team: True
-    display_role: True
     print_id: True
     print_bbox_confidence: True
     print_bbox_state: True
+    min_bbox_confidence: 0.1
     # debug
     print_keypoints_confidence: False
     draw_bpbreid_heatmaps: False

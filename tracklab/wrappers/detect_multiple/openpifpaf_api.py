@@ -106,7 +106,7 @@ class OpenPifPaf(ImageLevelModule):
 
         return detections
 
-    def train(self):
+    def train(self, *args, **kwargs):
         old_argv = sys.argv
         sys.argv = self._hydra_to_argv(self.cfg.train)
         log.info(f"Starting training of the detection model")

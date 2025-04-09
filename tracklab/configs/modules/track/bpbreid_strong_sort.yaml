@@ -2,8 +2,8 @@ _target_: tracklab.wrappers.BPBReIDStrongSORT
 
 cfg:
   ecc: False # activate camera motion compensation
-  ema_alpha: 0.9 # updates  appearance  state in  an exponential moving average manner # FIXME is it still used?
-  mc_lambda: 0.995 # matching with both appearance (1 - MC_LAMBDA) and KF gated cost
+  ema_alpha: 0.9 # updates  appearance  state in  an exponential moving average manner
+  mc_lambda: 0.995 # matching with  <mc_lambda * appearance + (1 - mc_lambda) * KF_gated_cost>
   max_dist: 0.5 # The reid matching threshold. Samples with larger distance are considered an invalid match
   motion_criterium: "iou" # "iou" or "oks"
   max_iou_distance: 0.8 # Gating threshold. Associations with cost larger than this value are disregarded.
@@ -19,3 +19,6 @@ cfg:
   w_kfgd: 1
   w_reid: 1
   w_st: 1
+  use_only_foreground_embedding: False
+  disable_gating: False
+  disable_second_stage: False

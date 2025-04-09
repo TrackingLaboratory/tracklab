@@ -6,6 +6,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 
 import numpy as np
+import pandas
 import pandas as pd
 from contextlib import AbstractContextManager
 from os.path import abspath
@@ -51,21 +52,24 @@ class TrackerState(AbstractContextManager):
         if self.load_file:
             with zipfile.ZipFile(self.load_file) as zf:
                 if "summary.json" in zf.namelist():
-                    with zf.open("summary.json") as fp:
+                    with zf.open("summary.json", force_zip64=True) as fp:
                         summary = json.load(fp)
                         if isinstance(summary["columns"], list):
                             load_columns["detection"] = set(summary["columns"])
                         else:
                             load_columns = {k:set(v) for k, v in summary["columns"].items()}
                 else:
-                    image_file = next(f for f in zf.namelist() if "image" in f)
+                    image_file = next((f for f in zf.namelist() if "image" in f), None)
                     detection_file = next(f for f in zf.namelist() if "image" not in f)
-                    with zf.open(detection_file) as fp:
-                        dets = pickle.load(fp)
+                    with zf.open(detection_file, force_zip64=True) as fp:
+                        dets = pandas.read_pickle(fp)
                         load_columns["detection"] = set(dets.columns)
-                    with zf.open(image_file) as fp:
-                        images = pickle.load(fp)
-                        load_columns["image"] = set(images.columns)
+                    if image_file is not None:
+                        with zf.open(image_file, force_zip64=True) as fp:
+                            images = pandas.read_pickle(fp)
+                            load_columns["image"] = set(images.columns)
+                    else:
+                        load_columns["image"] = set()
         elif load_from_groundtruth:
             load_columns["image"] = set(self.image_gt.columns)
             load_columns["detection"] = set(self.detections_gt.columns)
@@ -219,7 +223,7 @@ class TrackerState(AbstractContextManager):
         if self.save_file is None:
             save_zf = None
         else:
-            os.makedirs(os.path.dirname(self.save_file), exist_ok=True)
+            Path(self.save_file).parent.mkdir(parents= True, exist_ok=True)
             save_zf = zipfile.ZipFile(
                 self.save_file,
                 mode="a",
@@ -251,6 +255,10 @@ class TrackerState(AbstractContextManager):
         self.update(detections, image_pred)
         self.save()
 
+    def on_dataset_track_end(self, engine: "TrackingEngine"):
+        log.info("Tracking ended, final TrackerState stats:")
+        self.display_stats()
+
     def update(self, detections: pd.DataFrame, image_metadata):
         if self.detections_pred is None:
             self.detections_pred = detections
@@ -280,6 +288,8 @@ class TrackerState(AbstractContextManager):
         assert (
                 self.detections_pred is not None
         ), "The detections_pred should not be empty when saving"
+        if "body_masks" in self.detections_pred:
+            self.detections_pred = self.detections_pred.drop(['body_masks'], axis=1)
         if f"{self.video_id}.pkl" not in self.zf["save"].namelist():
             if "summary.json" not in self.zf["save"].namelist():
                 with self.zf["save"].open("summary.json", "w", force_zip64=True) as fp:
@@ -328,21 +338,21 @@ class TrackerState(AbstractContextManager):
             video_image_preds = self.image_pred_public[self.image_pred_public.video_id == self.video_id]
         if self.load_file is not None:
             if f"{self.video_id}.pkl" in self.zf["load"].namelist():
-                with self.zf["load"].open(f"{self.video_id}.pkl", "r") as fp:
-                    video_detections = pickle.load(fp)[self.load_columns["detection"]]
-            else:
+                with self.zf["load"].open(f"{self.video_id}.pkl", "r", force_zip64=True) as fp:
+                    video_detections = pandas.read_pickle(fp)[self.load_columns["detection"]]  # TODO see with Victor if this ok
+                    video_detections = video_detections[video_detections['image_id'].isin(video_image_preds.index)]  # load only detections from the required frames (nframes)
+            else:  # TODO throw error?
                 log.info(f"{self.video_id} detections not in pklz file.")
-                video_detections = pd.DataFrame()
+                video_detections = pd.DataFrame(columns=self.load_columns["detection"])
             if f"{self.video_id}_image.pkl" in self.zf["load"].namelist():
-                with self.zf["load"].open(f"{self.video_id}_image.pkl", "r") as fp_image:
-                    video_image_preds = merge_dataframes(
-                        pickle.load(fp_image), video_image_preds
-                    )[self.load_columns["image"]]
+                with self.zf["load"].open(f"{self.video_id}_image.pkl", "r", force_zip64=True) as fp_image:
+                    video_images = merge_dataframes(pandas.read_pickle(fp_image), video_image_preds)[self.load_columns["image"]]
+                    video_image_preds = video_images[video_images.index.isin(video_image_preds.index)]  # load only images from the required frames (nframes)
             else:
-                video_image_preds = self.image_metadatas[
-                    self.image_metadatas.video_id == self.video_id
-                    ]
+                video_image_preds = self.image_metadatas[self.image_metadatas.video_id == self.video_id]
         self.update(video_detections, video_image_preds)
+
+
         return video_detections, video_image_preds
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -360,3 +370,9 @@ class TrackerState(AbstractContextManager):
                 columns=self.forget_columns,
                 errors="ignore"
             )
+
+    def display_stats(self):
+        log.info(f"Total # detections: {len(self.detections_pred)} (GT={len(self.detections_gt)})")
+        if "track_id" in self.detections_pred.columns:
+            log.info(f"Total # detections with track_id: {len(self.detections_pred.dropna(subset=['track_id']))} (GT={len(self.detections_gt.dropna(subset=['track_id']))})")
+            log.info(f"Total # track_ids: {len(self.detections_pred.track_id.unique())} (GT={len(self.detections_gt.person_id.unique())})")

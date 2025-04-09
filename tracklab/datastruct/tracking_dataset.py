@@ -1,10 +1,15 @@
+import copy
 import logging
 import os
 from abc import ABC
 from pathlib import Path
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Optional
+
+import numpy as np
 import pandas as pd
 
+from tracklab.utils import wandb
 
 log = logging.getLogger(__name__)
 
@@ -23,7 +28,13 @@ class TrackingSet:
     video_metadatas: pd.DataFrame
     image_metadatas: pd.DataFrame
     detections_gt: pd.DataFrame
-    image_gt: pd.DataFrame = field(default_factory=lambda: pd.DataFrame(columns=["video_id"]))
+    image_gt: pd.DataFrame = pd.DataFrame(columns=["video_id"])
+
+    def filter_videos(self, keep_video_ids):
+        self.video_metadatas = self.video_metadatas.loc[keep_video_ids]
+        self.image_metadatas = self.image_metadatas[self.image_metadatas.video_id.isin(keep_video_ids)]
+        self.detections_gt = self.detections_gt[self.detections_gt.video_id.isin(keep_video_ids)]
+        self.image_gt = self.image_gt[self.image_gt.video_id.isin(keep_video_ids)]
 
 
 class TrackingDataset(ABC):
@@ -34,16 +45,50 @@ class TrackingDataset(ABC):
         nvid: int = -1,
         nframes: int = -1,
         vids_dict: list = None,
-        *args,
+        *,
+        set_split_idxs: Optional[dict[str, int]] = None,
         **kwargs
     ):
+        set_split_idxs = set_split_idxs or {}
         self.dataset_path = Path(dataset_path)
         self.sets = SetsDict(sets)
         sub_sampled_sets = SetsDict()
         for set_name, split in self.sets.items():
             vid_list = vids_dict[set_name] if vids_dict is not None and set_name in vids_dict else None
             sub_sampled_sets[set_name] = self._subsample(split, nvid, nframes, vid_list)
+        assert (len(set_split_idxs) == 0) or (nvid == -1), "Splitting the dataset and setting nvid to a different value is not supported"
+        self.training_sets = copy.deepcopy(self.sets)
         self.sets = sub_sampled_sets
+        self.set_splits = {}
+        self.set_split_idxs = set_split_idxs
+
+        for set_name, split_idx in set_split_idxs.items():
+            self.set_splits[set_name] = []
+            self._split_set(set_name)
+            self.sets[set_name] = self.set_splits[set_name][split_idx]
+            self.training_sets[set_name] = self.set_splits[set_name][split_idx]
+
+    def _split_set(self, set_name, num_splits=2):
+        video_groups = [[] for i in range(num_splits)]
+        people_in_video = [set() for i in range(num_splits)]
+        for video_id, _ in self.sets[set_name].detections_gt.groupby("video_id").person_id.nunique().sort_values(ascending=False).items():
+            video_df = self.sets[set_name].detections_gt.loc[self.sets[set_name].detections_gt.video_id==video_id]
+            for person_id in np.unique(video_df.person_id):
+                group_idxs = np.nonzero([np.isin(person_id, x) for x in people_in_video])[0]
+                if len(group_idxs) > 0:
+                    current_group = group_idxs[0]
+                    break
+            else:
+                current_group = np.argmin([len(x) for x in video_groups])  # group to put it in
+
+            video_groups[current_group].append(video_id)
+            people_in_video[current_group].update(video_df.person_id)
+
+        self.train_sets = []
+        for video_ids in video_groups:
+            current_set = copy.deepcopy(self.sets[set_name])
+            current_set.filter_videos(video_ids)
+            self.set_splits[set_name].append(current_set)
 
     def _subsample(self, tracking_set, nvid, nframes, vids_names):
         if nvid < 1 and nframes < 1 and (vids_names is None or len(vids_names) == 0) or tracking_set is None:
@@ -91,12 +136,26 @@ class TrackingDataset(ABC):
         assert len(tiny_video_metadatas) > 0, "No videos left after subsampling the tracking set"
         assert len(tiny_image_metadatas) > 0, "No images left after subsampling the tracking set"
 
-        return TrackingSet(
+        tiny_tracking_set = TrackingSet(
             tiny_video_metadatas,
             tiny_image_metadatas,
             tiny_detections,
             tiny_image_gt,
         )
+
+        if hasattr(tracking_set, "detections_public") and not tracking_set.detections_public.empty:
+            tiny_public_detections = tracking_set.detections_public[
+                tracking_set.detections_public.image_id.isin(tiny_image_metadatas.index)
+            ]
+            tiny_tracking_set.detections_public = tiny_public_detections
+
+        if hasattr(tracking_set, "detections_pred") and not tracking_set.detections_pred.empty:
+            tiny_pred_detections = tracking_set.detections_pred[
+                tracking_set.detections_pred.image_id.isin(tiny_image_metadatas.index)
+            ]
+            tiny_tracking_set.detections_pred = tiny_pred_detections
+
+        return tiny_tracking_set
 
 
     @staticmethod
@@ -155,8 +214,8 @@ class TrackingDataset(ABC):
         for id, video in video_metadatas.iterrows():
             file_path = os.path.join(save_path, f"{video['name']}.txt")
             file_df = mot_df[mot_df["video_id"] == id].copy()
-            if file_df["frame"].min() == 0:
-                file_df["frame"] = file_df["frame"] + 1  # MOT Challenge format starts at 1
+            #if file_df["frame"].min() == 0:  # FIXME changed to make bytetrackddsort work?
+            file_df["frame"] = file_df["frame"] + 1  # MOT Challenge format starts at 1
             if not file_df.empty:
                 file_df.sort_values(by="frame", inplace=True)
                 clazz = "category_id" if save_classes else "x"
@@ -183,4 +242,11 @@ class TrackingDataset(ABC):
 
     def process_trackeval_results(self, results, dataset_config, eval_config):
         log.info(f"TrackEval results = {results}")
-        return results
+        wandb.log(results)
+
+    def __str__(self):
+        set_str = []
+        for set_name, set_data in self.sets.items():
+            if set_data is not None:
+                set_str.append(f"{set_name} set: {len(set_data.video_metadatas)}")
+        return self.__class__.__name__ + "= " + "; ".join(set_str)
