@@ -57,7 +57,7 @@ class VisualizationEngine(Callback):
             ]
         image_gts = tracker_state.image_gt[tracker_state.image_gt.video_id == video_id]
         nframes = len(image_metadatas)
-        video_name = tracker_state.video_metadatas.loc[video_id].name
+        video_name = tracker_state.video_metadatas.loc[video_id]["name"]
         total = self.max_frames or len(image_metadatas.index)
         progress.init_progress_bar("vis", "Visualization", total)
         detection_preds_by_image = detections.groupby("image_id")
