@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Dict, Optional
 
 import cv2
+import pandas as pd
 
 from tracklab.callbacks import Progressbar, Callback
 from tracklab.core.visualizer import Visualizer
@@ -65,7 +66,7 @@ class VisualizationEngine(Callback):
             image_id,
             self,
             image_metadatas,
-            detection_preds_by_image.get_group(image_id),
+            get_group(detection_preds_by_image, image_id),
             detection_gts_by_image.get_group(image_id),
             image_gts,
             image_preds,
@@ -118,3 +119,8 @@ def process_frame(args):
                                 image_pred, image_gt, nframes)
 
     return frame, Path(image_metadata.file_path).name
+
+
+def get_group(g, key):
+    if key in g.groups: return g.get_group(key)
+    return pd.DataFrame(columns=["bbox_ltwh"])

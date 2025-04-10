@@ -32,7 +32,10 @@ class DetectionVisualizer(Visualizer, ABC):
         self.colors = colors
 
     def draw_frame(self, image, detections_pred, detections_gt, image_pred, image_gt):
-        bbox_pred = torch.tensor(np.stack(detections_pred.bbox.ltrb()))
+        if not detections_pred.empty:
+            bbox_pred = torch.tensor(np.stack(detections_pred.bbox.ltrb()))
+        else:
+            bbox_pred = torch.empty((0, 4))
         bbox_gt = torch.tensor(np.stack(detections_gt.bbox.ltrb()))
         cost_matrix = box_iou(bbox_pred, bbox_gt)
 
