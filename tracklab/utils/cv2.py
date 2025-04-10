@@ -81,22 +81,21 @@ def draw_keypoints(
     detection,
     patch,
     kp_color,
-    kp_radius,
-    kp_thickness,
-    text_font,
-    text_scale,
-    text_thickness,
-    text_color,
-    skeleton_color,
-    skeleton_thickness,
+    threshold=0.,
     print_confidence=False,
     draw_skeleton=True,
+    skeleton_thickness=2,
+    kp_radius=4,
+    kp_thickness=-1,
+    text_font=1,
+    text_scale=1,
+    text_thickness=1,
 ):
-    try:
+    if hasattr(detection, "keypoints_xyc"):
         keypoints_xy = detection.keypoints.xy(rounded=True).astype(int)
         keypoints_c = detection.keypoints.c()
         for xy, c in zip(keypoints_xy, keypoints_c):
-            if c > 0:
+            if c >= threshold:
                 cv2.circle(
                     patch,
                     (xy[0], xy[1]),
@@ -113,14 +112,15 @@ def draw_keypoints(
                         fontFace=text_font,
                         fontScale=text_scale,
                         thickness=text_thickness,
-                        color_txt=text_color,
+                        color_txt=kp_color,
                         color_bg=(255, 255, 255),
                         alignH="r",
                         alignV="t",
+                        alpha_bg=0.5,
                     )
             if draw_skeleton:
                 for link in posetrack_human_skeleton:
-                    if keypoints_c[link[0] - 1] > 0 and keypoints_c[link[1] - 1] > 0:
+                    if keypoints_c[link[0] - 1] >= threshold and keypoints_c[link[1] - 1] >= threshold:
                         cv2.line(
                             patch,
                             (
@@ -135,77 +135,73 @@ def draw_keypoints(
                             thickness=skeleton_thickness,
                             lineType=cv2.LINE_AA,
                         )
-    except KeyError:
+    else:
         log.warning(
             "You tried to draw the keypoints but no 'keypoints_xyc' were found in the "
             "detection."
         )
 
-
 def draw_bbox(
     detection,
     patch,
     bbox_color,
-    bbox_thickness,
-    text_font,
-    text_scale,
-    text_thickness,
-    text_color,
-    print_confidence=False,
     print_id=False,
+    print_confidence=False,
+    bbox_thickness=2,
+    text_font=1,
+    text_scale=1,
+    text_thickness=1,
 ):
-    l, t, r, b = detection.bbox.ltrb(
-        image_shape=(patch.shape[1], patch.shape[0]), rounded=True
-    )
-    w, h = r - l, b - t
-    cv2.rectangle(
-        patch,
-        (l, t),
-        (r, b),
-        color=bbox_color,
-        thickness=bbox_thickness,
-        lineType=cv2.LINE_AA,
-    )
-    if print_confidence:
-        try:
-            draw_text(
-                patch,
-                f"{detection.bbox.conf():.2f}%s",
-                (l+5, t+5),
-                fontFace=text_font,
-                fontScale=text_scale,
-                thickness=text_thickness,
-                color_txt=text_color,
-                alignH="l",
-                alignV="t",
-                color_bg=(255, 255, 255),
-                darken=0.7,
-            )
-        except KeyError:
-            log.warning(
-                "You tried to draw the confidence but no 'bbox_conf' was found in the "
-                "detection."
-            )
-    if print_id:
-        try:
-            if not np.isnan(detection.track_id):
+    if hasattr(detection, "bbox_ltwh"):
+        l, t, r, b = detection.bbox.ltrb(image_shape=(patch.shape[1], patch.shape[0]), rounded=True)
+        cv2.rectangle(
+            patch,
+            (l, t),
+            (r, b),
+            color=bbox_color,
+            thickness=bbox_thickness,
+            lineType=cv2.LINE_AA,
+        )
+        if print_confidence:
+            if hasattr(detection, "bbox_conf"):
                 draw_text(
                     patch,
-                    f"ID: {int(detection.track_id)}",
-                    (r-5, t-15),
+                    f"{detection.bbox.conf():.2f}%",
+                    (l+5, t+5),
                     fontFace=text_font,
                     fontScale=text_scale,
                     thickness=text_thickness,
-                    alignH="r",
+                    color_txt=bbox_color,
+                    alignH="l",
                     alignV="t",
-                    color_txt=text_color,
                     color_bg=(255, 255, 255),
                     alpha_bg=0.5,
                 )
-        except KeyError:
-            log.warning(
-                "You tried to draw the track id but no 'track_id' was found in the "
-                "detection."
+            else:
+                log.warning(
+                    "You tried to draw the confidence but no 'bbox_conf' was found in the "
+                    "detection."
+                )
+        if print_id:
+            if hasattr(detection, "track_id"):
+                if not np.isnan(detection.track_id):
+                    draw_text(
+                        patch,
+                        f"ID: {int(detection.track_id)}",
+                        (r-5, t-15),
+                        fontFace=text_font,
+                        fontScale=text_scale,
+                        thickness=text_thickness,
+                        alignH="r",
+                        alignV="t",
+                        color_txt=bbox_color,
+                        color_bg=(255, 255, 255),
+                        alpha_bg=0.5,
+                    )
+            else:
+                log.warning(
+                    "You tried to draw the track id but no 'track_id' was found in the "
+                    "detection."
             )
 
 

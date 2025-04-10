@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 
+import torch
 import numpy as np
 import pandas as pd
-import torch
+
 from scipy.optimize import linear_sum_assignment
 from torchvision.ops import box_iou
-
-from tracklab.core.visualization_engine import prediction_cmap, ground_truth_cmap
+from distinctipy import get_colors, get_rgb256
 
 
 class Visualizer(ABC):
@@ -30,6 +30,8 @@ class DetectionVisualizer(Visualizer, ABC):
     def post_init(self, colors, **kwargs):
         super().post_init(**kwargs)
         self.colors = colors
+        cmap = get_colors(colors["N"])
+        self.cmap = [get_rgb256(i) for i in cmap]
 
     def draw_frame(self, image, detections_pred, detections_gt, image_pred, image_gt):
         if not detections_pred.empty:
@@ -63,16 +65,16 @@ class DetectionVisualizer(Visualizer, ABC):
     def draw_detection(self, image, detection_pred, detection_gt, metric=None):
         pass
 
-    def color(self, detection, is_prediction, color_type="bbox"):
+    def color(self, detection, is_prediction, color_type="default"):
         assert self.colors is not None
         if color_type not in self.colors:
             raise ValueError(f"{color_type} not declared in the colors dict for visualization")
-        cmap = prediction_cmap if is_prediction else ground_truth_cmap
         if pd.isna(detection.track_id):
             color = self.colors[color_type].no_id
         else:
             cmap_key = "prediction" if is_prediction else "ground_truth"
-            color_id = cmap[int(detection.track_id) % len(cmap)]
-            color = self.colors[color_type][cmap_key] or color_id
-
+            if self.colors[color_type][cmap_key] == "track_id":
+                color = self.cmap[int(detection.track_id) % len(self.cmap)]
+            else:
+                color = self.colors[color_type][cmap_key]
         return color

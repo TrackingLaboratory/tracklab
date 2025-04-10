@@ -1,19 +1,30 @@
+defaults:
+  - colors # For more specific color tuning
+
 _target_: tracklab.visualization.VisualizationEngine
 save_videos: True
-visualizers:
-  test:
-    _target_: tracklab.visualization.DefaultDetectionVisualizer
-#  ellipse:
-#    _target_: tracklab.visualization.EllipseDetectionVisualizer
-  track_line:
-    _target_: tracklab.visualization.TrackingLineVisualizer
 
+visualizers:
+  # Available Visualizers:
+  # - Detections: DefaultDetectionVisualizer, FullDetectionVisualizer,
+  #               DebugDetectionVisualizer, EllipseDetectionVisualizer
+  # - Keypoints: DefaultKeypointsVisualizer, FullKeypointsVisualizer
+  detections:
+    _target_: tracklab.visualization.DefaultDetectionVisualizer
+  #keypoints:
+  #  _target_: DefaultKeypointsVisualizer
+
+# Color settings for visualization.
 colors:
-  bbox:
-    no_id: [0,0,0]
-    prediction: null
-    ground_truth: [0,0,0]
-  text:
-    no_id: [0,0,0]
-    prediction: null
-    ground_truth: [0,0,0]
+  # Choose the color you want to display:
+  # - null: No display.
+  # - track_id: A color based on the tracking ID (for prediction or ground_truth only).
+  # - RGB code: A hardcoded color in [R, G, B] format.
+  default:
+    no_id: null  # Color setting for objects with no ID (null means no display).
+    prediction: "track_id"  # Color setting for tracked predictions, based on tracking ID.
+    ground_truth: null  # Color setting for ground truth, specified as an RGB value.
+
+  # Estimated number of objects to track to generate colors that are visually
+  # distinct from one another when using "track_id".
+  N: 10

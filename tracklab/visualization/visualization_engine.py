@@ -7,7 +7,7 @@ import cv2
 import pandas as pd
 
 from tracklab.callbacks import Progressbar, Callback
-from tracklab.core.visualizer import Visualizer
+from tracklab.visualization import Visualizer
 from tracklab.datastruct import TrackerState
 from tracklab.utils.cv2 import final_patch, cv2_load_image
 
@@ -52,12 +52,10 @@ class VisualizationEngine(Callback):
             self.visualize(engine.tracker_state, video_idx, detections, image_pred, progress)
 
     def visualize(self, tracker_state: TrackerState, video_id, detections, image_preds, progress=None):
-        image_metadatas = tracker_state.image_metadatas[
-            tracker_state.image_metadatas.video_id == video_id
-            ]
+        image_metadatas = tracker_state.image_metadatas[tracker_state.image_metadatas.video_id == video_id]
         image_gts = tracker_state.image_gt[tracker_state.image_gt.video_id == video_id]
         nframes = len(image_metadatas)
-        video_name = tracker_state.video_metadatas.loc[video_id]["name"]
+        video_name = tracker_state.video_metadatas.loc[video_id]['name']
         total = self.max_frames or len(image_metadatas.index)
         progress.init_progress_bar("vis", "Visualization", total)
         detection_preds_by_image = detections.groupby("image_id")
@@ -71,8 +69,7 @@ class VisualizationEngine(Callback):
             image_gts,
             image_preds,
             nframes,
-        ) for image_id in islice(image_metadatas.index, 0, None, nframes//total)
-        ]
+        ) for image_id in islice(image_metadatas.index, 0, None, nframes//total)]
         if self.save_videos:
             image = cv2_load_image(image_metadatas.iloc[0].file_path)
             filepath = self.save_dir / "videos" / f"{video_name}.mp4"
@@ -97,8 +94,7 @@ class VisualizationEngine(Callback):
                    image_pred, image_gt, nframes):
         image = cv2_load_image(image_metadata.file_path)
         for visualizer in self.visualizers.values():
-            visualizer.draw_frame(image, detections_pred, detections_gt,
-                                  image_pred, image_gt)
+            visualizer.draw_frame(image, detections_pred, detections_gt, image_pred, image_gt)
 
         return final_patch(image)
 

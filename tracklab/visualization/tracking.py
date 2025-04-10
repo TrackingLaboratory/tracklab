@@ -3,7 +3,7 @@ from collections import deque
 import cv2
 import numpy as np
 
-from tracklab.core.visualizer import DetectionVisualizer
+from tracklab.visualization import DetectionVisualizer
 
 
 class TrackingLineVisualizer(DetectionVisualizer):

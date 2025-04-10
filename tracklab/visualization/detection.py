@@ -1,38 +1,61 @@
 import cv2
+import numpy as np
 
-from tracklab.core.visualizer import DetectionVisualizer
+from tracklab.visualization import DetectionVisualizer
 from tracklab.utils.cv2 import draw_bbox
 
 
 class DefaultDetectionVisualizer(DetectionVisualizer):
-    def __init__(self, draw_prediction=True, draw_ground_truth=False):
+    def __init__(self, print_id=False, print_confidence=False):
         super().__init__()
-        self.draw_prediction = draw_prediction
-        self.draw_ground_truth = draw_ground_truth
+        self.print_id = print_id
+        self.print_confidence = print_confidence
 
     def draw_detection(self, image, detection_pred, detection_gt, metric=None):
-        if self.draw_ground_truth and detection_gt is not None:
-            color_gt = self.color(detection_gt, is_prediction=False, color_type="bbox")
-            draw_bbox(detection_gt, image, color_gt, 1, None, None, None, None)
-        if self.draw_prediction and detection_pred is not None:
-            color_pred = self.color(detection_pred, is_prediction=True, color_type="bbox")
-            draw_bbox(detection_pred, image, color_pred, 1, None, None, None, None)
+        if detection_gt is not None:
+            color_bbox = self.color(detection_gt, is_prediction=False)
+            if color_bbox:
+                draw_bbox(
+                    detection_gt,
+                    image,
+                    color_bbox,
+                )
+        if detection_pred is not None:
+            color_bbox = self.color(detection_pred, is_prediction=True)
+            if color_bbox:
+                draw_bbox(
+                    detection_pred,
+                    image,
+                    color_bbox,
+                    self.print_confidence,
+                    self.print_id
+                )
 
+class FullDetectionVisualizer(DefaultDetectionVisualizer):
+    def __init__(self):
+        super().__init__(print_id=True, print_confidence=True)
 
-class SimpleDetectionVisualizer(DetectionVisualizer):
+class DebugDetectionVisualizer(DetectionVisualizer):
+    """
+    Detections are classified by colors:
+        - Green is True Positive
+        - Yellow is a False Positive
+        - Red is a False Negative
+    """
     def __init__(self, threshold=0.5):
         self.threshold = threshold
         super().__init__()
 
     def draw_detection(self, image, detection_pred, detection_gt, metric=None):
-        if metric is not None and metric > self.threshold:
-            draw_bbox(detection_pred, image, (0, 255, 0), 2, None, None, None, None)
-        elif detection_pred is not None:
-            draw_bbox(detection_pred, image, (255, 0, 0), 1, None, None, None, None)
-            if detection_gt is not None:
-                draw_bbox(detection_gt, image, (255, 0, 0), 1, None, None, None, None)
-        elif detection_gt is not None:
-            draw_bbox(detection_gt, image, (255, 0, 0), 1, None, None, None, None)
+        if detection_gt is not None:  # GT exists
+            if detection_pred is None:  # pred is not detected
+                draw_bbox(detection_gt, image, (255, 0, 0))  # FN
+            elif metric and metric > self.threshold and not np.isnan(detection_pred.track_id):  # pred is correct
+                draw_bbox(detection_pred, image, (0, 255, 0))  # TP
+            else:  # pred is not correct
+                draw_bbox(detection_gt, image, (255, 0, 0))  # FN
+        elif detection_pred is not None and not np.isnan(detection_pred.track_id):  # no GT and pred is assigned
+            draw_bbox(detection_pred, image, (255, 255, 0))  # FP
 
 
 class EllipseDetectionVisualizer(DetectionVisualizer):
