@@ -3,7 +3,7 @@ import logging
 import os
 from abc import ABC
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 import numpy as np
@@ -28,7 +28,7 @@ class TrackingSet:
     video_metadatas: pd.DataFrame
     image_metadatas: pd.DataFrame
     detections_gt: pd.DataFrame
-    image_gt: pd.DataFrame = pd.DataFrame(columns=["video_id"])
+    image_gt: pd.DataFrame = field(default_factory=lambda: pd.DataFrame(columns=["video_id"]))
 
     def filter_videos(self, keep_video_ids):
         self.video_metadatas = self.video_metadatas.loc[keep_video_ids]
