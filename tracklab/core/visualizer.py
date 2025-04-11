@@ -14,6 +14,9 @@ class Visualizer(ABC):
     def draw_frame(self, image, detections_pred, detections_gt, image_pred, image_gt):
         pass
 
+    def preproces(self, video_detections_pred, video_detections_gt, video_image_pred, video_image_gt):
+        pass
+
     def post_init(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
