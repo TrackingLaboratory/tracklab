@@ -2,6 +2,7 @@ from itertools import islice
 from multiprocessing import Pool
 from pathlib import Path
 from typing import Dict, Optional
+import logging
 
 import cv2
 import pandas as pd
@@ -11,6 +12,7 @@ from tracklab.visualization import Visualizer
 from tracklab.datastruct import TrackerState
 from tracklab.utils.cv2 import final_patch, cv2_load_image
 
+log = logging.getLogger(__name__)
 
 class VisualizationEngine(Callback):
     """ Visualization engine from list of visualizers.
@@ -55,7 +57,12 @@ class VisualizationEngine(Callback):
         image_metadatas = tracker_state.image_metadatas[tracker_state.image_metadatas.video_id == video_id]
         image_gts = tracker_state.image_gt[tracker_state.image_gt.video_id == video_id]
         nframes = len(image_metadatas)
-        video_name = tracker_state.video_metadatas.loc[video_id]['name']
+        video_name = tracker_state.video_metadatas.loc[video_id]["name"]
+        for visualizer in self.visualizers.values():
+            try:
+                visualizer.preproces(detections, tracker_state.detections_gt, image_preds, tracker_state.image_gt)
+            except Exception as e:
+                log.warning(f"visualizer {Visualizer} raised error : {e}")
         total = self.max_frames or len(image_metadatas.index)
         progress.init_progress_bar("vis", "Visualization", total)
         detection_preds_by_image = detections.groupby("image_id")
@@ -94,7 +101,12 @@ class VisualizationEngine(Callback):
                    image_pred, image_gt, nframes):
         image = cv2_load_image(image_metadata.file_path)
         for visualizer in self.visualizers.values():
-            visualizer.draw_frame(image, detections_pred, detections_gt, image_pred, image_gt)
+            try:
+                visualizer.draw_frame(image, detections_pred, detections_gt,
+                                      image_pred, image_gt)
+            except Exception as e:
+                log.warning(f"Error drawing {e}")
+
 
         return final_patch(image)
 
