@@ -8,6 +8,7 @@ visualizers:
   # Available Visualizers:
   # - Detections: DefaultDetectionVisualizer, FullDetectionVisualizer,
   #               DebugDetectionVisualizer, EllipseDetectionVisualizer
+  #               SimpleDetectionStatsVisualizer, DetectionStatsVisualizer
   # - Keypoints: DefaultKeypointsVisualizer, FullKeypointsVisualizer
   detections:
     _target_: tracklab.visualization.DefaultDetectionVisualizer

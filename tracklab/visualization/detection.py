@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 from tracklab.visualization import DetectionVisualizer
-from tracklab.utils.cv2 import draw_bbox
+from tracklab.utils.cv2 import draw_bbox, draw_bbox_stats
 
 
 class DefaultDetectionVisualizer(DetectionVisualizer):
@@ -39,8 +39,8 @@ class DebugDetectionVisualizer(DetectionVisualizer):
     """
     Detections are classified by colors:
         - Green is True Positive
-        - Yellow is a False Positive
-        - Red is a False Negative
+        - Yellow is False Positive
+        - Red is False Negative
     """
     def __init__(self, threshold=0.5):
         self.threshold = threshold
@@ -57,6 +57,26 @@ class DebugDetectionVisualizer(DetectionVisualizer):
         elif detection_pred is not None and not np.isnan(detection_pred.track_id):  # no GT and pred is assigned
             draw_bbox(detection_pred, image, (255, 255, 0))  # FP
 
+class DetectionStatsVisualizer(DetectionVisualizer):
+    def __init__(self,
+            print_stats=["state", "hits", "age", "time_since_update", "matched_with", "costs"],
+     ):
+        self.print_stats = print_stats
+        super().__init__()
+
+    def draw_detection(self, image, detection_pred, detection_gt, metric=None):
+        if detection_pred is not None:
+            color_bbox = self.color(detection_pred, is_prediction=True)
+            if color_bbox:
+                draw_bbox_stats(
+                    detection_pred,
+                    image,
+                    self.print_stats
+                )
+
+class SimpleDetectionStatsVisualizer(DetectionStatsVisualizer):
+    def __init__(self):
+        super().__init__(print_stats=["state", "hits", "age", "time_since_update"])
 
 class EllipseDetectionVisualizer(DetectionVisualizer):
     def __init__(self, threshold=0.5):

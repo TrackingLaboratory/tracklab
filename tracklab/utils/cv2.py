@@ -1,12 +1,10 @@
-import colorsys
-
 import cv2
-from functools import lru_cache
-
+import pandas as pd
+import colorsys
 import matplotlib.cm as cm
 
 from .coordinates import *
-
+from functools import lru_cache
 
 import logging
 
@@ -204,6 +202,49 @@ def draw_bbox(
                     "detection."
             )
 
+def draw_bbox_stats(
+    detection,
+    patch,
+    stats,
+    text_font=1,
+    text_scale=0.7,
+    text_thickness=1,
+):
+    if hasattr(detection, "bbox_ltwh"):
+        l, t, r, b = detection.bbox.ltrb(image_shape=(patch.shape[1], patch.shape[0]), rounded=True)
+        for i, stat in enumerate(stats):
+            if hasattr(detection, stat):
+                draw_text(
+                    patch,
+                    f"{stat}: {pretty_print(stat, detection[stat])}",
+                    (r - 5, b - 15*(i+1)),
+                    fontFace=text_font,
+                    fontScale=text_scale,
+                    thickness=text_thickness,
+                    alignH="r",
+                    alignV="t",
+                    color_txt=(0,0,0),
+                    color_bg=(255, 255, 255),
+                    alpha_bg=0.8,
+                )
+            else:
+                log.warning(f"No '{stat}' found in the detection during visualization.")
+    else:
+        log.warning(f"No 'bbox_ltwh' found in the detection during visualization.")
+
+def pretty_print(stat, value):
+    if stat in ["hits", "age", "time_since_update"]:
+        return int(value)
+    elif stat == "matched_with":
+        if pd.isna(value):
+            return "N/A"
+        else:
+            return f"S: {value[1]:.3f}%"
+    elif stat == "costs":
+        return {k: {ik: round(iv, 3) for ik, iv in v.items()} if isinstance(v, dict) else round(v, 3)
+        if isinstance(v, float) else v for k, v in value.items()}
+    else:
+        return value
 
 def draw_bpbreid_heatmaps(detection, patch, heatmaps_display_threshold):
     try:
