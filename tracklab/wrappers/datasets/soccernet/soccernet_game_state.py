@@ -397,9 +397,9 @@ def download_dataset(dataset_path, splits=("train", "valid", "test", "challenge"
                            "datasets automatically ? [i]"
                            f"({'/'.join(splits)})[/i]")
     if download:
-        mySoccerNetDownloader.downloadDataTask(task="gamestate-2024",
+        mySoccerNetDownloader.downloadDataTask(task="gamestate-2025",
                                                split=splits)
         for split in splits:
             log.info(f"Unzipping {split} split...")
-            with zipfile.ZipFile(dataset_path/"gamestate-2024"/f"{split}.zip", 'r') as zf:
+            with zipfile.ZipFile(dataset_path/"gamestate-2025"/f"{split}.zip", 'r') as zf:
                 zf.extractall(dataset_path / split)
