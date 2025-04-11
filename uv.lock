@@ -730,6 +730,18 @@ wheels = [
 ]
 
 [[package]]
+name = "distinctipy"
+version = "1.3.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8c/3c/e0b90a5bc396e2abaf207d9a41ea8aeab1f41760425262474903bade6a7b/distinctipy-1.3.4.tar.gz", hash = "sha256:fed97afff1afb73ecaa87c85461021f0ba89fae63067c0125b9673526510aac4", size = 29711 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0a/75/fa882538bdb0c8fc4459f1595a761591b827691936d57c08c492676f19bc/distinctipy-1.3.4-py3-none-any.whl", hash = "sha256:2bf57d9d20dbc5c2fd462298573cc963c037f493d04ec61e94cb8d0bf5023c74", size = 26743 },
+]
+
+[[package]]
 name = "docutils"
 version = "0.21.2"
 source = { registry = "https://pypi.org/simple" }
@@ -4304,6 +4316,7 @@ name = "tracklab"
 version = "1.3.0"
 source = { editable = "." }
 dependencies = [
+    { name = "distinctipy" },
     { name = "filterpy" },
     { name = "gdown" },
     { name = "hydra-core" },
@@ -4353,6 +4366,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "distinctipy" },
     { name = "filterpy", specifier = ">=1.4.5" },
     { name = "gdown", specifier = ">=4.7.1" },
     { name = "hydra-core", specifier = ">=1.3" },

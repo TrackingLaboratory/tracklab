@@ -30,6 +30,7 @@ dependencies = [
     "tabulate",
     "sn-trackeval>=0.3.0",
     "lap",
+    "distinctipy",
 ]
 
 [project.optional-dependencies]
