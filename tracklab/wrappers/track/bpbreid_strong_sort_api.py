@@ -55,9 +55,6 @@ class BPBReIDStrongSORT(ImageLevelModule):
             w_kfgd=self.cfg.w_kfgd,
             w_reid=self.cfg.w_reid,
             w_st=self.cfg.w_st,
-            use_only_foreground_embedding=self.cfg.use_only_foreground_embedding,
-            disable_second_stage=self.cfg.disable_second_stage,
-            disable_gating=self.cfg.disable_gating,
         )
         # For camera compensation
         self.prev_frame = None
