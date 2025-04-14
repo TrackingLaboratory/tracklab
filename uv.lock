@@ -3278,6 +3278,15 @@ wheels = [
 ]
 
 [[package]]
+name = "rtmlib"
+version = "0.0.13"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f6/87/c755ecbcc44badbf74d3f9860d4637116dd7ea2b0f1499a6dcc5da3ad214/rtmlib-0.0.13.tar.gz", hash = "sha256:d1961364e7a24f865d262ab2e9efdbcecb01f1d50960705f99d820c425636722", size = 39497 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/db/36/2d82b6e385ed943cb343191ad46582609bf0d78201cc230b217506b72c85/rtmlib-0.0.13-py3-none-any.whl", hash = "sha256:b6a69f8d4379306d397056184c4649eceba8d4309e7b5a0d1510d13a45584d8a", size = 48294 },
+]
+
+[[package]]
 name = "s3transfer"
 version = "0.11.4"
 source = { registry = "https://pypi.org/simple" }
@@ -4313,7 +4322,7 @@ wheels = [
 
 [[package]]
 name = "tracklab"
-version = "1.3.0"
+version = "1.3.5"
 source = { editable = "." }
 dependencies = [
     { name = "distinctipy" },
@@ -4328,6 +4337,7 @@ dependencies = [
     { name = "pandas" },
     { name = "pytorch-lightning" },
     { name = "rich" },
+    { name = "rtmlib" },
     { name = "scikit-learn" },
     { name = "sn-trackeval" },
     { name = "soccernet" },
@@ -4382,6 +4392,7 @@ requires-dist = [
     { name = "pixeltable-yolox", marker = "extra == 'yolox'" },
     { name = "pytorch-lightning", specifier = ">=2.0" },
     { name = "rich" },
+    { name = "rtmlib" },
     { name = "scikit-learn", specifier = ">=1.5.1" },
     { name = "sn-trackeval", specifier = ">=0.3.0" },
     { name = "soccernet", specifier = ">=0.1.53" },
