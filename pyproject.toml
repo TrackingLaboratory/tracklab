@@ -54,7 +54,7 @@ yolox = [
 ]
 
 kpr = [
-    "torchreid@git+https://github.com/VlSomers/keypoint_promptable_reidentification",
+    "torchreid@git+https://github.com/victorjoos/keypoint_promptable_reidentification",
 ]
 
 
