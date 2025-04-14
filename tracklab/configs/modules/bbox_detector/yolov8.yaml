@@ -1,5 +1,4 @@
-
-_target_: tracklab.wrappers.YOLOv8
+_target_: tracklab.wrappers.bbox_detector.yolov8_api.YOLOv8
 batch_size: 4
 cfg:
   # models available :

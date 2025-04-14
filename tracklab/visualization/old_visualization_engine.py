@@ -64,7 +64,7 @@ left_cmap = colormaps["Blues"].reversed().resampled(100)
 right_cmap = colormaps["Reds"].reversed().resampled(100)
 
 
-class VisualizationEngine(Callback):
+class OldVisualizationEngine(Callback):
     after_saved_state = True
 
     def __init__(self, cfg):

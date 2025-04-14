@@ -4,3 +4,4 @@ from .detection import (DefaultDetectionVisualizer, FullDetectionVisualizer, Deb
                         EllipseDetectionVisualizer, SimpleDetectionStatsVisualizer, DetectionStatsVisualizer)
 from .keypoints import DefaultKeypointsVisualizer, FullKeypointsVisualizer
 from .tracking import TrackingLineVisualizer
+from .old_visualization_engine import OldVisualizationEngine  # TODO delete this file

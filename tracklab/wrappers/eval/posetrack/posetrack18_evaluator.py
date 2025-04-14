@@ -1,8 +1,8 @@
 import os
+
 import numpy as np
 from tabulate import tabulate
-
-from tracklab.core import Evaluator as EvaluatorBase
+from tracklab.pipeline import Evaluator as EvaluatorBase
 from tracklab.utils import wandb
 
 try:

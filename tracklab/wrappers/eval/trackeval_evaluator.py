@@ -1,13 +1,12 @@
 import io
+import logging
 from contextlib import redirect_stdout
+from pathlib import Path
 
 import numpy as np
-import logging
 import trackeval
-
-from pathlib import Path
 from tabulate import tabulate
-from tracklab.core import Evaluator as EvaluatorBase
+from tracklab.pipeline import Evaluator as EvaluatorBase
 
 log = logging.getLogger(__name__)
 

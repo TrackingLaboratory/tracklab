@@ -5,9 +5,6 @@ callbacks:
   progress:
     _target_: tracklab.callbacks.Progressbar
     use_rich: ${use_rich}
-  ignored_regions:
-    _target_: tracklab.callbacks.IgnoredRegions
-    max_intersection: 0.9
   vis: ${visualization}
 #  vis_track:
 #    _target_: tracklab.visualization.video_track.VideoTrackVisualizationEngine

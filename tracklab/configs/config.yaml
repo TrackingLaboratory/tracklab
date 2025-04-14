@@ -8,11 +8,11 @@ defaults:
   - eval: trackeval
   - engine: offline
   - state: no_save
-  - visualization: save_videos
-  - modules/bbox_detector: yolov8
-  - modules/pose_topdown: hrnet_posetrack18
   - modules/reid: bpbreid
   - modules/track: oc_sort
+  - visualization: test_vis
+  - modules/pose_estimator: yolov8-pose
+  #- modules/bbox_detector: yolov8
   - _self_
 
 # Pipeline definition :
@@ -20,7 +20,7 @@ defaults:
 # - If loading a tracking state from disk, remove modules whose outputs are already provided in the loaded state
 # Use 'pipeline: []' for an empty pipeline
 pipeline:
-  - bbox_detector
+  - pose_estimator
   - track
 
 dataset:

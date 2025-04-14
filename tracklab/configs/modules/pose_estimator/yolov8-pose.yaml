@@ -1,5 +1,4 @@
-
-_target_: tracklab.wrappers.YOLOv8Pose
+_target_: tracklab.wrappers.pose_estimator.yolov8_pose_api.YOLOv8Pose
 batch_size: 4
 cfg:
   # models available :

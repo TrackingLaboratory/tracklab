@@ -2,6 +2,7 @@ from abc import abstractmethod, ABC
 
 from tracklab.datastruct.tracker_state import TrackerState
 
+
 # FIXME is this usefull ?
 class Evaluator(ABC):
     """Abstract class to implement for the integration of a new dataset evaluator

@@ -23,8 +23,8 @@ authors:
     affiliation: UCLouvain
 repository-code: 'https://github.com/TrackingLaboratory/tracklab'
 abstract: >-
-  A modular end-to-end video tracking framework for research
-  and development
+  A Modular End-to-End Video Tracking Framework for Research
+  and Development
 keywords:
   - Multi-Object Tracking
   - Video Understanding

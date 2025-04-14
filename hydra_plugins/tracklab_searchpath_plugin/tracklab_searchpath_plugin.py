@@ -8,7 +8,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class PbTrackSearchPathPlugin(SearchPathPlugin):
+class TracklabSearchPathPlugin(SearchPathPlugin):
     def manipulate_search_path(self, search_path: ConfigSearchPath) -> None:
         # Appends the search path for tracklab plugins to the end of the search path
         tracklab_plugins = entry_points(group="tracklab_plugin")

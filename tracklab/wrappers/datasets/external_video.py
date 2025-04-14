@@ -42,7 +42,7 @@ def write_video_images_to_disk(video_path):
 
 class ExternalVideo(TrackingDataset):
     """
-    A class to use PbTrack at inference on any .mp4 video.
+    A class to use Tracklab at inference on any .mp4 video.
     The .mp4 image frames are first saved individually to disk in 'working_dir/tmp/' dir.
     A tracking test set is then created based on these images files, with video_metadata and image_metadata, but without
     detections.

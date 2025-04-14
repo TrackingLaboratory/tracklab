@@ -1,14 +1,13 @@
-import os
 import json
+import os
 import tempfile
 from pathlib import Path
 
-import torch
 import numpy as np
 import pandas as pd
+import torch
 from tabulate import tabulate
-
-from tracklab.core import Evaluator as EvaluatorBase
+from tracklab.pipeline import Evaluator as EvaluatorBase
 from tracklab.utils import wandb
 
 try:
