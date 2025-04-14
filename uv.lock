@@ -4950,7 +4950,7 @@ wheels = [
 [[package]]
 name = "torchreid"
 version = "1.3.0"
-source = { git = "https://github.com/victorjoos/keypoint_promptable_reidentification#ed15eb96e82e3201ec4c091e504972b248e85e6c" }
+source = { git = "https://github.com/victorjoos/keypoint_promptable_reidentification#693f67036711039a9ea21fbc129e6e50e3bab418" }
 dependencies = [
     { name = "albumentations" },
     { name = "cosine-annealing-warmup" },
