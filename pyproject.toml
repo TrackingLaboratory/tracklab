@@ -1,6 +1,6 @@
 [project]
 name = "tracklab"
-version = "1.3.7"
+version = "1.3.9"
 description = "A Modular End-to-End Tracking Framework for Research and Development"
 readme = "README.md"
 authors = [
@@ -53,10 +53,14 @@ yolox = [
     "pixeltable-yolox"
 ]
 
+kpr = [
+    "torchreid@git+https://github.com/VlSomers/keypoint_promptable_reidentification",
+]
+
 
 [dependency-groups]
 dev = [
-    "tracklab[transformers,yolox]",
+    "tracklab[transformers,yolox,kpr]",
     "twine>=6.1.0",
 ]
 
