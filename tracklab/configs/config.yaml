@@ -7,7 +7,6 @@ defaults:
   - dataset: dancetrack
   - eval: trackeval
   - engine: offline
-  - state: no_save
   - visualization: test_vis
   #- modules/bbox_detector: yolov8
   - modules/pose_estimator: yolov8-pose
@@ -25,22 +24,29 @@ pipeline:
   #- reid
   - track
 
-# Experiment name
-experiment_name: "tracklab"
+num_cores: 4
 
-# Path definitions
+# Logging
+experiment_name: "tracklab"
+print_config: false
+use_wandb: false
+
+# Paths
 data_dir: "${project_dir}/data"
 model_dir: "${project_dir}/pretrained_models"
 
-# Machine configuration
-num_cores: 4
-use_wandb: False
-use_rich: True
+# State files loading/saving
+state:
+  load_file: null
+  save_file: "${project_dir}/states/tracklab.pklz"
+  save_file: "${project_dir}/states/${experiment_name}.pklz"
+  load_from_public_dets: false
+  load_from_groundtruth: false
 
-# Flags
-test_tracking: True
-print_config: False
-eval_tracking: True
+# Flag parameters
+test_tracking: true
+eval_tracking: true
+use_rich: true
 
 # configure Hydra to use the current working directory
 # and set up the output directory according to experiment_name

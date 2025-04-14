@@ -29,7 +29,7 @@ class TrackerState(AbstractContextManager):
             save_file=None,
             load_from_groundtruth=False,
             load_from_public_dets=False,
-            compression=zipfile.ZIP_STORED,
+            compression=zipfile.ZIP_DEFLATED,
             bbox_format=None,
             pipeline=None,
     ):
