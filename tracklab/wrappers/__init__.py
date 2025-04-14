@@ -1,5 +1,5 @@
 from .bbox_detector import *
-from .datasets import *
+from .dataset import *
 from .eval import *
 from .pose_estimator import *
 from .reid import *

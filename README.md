@@ -129,7 +129,7 @@ TODO Describe TrackLab + Hydra configuration system
 ### Architecture Overview
 Here is an overview of the important TrackLab classes:
 - **[TrackingDataset](tracklab/datastruct/tracking_dataset.py)**: Abstract class to be instantiated when adding a new dataset. The `TrackingDataset` contains one `TrackingSet` for each split of the dataset (train, val, test, etc).
-  - Example: [SoccerNetMOT](tracklab/wrappers/datasets/soccernet/soccernet_mot.py). The [SoccerNet Tracking](https://github.com/SoccerNet/sn-tracking) dataset.
+  - Example: [SoccerNetMOT](tracklab/wrappers/dataset/soccernet/soccernet_mot.py). The [SoccerNet Tracking](https://github.com/SoccerNet/sn-tracking) dataset.
 - **[TrackingSet](tracklab/datastruct/tracking_dataset.py)**: A tracking set contains three [Pandas](https://pandas.pydata.org/) dataframes:
   1. `video_metadatas`: contains one row of information per video (e.g. fps, width, height, etc).
   2. `image_metadatas`: contains one row of information per image (e.g. frame_id, video_id, etc).
