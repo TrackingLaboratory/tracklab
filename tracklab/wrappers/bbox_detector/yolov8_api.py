@@ -1,16 +1,12 @@
-import os
-import torch
-import pandas as pd
-
-from typing import Any
-from tracklab.pipeline.imagelevel_module import ImageLevelModule
-
-os.environ["YOLO_VERBOSE"] = "False"
-from ultralytics import YOLO
-
-from tracklab.utils.coordinates import ltrb_to_ltwh
-
 import logging
+import os
+from typing import Any
+
+import pandas as pd
+import torch
+from tracklab.pipeline.imagelevel_module import ImageLevelModule
+from tracklab.utils.coordinates import ltrb_to_ltwh
+from ultralytics import YOLO
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +47,7 @@ class YOLOv8(ImageLevelModule):
     @torch.no_grad()
     def process(self, batch: Any, detections: pd.DataFrame, metadatas: pd.DataFrame):
         images, shapes = batch
-        results_by_image = self.model(images)
+        results_by_image = self.model(images, verbose=False)
         detections = []
         for results, shape, (_, metadata) in zip(
             results_by_image, shapes, metadatas.iterrows()

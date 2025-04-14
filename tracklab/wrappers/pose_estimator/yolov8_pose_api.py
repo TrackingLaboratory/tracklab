@@ -1,17 +1,13 @@
+import logging
 import os
-import torch
+from typing import Any
+
 import numpy as np
 import pandas as pd
-
-from typing import Any
+import torch
 from tracklab.pipeline.imagelevel_module import ImageLevelModule
-
-os.environ["YOLO_VERBOSE"] = "False"
-from ultralytics import YOLO
-
 from tracklab.utils.coordinates import ltrb_to_ltwh
-
-import logging
+from ultralytics import YOLO
 
 log = logging.getLogger(__name__)
 
@@ -54,7 +50,7 @@ class YOLOv8Pose(ImageLevelModule):
     @torch.no_grad()
     def process(self,  batch: Any, detections: pd.DataFrame, metadatas: pd.DataFrame):
         images, shapes = batch
-        results_by_image = self.model(images)
+        results_by_image = self.model(images, verbose=False)
         detections = []
         for results, shape, (_, metadata) in zip(
             results_by_image, shapes, metadatas.iterrows()
@@ -71,8 +67,8 @@ class YOLOv8Pose(ImageLevelModule):
                                 bbox_conf=bbox.conf[0],
                                 video_id=metadata.video_id,
                                 category_id=1,  # `person` class in posetrack
-                                keypoints_xyc=keypoints,
-                                keypoints_conf=np.mean(keypoints[:, 2], axis=0),
+                                keypoints_xyc=keypoints.data[0],
+                                keypoints_conf=np.mean(keypoints.data[0, :, 2]),
                             ),
                             name=self.id,
                         )
