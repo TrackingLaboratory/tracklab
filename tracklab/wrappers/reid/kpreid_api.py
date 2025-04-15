@@ -62,7 +62,7 @@ class KPReId(DetectionLevelModule):
         self.cfg.data.save_dir = save_path
         self.cfg.project.job_id = job_id
         self.cfg.use_gpu = torch.cuda.is_available()
-        self.cfg = build_config(config=self.cfg)
+        self.cfg = build_config(config=self.cfg, training_enabled=training_enabled)
         self.test_embeddings = self.cfg.model.kpr.test_embeddings
         # Register the PoseTrack21ReID dataset to Torchreid that will be instantiated when building Torchreid engine.
         self.training_enabled = training_enabled
@@ -99,6 +99,7 @@ class KPReId(DetectionLevelModule):
             background_computation_strategy=self.cfg.model.kpr.masks.background_computation_strategy,
             mask_filtering_threshold=self.cfg.model.kpr.masks.mask_filtering_threshold,
             train_dir=None,
+            verbose=False,
         )
 
     def download_models(self, load_weights):

@@ -38,7 +38,6 @@ model_dir: "${project_dir}/pretrained_models"
 # State files loading/saving
 state:
   load_file: null
-  save_file: "${project_dir}/states/tracklab.pklz"
   save_file: "${project_dir}/states/${experiment_name}.pklz"
   load_from_public_dets: false
   load_from_groundtruth: false
