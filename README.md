@@ -13,7 +13,7 @@ TrackLab is an easy-to-use modular framework for multi-object pose/segmentation/
 
 ## Upcoming
 - [x] Public release of the codebase
-- [ ] Add support for more datasets (DanceTrack, MOTChallenge, SportsMOT, ...)
+- [x] Add support for more datasets (DanceTrack, MOTChallenge, SportsMOT, ...)
 - [ ] Add many more SOTA tracking methods and object detectors
 - [ ] Improve documentation and add more tutorials
 
@@ -51,31 +51,94 @@ to get an html version of the documentation.
 
 [^1]: Tested on `conda 22.11.1`, `Python 3.10.8`, `pip 22.3.1`, `g++ 11.3.0` and `gcc 11.3.0`
 
-### Clone the repository
+### Install using uv (recommended)
+
+[Install uv](https://docs.astral.sh/uv/getting-started/installation/).
+
+If you're creating a new project or using tracklab in an existing project, you can initialize a uv project with :
+
+```bash
+uv init
+```
+
+Then you can add tracklab : 
+
+```bash
+uv add tracklab
+```
+
+If you only want to use the virtual environment created by uv, you can use the following commands : 
+
+```bash
+uv venv --python 3.12
+uv pip install tracklab
+```
+
+In both cases, you will then be able to run tracklab using the following command:
+```bash
+uv run tracklab
+```
+
+To update & run : 
+```bash
+uv run -U tracklab
+```
+
+### Install using conda
+
+[Install conda](https://www.anaconda.com/docs/getting-started/miniconda/main).
+
+Create a new virtual environment with conda, then install tracklab with pip : 
+```bash
+conda create -n tracklab pip python=3.10 pytorch==1.13.1 torchvision==0.14.1 pytorch-cuda=11.7 -c pytorch -c nvidia -y
+conda activate tracklab
+pip install tracklab
+```
+
+You might need to change your torch installation depending on your hardware. Please check on 
+[Pytorch website](https://pytorch.org/get-started/previous-versions/) to find the right version for you.
+
+Update tracklab with : 
+
+```bash
+pip install -U tracklab
+```
+
+### Install additional dependencies
+We support multiple extra packages: openmmlabs, transformers, yolox, that you can install with the following commands :
+
+#### OpenMMLabs
+```bash
+(uv) pip install tracklab[openmmlab]
+(uv run) mim install mmcv==2.0.1
+```
+
+#### Transformers & YOLOX
+```bash
+(uv) pip install tracklab[transformers,yolox]
+```
+
+### Manual installation
+
+[Follow the above instructions to install uv](https://docs.astral.sh/uv/getting-started/installation/). Then clone the tracklab repository : 
 
 ```bash
 git clone https://github.com/TrackingLaboratory/tracklab.git
 cd tracklab
 ```
 
-### Manage the environment
-
-#### Create and activate a new environment
+Run tracklab with : 
 
 ```bash
-conda create -n tracklab pip python=3.10 pytorch==1.13.1 torchvision==0.14.1 pytorch-cuda=11.7 -c pytorch -c nvidia -y
-conda activate tracklab
+uv run tracklab
 ```
 
-You might need to change your torch installation depending on your hardware. Please check on 
-[Pytorch website](https://pytorch.org/get-started/previous-versions/) to find the right version for you.
-
-#### Install the dependencies
-Get into your repo and install the requirements with :
+Since we're using uv under the hood, uv will automatically create a virtual environment for you, and
+update the dependencies as you change them. You can also choose to install using conda, you'll then have
+to run the following when inside a virtual environment:
 
 ```bash
 pip install -e .
-mim install mmcv==2.0.1
 ```
 
 You might need to redo this if you update the repository, and some dependencies changed.
