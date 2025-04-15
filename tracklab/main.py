@@ -84,9 +84,9 @@ def init_environment(cfg):
     # For Hydra and Slurm compatibility
     progress.use_rich = cfg.use_rich
     set_sharing_strategy()  # Do not touch
-    # if torch.backends.mps.is_available():
-    #     device = "mps"
-    if torch.cuda.is_available():
+    if torch.backends.mps.is_available():
+        device = "mps"
+    elif torch.cuda.is_available():
         device = "cuda"
     else:
         device = "cpu"
