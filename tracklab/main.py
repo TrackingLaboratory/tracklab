@@ -44,7 +44,7 @@ def main(cfg):
     # Train tracking modules
     for module in modules:
         if module.training_enabled:
-            module.train(tracking_dataset, pipeline, evaluator, OmegaConf.to_container(cfg.datasets, resolve=True))
+            module.train(tracking_dataset, pipeline, evaluator, OmegaConf.to_container(cfg.dataset, resolve=True))
 
     # Test tracking
     if cfg.test_tracking:
