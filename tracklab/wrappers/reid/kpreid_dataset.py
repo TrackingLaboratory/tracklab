@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-import sys
 import cv2
 import torch
 import numpy as np
@@ -19,15 +18,11 @@ from tracklab.utils.coordinates import rescale_keypoints
 
 from tracklab.utils.cv2 import overlay_heatmap
 
-try:
-    from torchreid.data import ImageDataset
-    from torchreid.utils.imagetools import (
-        gkern,
-        build_gaussian_heatmaps,
-    )
-except:
-    torchreid = None
-    ImageDataset = object
+from torchreid.data import ImageDataset
+from torchreid.utils.imagetools import (
+    gkern,
+    build_joints_gaussian_heatmaps,
+)
 
 import logging
 
@@ -460,7 +455,7 @@ class ReidDataset(ImageDataset):
                             (w, h),
                             (mask_w, mask_h),
                         )
-                        masks_gt_crop = build_gaussian_heatmaps(
+                        masks_gt_crop = build_joints_gaussian_heatmaps(
                             keypoints_xyc, mask_w, mask_h, gaussian=gaussian
                         )
                     elif mode == "gaussian_joints":
@@ -473,7 +468,7 @@ class ReidDataset(ImageDataset):
                             (w, h),
                             (mask_w, mask_h),
                         )
-                        masks_gt_crop = build_gaussian_body_part_heatmaps(  # FIXME
+                        masks_gt_crop = build_joints_gaussian_heatmaps(  # FIXME
                             keypoints_xyc, mask_w, mask_h
                         )
                     elif mode == "pose_on_img_crops":

@@ -10,7 +10,7 @@ defaults:
   - visualization: test_vis
   #- modules/bbox_detector: yolov8
   - modules/pose_estimator: yolov8-pose
-  #- modules/reid: bpbreid
+  #- modules/reid: kpr
   - modules/track: oc_sort
   - _self_
 

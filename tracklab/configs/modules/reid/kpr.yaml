@@ -1,18 +1,15 @@
 defaults:
   - dataset: default
 
-_target_: tracklab.wrappers.BPBReId
+_target_: tracklab.wrappers.reid.kpreid_api.KPReId
 training_enabled: False
 batch_size: 2
-job_id: "${oc.env:SLURM_JOBID,0}" # TODO
 save_path: reid
 use_keypoints_visibility_scores_for_reid: False
 
-# "${model_dir}/reid/kpr_53002715_set_split_idxs_0_dancetrack_sportsmot_posetrack21_occludedduke_market.pth.tar"
-
 cfg:
   model:
-    load_weights: ""
+    load_weights: "${model_dir}/reid/kpr_dancetrack_sportsmot_posetrack21_occludedduke_market_split0.pth.tar"
     pretrained: false
     discard_test_params: False
     save_model_flag: false
