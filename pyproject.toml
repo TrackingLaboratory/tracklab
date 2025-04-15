@@ -32,6 +32,7 @@ dependencies = [
     "lap",
     "distinctipy",
     "rtmlib",
+    "huggingface-hub",
 ]
 
 [project.optional-dependencies]
@@ -62,6 +63,7 @@ kpr = [
 dev = [
     "tracklab[transformers,yolox,kpr]",
     "twine>=6.1.0",
+    "huggingface_hub[cli]",
 ]
 
 [project.scripts]
