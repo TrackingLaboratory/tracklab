@@ -6,7 +6,7 @@ from tracklab.utils.cv2 import draw_bbox, draw_bbox_stats
 
 
 class DefaultDetectionVisualizer(DetectionVisualizer):
-    def __init__(self, print_id=False, print_confidence=False):
+    def __init__(self, print_id=True, print_confidence=False):
         super().__init__()
         self.print_id = print_id
         self.print_confidence = print_confidence
