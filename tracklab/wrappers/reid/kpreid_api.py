@@ -83,7 +83,7 @@ class KPReId(DetectionLevelModule):
                                                           vis_continous=False,
                                                           )
 
-        self.model = build_model(self.cfg, 0)
+        self.model = build_model(self.cfg, 0, verbose=False)
         self.model.eval()
 
         _, self.transforms, self.target_preprocess, self.prompt_preprocess = build_transforms(
