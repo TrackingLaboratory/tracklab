@@ -27,8 +27,8 @@ class DefaultDetectionVisualizer(DetectionVisualizer):
                     detection_pred,
                     image,
                     color_bbox,
-                    self.print_confidence,
-                    self.print_id
+                    print_id=self.print_id,
+                    print_confidence=self.print_confidence,
                 )
 
 class FullDetectionVisualizer(DefaultDetectionVisualizer):

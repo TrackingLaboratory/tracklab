@@ -2,6 +2,7 @@ import cv2
 import pandas as pd
 import colorsys
 import matplotlib.cm as cm
+import distinctipy
 
 from .coordinates import *
 from functools import lru_cache
@@ -162,6 +163,7 @@ def draw_bbox(
         )
         if print_confidence:
             if hasattr(detection, "bbox_conf"):
+
                 draw_text(
                     patch,
                     f"{detection.bbox.conf():.2f}%",
@@ -183,6 +185,7 @@ def draw_bbox(
         if print_id:
             if hasattr(detection, "track_id"):
                 if not np.isnan(detection.track_id):
+                    text_color = np.array(distinctipy.get_text_color(np.array(bbox_color) / 255, 0.6)) * 255
                     draw_text(
                         patch,
                         f"ID: {int(detection.track_id)}",
@@ -192,8 +195,8 @@ def draw_bbox(
                         thickness=text_thickness,
                         alignH="r",
                         alignV="t",
-                        color_txt=bbox_color,
-                        color_bg=(255, 255, 255),
+                        color_txt=text_color,
+                        color_bg=bbox_color, # (255, 255, 255),
                         alpha_bg=0.5,
                     )
             else:
