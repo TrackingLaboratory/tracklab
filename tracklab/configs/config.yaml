@@ -7,7 +7,7 @@ defaults:
   - dataset: dancetrack
   - eval: trackeval
   - engine: offline
-  - visualization: test_vis
+  - visualization: tracking
   #- modules/bbox_detector: yolov8
   - modules/pose_estimator: yolov8-pose
   #- modules/reid: kpr
