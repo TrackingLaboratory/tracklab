@@ -12,8 +12,10 @@ visualizers:
   # - Keypoints: DefaultKeypointsVisualizer, FullKeypointsVisualizer
   detections:
     _target_: tracklab.visualization.DefaultDetectionVisualizer
-  #keypoints:
-  #  _target_: DefaultKeypointsVisualizer
+#  keypoints:
+#    _target_: tracklab.visualization.DefaultKeypointsVisualizer
+  tracking:
+    _target_: tracklab.visualization.TrackingLineVisualizer
 
 # Color settings for visualization.
 colors:

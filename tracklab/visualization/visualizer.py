@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from functools import lru_cache
 
 import torch
 import numpy as np
@@ -25,6 +26,9 @@ class Visualizer(ABC):
 class ImageVisualizer(Visualizer, ABC):
     pass
 
+@lru_cache(maxsize=None)
+def get_fixed_colors(N):
+    return get_colors(N)
 
 class DetectionVisualizer(Visualizer, ABC):
     def __init__(self):
@@ -33,7 +37,7 @@ class DetectionVisualizer(Visualizer, ABC):
     def post_init(self, colors, **kwargs):
         super().post_init(**kwargs)
         self.colors = colors
-        cmap = get_colors(colors["N"])
+        cmap = get_fixed_colors(colors["N"])
         self.cmap = [get_rgb256(i) for i in cmap]
 
     def draw_frame(self, image, detections_pred, detections_gt, image_pred, image_gt):
