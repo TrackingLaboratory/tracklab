@@ -41,7 +41,10 @@ class DetectionVisualizer(Visualizer, ABC):
             bbox_pred = torch.tensor(np.stack(detections_pred.bbox.ltrb()))
         else:
             bbox_pred = torch.empty((0, 4))
-        bbox_gt = torch.tensor(np.stack(detections_gt.bbox.ltrb()))
+        if not detections_gt.empty:
+            bbox_gt = torch.tensor(np.stack(detections_gt.bbox.ltrb()))
+        else:
+            bbox_gt = torch.empty((0, 4))
         cost_matrix = box_iou(bbox_pred, bbox_gt)
 
         row_idxs, col_idxs = linear_sum_assignment(1 - cost_matrix)

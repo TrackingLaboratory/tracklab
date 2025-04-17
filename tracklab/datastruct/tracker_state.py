@@ -38,7 +38,7 @@ class TrackerState(AbstractContextManager):
         self.image_metadatas = tracking_set.image_metadatas
         self.image_gt = tracking_set.image_gt
         self.image_pred = None
-        self.detections_gt = tracking_set.detections_gt
+        self.detections_gt = tracking_set.detections_gt or pd.DataFrame(columns=["image_id"])
         self.detections_pred = None
         if hasattr(tracking_set, "detections_public"):
             self.detections_public = tracking_set.detections_public
@@ -373,6 +373,13 @@ class TrackerState(AbstractContextManager):
 
     def display_stats(self):
         log.info(f"Total # detections: {len(self.detections_pred)} (GT={len(self.detections_gt)})")
+        tracked_text = ["Total # detections with track_id: "]
+        unique_text = ["Total # track_ids: "]
         if "track_id" in self.detections_pred.columns:
-            log.info(f"Total # detections with track_id: {len(self.detections_pred.dropna(subset=['track_id']))} (GT={len(self.detections_gt.dropna(subset=['track_id']))})")
-            log.info(f"Total # track_ids: {len(self.detections_pred.track_id.unique())} (GT={len(self.detections_gt.person_id.unique())})")
+                tracked_text.append(f"{len(self.detections_pred.dropna(subset=['track_id']))}")
+                unique_text.append(f"{len(self.detections_pred.track_id.unique())}")
+        if "track_id" in self.detections_gt.columns and "person_id" in self.detections_gt.columns:
+            tracked_text.append(f" (GT={len(self.detections_gt.dropna(subset=['track_id']))})")
+            unique_text.append(f" (GT={len(self.detections_gt.person_id.unique())})")
+        log.info("".join(tracked_text))
+        log.info("".join(unique_text))

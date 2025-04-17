@@ -72,7 +72,7 @@ class VisualizationEngine(Callback):
             self,
             image_metadatas,
             get_group(detection_preds_by_image, image_id),
-            detection_gts_by_image.get_group(image_id),
+            get_group(detection_gts_by_image, image_id),
             image_gts,
             image_preds,
             nframes,
