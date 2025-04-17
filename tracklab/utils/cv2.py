@@ -94,7 +94,7 @@ def draw_keypoints(
         keypoints_xy = detection.keypoints.xy(rounded=True).astype(int)
         keypoints_c = detection.keypoints.c()
         for xy, c in zip(keypoints_xy, keypoints_c):
-            if c >= threshold:
+            if c >= threshold and (xy != [0, 0]).all():
                 cv2.circle(
                     patch,
                     (xy[0], xy[1]),
@@ -119,7 +119,9 @@ def draw_keypoints(
                     )
             if draw_skeleton:
                 for link in posetrack_human_skeleton:
-                    if keypoints_c[link[0] - 1] >= threshold and keypoints_c[link[1] - 1] >= threshold:
+                    if (keypoints_c[link[0] - 1] >= threshold and keypoints_c[link[1] - 1] >= threshold) \
+                        and (keypoints_xy[link[0] - 1] != [0, 0]).all() \
+                        and (keypoints_xy[link[1] - 1] != [0, 0]).all():
                         cv2.line(
                             patch,
                             (
