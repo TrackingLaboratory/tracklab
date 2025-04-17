@@ -38,7 +38,10 @@ class TrackerState(AbstractContextManager):
         self.image_metadatas = tracking_set.image_metadatas
         self.image_gt = tracking_set.image_gt
         self.image_pred = None
-        self.detections_gt = tracking_set.detections_gt or pd.DataFrame(columns=["image_id"])
+        if tracking_set.detections_gt is None or tracking_set.detections_gt.empty:
+            self.detections_gt = pd.DataFrame(columns=["image_id"])
+        else:
+            self.detections_gt = tracking_set.detections_gt
         self.detections_pred = None
         if hasattr(tracking_set, "detections_public"):
             self.detections_public = tracking_set.detections_public
