@@ -1,0 +1,9 @@
+_target_: tracklab.wrappers.bbox_detector.yolo_ultralytics_api.YOLOUltralytics
+batch_size: 4
+cfg:
+  # models available :
+  # yolo11n.pt yolo11s.pt yolo11m.pt yolo11l.pt yolo11x.pt
+  # those models will be downloaded automatically if not found in the path
+  path_to_checkpoint: "${model_dir}/yolo/yolo11m.pt"
+
+  min_confidence: 0.4

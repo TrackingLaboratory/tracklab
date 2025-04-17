@@ -1,0 +1,9 @@
+_target_: tracklab.wrappers.pose_estimator.yolo_ultralytics_pose_api.YOLOUltralyticsPose
+batch_size: 4
+cfg:
+  # models available :
+  # yolo11n-pose.pt yolo11s-pose.pt yolo11m-pose.pt yolo11l-pose.pt yolo11x-pose.pt
+  # those models will be downloaded automatically if not found in the path
+  path_to_checkpoint: "${model_dir}/yolo_ultralytics/yolo11m-pose.pt"
+
+  min_confidence: 0.4

@@ -11,6 +11,9 @@ defaults:
   #- modules/bbox_detector: yolov8
   - modules/pose_estimator: yolov8-pose
   #- modules/reid: kpr
+  #- modules/bbox_detector: yolo_ultralytics
+  - modules/pose_estimator: yolo_ultralytics-pose
+  - modules/reid: kpr
   - modules/track: oc_sort
   - _self_
 

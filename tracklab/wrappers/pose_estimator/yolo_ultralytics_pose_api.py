@@ -2,6 +2,7 @@ import logging
 import os
 from typing import Any
 
+import numpy as np
 import pandas as pd
 import torch
 from tracklab.pipeline.imagelevel_module import ImageLevelModule
@@ -18,7 +19,7 @@ def collate_fn(batch):
     return idxs, (images, shapes)
 
 
-class YOLOv8(ImageLevelModule):
+class YOLOUltralyticsPose(ImageLevelModule):
     collate_fn = collate_fn
     input_columns = []
     output_columns = [
@@ -27,6 +28,8 @@ class YOLOv8(ImageLevelModule):
         "category_id",
         "bbox_ltwh",
         "bbox_conf",
+        "keypoints_xyc",
+        "keypoints_conf",
     ]
 
     def __init__(self, cfg, device, batch_size, **kwargs):
@@ -45,15 +48,16 @@ class YOLOv8(ImageLevelModule):
         }
 
     @torch.no_grad()
-    def process(self, batch: Any, detections: pd.DataFrame, metadatas: pd.DataFrame):
+    def process(self,  batch: Any, detections: pd.DataFrame, metadatas: pd.DataFrame):
         images, shapes = batch
         results_by_image = self.model(images, verbose=False)
         detections = []
         for results, shape, (_, metadata) in zip(
             results_by_image, shapes, metadatas.iterrows()
         ):
-            for bbox in results.boxes.cpu().numpy():
-                # check for `person` class
+            for bbox, keypoints in zip(
+                results.boxes.cpu().numpy(), results.keypoints.cpu().numpy()
+            ):
                 if bbox.cls == 0 and bbox.conf >= self.cfg.min_confidence:
                     detections.append(
                         pd.Series(
@@ -63,6 +67,8 @@ class YOLOv8(ImageLevelModule):
                                 bbox_conf=bbox.conf[0],
                                 video_id=metadata.video_id,
                                 category_id=1,  # `person` class in posetrack
+                                keypoints_xyc=keypoints.data[0],
+                                keypoints_conf=np.mean(keypoints.data[0, :, 2]),
                             ),
                             name=self.id,
                         )
