@@ -47,6 +47,10 @@ class VisualizationEngine(Callback):
         for visualizer in visualizers.values():
             visualizer.post_init(**kwargs)
 
+    def on_dataset_track_end(self, engine: "TrackingEngine"):
+        if self.save_videos or self.save_images:
+            log.info(f"Visualization output at : {self.save_dir.absolute()}")
+
     def on_video_loop_end(self, engine, video_metadata, video_idx, detections,
                           image_pred):
         if self.save_videos or self.save_images:
