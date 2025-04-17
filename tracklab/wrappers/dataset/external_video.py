@@ -51,8 +51,6 @@ class ExternalVideo(TrackingDataset):
         and tracking engine should adapt its batch loop accordingly.
     """
 
-    annotations_dir = "posetrack_data"
-
     def __init__(self, dataset_path: str, video_path: str, *args, **kwargs):
         if video_path.startswith("http"):
             yt_params = {"noplaylist": True, "restrictfilenames": True}
@@ -61,9 +59,7 @@ class ExternalVideo(TrackingDataset):
                 video_path = ydl.prepare_filename(info_dict)
         self.video_path = Path(video_path)
         video_name = self.video_path.stem
-        assert self.video_path.exists(), "Video does not exist ('{}')".format(
-            self.video_path
-        )
+        assert self.video_path.exists(), "Video does not exist ('{}')".format(self.video_path)
         if self.video_path.is_dir():
             image_metadata = []
             video_metadata = []
