@@ -27,5 +27,5 @@ colors:
     ground_truth: null  # Color setting for ground truth, specified as an RGB value.
 
   # Estimated number of objects to track to generate colors that are visually
-  # distinct from one another when using "track_id".
-  N: 10
+  # distinct from one another when using "track_id". or colormap name
+  cmap: 10

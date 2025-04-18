@@ -3,6 +3,7 @@ from functools import lru_cache
 
 import torch
 import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 
 from scipy.optimize import linear_sum_assignment
@@ -37,7 +38,12 @@ class DetectionVisualizer(Visualizer, ABC):
     def post_init(self, colors, **kwargs):
         super().post_init(**kwargs)
         self.colors = colors
-        cmap = get_fixed_colors(colors["N"])
+        if "cmap" in colors and isinstance(colors["cmap"], int):
+            cmap = get_fixed_colors(colors["cmap"])
+        elif "cmap" in colors:
+            cmap = plt.get_cmap(colors["cmap"]).colors
+        else:
+            cmap = get_fixed_colors(colors["N"])
         self.cmap = [get_rgb256(i) for i in cmap]
 
     def draw_frame(self, image, detections_pred, detections_gt, image_pred, image_gt):
@@ -84,7 +90,7 @@ class DetectionVisualizer(Visualizer, ABC):
         else:
             cmap_key = "prediction" if is_prediction else "ground_truth"
             if self.colors[color_type][cmap_key] == "track_id":
-                color = self.cmap[int(detection.track_id) % len(self.cmap)]
+                color = self.cmap[(int(detection.track_id) - 1) % len(self.cmap)]
             else:
                 color = self.colors[color_type][cmap_key]
         return color
