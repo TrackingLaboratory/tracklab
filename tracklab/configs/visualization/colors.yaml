@@ -1,3 +1,5 @@
+video_fps: 25
+
 colors:
   bbox:
     no_id: null
