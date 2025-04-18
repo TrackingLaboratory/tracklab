@@ -38,14 +38,14 @@ dependencies = [
 
 [project.optional-dependencies]
 # Always install mmcv with mim install mmcv==2.2.0 when installing this extra
-openmmlab = [
-    "mmdet>=3.1.0",
-    "mmengine>=0.10.1",
-    "openmim>=0.3.9",
-    "torch<=2.1.2",
-    "torchvision<=0.16.2",
-    "mmpose>=1.2.0",
-]
+#openmmlab = [
+#    "mmdet>=3.1.0",
+#    "mmengine>=0.10.1",
+#    "openmim>=0.3.9",
+#    "torch<=2.1.2",
+#    "torchvision<=0.16.2",
+#    "mmpose>=1.2.0",
+#]
 
 transformers = [
     "transformers",
@@ -92,9 +92,9 @@ no-build-isolation-package = ["chumpy"]
 #[tool.uv.sources]
 #torch = { index = "pytorch" }
 #torchvision = {index = "pytorch"}
-conflicts = [
-    [
-      { extra = "openmmlab" },
-      { extra = "yolox" },
-    ],
-]
+#conflicts = [
+#    [
+#      { extra = "openmmlab" },
+#      { extra = "yolox" },
+#    ],
+#]
