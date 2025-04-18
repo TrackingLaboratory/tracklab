@@ -56,6 +56,7 @@ class VisualizationEngine(Callback):
         if self.save_videos or self.save_images:
             progress = engine.callbacks.get("progress", Progressbar(dummy=True))
             self.visualize(engine.tracker_state, video_idx, detections, image_pred, progress)
+            progress.on_module_end(None, "vis", None)
 
     def visualize(self, tracker_state: TrackerState, video_id, detections, image_preds, progress=None):
         image_metadatas = tracker_state.image_metadatas[tracker_state.image_metadatas.video_id == video_id]
