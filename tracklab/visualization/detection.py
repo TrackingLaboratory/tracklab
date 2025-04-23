@@ -100,8 +100,8 @@ class EllipseDetectionVisualizer(DetectionVisualizer):
                 lineType=cv2.LINE_4,
             )
         if detection_pred is not None:
-            color_bbox = self.color(detection_pred, is_prediction=True)
-            if color_bbox:
+            color = self.color(detection_pred, is_prediction=True)
+            if color:
                 x1, y1, x2, y2 = detection_gt.bbox.ltrb()
                 center = (int((x1 + x2) / 2), int(y2))
                 width = x2 - x1
