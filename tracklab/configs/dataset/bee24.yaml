@@ -1,0 +1,12 @@
+defaults:
+  - default
+
+_target_: tracklab.wrappers.Bee24
+
+dataset_path: ${data_dir}/BEE24
+eval_set: "test"
+public_dets_subpath: "det/yolox.txt"
+
+track_eval:
+  dataset_class: MotChallenge2DBox
+  BENCHMARK: "Bee24"
