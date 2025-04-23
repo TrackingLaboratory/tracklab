@@ -85,24 +85,25 @@ class EllipseDetectionVisualizer(DetectionVisualizer):
     def draw_detection(self, image, detection_pred, detection_gt, metric=None):
         if detection_gt is not None:
             color = self.color(detection_gt, is_prediction=False)
-            x1, y1, x2, y2 = detection_gt.bbox.ltrb()
-            center = (int((x1 + x2) / 2), int(y2))
-            width = x2 - x1
-            cv2.ellipse(
-                image,
-                center=center,
-                axes=(int(width), int(0.35 * width)),
-                angle=0.0,
-                startAngle=-45.0,
-                endAngle=235.0,
-                color=color,
-                thickness=2,
-                lineType=cv2.LINE_4,
-            )
+            if color:
+                x1, y1, x2, y2 = detection_gt.bbox.ltrb()
+                center = (int((x1 + x2) / 2), int(y2))
+                width = x2 - x1
+                cv2.ellipse(
+                    image,
+                    center=center,
+                    axes=(int(width), int(0.35 * width)),
+                    angle=0.0,
+                    startAngle=-45.0,
+                    endAngle=235.0,
+                    color=color,
+                    thickness=2,
+                    lineType=cv2.LINE_4,
+                )
         if detection_pred is not None:
             color = self.color(detection_pred, is_prediction=True)
             if color:
-                x1, y1, x2, y2 = detection_gt.bbox.ltrb()
+                x1, y1, x2, y2 = detection_pred.bbox.ltrb()
                 center = (int((x1 + x2) / 2), int(y2))
                 width = x2 - x1
                 cv2.ellipse(
