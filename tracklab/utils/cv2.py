@@ -168,7 +168,7 @@ def draw_bbox(
 
                 draw_text(
                     patch,
-                    f"{detection.bbox.conf():.2f}%",
+                    f"{detection.bbox.conf() * 100:.1f}%",
                     (l+5, t+5),
                     fontFace=text_font,
                     fontScale=text_scale,
