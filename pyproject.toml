@@ -1,6 +1,6 @@
 [project]
 name = "tracklab"
-version = "1.3.18"
+version = "1.3.19"
 description = "A Modular End-to-End Tracking Framework for Research and Development"
 readme = "README.md"
 authors = [
