@@ -327,14 +327,15 @@ def print_count_frame(patch, frame, nframes):
     draw_text(
         patch,
         f"{frame+1}/{nframes}",
-        (6, 15),
+        (5, 5),
         fontFace=1,
-        fontScale=2.0,
+        fontScale=1.0,
         thickness=1,
-        color_txt=(255, 0, 0),
+        color_txt=(0, 0, 0),
         color_bg=(255, 255, 255),
         alignH="l",
         alignV="t",
+        alpha_bg=0.6,
     )
 
 

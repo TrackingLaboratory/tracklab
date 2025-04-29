@@ -1,0 +1,9 @@
+from .visualizer import ImageVisualizer
+from tracklab.utils.cv2 import print_count_frame
+
+class PrintCountVisualizer(ImageVisualizer):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def draw_frame(self, image, detections_pred, detections_gt, image_pred, image_gt):
+        print_count_frame(image, image_gt.frame, nframes=image_gt.nframes)
