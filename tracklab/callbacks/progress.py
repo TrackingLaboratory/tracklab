@@ -117,7 +117,7 @@ class RichProgressbar(Progressbar):
         self.pbar.update(self.tasks["main"], advance=1, refresh=True)
 
     def on_module_start(self, engine: "TrackingEngine", task: str, dataloader: DataLoader):
-        desc = task.replace("_", " ").capitalize()
+        desc = task
         if hasattr(engine.models[task], "process_video"):
             length = len(engine.img_metadatas[engine.img_metadatas.video_id == self.video_id])
         else:
