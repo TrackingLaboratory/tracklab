@@ -8,6 +8,7 @@ import pandas as pd
 import torch
 from lightning import Fabric
 
+from tracklab.engine import TrackingEngine
 from tracklab.engine.engine import merge_dataframes
 from tracklab.pipeline import Pipeline
 
@@ -109,7 +110,6 @@ class VideoOnlineTrackingEngine:
                         batch = model.preprocess(image=image, detection=detection, metadata=metadata)
                         batch = type(model).collate_fn([(detection.name, batch)])
                         detections = self.default_step(batch, model_name, detections, metadata)
-
             self.callback("on_image_loop_end",
                           image_metadata=metadata, image=image,
                           image_idx=frame_idx, detections=detections)
@@ -122,7 +122,7 @@ class VideoOnlineTrackingEngine:
         idxs, batch = batch
         idxs = idxs.cpu() if isinstance(idxs, torch.Tensor) else idxs
         if model.level == "image":
-            log.info(f"step : {idxs} {self.img_metadatas.index}")
+            log.info(f"step : {idxs}")
             batch_metadatas = pd.DataFrame([metadata])
             if len(detections) > 0:
                 batch_input_detections = detections.loc[

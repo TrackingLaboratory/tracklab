@@ -61,8 +61,8 @@ class DeepOCSORT(ImageLevelModule):
         inputs = batch["input"][0]  # Nx7 [l,t,r,b,conf,class,tracklab_id]
         inputs = inputs[inputs[:, 4] > self.cfg.min_confidence]
         image = cv2_load_image(metadatas['file_path'].values[0])
-        results = self.model.update(inputs, image)
-        results = np.asarray(results)  # N'x8 [l,t,r,b,track_id,class,conf,idx]
+        res = self.model.update(inputs, image)
+        results = np.asarray(res)  # N'x8 [l,t,r,b,track_id,class,conf,idx]
         if results.size:
             track_bbox_ltwh = [ltrb_to_ltwh(x) for x in results[:, :4]]
             track_bbox_conf = list(results[:, 6])
@@ -80,6 +80,9 @@ class DeepOCSORT(ImageLevelModule):
                 }
             )
             results.set_index("idxs", inplace=True, drop=True)
-            return results
+            # remove duplicate rows having the same idx (keep one of the duplicated rows):
+            return results[~results.index.duplicated(keep="first")]  # quick fix for below issue, to investigate more...
+            # return results # FIXME fails with 'raise ValueError("cannot reindex on an axis with duplicate labels")' in File "/auto/home/users/v/s/vsomers/projects/tracklab-private/tracklab/engine/engine.py", line 41, in merge_dataframes
+            # On SportsMOT val video 'v_cC2mHWqMcjk_c009', at some points two detections have the same index here. BoTSORT return more detections than what is inputed, and uses the same idx.
         else:
             return []

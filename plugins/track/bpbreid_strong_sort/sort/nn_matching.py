@@ -1,9 +1,12 @@
 # vim: expandtab:ts=4:sw=4
 import numpy as np
 import torch
+try:
+    from torchreid.metrics import compute_distance_matrix
+    from torchreid.metrics.distance import compute_distance_matrix_using_bp_features
+except ImportError:
+    torchreid = None
 
-from torchreid.metrics import compute_distance_matrix
-from torchreid.metrics.distance import compute_distance_matrix_using_bp_features
 from torch.nn import functional as F
 
 def _pdist(a, b):

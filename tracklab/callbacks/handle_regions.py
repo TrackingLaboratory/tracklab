@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 
 from tracklab.callbacks import Callback
-from tracklab.engine import TrackingEngine
 
 
 class IgnoredRegions(Callback):

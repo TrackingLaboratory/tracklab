@@ -1,5 +1,0 @@
-# If save_file is not null, will save the tracking state
-save_file: null
-compression: 0  # No compression, use 8 for compression
-
-load_from_groundtruth: true

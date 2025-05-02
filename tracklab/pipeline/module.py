@@ -1,8 +1,7 @@
+import logging
 import re
 from abc import ABC, ABCMeta
 from typing import List
-
-import logging
 
 log = logging.getLogger(__name__)
 

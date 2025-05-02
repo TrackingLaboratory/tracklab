@@ -1,0 +1,15 @@
+video_fps: 25
+
+colors:
+  bbox:
+    no_id: null
+    prediction: "track_id"
+    ground_truth: [0,255,0]
+  text:
+    no_id: null
+    prediction: "track_id"
+    ground_truth: [0,255,0]
+  keypoint:
+    no_id: null
+    prediction: "track_id"
+    ground_truth: [0,255,0]

@@ -1,0 +1,40 @@
+defaults:
+  - dataset: default
+
+_target_: tracklab.wrappers.reid.kpreid_api.KPReId
+training_enabled: False
+batch_size: 2
+save_path: reid
+use_keypoints_visibility_scores_for_reid: False
+
+cfg:
+  model:
+    load_weights: "${model_dir}/reid/kpr_dancetrack_sportsmot_posetrack21_occludedduke_market_split0.pth.tar"
+    pretrained: false
+    discard_test_params: False
+    save_model_flag: false
+    kpr:
+      dim_reduce_output: 512
+      keypoints:
+        enabled: False
+        prompt_masks: keypoints_gaussian
+        prompt_preprocess: cck6
+      masks:
+        dir: ""
+        preprocess: "five_v"
+    transreid:
+      sie_camera: False
+    promptable_trans:
+      masks_prompting: False
+  project:
+    name: ""
+    experiment_name: ""
+    notes: ""
+    tags: []
+    job_id: ""
+    logger:
+      use_wandb: False
+  data:
+    save_dir: ""
+    sources: ['market1501']
+    targets: ['market1501']

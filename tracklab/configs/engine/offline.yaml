@@ -5,7 +5,12 @@ callbacks:
   progress:
     _target_: tracklab.callbacks.Progressbar
     use_rich: ${use_rich}
-  ignored_regions:
-    _target_: tracklab.callbacks.IgnoredRegions
-    max_intersection: 0.9
   vis: ${visualization}
+#  vis_track:
+#    _target_: tracklab.visualization.video_track.VideoTrackVisualizationEngine
+#    save_tracks: True
+#    process_n_videos: null
+#    process_n_frames_per_video: null
+#    num_imgs_per_seq: 8
+#    num_shown_sequences: 3
+#    sequence_step: 5

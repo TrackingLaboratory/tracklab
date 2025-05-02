@@ -2,14 +2,17 @@ from itertools import islice
 from multiprocessing import Pool
 from pathlib import Path
 from typing import Dict, Optional
+import logging
 
 import cv2
+import pandas as pd
 
 from tracklab.callbacks import Progressbar, Callback
-from tracklab.core.visualizer import Visualizer
+from tracklab.visualization import Visualizer
 from tracklab.datastruct import TrackerState
 from tracklab.utils.cv2 import final_patch, cv2_load_image
 
+log = logging.getLogger(__name__)
 
 class VisualizationEngine(Callback):
     """ Visualization engine from list of visualizers.
@@ -44,19 +47,53 @@ class VisualizationEngine(Callback):
         for visualizer in visualizers.values():
             visualizer.post_init(**kwargs)
 
+    def on_dataset_track_end(self, engine: "TrackingEngine"):
+        if self.save_videos or self.save_images:
+            log.info(f"Visualization output at : {self.save_dir.absolute()}")
+
     def on_video_loop_end(self, engine, video_metadata, video_idx, detections,
                           image_pred):
         if self.save_videos or self.save_images:
             progress = engine.callbacks.get("progress", Progressbar(dummy=True))
             self.visualize(engine.tracker_state, video_idx, detections, image_pred, progress)
+            progress.on_module_end(None, "vis", None)
+
+    """ 
+    #TODO implement the online visualization
+    previous code:
+        if self.cfg.show_online:
+        tracker_state = engine.tracker_state
+        if tracker_state.detections_gt is not None:
+            ground_truths = tracker_state.detections_gt[
+                tracker_state.detections_gt.image_id == image_metadata.name
+            ]
+        else:
+            ground_truths = None
+        if len(detections) == 0:
+            image = image
+        else:
+            detections = detections[detections.image_id == image_metadata.name]
+            image = self.draw_frame(image_metadata,
+                                    detections, ground_truths, "inf", image=image)
+        if platform.system() == "Linux" and self.video_name not in self.windows:
+            self.windows.append(self.video_name)
+            cv2.namedWindow(str(self.video_name),
+                            cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)  # allow window resize (Linux)
+            cv2.resizeWindow(str(self.video_name), image.shape[1], image.shape[0])
+        cv2.imshow(str(self.video_name), image)
+        cv2.waitKey(1)
+    """
 
     def visualize(self, tracker_state: TrackerState, video_id, detections, image_preds, progress=None):
-        image_metadatas = tracker_state.image_metadatas[
-            tracker_state.image_metadatas.video_id == video_id
-            ]
+        image_metadatas = tracker_state.image_metadatas[tracker_state.image_metadatas.video_id == video_id]
         image_gts = tracker_state.image_gt[tracker_state.image_gt.video_id == video_id]
         nframes = len(image_metadatas)
-        video_name = tracker_state.video_metadatas.loc[video_id].name
+        video_name = tracker_state.video_metadatas.loc[video_id]["name"]
+        for visualizer in self.visualizers.values():
+            try:
+                visualizer.preproces(detections, tracker_state.detections_gt, image_preds, tracker_state.image_gt)
+            except Exception as e:
+                log.warning(f"Visualizer {Visualizer} raised error : {e} during preprocess.")
         total = self.max_frames or len(image_metadatas.index)
         progress.init_progress_bar("vis", "Visualization", total)
         detection_preds_by_image = detections.groupby("image_id")
@@ -65,13 +102,12 @@ class VisualizationEngine(Callback):
             image_id,
             self,
             image_metadatas,
-            detection_preds_by_image.get_group(image_id),
-            detection_gts_by_image.get_group(image_id),
+            get_group(detection_preds_by_image, image_id),
+            get_group(detection_gts_by_image, image_id),
             image_gts,
             image_preds,
             nframes,
-        ) for image_id in islice(image_metadatas.index, 0, None, nframes//total)
-        ]
+        ) for image_id in islice(image_metadatas.index, 0, None, nframes//total)]
         if self.save_videos:
             image = cv2_load_image(image_metadatas.iloc[0].file_path)
             filepath = self.save_dir / "videos" / f"{video_name}.mp4"
@@ -96,9 +132,10 @@ class VisualizationEngine(Callback):
                    image_pred, image_gt, nframes):
         image = cv2_load_image(image_metadata.file_path)
         for visualizer in self.visualizers.values():
-            visualizer.draw_frame(image, detections_pred, detections_gt,
-                                  image_pred, image_gt)
-
+            try:
+                visualizer.draw_frame(image, detections_pred, detections_gt, image_pred, image_gt)
+            except Exception as e:
+                log.warning(f"Visualizer {Visualizer} raised error : {e} during drawing.")
         return final_patch(image)
 
 
@@ -118,3 +155,8 @@ def process_frame(args):
                                 image_pred, image_gt, nframes)
 
     return frame, Path(image_metadata.file_path).name
+
+
+def get_group(g, key):
+    if key in g.groups: return g.get_group(key)
+    return pd.DataFrame(columns=["bbox_ltwh"])

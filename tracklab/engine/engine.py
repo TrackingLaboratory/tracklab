@@ -10,8 +10,7 @@ from abc import abstractmethod, ABC
 
 from tracklab.pipeline import Pipeline
 
-if TYPE_CHECKING:
-    from tracklab.callbacks import Callback
+from tracklab.callbacks import Callback
 
 from tracklab.datastruct import TrackerState
 
@@ -84,6 +83,8 @@ class TrackingEngine(ABC):
         # super().__init__()
         self.module_names = [module.name for module in modules]
         self.callbacks = callbacks or {}
+        module_callbacks = {module.name:module for module in modules if isinstance(module, Callback)}
+        callbacks = {**self.callbacks, **module_callbacks}
         callbacks_before = [c for c in callbacks.values() if not c.after_saved_state]
         callbacks_after = [c for c in callbacks.values() if c.after_saved_state]
         callbacks = callbacks_before + [tracker_state] + callbacks_after

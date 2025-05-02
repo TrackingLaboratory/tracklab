@@ -1,11 +1,11 @@
-![TrackLab](docs/tracklab_banner.png)
+![TrackLab](https://raw.githubusercontent.com/TrackingLaboratory/tracklab/refs/heads/main/docs/tracklab_banner.png)
 
 TrackLab is an easy-to-use modular framework for multi-object pose/segmentation/bbox tracking that supports many tracking datasets and evaluation metrics.
 
 
 <p align="center">
-  <img src="docs/assets/gifs/PoseTrack21_008827.gif" width="400" />
-  <img src="docs/assets/gifs/PoseTrack21_016236.gif" width="400" /> 
+  <img src="https://raw.githubusercontent.com/TrackingLaboratory/tracklab/refs/heads/main/docs/assets/gifs/PoseTrack21_016236.gif" width="400" />
+  <img src="https://raw.githubusercontent.com/TrackingLaboratory/tracklab/refs/heads/main/docs/assets/gifs/PoseTrack21_008827.gif" width="400" /> 
 </p>
 
 ## News
@@ -13,7 +13,7 @@ TrackLab is an easy-to-use modular framework for multi-object pose/segmentation/
 
 ## Upcoming
 - [x] Public release of the codebase
-- [ ] Add support for more datasets (DanceTrack, MOTChallenge, SportsMOT, ...)
+- [x] Add support for more datasets (DanceTrack, MOTChallenge, SportsMOT, ...)
 - [ ] Add many more SOTA tracking methods and object detectors
 - [ ] Improve documentation and add more tutorials
 
@@ -51,31 +51,94 @@ to get an html version of the documentation.
 
 [^1]: Tested on `conda 22.11.1`, `Python 3.10.8`, `pip 22.3.1`, `g++ 11.3.0` and `gcc 11.3.0`
 
-### Clone the repository
+### Install using uv (recommended)
+
+[Install uv](https://docs.astral.sh/uv/getting-started/installation/).
+
+If you're creating a new project or using tracklab in an existing project, you can initialize a uv project with :
+
+```bash
+uv init
+```
+
+Then you can add tracklab : 
+
+```bash
+uv add tracklab
+```
+
+If you only want to use the virtual environment created by uv, you can use the following commands : 
+
+```bash
+uv venv --python 3.12
+uv pip install tracklab
+```
+
+In both cases, you will then be able to run tracklab using the following command:
+```bash
+uv run tracklab
+```
+
+To update & run : 
+```bash
+uv run -U tracklab
+```
+
+### Install using conda
+
+[Install conda](https://www.anaconda.com/docs/getting-started/miniconda/main).
+
+Create a new virtual environment with conda, then install tracklab with pip : 
+```bash
+conda create -n tracklab pip python=3.10 pytorch==1.13.1 torchvision==0.14.1 pytorch-cuda=11.7 -c pytorch -c nvidia -y
+conda activate tracklab
+pip install tracklab
+```
+
+You might need to change your torch installation depending on your hardware. Please check on 
+[Pytorch website](https://pytorch.org/get-started/previous-versions/) to find the right version for you.
+
+Update tracklab with : 
+
+```bash
+pip install -U tracklab
+```
+
+### Install additional dependencies
+We support multiple extra packages: openmmlabs, transformers, yolox, that you can install with the following commands :
+
+#### OpenMMLabs
+```bash
+(uv) pip install tracklab[openmmlab]
+(uv run) mim install mmcv==2.0.1
+```
+
+#### Transformers & YOLOX
+```bash
+(uv) pip install tracklab[transformers,yolox]
+```
+
+### Manual installation
+
+[Follow the above instructions to install uv](https://docs.astral.sh/uv/getting-started/installation/). Then clone the tracklab repository : 
 
 ```bash
 git clone https://github.com/TrackingLaboratory/tracklab.git
 cd tracklab
 ```
 
-### Manage the environment
-
-#### Create and activate a new environment
+Run tracklab with : 
 
 ```bash
-conda create -n tracklab pip python=3.10 pytorch==1.13.1 torchvision==0.14.1 pytorch-cuda=11.7 -c pytorch -c nvidia -y
-conda activate tracklab
+uv run tracklab
 ```
 
-You might need to change your torch installation depending on your hardware. Please check on 
-[Pytorch website](https://pytorch.org/get-started/previous-versions/) to find the right version for you.
-
-#### Install the dependencies
-Get into your repo and install the requirements with :
+Since we're using uv under the hood, uv will automatically create a virtual environment for you, and
+update the dependencies as you change them. You can also choose to install using conda, you'll then have
+to run the following when inside a virtual environment:
 
 ```bash
 pip install -e .
-mim install mmcv==2.0.1
 ```
 
 You might need to redo this if you update the repository, and some dependencies changed.
@@ -129,7 +192,7 @@ TODO Describe TrackLab + Hydra configuration system
 ### Architecture Overview
 Here is an overview of the important TrackLab classes:
 - **[TrackingDataset](tracklab/datastruct/tracking_dataset.py)**: Abstract class to be instantiated when adding a new dataset. The `TrackingDataset` contains one `TrackingSet` for each split of the dataset (train, val, test, etc).
-  - Example: [SoccerNetMOT](tracklab/wrappers/datasets/soccernet/soccernet_mot.py). The [SoccerNet Tracking](https://github.com/SoccerNet/sn-tracking) dataset.
+  - Example: [SoccerNetMOT](tracklab/wrappers/dataset/soccernet/soccernet_mot.py). The [SoccerNet Tracking](https://github.com/SoccerNet/sn-tracking) dataset.
 - **[TrackingSet](tracklab/datastruct/tracking_dataset.py)**: A tracking set contains three [Pandas](https://pandas.pydata.org/) dataframes:
   1. `video_metadatas`: contains one row of information per video (e.g. fps, width, height, etc).
   2. `image_metadatas`: contains one row of information per image (e.g. frame_id, video_id, etc).
@@ -143,7 +206,7 @@ Here is an overview of the important TrackLab classes:
 - **[VideoLevelModule](tracklab/pipeline/videolevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on all frames simultaneously. Can be used to implement offline tracking strategies, tracklet level voting mechanisms, etc. 
   - Example: [VotingTrackletJerseyNumber](tracklab/wrappers/jn_detector/voting_tracklet_jn_api.py). To perform majority voting within each tracklet and compute a consistent tracklet level attribute (an attribute can be, for instance, the result of a detection level classification task).
 - **[ImageLevelModule](tracklab/pipeline/imagelevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on a single frame. Can be used to implement online tracking strategies, pose/segmentation/bbox detectors, etc.
-  - Example 1: [YOLOv8](tracklab/wrappers/detect_multiple/yolov8_api.py). To perform object detection on each image with [YOLOv8](https://github.com/ultralytics/ultralytics). Creates a new row (i.e. detection) within `detections_pred`.
+  - Example 1: [YOLOv8](tracklab/wrappers/bbox_detector/yolov8_api.py). To perform object detection on each image with [YOLOv8](https://github.com/ultralytics/ultralytics). Creates a new row (i.e. detection) within `detections_pred`.
   - Example 2: [StrongSORT](tracklab/wrappers/track/strong_sort_api.py). To perform online tracking with [StrongSORT](https://github.com/dyhBUPT/StrongSORT). Creates a new "track_id" column for each detection within `detections_pred`. 
 - **[DetectionLevelModule](tracklab/pipeline/detectionlevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on a single detection. Can be used to implement pose estimation for top-down strategies, re-identification, attributes recognition, etc. 
   - Example 1: [EasyOCR](tracklab/wrappers/jn_detector/easyocr_api.py). To perform jersey number recognition on each detection with [EasyOCR](https://github.com/JaidedAI/EasyOCR). Creates a new "jersey_number" column within `detections_pred`.

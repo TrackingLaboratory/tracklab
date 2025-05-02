@@ -1,0 +1,28 @@
+defaults:
+  - colors # For more specific color tuning
+
+_target_: tracklab.visualization.VisualizationEngine
+save_videos: False
+
+visualizers: {}
+  # Available Visualizers:
+  # - Detections: DefaultDetection, FullDetection, DebugDetection, EllipseDetection,
+  #               SimpleDetectionStats, DetectionStats
+  # - Keypoints: DefaultKeypoints, FullKeypoints
+  # - Tracking: TrackingLine # shows tracking history
+  # - Images: FrameCount, IgnoreRegions
+
+# Color settings for visualization.
+colors:
+  # Choose the color to display:
+  # - null: No display.
+  # - track_id: A color based on the tracking ID (for prediction or ground_truth only).
+  # - RGB code: A hardcoded color in [R, G, B] format.
+  default:
+    no_id: null  # Color setting for objects with no ID (null means no display).
+    prediction: "track_id"  # Color setting for tracked predictions, based on tracking ID.
+    ground_truth: null  # Color setting for ground truth (null means no display).
+
+  # Estimated number of objects to track to generate colors that are visually
+  # distinct from one another when using "track_id" or colormap name.
+  cmap: 10

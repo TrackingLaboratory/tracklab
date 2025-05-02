@@ -1,0 +1,3 @@
+_target_: tracklab.wrappers.bbox_detector.rtmblib_api.YOLOXDetector
+onnx_model: "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/yolox_x_8xb8-300e_humanart-a39d44ed.zip"
+batch_size: 1

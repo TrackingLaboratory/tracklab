@@ -1,6 +1,6 @@
 import numpy as np
 
-from ultralytics.yolo.utils.ops import xywh2xyxy, xyxy2xywh
+from ultralytics.utils.ops import xywh2xyxy, xyxy2xywh
 
 
 from .kalman_filter import KalmanFilter
