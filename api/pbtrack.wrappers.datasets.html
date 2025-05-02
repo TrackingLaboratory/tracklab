@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
@@ -5,19 +7,15 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tracklab.wrappers.datasets package &mdash; TrackLab  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
@@ -90,7 +88,7 @@
   <section id="tracklab-wrappers-datasets-package">
 <h1>tracklab.wrappers.datasets package<a class="headerlink" href="#tracklab-wrappers-datasets-package" title="Link to this heading"></a></h1>
 <section id="subpackages">
-<span id="module-tracklab.wrappers.datasets"></span><h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 </div>
 </section>
@@ -99,43 +97,13 @@
 </section>
 <section id="tracklab-wrappers-datasets-external-video-module">
 <h2>tracklab.wrappers.datasets.external_video module<a class="headerlink" href="#tracklab-wrappers-datasets-external-video-module" title="Link to this heading"></a></h2>
-<dl class="py class" id="module-tracklab.wrappers.datasets.external_video">
-<dt class="sig sig-object py" id="tracklab.wrappers.datasets.external_video.ExternalVideo">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.wrappers.datasets.external_video.</span></span><span class="sig-name descname"><span class="pre">ExternalVideo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/datasets/external_video.html#ExternalVideo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.datasets.external_video.ExternalVideo" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="pbtrack.datastruct.html#tracklab.datastruct.tracking_dataset.TrackingDataset" title="tracklab.datastruct.tracking_dataset.TrackingDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrackingDataset</span></code></a></p>
-<p>A class to use PbTrack at inference on any .mp4 video.
-The .mp4 image frames are first saved individually to disk in ‘working_dir/tmp/’ dir.
-A tracking test set is then created based on these images files, with video_metadata and image_metadata, but without
-detections.
-TODO dirty/easy implementation, we should refactor the tracking engine to make it load directly the images from the</p>
-<blockquote>
-<div><p>mp4. Each video in video_metadata should specify its type: folder of images or mp4 video or youtube link, etc,
-and tracking engine should adapt its batch loop accordingly.</p>
-</div></blockquote>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="tracklab.wrappers.datasets.external_video.ExternalVideo.annotations_dir">
-<span class="sig-name descname"><span class="pre">annotations_dir</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'posetrack_data'</span></em><a class="headerlink" href="#tracklab.wrappers.datasets.external_video.ExternalVideo.annotations_dir" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="tracklab.wrappers.datasets.external_video.ExternalVideo.get_frame_count">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_frame_count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/datasets/external_video.html#ExternalVideo.get_frame_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.datasets.external_video.ExternalVideo.get_frame_count" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="tracklab.wrappers.datasets.external_video.write_video_images_to_disk">
-<span class="sig-prename descclassname"><span class="pre">tracklab.wrappers.datasets.external_video.</span></span><span class="sig-name descname"><span class="pre">write_video_images_to_disk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/datasets/external_video.html#write_video_images_to_disk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.datasets.external_video.write_video_images_to_disk" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
 </section>
 <section id="tracklab-wrappers-datasets-jrdb-pose-module">
 <h2>tracklab.wrappers.datasets.jrdb_pose module<a class="headerlink" href="#tracklab-wrappers-datasets-jrdb-pose-module" title="Link to this heading"></a></h2>
 </section>
 <section id="tracklab-wrappers-datasets-jta-module">
-<span id="module-tracklab.wrappers.datasets.jrdb_pose"></span><h2>tracklab.wrappers.datasets.jta module<a class="headerlink" href="#tracklab-wrappers-datasets-jta-module" title="Link to this heading"></a></h2>
-<span class="target" id="module-tracklab.wrappers.datasets.jta"></span></section>
+<h2>tracklab.wrappers.datasets.jta module<a class="headerlink" href="#tracklab-wrappers-datasets-jta-module" title="Link to this heading"></a></h2>
+</section>
 </section>
 
 

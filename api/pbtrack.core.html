@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
@@ -5,19 +7,15 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tracklab.core package &mdash; TrackLab  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
@@ -90,66 +88,13 @@
   <section id="tracklab-core-package">
 <h1>tracklab.core package<a class="headerlink" href="#tracklab-core-package" title="Link to this heading"></a></h1>
 <section id="submodules">
-<span id="module-tracklab.core"></span><h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
 <section id="tracklab-core-evaluator-module">
 <h2>tracklab.core.evaluator module<a class="headerlink" href="#tracklab-core-evaluator-module" title="Link to this heading"></a></h2>
-<dl class="py class" id="module-tracklab.core.evaluator">
-<dt class="sig sig-object py" id="tracklab.core.evaluator.Evaluator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.core.evaluator.</span></span><span class="sig-name descname"><span class="pre">Evaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/core/evaluator.html#Evaluator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.core.evaluator.Evaluator" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Abstract class to implement for the integration of a new dataset evaluator
-in wrappers/eval. The functions to implement are __init__ and run. A description
-of the expected behavior is provided below.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="tracklab.core.evaluator.Evaluator.run">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tracker_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="pbtrack.datastruct.html#tracklab.datastruct.tracker_state.TrackerState" title="tracklab.datastruct.tracker_state.TrackerState"><span class="pre">TrackerState</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/core/evaluator.html#Evaluator.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.core.evaluator.Evaluator.run" title="Link to this definition"></a></dt>
-<dd><p>Run the evaluation
-:param tracker_state: the tracker state for the evaluation
-:type tracker_state: TrackerState</p>
-</dd></dl>
-
-</dd></dl>
-
 </section>
 <section id="tracklab-core-visualization-engine-module">
 <h2>tracklab.core.visualization_engine module<a class="headerlink" href="#tracklab-core-visualization-engine-module" title="Link to this heading"></a></h2>
-<dl class="py class" id="module-tracklab.core.visualization_engine">
-<dt class="sig sig-object py" id="tracklab.core.visualization_engine.VisualizationEngine">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.core.visualization_engine.</span></span><span class="sig-name descname"><span class="pre">VisualizationEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/core/visualization_engine.html#VisualizationEngine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.core.visualization_engine.VisualizationEngine" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="pbtrack.callbacks.html#tracklab.callbacks.callback.Callback" title="tracklab.callbacks.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="tracklab.core.visualization_engine.VisualizationEngine.after_saved_state">
-<span class="sig-name descname"><span class="pre">after_saved_state</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#tracklab.core.visualization_engine.VisualizationEngine.after_saved_state" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="tracklab.core.visualization_engine.VisualizationEngine.draw_frame">
-<span class="sig-name descname"><span class="pre">draw_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ground_truths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nframes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/core/visualization_engine.html#VisualizationEngine.draw_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.core.visualization_engine.VisualizationEngine.draw_frame" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="tracklab.core.visualization_engine.VisualizationEngine.on_image_loop_end">
-<span class="sig-name descname"><span class="pre">on_image_loop_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">engine</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="pbtrack.engine.html#tracklab.engine.engine.TrackingEngine" title="tracklab.engine.engine.TrackingEngine"><span class="pre">TrackingEngine</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/core/visualization_engine.html#VisualizationEngine.on_image_loop_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.core.visualization_engine.VisualizationEngine.on_image_loop_end" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="tracklab.core.visualization_engine.VisualizationEngine.on_video_loop_end">
-<span class="sig-name descname"><span class="pre">on_video_loop_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">engine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/core/visualization_engine.html#VisualizationEngine.on_video_loop_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.core.visualization_engine.VisualizationEngine.on_video_loop_end" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="tracklab.core.visualization_engine.VisualizationEngine.on_video_loop_start">
-<span class="sig-name descname"><span class="pre">on_video_loop_start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">engine</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="pbtrack.engine.html#tracklab.engine.engine.TrackingEngine" title="tracklab.engine.engine.TrackingEngine"><span class="pre">TrackingEngine</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/core/visualization_engine.html#VisualizationEngine.on_video_loop_start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.core.visualization_engine.VisualizationEngine.on_video_loop_start" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="tracklab.core.visualization_engine.VisualizationEngine.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tracker_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="pbtrack.datastruct.html#tracklab.datastruct.tracker_state.TrackerState" title="tracklab.datastruct.tracker_state.TrackerState"><span class="pre">TrackerState</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/core/visualization_engine.html#VisualizationEngine.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.core.visualization_engine.VisualizationEngine.run" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
 </section>
 </section>
 

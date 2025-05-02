@@ -1,22 +1,20 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tracklab.engine.engine &mdash; TrackLab  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
-        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -87,27 +85,26 @@
            <div itemprop="articleBody">
              
   <h1>Source code for tracklab.engine.engine</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">lightning.fabric</span> <span class="kn">import</span> <span class="n">Fabric</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lightning.fabric</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fabric</span>
 
-<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">ABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">ABC</span>
 
-<span class="kn">from</span> <span class="nn">tracklab.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tracklab.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span>
 
-<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">tracklab.callbacks</span> <span class="kn">import</span> <span class="n">Callback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tracklab.callbacks</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callback</span>
 
-<span class="kn">from</span> <span class="nn">tracklab.datastruct</span> <span class="kn">import</span> <span class="n">TrackerState</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tracklab.datastruct</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrackerState</span>
 
 
 <div class="viewcode-block" id="merge_dataframes">
 <a class="viewcode-back" href="../../../api/pbtrack.engine.html#tracklab.engine.engine.merge_dataframes">[docs]</a>
-<span class="k">def</span> <span class="nf">merge_dataframes</span><span class="p">(</span><span class="n">main_df</span><span class="p">,</span> <span class="n">appended_piece</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_dataframes</span><span class="p">(</span><span class="n">main_df</span><span class="p">,</span> <span class="n">appended_piece</span><span class="p">):</span>
     <span class="c1"># Convert appended_piece to a DataFrame if it&#39;s not already</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">appended_piece</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
         <span class="n">appended_piece</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">appended_piece</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
@@ -136,7 +133,7 @@
 
 <div class="viewcode-block" id="TrackingEngine">
 <a class="viewcode-back" href="../../../api/pbtrack.engine.html#tracklab.engine.engine.TrackingEngine">[docs]</a>
-<span class="k">class</span> <span class="nc">TrackingEngine</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TrackingEngine</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Manages the full tracking pipeline.</span>
 
 <span class="sd">    After initializing the :class:`TrackingEngine`, users should call :class:`track_dataset`</span>
@@ -168,7 +165,7 @@
 <span class="sd">        num_workers: number of workers for preprocessing</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">modules</span><span class="p">:</span> <span class="n">Pipeline</span><span class="p">,</span>
         <span class="n">tracker_state</span><span class="p">:</span> <span class="n">TrackerState</span><span class="p">,</span>
@@ -178,6 +175,8 @@
         <span class="c1"># super().__init__()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">module_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">module</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">modules</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span> <span class="o">=</span> <span class="n">callbacks</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">module_callbacks</span> <span class="o">=</span> <span class="p">{</span><span class="n">module</span><span class="o">.</span><span class="n">name</span><span class="p">:</span><span class="n">module</span> <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">modules</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">Callback</span><span class="p">)}</span>
+        <span class="n">callbacks</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">,</span> <span class="o">**</span><span class="n">module_callbacks</span><span class="p">}</span>
         <span class="n">callbacks_before</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">callbacks</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="o">.</span><span class="n">after_saved_state</span><span class="p">]</span>
         <span class="n">callbacks_after</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">callbacks</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">after_saved_state</span><span class="p">]</span>
         <span class="n">callbacks</span> <span class="o">=</span> <span class="n">callbacks_before</span> <span class="o">+</span> <span class="p">[</span><span class="n">tracker_state</span><span class="p">]</span> <span class="o">+</span> <span class="n">callbacks_after</span>
@@ -197,7 +196,7 @@
 
 <div class="viewcode-block" id="TrackingEngine.track_dataset">
 <a class="viewcode-back" href="../../../api/pbtrack.engine.html#tracklab.engine.engine.TrackingEngine.track_dataset">[docs]</a>
-    <span class="k">def</span> <span class="nf">track_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">track_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run tracking on complete dataset.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="s2">&quot;on_dataset_track_start&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">video_idx</span><span class="p">,</span> <span class="n">video_metadata</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
@@ -224,7 +223,7 @@
 <div class="viewcode-block" id="TrackingEngine.video_loop">
 <a class="viewcode-back" href="../../../api/pbtrack.engine.html#tracklab.engine.engine.TrackingEngine.video_loop">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">video_loop</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">video_loop</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">tracker_state</span><span class="p">:</span> <span class="n">TrackerState</span><span class="p">,</span> <span class="n">video_metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">video_id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run tracking on one video.</span>
@@ -246,7 +245,7 @@
 
 <div class="viewcode-block" id="TrackingEngine.default_step">
 <a class="viewcode-back" href="../../../api/pbtrack.engine.html#tracklab.engine.engine.TrackingEngine.default_step">[docs]</a>
-    <span class="k">def</span> <span class="nf">default_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">default_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
                      <span class="n">image_pred</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">task</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;on_module_step_start&quot;</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">)</span>

@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
@@ -5,19 +7,15 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tracklab.pipeline package &mdash; TrackLab  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
@@ -133,9 +131,8 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="tracklab.pipeline.detectionlevel_module.DetectionLevelModule.collate_fn">
 <span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tracklab.pipeline.detectionlevel_module.DetectionLevelModule.collate_fn" title="Link to this definition"></a></dt>
-<dd><p>Function that takes in a batch of data and puts the elements within the batch
-into a tensor with an additional outer dimension - batch size. The exact output type can be
-a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, a <cite>Sequence</cite> of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, a
+<dd><p>Take in a batch of data and put the elements within the batch into a tensor with an additional outer dimension - batch size.</p>
+<p>The exact output type can be a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, a <cite>Sequence</cite> of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, a
 Collection of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, or left unchanged, depending on the input type.
 This is used as the default function for collation when
 <cite>batch_size</cite> or <cite>batch_sampler</cite> is defined in <code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code>.</p>
@@ -161,7 +158,8 @@ default_collate([V2_1, V2_2, …]), …]</cite></p></li>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example with a batch of `int`s:</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># xdoctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example with a batch of `int`s:</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
 <span class="go">tensor([0, 1, 2, 3])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example with a batch of `str`s:</span>
@@ -171,7 +169,6 @@ default_collate([V2_1, V2_2, …]), …]</cite></p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">([{</span><span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">}])</span>
 <span class="go">{&#39;A&#39;: tensor([  0, 100]), &#39;B&#39;: tensor([  1, 100])}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example with `NamedTuple` inside the batch:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># xdoctest: +SKIP</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Point</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Point&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">([</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
 <span class="go">Point(x=tensor([0, 1]), y=tensor([0, 1]))</span>
@@ -183,16 +180,16 @@ default_collate([V2_1, V2_2, …]), …]</cite></p></li>
 <span class="go">[tensor([0, 2]), tensor([1, 3])]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Two options to extend `default_collate` to handle specific type</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Option 1: Write custom collate function and invoke `default_collate`</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">custom_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">custom_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">elem</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">... </span>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">CustomType</span><span class="p">):</span>  <span class="c1"># Some custom condition</span>
 <span class="gp">... </span>        <span class="k">return</span> <span class="o">...</span>
 <span class="gp">... </span>    <span class="k">else</span><span class="p">:</span>  <span class="c1"># Fall back to `default_collate`</span>
 <span class="gp">... </span>        <span class="k">return</span> <span class="n">default_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Option 2: In-place modify `default_collate_fn_map`</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">collate_customtype_fn</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">collate_fn_map</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">collate_customtype_fn</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">collate_fn_map</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="o">...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate_fn_map</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">CustoType</span><span class="p">,</span> <span class="n">collate_customtype_fn</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate_fn_map</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">CustomType</span><span class="p">,</span> <span class="n">collate_customtype_fn</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>  <span class="c1"># Handle `CustomType` automatically</span>
 </pre></div>
 </div>
@@ -313,9 +310,8 @@ pose estimator (which outputs keypoints directly).</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="tracklab.pipeline.imagelevel_module.ImageLevelModule.collate_fn">
 <span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tracklab.pipeline.imagelevel_module.ImageLevelModule.collate_fn" title="Link to this definition"></a></dt>
-<dd><p>Function that takes in a batch of data and puts the elements within the batch
-into a tensor with an additional outer dimension - batch size. The exact output type can be
-a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, a <cite>Sequence</cite> of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, a
+<dd><p>Take in a batch of data and put the elements within the batch into a tensor with an additional outer dimension - batch size.</p>
+<p>The exact output type can be a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, a <cite>Sequence</cite> of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, a
 Collection of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, or left unchanged, depending on the input type.
 This is used as the default function for collation when
 <cite>batch_size</cite> or <cite>batch_sampler</cite> is defined in <code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code>.</p>
@@ -341,7 +337,8 @@ default_collate([V2_1, V2_2, …]), …]</cite></p></li>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example with a batch of `int`s:</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># xdoctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example with a batch of `int`s:</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
 <span class="go">tensor([0, 1, 2, 3])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example with a batch of `str`s:</span>
@@ -351,7 +348,6 @@ default_collate([V2_1, V2_2, …]), …]</cite></p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">([{</span><span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">}])</span>
 <span class="go">{&#39;A&#39;: tensor([  0, 100]), &#39;B&#39;: tensor([  1, 100])}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example with `NamedTuple` inside the batch:</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># xdoctest: +SKIP</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Point</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Point&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">([</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
 <span class="go">Point(x=tensor([0, 1]), y=tensor([0, 1]))</span>
@@ -363,16 +359,16 @@ default_collate([V2_1, V2_2, …]), …]</cite></p></li>
 <span class="go">[tensor([0, 2]), tensor([1, 3])]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Two options to extend `default_collate` to handle specific type</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Option 1: Write custom collate function and invoke `default_collate`</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">custom_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">custom_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">elem</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">... </span>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">CustomType</span><span class="p">):</span>  <span class="c1"># Some custom condition</span>
 <span class="gp">... </span>        <span class="k">return</span> <span class="o">...</span>
 <span class="gp">... </span>    <span class="k">else</span><span class="p">:</span>  <span class="c1"># Fall back to `default_collate`</span>
 <span class="gp">... </span>        <span class="k">return</span> <span class="n">default_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Option 2: In-place modify `default_collate_fn_map`</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">collate_customtype_fn</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">collate_fn_map</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">collate_customtype_fn</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">collate_fn_map</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="o">...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate_fn_map</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">CustoType</span><span class="p">,</span> <span class="n">collate_customtype_fn</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate_fn_map</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">CustomType</span><span class="p">,</span> <span class="n">collate_customtype_fn</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">default_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>  <span class="c1"># Handle `CustomType` automatically</span>
 </pre></div>
 </div>
