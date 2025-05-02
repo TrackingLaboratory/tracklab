@@ -7,13 +7,12 @@ import hydra
 import warnings
 import logging
 
-from tracklab.utils import monkeypatch_hydra, \
-    progress  # needed to avoid complex hydra stacktraces when errors occur in "instantiate(...)"
-from hydra.utils import instantiate
-from omegaconf import OmegaConf
 from tracklab.datastruct import TrackerState
 from tracklab.pipeline import Pipeline
-from tracklab.utils import wandb
+from tracklab.utils import monkeypatch_hydra, progress, wandb
+
+from hydra.utils import instantiate
+from omegaconf import OmegaConf
 
 
 os.environ["HYDRA_FULL_ERROR"] = "1"
