@@ -10,6 +10,7 @@ TrackLab is an easy-to-use modular framework for multi-object pose/segmentation/
 
 ## News
 - [2024.02.05] Public release
+- [2025.05.02] [Released CAMELTrack: Context-Aware Multi-cue ExpLoitation for Online Multi-Object Tracking](https://github.com/TrackingLaboratory/CAMELTrack)
 
 ## Upcoming
 - [x] Public release of the codebase
@@ -106,12 +107,6 @@ pip install -U tracklab
 
 ### Install additional dependencies
 We support multiple extra packages: openmmlabs, transformers, yolox, that you can install with the following commands :
-
-#### OpenMMLabs
-```bash
-(uv) pip install tracklab[openmmlab]
-(uv run) mim install mmcv==2.0.1
-```
 
 #### Transformers & YOLOX
 ```bash
