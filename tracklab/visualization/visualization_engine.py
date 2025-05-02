@@ -67,7 +67,7 @@ class VisualizationEngine(Callback):
             try:
                 visualizer.preproces(detections, tracker_state.detections_gt, image_preds, tracker_state.image_gt)
             except Exception as e:
-                log.warning(f"visualizer {Visualizer} raised error : {e}")
+                log.warning(f"Visualizer {Visualizer} raised error : {e} during preprocess.")
         total = self.max_frames or len(image_metadatas.index)
         progress.init_progress_bar("vis", "Visualization", total)
         detection_preds_by_image = detections.groupby("image_id")
@@ -107,12 +107,9 @@ class VisualizationEngine(Callback):
         image = cv2_load_image(image_metadata.file_path)
         for visualizer in self.visualizers.values():
             try:
-                visualizer.draw_frame(image, detections_pred, detections_gt,
-                                      image_pred, image_gt)
+                visualizer.draw_frame(image, detections_pred, detections_gt, image_pred, image_gt)
             except Exception as e:
-                log.warning(f"Error drawing {e}")
-
-
+                log.warning(f"Visualizer {Visualizer} raised error : {e} during drawing.")
         return final_patch(image)
 
 
