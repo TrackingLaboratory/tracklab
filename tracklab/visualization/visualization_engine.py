@@ -58,6 +58,32 @@ class VisualizationEngine(Callback):
             self.visualize(engine.tracker_state, video_idx, detections, image_pred, progress)
             progress.on_module_end(None, "vis", None)
 
+    """ 
+    #TODO implement the online visualization
+    previous code:
+        if self.cfg.show_online:
+        tracker_state = engine.tracker_state
+        if tracker_state.detections_gt is not None:
+            ground_truths = tracker_state.detections_gt[
+                tracker_state.detections_gt.image_id == image_metadata.name
+            ]
+        else:
+            ground_truths = None
+        if len(detections) == 0:
+            image = image
+        else:
+            detections = detections[detections.image_id == image_metadata.name]
+            image = self.draw_frame(image_metadata,
+                                    detections, ground_truths, "inf", image=image)
+        if platform.system() == "Linux" and self.video_name not in self.windows:
+            self.windows.append(self.video_name)
+            cv2.namedWindow(str(self.video_name),
+                            cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)  # allow window resize (Linux)
+            cv2.resizeWindow(str(self.video_name), image.shape[1], image.shape[0])
+        cv2.imshow(str(self.video_name), image)
+        cv2.waitKey(1)
+    """
+
     def visualize(self, tracker_state: TrackerState, video_id, detections, image_preds, progress=None):
         image_metadatas = tracker_state.image_metadatas[tracker_state.image_metadatas.video_id == video_id]
         image_gts = tracker_state.image_gt[tracker_state.image_gt.video_id == video_id]
