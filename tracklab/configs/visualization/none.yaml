@@ -5,6 +5,12 @@ _target_: tracklab.visualization.VisualizationEngine
 save_videos: False
 
 visualizers: {}
+  # Available Visualizers:
+  # - Detections: DefaultDetection, FullDetection, DebugDetection, EllipseDetection,
+  #               SimpleDetectionStats, DetectionStats
+  # - Keypoints: DefaultKeypoints, FullKeypoints
+  # - Tracking: TrackingLine # shows tracking history
+  # - Images: FrameCount, IgnoreRegions
 
 # Color settings for visualization.
 colors:

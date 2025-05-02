@@ -6,16 +6,15 @@ save_videos: True
 
 visualizers:
   # Available Visualizers:
-  # - Detections: DefaultDetectionVisualizer, FullDetectionVisualizer,
-  #               DebugDetectionVisualizer, EllipseDetectionVisualizer
-  #               SimpleDetectionStatsVisualizer, DetectionStatsVisualizer
-  # - Keypoints: DefaultKeypointsVisualizer, FullKeypointsVisualizer
-  detections:
-    _target_: tracklab.visualization.DefaultDetectionVisualizer
-#  keypoints:
-#    _target_: tracklab.visualization.DefaultKeypointsVisualizer
+  # - Detections: DefaultDetection, FullDetection, DebugDetection, EllipseDetection,
+  #               SimpleDetectionStats, DetectionStats
+  # - Keypoints: DefaultKeypoints, FullKeypoints
+  # - Tracking: TrackingLine # shows tracking history
+  # - Images: FrameCount, IgnoreRegions
+  frame_counter:
+    _target_: tracklab.visualization.FrameCount
   tracking:
-    _target_: tracklab.visualization.TrackingLineVisualizer
+    _target_: tracklab.visualization.TrackingLine
 
 # Color settings for visualization.
 colors:

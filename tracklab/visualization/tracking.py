@@ -6,7 +6,7 @@ from tracklab.visualization import DetectionVisualizer
 
 log = logging.getLogger(__name__)
 
-class TrackingLineVisualizer(DetectionVisualizer):
+class TrackingLine(DetectionVisualizer):
     def __init__(self, max_length: int = 60, vertical_pos: float = 0.0):
         super().__init__()
         self.max_length = max_length

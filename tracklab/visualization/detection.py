@@ -5,7 +5,7 @@ from tracklab.visualization import DetectionVisualizer
 from tracklab.utils.cv2 import draw_bbox, draw_bbox_stats, draw_text
 
 
-class DefaultDetectionVisualizer(DetectionVisualizer):
+class DefaultDetection(DetectionVisualizer):
     def __init__(self, print_id=True, print_confidence=False):
         super().__init__()
         self.print_id = print_id
@@ -24,11 +24,11 @@ class DefaultDetectionVisualizer(DetectionVisualizer):
                         print_confidence=self.print_confidence,
                     )
 
-class FullDetectionVisualizer(DefaultDetectionVisualizer):
+class FullDetection(DefaultDetection):
     def __init__(self):
         super().__init__(print_id=True, print_confidence=True)
 
-class DebugDetectionVisualizer(DetectionVisualizer):
+class DebugDetection(DetectionVisualizer):
     """
     Detections are classified by colors:
         - Green is True Positive
@@ -50,7 +50,7 @@ class DebugDetectionVisualizer(DetectionVisualizer):
         elif detection_pred is not None and not np.isnan(detection_pred.track_id):  # no GT and pred is assigned
             draw_bbox(detection_pred, image, (255, 255, 0))  # FP
 
-class DetectionStatsVisualizer(DetectionVisualizer):
+class DetectionStats(DetectionVisualizer):
     def __init__(self,
             print_stats=["state", "hits", "age", "time_since_update", "matched_with"],  # FIXME "costs" is too long for display
      ):
@@ -68,11 +68,11 @@ class DetectionStatsVisualizer(DetectionVisualizer):
                     bbox_color=color_bbox,
                 )
 
-class SimpleDetectionStatsVisualizer(DetectionStatsVisualizer):
+class SimpleDetectionStats(DetectionStats):
     def __init__(self):
         super().__init__(print_stats=["state", "hits", "age", "time_since_update"])
 
-class EllipseDetectionVisualizer(DetectionVisualizer):
+class EllipseDetection(DetectionVisualizer):
     def __init__(self, print_id=True):
         self.print_id = print_id
         super().__init__()
