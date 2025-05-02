@@ -137,10 +137,7 @@ def draw_keypoints(
                             lineType=cv2.LINE_AA,
                         )
     else:
-        log.warning(
-            "You tried to draw the keypoints but no 'keypoints_xyc' were found in the "
-            "detection."
-        )
+        log.warning("No 'keypoints_xyc' found in the detection for drawing keypoints.")
 
 def draw_bbox(
     detection,
@@ -180,10 +177,7 @@ def draw_bbox(
                     alpha_bg=0.5,
                 )
             else:
-                log.warning(
-                    "You tried to draw the confidence but no 'bbox_conf' was found in the "
-                    "detection."
-                )
+                log.warning("No 'bbox_conf' found in the detection for confidence drawing.")
         if print_id:
             if hasattr(detection, "track_id"):
                 if not np.isnan(detection.track_id):
@@ -202,10 +196,7 @@ def draw_bbox(
                         alpha_bg=0.5,
                     )
             else:
-                log.warning(
-                    "You tried to draw the track id but no 'track_id' was found in the "
-                    "detection."
-            )
+                log.warning("No 'track_id' found in the detection for drawing.")
 
 def draw_bbox_stats(
     detection,
@@ -244,15 +235,15 @@ def pretty_print(stat, value):
         if pd.isna(value):
             return "N/A"
         else:
-            return f"S: {value[1]:.3f}%"
+            return f"S: {100*value[1]:.1f}%"
     elif stat == "costs":
-        return {k: {ik: round(iv, 3) for ik, iv in v.items()} if isinstance(v, dict) else round(v, 3)
+        return {k: {ik: round(100 * iv, 1) for ik, iv in v.items()} if isinstance(v, dict) else round(v, 3)
         if isinstance(v, float) else v for k, v in value.items()}
     else:
         return value
 
 def draw_bpbreid_heatmaps(detection, patch, heatmaps_display_threshold):
-    try:
+    if hasattr(detection, "body_masks"):
         l, t, r, b = detection.bbox.ltrb(
             image_shape=(patch.shape[1], patch.shape[0]), rounded=True
         )
@@ -265,11 +256,8 @@ def draw_bpbreid_heatmaps(detection, patch, heatmaps_display_threshold):
             rgb=True,
         )
         patch[t:b, l:r] = img_crop_with_mask
-    except KeyError:
-        log.warning(
-            "You tried to draw the bpbreid heatmaps but no 'body_masks' were found in "
-            "the detection."
-        )
+    else:
+        log.warning("No 'body_masks' found in the detection for heatmap drawing.")
 
 
 def overlay_heatmap(
@@ -309,17 +297,14 @@ def overlay_heatmap(
 
 
 def draw_ignore_region(patch, image_metadata):
-    try:
-        for x, y in zip(
-            image_metadata["ignore_regions_x"], image_metadata["ignore_regions_y"]
-        ):
+    if hasattr(image_metadata, "ignore_regions_x") and hasattr(image_metadata, "ignore_regions_y"):
+        for x, y in zip(image_metadata["ignore_regions_x"], image_metadata["ignore_regions_y"]):
             points = np.array([x, y]).astype(int).T
             points = points.reshape((-1, 1, 2))
             cv2.polylines(patch, [points], True, [255, 0, 0], 2, lineType=cv2.LINE_AA)
-    except KeyError:
+    else :
         log.warning(
-            "You tried to draw the ignored regions but no 'ignore_regions_x' or 'ignore_regions_y' were found in "
-            "the image metadata."
+            "Missing 'ignore_regions_x' or 'ignore_regions_y' in image metadata for ignored regions drawing."
         )
 
 
