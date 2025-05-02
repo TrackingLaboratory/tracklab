@@ -8,13 +8,13 @@ defaults:
   - eval: trackeval
   - engine: offline
   - visualization: tracking
-  #- modules/bbox_detector: yolo_ultralytics
+  - modules/bbox_detector: yolo_ultralytics
   - modules/pose_estimator: yolo_ultralytics-pose
   - modules/reid: kpr
   - modules/track: oc_sort
   - _self_
 
-# Pipeline definition :
+# Pipeline definition:
 # - Defines the order in which the modules will be called
 # - If loading a tracking state from disk, remove modules whose outputs are already provided in the loaded state
 # Use 'pipeline: []' for an empty pipeline
