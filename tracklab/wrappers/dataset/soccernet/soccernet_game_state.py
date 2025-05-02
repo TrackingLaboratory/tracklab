@@ -222,8 +222,8 @@ def video_dir_to_dfs(args):
                 'frame': [i for i in range(0, nframes)],
                 'id': [f"{split_id}{video_id}{i:06d}" for i in range(1, nframes + 1)],
                 'video_id': video_id,
-                'file_path': [os.path.join(img_folder_path, f'{i:06d}.jpg') for i in
-                            range(1, nframes + 1)],
+                'file_path': [os.path.join(img_folder_path, f'{i:06d}.jpg') for i in range(1, nframes + 1)],
+                'nframes': nframes,
             })
             
         else:
@@ -279,6 +279,7 @@ def video_dir_to_dfs(args):
                 'file_path': [os.path.join(img_folder_path, i['file_name']) for i in
                             images_data],
                 'is_labeled': [i['is_labeled'] for i in images_data],
+                'nframes': nframes,
             })
             annotation_pitch_camera_df["video_id"] = video_id
         
@@ -354,10 +355,8 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
         pitch_camera = pd.concat(annotations_pitch_camera_list, ignore_index=True)
         pitch_gt = (pitch_camera[["image_id", "video_id", "lines"]]
                     [pitch_camera.supercategory=="pitch"].set_index("image_id", drop=True))
-        # camera_gt = (pitch_camera[["image_id", "parameters", "relative_mean_reproj", "accuracy@5"]]
-        #             [pitch_camera.supercategory=="camera"].set_index("image_id", drop=True))
-        # image_gt = pitch_gt.join(camera_gt)
-        image_gt = pitch_gt
+        image_gt = image_metadata.copy().set_index("id", drop=False)
+        image_gt["lines"] = pitch_gt["lines"]
 
         # Add category id to detections
         category_to_id = {category['name']: category['id'] for category in categories_list}
@@ -376,7 +375,7 @@ def load_set(dataset_path, nvid=-1, vids_filter_set=None):
                                 'half_period_start', 'half_period_stop', 'categories']
         video_metadata_columns.extend(set(video_metadata.columns) - set(video_metadata_columns))
         video_metadata = video_metadata[video_metadata_columns]
-        image_metadata_columns = ['video_id', 'frame', 'file_path', 'is_labeled']
+        image_metadata_columns = ['video_id', 'frame', 'file_path', 'is_labeled', 'nframes']
         image_metadata_columns.extend(set(image_metadata.columns) - set(image_metadata_columns))
         image_metadata = image_metadata[image_metadata_columns]
         detections_column_ordered = ['image_id', 'video_id', 'track_id', 'person_id', 'bbox_ltwh', 'visibility']
