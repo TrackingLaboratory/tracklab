@@ -26,12 +26,37 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
+  test-default-run:
+    name: Test default tracklab command
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: 'uv.lock'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: uv sync
+      - name: Cache models
+        id: cache-models
+        uses: actions/cache@v4
+        with:
+          path: pretrained_models
+          key: ${{ runner.os }}-models
+      - name: Test tracklab
+        run: uv run tracklab dataset.nframes=10
 
   publish-to-pypi:
     name: Publish to PyPI
     if: startsWith(github.ref, 'refs/tags/') # only publish to PyPI on tag pushes
     needs:
-      - build
+      - test-default-run
     runs-on: ubuntu-latest
     environment:
       name: pypi
