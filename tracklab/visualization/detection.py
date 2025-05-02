@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 from tracklab.visualization import DetectionVisualizer
-from tracklab.utils.cv2 import draw_bbox, draw_bbox_stats
+from tracklab.utils.cv2 import draw_bbox, draw_bbox_stats, draw_text
 
 
 class DefaultDetectionVisualizer(DetectionVisualizer):
@@ -12,24 +12,17 @@ class DefaultDetectionVisualizer(DetectionVisualizer):
         self.print_confidence = print_confidence
 
     def draw_detection(self, image, detection_pred, detection_gt, metric=None):
-        if detection_gt is not None:
-            color_bbox = self.color(detection_gt, is_prediction=False)
-            if color_bbox:
-                draw_bbox(
-                    detection_gt,
-                    image,
-                    color_bbox,
-                )
-        if detection_pred is not None:
-            color_bbox = self.color(detection_pred, is_prediction=True)
-            if color_bbox:
-                draw_bbox(
-                    detection_pred,
-                    image,
-                    color_bbox,
-                    print_id=self.print_id,
-                    print_confidence=self.print_confidence,
-                )
+        for detection, is_pred in zip([detection_pred, detection_gt], [True, False]):
+            if detection is not None:
+                color_bbox = self.color(detection, is_prediction=is_pred)
+                if color_bbox:
+                    draw_bbox(
+                        detection,
+                        image,
+                        color_bbox,
+                        print_id=self.print_id,
+                        print_confidence=self.print_confidence,
+                    )
 
 class FullDetectionVisualizer(DefaultDetectionVisualizer):
     def __init__(self):
@@ -80,41 +73,40 @@ class SimpleDetectionStatsVisualizer(DetectionStatsVisualizer):
         super().__init__(print_stats=["state", "hits", "age", "time_since_update"])
 
 class EllipseDetectionVisualizer(DetectionVisualizer):
-    def __init__(self):
+    def __init__(self, print_id=True):
+        self.print_id = print_id
         super().__init__()
 
     def draw_detection(self, image, detection_pred, detection_gt, metric=None):
-        if detection_gt is not None:
-            color = self.color(detection_gt, is_prediction=False)
-            if color:
-                x1, y1, x2, y2 = detection_gt.bbox.ltrb()
-                center = (int((x1 + x2) / 2), int(y2))
-                width = x2 - x1
-                cv2.ellipse(
-                    image,
-                    center=center,
-                    axes=(int(width), int(0.35 * width)),
-                    angle=0.0,
-                    startAngle=-45.0,
-                    endAngle=235.0,
-                    color=color,
-                    thickness=2,
-                    lineType=cv2.LINE_4,
-                )
-        if detection_pred is not None:
-            color = self.color(detection_pred, is_prediction=True)
-            if color:
-                x1, y1, x2, y2 = detection_pred.bbox.ltrb()
-                center = (int((x1 + x2) / 2), int(y2))
-                width = x2 - x1
-                cv2.ellipse(
-                    image,
-                    center=center,
-                    axes=(int(width), int(0.35 * width)),
-                    angle=0.0,
-                    startAngle=-45.0,
-                    endAngle=235.0,
-                    color=color,
-                    thickness=2,
-                    lineType=cv2.LINE_4,
-                )
+        for detection, is_pred in zip([detection_pred, detection_gt], [True, False]):
+            if detection is not None:
+                color = self.color(detection, is_prediction=is_pred)
+                if color:
+                    x1, y1, x2, y2 = detection.bbox.ltrb()
+                    center = (int((x1 + x2) / 2), int(y2))
+                    width = x2 - x1
+                    cv2.ellipse(
+                        image,
+                        center=center,
+                        axes=(int(width), int(0.35 * width)),
+                        angle=0.0,
+                        startAngle=-45.0,
+                        endAngle=235.0,
+                        color=color,
+                        thickness=2,
+                        lineType=cv2.LINE_AA,
+                    )
+                    if self.print_id and hasattr(detection, "track_id"):
+                        draw_text(
+                            image,
+                            f"ID: {int(detection.track_id)}",
+                            center,
+                            fontFace=1,
+                            fontScale=1,
+                            thickness=1,
+                            alignH="c",
+                            alignV="c",
+                            color_bg=color,
+                            color_txt=None,
+                            alpha_bg=1,
+                        )
