@@ -233,7 +233,7 @@ def draw_bbox_stats(
 
 def pretty_print(stat, value):
     if stat in ["hits", "age", "time_since_update"]:
-        return int(value)
+        return int(value) if not pd.isna(value) else "N/A"
     elif stat == "matched_with":
         if pd.isna(value):
             return "N/A"
