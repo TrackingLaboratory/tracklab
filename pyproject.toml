@@ -61,6 +61,9 @@ dev = [
     "tracklab[transformers,yolox]",
     "twine>=6.1.0",
     "huggingface_hub[cli]",
+    "sphinx",
+    "sphinx_rtd_theme",
+    "myst-parser",
 ]
 
 [project.scripts]
