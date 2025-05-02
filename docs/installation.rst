@@ -1,6 +1,6 @@
 .. _installation:
 
-Installation guide [1]_
+Installation guide
 =======================
 
 Clone the repository
