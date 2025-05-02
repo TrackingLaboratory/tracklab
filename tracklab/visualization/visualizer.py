@@ -40,10 +40,8 @@ class DetectionVisualizer(Visualizer, ABC):
         self.colors = colors
         if "cmap" in colors and isinstance(colors["cmap"], int):
             cmap = get_fixed_colors(colors["cmap"])
-        elif "cmap" in colors:
-            cmap = plt.get_cmap(colors["cmap"]).colors
         else:
-            cmap = get_fixed_colors(colors["N"])
+            cmap = plt.get_cmap(colors["cmap"]).colors
         self.cmap = [get_rgb256(i) for i in cmap]
 
     def draw_frame(self, image, detections_pred, detections_gt, image_pred, image_gt):
