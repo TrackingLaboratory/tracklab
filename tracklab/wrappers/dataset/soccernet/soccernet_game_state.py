@@ -1,6 +1,5 @@
 import logging
 import os
-import time
 import zipfile
 import numpy as np
 import pandas as pd
@@ -9,10 +8,11 @@ import json
 from pathlib import Path
 from SoccerNet.Downloader import SoccerNetDownloader
 from rich.prompt import Confirm
+from multiprocessing import Pool
+
 from tracklab.datastruct import TrackingDataset, TrackingSet
 from tracklab.utils import xywh_to_ltwh
 from tracklab.utils.progress import progress
-from multiprocessing import Pool
 
 log = logging.getLogger(__name__)
 
@@ -184,7 +184,6 @@ def dict_to_df_detections(annotation_dict, categories_list):
     df['position'] = None # df.apply(lambda row: row['attributes']['position'], axis=1)         for now there is no position in the json file
     df['category'] = df.apply(lambda row: extract_category(row['attributes']), axis=1)
     df['track_id'] = df['track_id'].astype(int)
-    # df['id'] = df['id']
 
     columns = ['id', 'image_id', 'track_id', 'bbox_ltwh', 'bbox_pitch', 'team_cluster',
                'team', 'role', 'jersey_number', 'position', 'category']
