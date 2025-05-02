@@ -105,30 +105,25 @@ the directory structure, and each file in a directory is a configuration choice.
 <p>The <cite>defaults</cite> list in this file contains the default value for every category.
 You can change these defaults either through the commandline.
 For example, to change the dataset and the image detector, you could do:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">tracklab</span><span class="o">.</span><span class="n">main</span> <span class="n">dataset</span><span class="o">=</span><span class="n">posetrack18</span> <span class="n">detect_multiple</span><span class="o">=</span><span class="n">openpifpaf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uv</span> <span class="n">run</span> <span class="n">tracklab</span> <span class="n">dataset</span><span class="o">=</span><span class="n">sportsmot</span> <span class="n">bbox_detector</span><span class="o">=</span><span class="n">yolox</span>
 </pre></div>
 </div>
-<p>If you want to change a single value inside a category, for example the bbox extension factor:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">tracklab</span><span class="o">.</span><span class="n">main</span> <span class="n">detect_multiple</span><span class="o">=</span><span class="n">openpifpaf</span> <span class="s2">&quot;detect_multiple.cfg.bbox.extension_factor=[0.05,0.05,0.05]&quot;</span>
+<p>If you want to change a single value inside a category, for example the number of frames per video:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uv</span> <span class="n">run</span> <span class="n">tracklab</span> <span class="n">dataset</span><span class="o">.</span><span class="n">nframes</span><span class="o">=</span><span class="mi">10</span>
 </pre></div>
 </div>
-<p>This will both change the detector to <code class="docutils literal notranslate"><span class="pre">openpifpaf</span></code> and change a parameter inside the openpifpaf configuration.</p>
 <p>You can find out which values you can change by looking at the configuration directory or running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">tracklab</span><span class="o">.</span><span class="n">main</span> <span class="o">--</span><span class="n">help</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uv</span> <span class="n">run</span> <span class="n">tracklab</span> <span class="o">--</span><span class="n">help</span>
 </pre></div>
 </div>
 <p>Thanks to Hydra, we can also run a grid-search (or other kind of hyper-parameter searches). The default grid-search
 is activated with the <code class="docutils literal notranslate"><span class="pre">-m</span></code> flag, and by passing a comma-separated list of values, either at the category-level
 or at the key-level:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">tracklab</span><span class="o">.</span><span class="n">main</span> <span class="o">-</span><span class="n">m</span> <span class="n">dataset</span><span class="o">=</span><span class="n">posetrack18</span><span class="p">,</span><span class="n">posetrack21</span> <span class="n">detect_multiple</span><span class="o">=</span><span class="n">openpifpaf</span><span class="p">,</span><span class="n">yolox</span> <span class="n">track</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">max_dist</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.7</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uv</span> <span class="n">run</span> <span class="n">tracklab</span> <span class="o">-</span><span class="n">m</span> <span class="n">dataset</span><span class="o">=</span><span class="n">sportsmot</span><span class="p">,</span><span class="n">dancetrack</span> <span class="n">track</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">max_dist</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.7</span>
 </pre></div>
 </div>
-<p>This command will run tracking multiple times, to test two datasets, two image-level detectors with three different
-tracking hyper-parameters (combining to 12 runs).</p>
-<div class="admonition hint">
-<p class="admonition-title">Hint</p>
-<p>The first <code class="docutils literal notranslate"><span class="pre">-m</span></code> is a python flag to run a module, while the second <code class="docutils literal notranslate"><span class="pre">-m</span></code> is the multirun flag from hydra</p>
-</div>
+<p>This command will run tracking multiple times, to test two datasets, with three different
+tracking hyper-parameters (combining to 6 runs).</p>
 <section id="configuration-directory">
 <h2>Configuration directory<a class="headerlink" href="#configuration-directory" title="Link to this heading"></a></h2>
 <p>The configuration for tracklab is located in the <code class="docutils literal notranslate"><span class="pre">configs/</span></code> directory, with the following structure:</p>
