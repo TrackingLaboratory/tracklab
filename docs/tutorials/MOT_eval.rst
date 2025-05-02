@@ -8,7 +8,7 @@ Specifically, the function `run(tracker_state)` must be implemented for the eval
 
 The `tracker_state` object is the data structure that aggregates all the 
 information and results related to the tracking. 
-It contains in particular the `predicitions`, the metadata related to the 
+It contains in particular the `predictions`, the metadata related to the
 dataset `image_metadas` and `video_metadas` but also the ground truths
 `detections_gt`, which were created during the dataset initialization. 
 All these attributes are `pd.DataFrame`, which makes sorting for evaluation 

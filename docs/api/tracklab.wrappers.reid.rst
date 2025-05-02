@@ -1,26 +1,26 @@
 tracklab.wrappers.reid package
-=============================
+==============================
 
 .. automodule:: tracklab.wrappers.reid
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------
 
-tracklab.wrappers.reid.bpbreid\_api module
+tracklab.wrappers.reid.kpreid\_api module
 -----------------------------------------
 
-.. automodule:: tracklab.wrappers.reid.bpbreid_api
+.. automodule:: tracklab.wrappers.reid.kpreid_api
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
-tracklab.wrappers.reid.bpbreid\_dataset module
+tracklab.wrappers.reid.kpreid\_dataset module
 ---------------------------------------------
 
-.. automodule:: tracklab.wrappers.reid.bpbreid_dataset
+.. automodule:: tracklab.wrappers.reid.kpreid_dataset
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

@@ -1,10 +1,10 @@
 tracklab package
-===============
+================
 
 .. automodule:: tracklab
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Subpackages
 -----------
@@ -13,21 +13,21 @@ Subpackages
    :maxdepth: 4
 
    tracklab.callbacks
-   tracklab.core
+   tracklab.configs
    tracklab.datastruct
    tracklab.engine
-   tracklab.loggers
    tracklab.pipeline
    tracklab.utils
+   tracklab.visualization
    tracklab.wrappers
 
 Submodules
 ----------
 
 tracklab.main module
--------------------
+--------------------
 
 .. automodule:: tracklab.main
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

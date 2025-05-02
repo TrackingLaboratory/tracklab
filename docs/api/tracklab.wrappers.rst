@@ -1,10 +1,10 @@
 tracklab.wrappers package
-========================
+=========================
 
 .. automodule:: tracklab.wrappers
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Subpackages
 -----------
@@ -12,10 +12,10 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   tracklab.wrappers.datasets
-   tracklab.wrappers.detect_multiple
-   tracklab.wrappers.detect_single
+   tracklab.wrappers.bbox_detector
+   tracklab.wrappers.dataset
    tracklab.wrappers.eval
-   tracklab.wrappers.jn_detector
+   tracklab.wrappers.pose_estimator
    tracklab.wrappers.reid
    tracklab.wrappers.track
+   tracklab.wrappers.tracklet_agg

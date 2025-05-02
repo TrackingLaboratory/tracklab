@@ -1,90 +1,106 @@
 tracklab.utils package
-=====================
+======================
 
 .. automodule:: tracklab.utils
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------
 
+tracklab.utils.attribute\_voting module
+---------------------------------------
+
+.. automodule:: tracklab.utils.attribute_voting
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 tracklab.utils.collate module
-----------------------------
+-----------------------------
 
 .. automodule:: tracklab.utils.collate
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 tracklab.utils.coordinates module
---------------------------------
+---------------------------------
 
 .. automodule:: tracklab.utils.coordinates
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 tracklab.utils.cv2 module
-------------------------
+-------------------------
 
 .. automodule:: tracklab.utils.cv2
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
+
+tracklab.utils.download module
+------------------------------
+
+.. automodule:: tracklab.utils.download
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
 tracklab.utils.easyocr module
-----------------------------
+-----------------------------
 
 .. automodule:: tracklab.utils.easyocr
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 tracklab.utils.instantiate module
---------------------------------
+---------------------------------
 
 .. automodule:: tracklab.utils.instantiate
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 tracklab.utils.monkeypatch\_hydra module
----------------------------------------
+----------------------------------------
 
 .. automodule:: tracklab.utils.monkeypatch_hydra
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 tracklab.utils.notebook module
------------------------------
+------------------------------
 
 .. automodule:: tracklab.utils.notebook
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 tracklab.utils.openmmlab module
-------------------------------
+-------------------------------
 
 .. automodule:: tracklab.utils.openmmlab
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
-tracklab.utils.progressbar module
---------------------------------
+tracklab.utils.progress module
+------------------------------
 
-.. automodule:: tracklab.utils.progressbar
+.. automodule:: tracklab.utils.progress
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 tracklab.utils.wandb module
---------------------------
+---------------------------
 
 .. automodule:: tracklab.utils.wandb
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
