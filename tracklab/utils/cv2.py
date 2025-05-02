@@ -11,7 +11,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-# FIXME load from categories in video_metadata
 posetrack_human_skeleton = [
     [16, 14],
     [14, 12],
