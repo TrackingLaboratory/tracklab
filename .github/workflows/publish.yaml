@@ -3,33 +3,8 @@ name: Test & Publish tracklab
 on: push
 
 jobs:
-  build:
-    name: Build distribution
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-      - name: Install pypa/build
-        run: >-
-          python3 -m
-          pip install build --user
-      - name: Build binary wheel and source tarball
-        run: python -m build
-      - name: store the distribution
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-package-distributions
-          path: dist/
   test-default-run:
     name: Test default tracklab command
-    needs:
-      - build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,6 +29,31 @@ jobs:
           key: ${{ runner.os }}-models
       - name: Test tracklab
         run: uv run tracklab dataset.nframes=10
+
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    needs:
+      - test-default-run
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install pypa/build
+        run: >-
+          python3 -m
+          pip install build --user
+      - name: Build binary wheel and source tarball
+        run: python -m build
+      - name: store the distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
 
   publish-to-pypi:
     name: Publish to PyPI
