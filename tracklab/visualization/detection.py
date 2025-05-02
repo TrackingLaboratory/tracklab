@@ -59,7 +59,7 @@ class DebugDetectionVisualizer(DetectionVisualizer):
 
 class DetectionStatsVisualizer(DetectionVisualizer):
     def __init__(self,
-            print_stats=["state", "hits", "age", "time_since_update", "matched_with", "costs"],
+            print_stats=["state", "hits", "age", "time_since_update", "matched_with"],  # FIXME "costs" is too long for display
      ):
         self.print_stats = print_stats
         super().__init__()
@@ -71,7 +71,8 @@ class DetectionStatsVisualizer(DetectionVisualizer):
                 draw_bbox_stats(
                     detection_pred,
                     image,
-                    self.print_stats
+                    self.print_stats,
+                    bbox_color=color_bbox,
                 )
 
 class SimpleDetectionStatsVisualizer(DetectionStatsVisualizer):
