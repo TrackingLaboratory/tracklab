@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Installation guide &mdash; TrackLab  documentation</title>
+  <title>Installation guide [1]_ &mdash; TrackLab  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
@@ -19,7 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="PbTrack Configuration" href="configuration.html" />
+    <link rel="next" title="Tracklab Configuration" href="configuration.html" />
     <link rel="prev" title="Welcome to TrackLab’s documentation!" href="index.html" /> 
 </head>
 
@@ -44,16 +44,17 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">General</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation guide </a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation guide [1]_</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#clone-the-repository">Clone the repository</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#manage-the-environment">Manage the environment</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#create-and-activate-a-new-environment-with-conda">Create and activate a new environment with conda</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#create-and-activate-a-new-environment-with-uv">Create and activate a new environment with uv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#install-the-dependencies">Install the dependencies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#run-your-first-tracklab-pipeline">Run your first tracklab pipeline</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="configuration.html">PbTrack Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Tracklab Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Available_features.html">Available features</a></li>
 </ul>
@@ -89,7 +90,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Installation guide </li>
+      <li class="breadcrumb-item active">Installation guide [1]_</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -100,22 +101,18 @@
            <div itemprop="articleBody">
              
   <section id="installation-guide-1">
-<span id="installation"></span><h1>Installation guide <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a><a class="headerlink" href="#installation-guide-1" title="Link to this heading"></a></h1>
+<span id="installation"></span><h1>Installation guide <a href="#id2"><span class="problematic" id="id1">[1]_</span></a><a class="headerlink" href="#installation-guide-1" title="Link to this heading"></a></h1>
 <section id="clone-the-repository">
 <h2>Clone the repository<a class="headerlink" href="#clone-the-repository" title="Link to this heading"></a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/PbTrack/pb-track.git
-<span class="nb">cd</span><span class="w"> </span>pb-track
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/TrackingLaboratory/tracklab.git
+<span class="nb">cd</span><span class="w"> </span>tracklab
 </pre></div>
 </div>
 </section>
 <section id="manage-the-environment">
 <h2>Manage the environment<a class="headerlink" href="#manage-the-environment" title="Link to this heading"></a></h2>
-<section id="create-and-activate-a-new-environment-with-conda">
-<h3>Create and activate a new environment with conda<a class="headerlink" href="#create-and-activate-a-new-environment-with-conda" title="Link to this heading"></a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>tracklab<span class="w"> </span>pip<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10<span class="w"> </span><span class="nv">pytorch</span><span class="o">==</span><span class="m">1</span>.13.0<span class="w"> </span><span class="nv">torchvision</span><span class="o">==</span><span class="m">0</span>.14.0<span class="w"> </span>pytorch-cuda<span class="o">=</span><span class="m">11</span>.7<span class="w"> </span>-c<span class="w"> </span>pytorch<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>-y
-conda<span class="w"> </span>activate<span class="w"> </span>tracklab
-</pre></div>
-</div>
+<section id="create-and-activate-a-new-environment-with-uv">
+<h3>Create and activate a new environment with uv<a class="headerlink" href="#create-and-activate-a-new-environment-with-uv" title="Link to this heading"></a></h3>
 <p>You might need to change your torch installation depending on your
 hardware. Please check on <a class="reference external" href="https://pytorch.org/get-started/previous-versions/">Pytorch
 website</a> to find
@@ -124,23 +121,15 @@ the right version for you.</p>
 <p class="admonition-title">Note</p>
 <p>You can also install the framework in a regular python virtual environment, and can then install
 the dependencies directly, but make sure that you install it in a <em>separate</em> environment !</p>
-<p>For advanced users, this project can also be installed with <a class="reference external" href="https://python-poetry.org/">Poetry</a>.</p>
 </div>
 </section>
 <section id="install-the-dependencies">
 <h3>Install the dependencies<a class="headerlink" href="#install-the-dependencies" title="Link to this heading"></a></h3>
 <p>Get into your repo and install the requirements with :</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
-mim<span class="w"> </span>install<span class="w"> </span>mmcv-full
-</pre></div>
-</div>
-<aside class="footnote-list brackets">
-<aside class="footnote brackets" id="id2" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
-<p>Tested on <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">22.11.1</span></code>, <code class="docutils literal notranslate"><span class="pre">Python</span> <span class="pre">3.10.8</span></code>, <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">22.3.1</span></code>,
-<code class="docutils literal notranslate"><span class="pre">g++</span> <span class="pre">11.3.0</span></code> and <code class="docutils literal notranslate"><span class="pre">gcc</span> <span class="pre">11.3.0</span></code></p>
-</aside>
-</aside>
+</section>
+<section id="run-your-first-tracklab-pipeline">
+<h3>Run your first tracklab pipeline<a class="headerlink" href="#run-your-first-tracklab-pipeline" title="Link to this heading"></a></h3>
+<p>Run the default configuration (on an example DanceTrack video) :</p>
 </section>
 </section>
 </section>
@@ -150,7 +139,7 @@ mim<span class="w"> </span>install<span class="w"> </span>mmcv-full
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="index.html" class="btn btn-neutral float-left" title="Welcome to TrackLab’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="configuration.html" class="btn btn-neutral float-right" title="PbTrack Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="configuration.html" class="btn btn-neutral float-right" title="Tracklab Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

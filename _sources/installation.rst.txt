@@ -8,19 +8,18 @@ Clone the repository
 
 .. code:: bash
 
-   git clone https://github.com/PbTrack/pb-track.git
-   cd pb-track
+   git clone https://github.com/TrackingLaboratory/tracklab.git
+   cd tracklab
 
 Manage the environment
 ----------------------
 
-Create and activate a new environment with conda
+Create and activate a new environment with uv
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
-
-   conda create -n tracklab pip python=3.10 pytorch==1.13.0 torchvision==0.14.0 pytorch-cuda=11.7 -c pytorch -c nvidia -y
-   conda activate tracklab
+   uv venv --python 3.12
+   uv sync
 
 You might need to change your torch installation depending on your
 hardware. Please check on `Pytorch
@@ -32,20 +31,19 @@ the right version for you.
  You can also install the framework in a regular python virtual environment, and can then install
  the dependencies directly, but make sure that you install it in a *separate* environment !
 
- For advanced users, this project can also be installed with `Poetry <https://python-poetry.org/>`_.
-
 Install the dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Get into your repo and install the requirements with :
 
 .. code:: bash
-
-   pip install -e .
-   mim install mmcv-full
+    uv sync
 
 
-.. [1]
-   Tested on ``conda 22.11.1``, ``Python 3.10.8``, ``pip 22.3.1``,
-   ``g++ 11.3.0`` and ``gcc 11.3.0``
+Run your first tracklab pipeline
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Run the default configuration (on an example DanceTrack video) :
+
+.. code:: bash
+    uv run tracklab

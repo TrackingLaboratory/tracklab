@@ -1,4 +1,4 @@
-PbTrack Configuration
+Tracklab Configuration
 =====================
 
 This framework uses `Hydra <http://hydra.cc/>`_ for its configuration.
