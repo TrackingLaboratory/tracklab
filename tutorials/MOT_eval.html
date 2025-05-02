@@ -19,7 +19,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Citation" href="../additional/citation.html" />
+    <link rel="next" title="tracklab package" href="../api/tracklab.html" />
     <link rel="prev" title="New dataset integration" href="MOT_dataset.html" /> 
 </head>
 
@@ -57,6 +57,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#config-file">Config file</a></li>
 </ul>
 </li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/tracklab.html">tracklab package</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
@@ -97,7 +101,7 @@ Specifically, the function <cite>run(tracker_state)</cite> must be implemented f
 <p>## <cite>EvaluatorBase</cite> extension</p>
 <p>The <cite>tracker_state</cite> object is the data structure that aggregates all the
 information and results related to the tracking.
-It contains in particular the <cite>predicitions</cite>, the metadata related to the
+It contains in particular the <cite>predictions</cite>, the metadata related to the
 dataset <cite>image_metadas</cite> and <cite>video_metadas</cite> but also the ground truths
 <cite>detections_gt</cite>, which were created during the dataset initialization.
 All these attributes are <cite>pd.DataFrame</cite>, which makes sorting for evaluation
@@ -124,7 +128,7 @@ yaml</cite>.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="MOT_dataset.html" class="btn btn-neutral float-left" title="New dataset integration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../additional/citation.html" class="btn btn-neutral float-right" title="Citation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../api/tracklab.html" class="btn btn-neutral float-right" title="tracklab package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
@@ -91,7 +95,7 @@
 
 
 <div class="viewcode-block" id="keypoints_in_bbox_coord">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.keypoints_in_bbox_coord">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.keypoints_in_bbox_coord">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">keypoints_in_bbox_coord</span><span class="p">(</span><span class="n">kp_xyc_img</span><span class="p">,</span> <span class="n">bbox_ltwh</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert keypoints in image coordinates to bounding box coordinates and filter out keypoints that are outside the</span>
@@ -124,7 +128,7 @@
 
 <span class="c1"># FIXME should be re-written to be used in KeypointsSeriesAccessor and KeypointsFrameAccessor</span>
 <div class="viewcode-block" id="rescale_keypoints">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.rescale_keypoints">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.rescale_keypoints">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">rescale_keypoints</span><span class="p">(</span><span class="n">rf_keypoints</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">new_size</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rescale keypoints to new size.</span>
@@ -149,7 +153,7 @@
 
 
 <div class="viewcode-block" id="clip_keypoints_to_image">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.clip_keypoints_to_image">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.clip_keypoints_to_image">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">clip_keypoints_to_image</span><span class="p">(</span><span class="n">kps</span><span class="p">,</span> <span class="n">image_size</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Clip keypoints to image size.</span>
@@ -183,7 +187,7 @@
 
 
 <div class="viewcode-block" id="clip_bbox_ltwh_to_img_dim">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.clip_bbox_ltwh_to_img_dim">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.clip_bbox_ltwh_to_img_dim">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">clip_bbox_ltwh_to_img_dim</span><span class="p">(</span><span class="n">bbox_ltwh</span><span class="p">,</span> <span class="n">img_w</span><span class="p">,</span> <span class="n">img_h</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Clip bounding box to image dimensions.</span>
@@ -207,7 +211,7 @@
 
 
 <div class="viewcode-block" id="clip_bbox_ltwh_to_img_dim_old">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.clip_bbox_ltwh_to_img_dim_old">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.clip_bbox_ltwh_to_img_dim_old">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">clip_bbox_ltwh_to_img_dim_old</span><span class="p">(</span><span class="n">bbox_ltwh</span><span class="p">,</span> <span class="n">img_w</span><span class="p">,</span> <span class="n">img_h</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Clip bounding box to image dimensions.</span>
@@ -229,7 +233,7 @@
 
 
 <div class="viewcode-block" id="clip_bbox_ltrb_to_img_dim">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.clip_bbox_ltrb_to_img_dim">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.clip_bbox_ltrb_to_img_dim">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">clip_bbox_ltrb_to_img_dim</span><span class="p">(</span><span class="n">bbox_ltrb</span><span class="p">,</span> <span class="n">img_w</span><span class="p">,</span> <span class="n">img_h</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Clip bounding box to image dimensions.</span>
@@ -251,7 +255,7 @@
 
 <span class="c1"># FIXME to be removed (duplicated in KeypointsSeriesAccessor and KeypointsFrameAccessor)</span>
 <div class="viewcode-block" id="round_bbox_coordinates">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.round_bbox_coordinates">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.round_bbox_coordinates">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">round_bbox_coordinates</span><span class="p">(</span><span class="n">bbox</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Round bounding box coordinates.</span>
@@ -270,14 +274,14 @@
 
 <span class="c1"># FIXME to be removed (duplicate with detection.bbox.ltrb(rounded=False))</span>
 <div class="viewcode-block" id="bbox_ltwh2ltrb">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.bbox_ltwh2ltrb">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.bbox_ltwh2ltrb">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">bbox_ltwh2ltrb</span><span class="p">(</span><span class="n">ltwh</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">ltwh</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span> <span class="n">ltwh</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">ltwh</span><span class="p">[</span><span class="mi">2</span><span class="p">:]))</span></div>
 
 
 
 <div class="viewcode-block" id="generate_bbox_from_keypoints">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.generate_bbox_from_keypoints">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.generate_bbox_from_keypoints">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">generate_bbox_from_keypoints</span><span class="p">(</span><span class="n">keypoints</span><span class="p">,</span> <span class="n">extension_factor</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generates a bounding box from keypoints by computing the bounding box of the keypoints and extending it by a factor.</span>
@@ -304,7 +308,7 @@
 
 
 <div class="viewcode-block" id="sanitize_keypoints">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.sanitize_keypoints">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.sanitize_keypoints">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">sanitize_keypoints</span><span class="p">(</span><span class="n">keypoints</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sanitizes keypoints by clipping them to the image dimensions and ensuring that their confidence values are valid.</span>
@@ -332,7 +336,7 @@
 
 
 <div class="viewcode-block" id="sanitize_bbox_ltwh">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.sanitize_bbox_ltwh">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.sanitize_bbox_ltwh">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">sanitize_bbox_ltwh</span><span class="p">(</span><span class="n">bbox</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sanitizes a bounding box by clipping it to the image dimensions and ensuring that its dimensions are valid.</span>
@@ -363,7 +367,7 @@
 
 
 <div class="viewcode-block" id="ltwh_to_xywh">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.ltwh_to_xywh">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.ltwh_to_xywh">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ltwh_to_xywh</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts coordinates `[left, top, w, h]` to `[center_x, center_y, w, h]`.</span>
@@ -379,7 +383,7 @@
 
 
 <div class="viewcode-block" id="ltwh_to_ltrb">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.ltwh_to_ltrb">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.ltwh_to_ltrb">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ltwh_to_ltrb</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts coordinates `[left, top, w, h]` to `[left, top, right, bottom]`.</span>
@@ -395,7 +399,7 @@
 
 
 <div class="viewcode-block" id="sanitize_bbox_ltrb">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.sanitize_bbox_ltrb">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.sanitize_bbox_ltrb">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">sanitize_bbox_ltrb</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sanitizes a bounding box by clipping it to the image dimensions and ensuring that its dimensions are valid.</span>
@@ -426,7 +430,7 @@
 
 
 <div class="viewcode-block" id="ltrb_to_xywh">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.ltrb_to_xywh">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.ltrb_to_xywh">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ltrb_to_xywh</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts coordinates `[left, top, right, bottom]` to `[center_x, center_y, w, h]`.</span>
@@ -449,7 +453,7 @@
 
 
 <div class="viewcode-block" id="ltrb_to_ltwh">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.ltrb_to_ltwh">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.ltrb_to_ltwh">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ltrb_to_ltwh</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts coordinates `[left, top, right, bottom]` to `[left, top, w, h]`.</span>
@@ -465,7 +469,7 @@
 
 
 <div class="viewcode-block" id="sanitize_bbox_xywh">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.sanitize_bbox_xywh">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.sanitize_bbox_xywh">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">sanitize_bbox_xywh</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">images_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sanitizes a bounding box by clipping it to the image dimensions and ensuring that its dimensions are valid.</span>
@@ -485,7 +489,7 @@
 
 
 <div class="viewcode-block" id="xywh_to_ltrb">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.xywh_to_ltrb">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.xywh_to_ltrb">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">xywh_to_ltrb</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts coordinates `[center_x, center_y, w, h]` to `[left, top, right, bottom]`.</span>
@@ -508,7 +512,7 @@
 
 
 <div class="viewcode-block" id="xywh_to_ltwh">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.coordinates.xywh_to_ltwh">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.coordinates.xywh_to_ltwh">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">xywh_to_ltwh</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts coordinates `[center_x, center_y, w, h]` to `[left, top, w, h]`.</span>

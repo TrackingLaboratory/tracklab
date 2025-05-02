@@ -1,0 +1,323 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tracklab.engine package &mdash; TrackLab  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tracklab.pipeline package" href="tracklab.pipeline.html" />
+    <link rel="prev" title="tracklab.datastruct package" href="tracklab.datastruct.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TrackLab
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation guide </a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">PbTrack Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Available_features.html">Available features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/Yolov8_pose_estimation.html">Integrating a new module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/MOT_dataset.html">New dataset integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/MOT_eval.html">New evaluator integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="tracklab.html">tracklab package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tracklab.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="tracklab.callbacks.html">tracklab.callbacks package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.configs.html">tracklab.configs package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.datastruct.html">tracklab.datastruct package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">tracklab.engine package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-tracklab.engine.engine">tracklab.engine.engine module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-tracklab.engine.offline">tracklab.engine.offline module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-tracklab.engine.pipelined">tracklab.engine.pipelined module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-tracklab.engine.video">tracklab.engine.video module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.pipeline.html">tracklab.pipeline package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html">tracklab.utils package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html">tracklab.visualization package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.wrappers.html">tracklab.wrappers package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.html#module-tracklab.main">tracklab.main module</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../additional/citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/coming_soon.html">Coming soon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/contribute.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/licence.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TrackLab</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="tracklab.html">tracklab package</a></li>
+      <li class="breadcrumb-item active">tracklab.engine package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/tracklab.engine.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tracklab.engine">
+<span id="tracklab-engine-package"></span><h1>tracklab.engine package<a class="headerlink" href="#module-tracklab.engine" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-tracklab.engine.engine">
+<span id="tracklab-engine-engine-module"></span><h2>tracklab.engine.engine module<a class="headerlink" href="#module-tracklab.engine.engine" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.engine.engine.TrackingEngine">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.engine.engine.</span></span><span class="sig-name descname"><span class="pre">TrackingEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modules</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Pipeline" title="tracklab.pipeline.module.Pipeline"><span class="pre">Pipeline</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracker_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState" title="tracklab.datastruct.tracker_state.TrackerState"><span class="pre">TrackerState</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callbacks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback" title="tracklab.callbacks.callback.Callback"><span class="pre">Callback</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/engine/engine.html#TrackingEngine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.engine.engine.TrackingEngine" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Manages the full tracking pipeline.</p>
+<p>After initializing the <a class="reference internal" href="#tracklab.engine.engine.TrackingEngine" title="tracklab.engine.engine.TrackingEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrackingEngine</span></code></a>, users should call <a class="reference internal" href="#tracklab.engine.engine.TrackingEngine.track_dataset" title="tracklab.engine.engine.TrackingEngine.track_dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">track_dataset</span></code></a>
+which will track each video in turn. The call stack looks like :</p>
+<p>track_dataset
+|
+video_step
+|
+-&gt; detect_multi_step -&gt; detect_single_step -&gt; reid_step -&gt; track_step</p>
+<p>Implementors of <a class="reference internal" href="#tracklab.engine.engine.TrackingEngine" title="tracklab.engine.engine.TrackingEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrackingEngine</span></code></a> will need to <em>at least</em> implement
+<a class="reference internal" href="#tracklab.engine.engine.TrackingEngine.video_loop" title="tracklab.engine.engine.TrackingEngine.video_loop"><code class="xref py py-func docutils literal notranslate"><span class="pre">video_loop()</span></code></a>.
+for example, an online engine will simply call each step in turn for every image in
+a video. An offline engine might instead call each step for all the images before
+doing the next step in the pipeline.</p>
+<p>You should take care to implement the different callback hooks, by calling:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">fabric</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;a_callback_function&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>detect_multi_model</strong> – The bbox/pose detection model</p></li>
+<li><p><strong>detect_single_model</strong> – The pose detection model</p></li>
+<li><p><strong>reid_model</strong> – Reid model</p></li>
+<li><p><strong>track_model</strong> – tracking model</p></li>
+<li><p><strong>tracker_state</strong> – contains inputs and outputs</p></li>
+<li><p><strong>callbacks</strong> – called at different steps</p></li>
+<li><p><strong>num_workers</strong> – number of workers for preprocessing</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.engine.engine.TrackingEngine.default_step">
+<span class="sig-name descname"><span class="pre">default_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pred</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/engine/engine.html#TrackingEngine.default_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.engine.engine.TrackingEngine.default_step" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.engine.engine.TrackingEngine.track_dataset">
+<span class="sig-name descname"><span class="pre">track_dataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/engine/engine.html#TrackingEngine.track_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.engine.engine.TrackingEngine.track_dataset" title="Link to this definition"></a></dt>
+<dd><p>Run tracking on complete dataset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.engine.engine.TrackingEngine.video_loop">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">video_loop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tracker_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState" title="tracklab.datastruct.tracker_state.TrackerState"><span class="pre">TrackerState</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="../_modules/tracklab/engine/engine.html#TrackingEngine.video_loop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.engine.engine.TrackingEngine.video_loop" title="Link to this definition"></a></dt>
+<dd><p>Run tracking on one video.</p>
+<p>The pipeline for each video looks like :</p>
+<p>detect_multi -&gt; (detect_single) -&gt; reid -&gt; track</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tracker_state</strong> (<a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState" title="tracklab.datastruct.tracker_state.TrackerState"><em>TrackerState</em></a>) – tracker state object</p></li>
+<li><p><strong>video_metadata</strong> (<em>pd.Series</em>) – metadata for the video</p></li>
+<li><p><strong>video_id</strong> (<em>int</em>) – id of the video</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a dataframe of all detections</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>detections</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tracklab.engine.engine.merge_dataframes">
+<span class="sig-prename descclassname"><span class="pre">tracklab.engine.engine.</span></span><span class="sig-name descname"><span class="pre">merge_dataframes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">main_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">appended_piece</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/engine/engine.html#merge_dataframes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.engine.engine.merge_dataframes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-tracklab.engine.offline">
+<span id="tracklab-engine-offline-module"></span><h2>tracklab.engine.offline module<a class="headerlink" href="#module-tracklab.engine.offline" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.engine.offline.OfflineTrackingEngine">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.engine.offline.</span></span><span class="sig-name descname"><span class="pre">OfflineTrackingEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modules</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Pipeline" title="tracklab.pipeline.module.Pipeline"><span class="pre">Pipeline</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracker_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState" title="tracklab.datastruct.tracker_state.TrackerState"><span class="pre">TrackerState</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callbacks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback" title="tracklab.callbacks.callback.Callback"><span class="pre">Callback</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/engine/offline.html#OfflineTrackingEngine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.engine.offline.OfflineTrackingEngine" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.engine.engine.TrackingEngine" title="tracklab.engine.engine.TrackingEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrackingEngine</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.engine.offline.OfflineTrackingEngine.video_loop">
+<span class="sig-name descname"><span class="pre">video_loop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tracker_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/engine/offline.html#OfflineTrackingEngine.video_loop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.engine.offline.OfflineTrackingEngine.video_loop" title="Link to this definition"></a></dt>
+<dd><p>Run tracking on one video.</p>
+<p>The pipeline for each video looks like :</p>
+<p>detect_multi -&gt; (detect_single) -&gt; reid -&gt; track</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tracker_state</strong> (<a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState" title="tracklab.datastruct.tracker_state.TrackerState"><em>TrackerState</em></a>) – tracker state object</p></li>
+<li><p><strong>video_metadata</strong> (<em>pd.Series</em>) – metadata for the video</p></li>
+<li><p><strong>video_id</strong> (<em>int</em>) – id of the video</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a dataframe of all detections</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>detections</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-tracklab.engine.pipelined">
+<span id="tracklab-engine-pipelined-module"></span><h2>tracklab.engine.pipelined module<a class="headerlink" href="#module-tracklab.engine.pipelined" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.engine.pipelined.PipelinedTrackingEngine">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.engine.pipelined.</span></span><span class="sig-name descname"><span class="pre">PipelinedTrackingEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/engine/pipelined.html#PipelinedTrackingEngine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.engine.pipelined.PipelinedTrackingEngine" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.engine.engine.TrackingEngine" title="tracklab.engine.engine.TrackingEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrackingEngine</span></code></a></p>
+<p>Pipelined implementation of an online tracking engine.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.engine.pipelined.PipelinedTrackingEngine.video_loop">
+<span class="sig-name descname"><span class="pre">video_loop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_id</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="../_modules/tracklab/engine/pipelined.html#PipelinedTrackingEngine.video_loop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.engine.pipelined.PipelinedTrackingEngine.video_loop" title="Link to this definition"></a></dt>
+<dd><p>Run tracking on one video.</p>
+<p>The pipeline for each video looks like :</p>
+<p>detect_multi -&gt; (detect_single) -&gt; reid -&gt; track</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tracker_state</strong> (<a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState" title="tracklab.datastruct.tracker_state.TrackerState"><em>TrackerState</em></a>) – tracker state object</p></li>
+<li><p><strong>video_metadata</strong> (<em>pd.Series</em>) – metadata for the video</p></li>
+<li><p><strong>video_id</strong> (<em>int</em>) – id of the video</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a dataframe of all detections</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>detections</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-tracklab.engine.video">
+<span id="tracklab-engine-video-module"></span><h2>tracklab.engine.video module<a class="headerlink" href="#module-tracklab.engine.video" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.engine.video.VideoOnlineTrackingEngine">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.engine.video.</span></span><span class="sig-name descname"><span class="pre">VideoOnlineTrackingEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modules</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Pipeline" title="tracklab.pipeline.module.Pipeline"><span class="pre">Pipeline</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_fps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracker_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callbacks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback" title="tracklab.callbacks.callback.Callback"><span class="pre">Callback</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/engine/video.html#VideoOnlineTrackingEngine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.engine.video.VideoOnlineTrackingEngine" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.engine.video.VideoOnlineTrackingEngine.default_step">
+<span class="sig-name descname"><span class="pre">default_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/engine/video.html#VideoOnlineTrackingEngine.default_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.engine.video.VideoOnlineTrackingEngine.default_step" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.engine.video.VideoOnlineTrackingEngine.track_dataset">
+<span class="sig-name descname"><span class="pre">track_dataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/engine/video.html#VideoOnlineTrackingEngine.track_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.engine.video.VideoOnlineTrackingEngine.track_dataset" title="Link to this definition"></a></dt>
+<dd><p>Run tracking on complete dataset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.engine.video.VideoOnlineTrackingEngine.video_loop">
+<span class="sig-name descname"><span class="pre">video_loop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/engine/video.html#VideoOnlineTrackingEngine.video_loop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.engine.video.VideoOnlineTrackingEngine.video_loop" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tracklab.datastruct.html" class="btn btn-neutral float-left" title="tracklab.datastruct package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tracklab.pipeline.html" class="btn btn-neutral float-right" title="tracklab.pipeline package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Baptiste Standaert, Vladimir Somers, Victor Joos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

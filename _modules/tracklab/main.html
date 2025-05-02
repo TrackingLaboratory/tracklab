@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../additional/citation.html">Citation</a></li>
@@ -109,7 +113,7 @@
 
 
 <div class="viewcode-block" id="main">
-<a class="viewcode-back" href="../../api/pbtrack.html#tracklab.main.main">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.html#tracklab.main.main">[docs]</a>
 <span class="nd">@hydra</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">version_base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config_path</span><span class="o">=</span><span class="s2">&quot;pkg://tracklab.configs&quot;</span><span class="p">,</span> <span class="n">config_name</span><span class="o">=</span><span class="s2">&quot;config&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
     <span class="n">device</span> <span class="o">=</span> <span class="n">init_environment</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
@@ -164,7 +168,7 @@
 
 
 <div class="viewcode-block" id="set_sharing_strategy">
-<a class="viewcode-back" href="../../api/pbtrack.html#tracklab.main.set_sharing_strategy">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.html#tracklab.main.set_sharing_strategy">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">set_sharing_strategy</span><span class="p">():</span>
     <span class="n">torch</span><span class="o">.</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">set_sharing_strategy</span><span class="p">(</span>
         <span class="s2">&quot;file_system&quot;</span>
@@ -173,7 +177,7 @@
 
 
 <div class="viewcode-block" id="init_environment">
-<a class="viewcode-back" href="../../api/pbtrack.html#tracklab.main.init_environment">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.html#tracklab.main.init_environment">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">init_environment</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
     <span class="c1"># For Hydra and Slurm compatibility</span>
     <span class="n">progress</span><span class="o">.</span><span class="n">use_rich</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">use_rich</span>
@@ -205,14 +209,14 @@
 
 
 <div class="viewcode-block" id="close_environment">
-<a class="viewcode-back" href="../../api/pbtrack.html#tracklab.main.close_environment">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.html#tracklab.main.close_environment">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">close_environment</span><span class="p">():</span>
     <span class="n">wandb</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span></div>
 
 
 
 <div class="viewcode-block" id="evaluate">
-<a class="viewcode-back" href="../../api/pbtrack.html#tracklab.main.evaluate">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.html#tracklab.main.evaluate">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">evaluator</span><span class="p">,</span> <span class="n">tracker_state</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;eval_tracking&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>  <span class="c1"># and cfg.dataset.nframes == -1:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting evaluation.&quot;</span><span class="p">)</span>

@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
@@ -101,7 +105,7 @@
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="get_config_path">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.openmmlab.get_config_path">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.openmmlab.get_config_path">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_config_path</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="n">config_name</span><span class="p">):</span>
     <span class="n">installed_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">get_installed_path</span><span class="p">(</span><span class="n">package</span><span class="p">))</span>
     <span class="c1"># configs will be put in package/.mim in PR #68</span>
@@ -115,7 +119,7 @@
 
 
 <div class="viewcode-block" id="get_checkpoint">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.openmmlab.get_checkpoint">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.openmmlab.get_checkpoint">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_checkpoint</span><span class="p">(</span><span class="n">path_to_checkpoint</span><span class="p">,</span> <span class="n">download_url</span><span class="p">):</span>
     <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path_to_checkpoint</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path_to_checkpoint</span><span class="p">):</span>

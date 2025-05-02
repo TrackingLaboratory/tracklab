@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
@@ -95,7 +99,7 @@
 
 
 <div class="viewcode-block" id="DetectionLevelModule">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DetectionLevelModule</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract class to implement a module that operates directly on detections.</span>
 
@@ -135,7 +139,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_datapipe</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="DetectionLevelModule.preprocess">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule.preprocess">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule.preprocess">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">detection</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Adapts the default input to your specific case.</span>
@@ -153,7 +157,7 @@
 
 
 <div class="viewcode-block" id="DetectionLevelModule.process">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule.process">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule.process">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">metadatas</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The main processing function. Runs on GPU.</span>
@@ -183,7 +187,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_datapipe</span>
 
 <div class="viewcode-block" id="DetectionLevelModule.dataloader">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule.dataloader">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule.dataloader">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">):</span>
         <span class="n">datapipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datapipe</span>
         <span class="k">return</span> <span class="n">DataLoader</span><span class="p">(</span>

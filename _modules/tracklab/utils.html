@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../additional/citation.html">Citation</a></li>
@@ -90,7 +94,7 @@
 
 
 <div class="viewcode-block" id="BBoxDataFrameAccessor">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.BBoxDataFrameAccessor">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.BBoxDataFrameAccessor">[docs]</a>
 <span class="nd">@pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">register_dataframe_accessor</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">BBoxDataFrameAccessor</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pandas_obj</span><span class="p">):</span>
@@ -103,7 +107,7 @@
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Must have &#39;bbox_ltwh&#39;.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BBoxDataFrameAccessor.ltwh">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.BBoxDataFrameAccessor.ltwh">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.BBoxDataFrameAccessor.ltwh">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">ltwh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">bbox_ltwh</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">sanitize_bbox_ltwh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">rounded</span><span class="p">)</span>
@@ -111,19 +115,19 @@
 
 
 <div class="viewcode-block" id="BBoxDataFrameAccessor.ltrb">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.BBoxDataFrameAccessor.ltrb">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.BBoxDataFrameAccessor.ltrb">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">ltrb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">bbox_ltwh</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ltwh_to_ltrb</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">rounded</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="BBoxDataFrameAccessor.xywh">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.BBoxDataFrameAccessor.xywh">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.BBoxDataFrameAccessor.xywh">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">xywh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">bbox_ltwh</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ltwh_to_xywh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">rounded</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="BBoxDataFrameAccessor.conf">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.BBoxDataFrameAccessor.conf">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.BBoxDataFrameAccessor.conf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">conf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="s2">&quot;bbox_conf&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">bbox_conf</span>
@@ -133,7 +137,7 @@
 
 
 <div class="viewcode-block" id="BBoxSeriesAccessor">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.BBoxSeriesAccessor">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.BBoxSeriesAccessor">[docs]</a>
 <span class="nd">@pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">register_series_accessor</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">BBoxSeriesAccessor</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pandas_obj</span><span class="p">):</span>
@@ -146,25 +150,25 @@
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Must have &#39;bbox_ltwh&#39;.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BBoxSeriesAccessor.ltwh">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.BBoxSeriesAccessor.ltwh">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.BBoxSeriesAccessor.ltwh">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">ltwh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">sanitize_bbox_ltwh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">bbox_ltwh</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">rounded</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BBoxSeriesAccessor.ltrb">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.BBoxSeriesAccessor.ltrb">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.BBoxSeriesAccessor.ltrb">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">ltrb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ltwh_to_ltrb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">bbox_ltwh</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">rounded</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BBoxSeriesAccessor.xywh">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.BBoxSeriesAccessor.xywh">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.BBoxSeriesAccessor.xywh">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">xywh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ltwh_to_xywh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">bbox_ltwh</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">rounded</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BBoxSeriesAccessor.conf">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.BBoxSeriesAccessor.conf">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.BBoxSeriesAccessor.conf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">conf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="s2">&quot;bbox_conf&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">bbox_conf</span>
@@ -174,7 +178,7 @@
 
 
 <div class="viewcode-block" id="KeypointsDataFrameAccessor">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.KeypointsDataFrameAccessor">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.KeypointsDataFrameAccessor">[docs]</a>
 <span class="nd">@pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">register_dataframe_accessor</span><span class="p">(</span><span class="s2">&quot;keypoints&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">KeypointsDataFrameAccessor</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pandas_obj</span><span class="p">):</span>
@@ -189,7 +193,7 @@
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Must have &#39;keypoints_conf&#39;.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="KeypointsDataFrameAccessor.xyc">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.KeypointsDataFrameAccessor.xyc">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.KeypointsDataFrameAccessor.xyc">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">xyc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">keypoints_xyc</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">sanitize_keypoints</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">rounded</span><span class="p">)</span>
@@ -197,7 +201,7 @@
 
 
 <div class="viewcode-block" id="KeypointsDataFrameAccessor.xy">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.KeypointsDataFrameAccessor.xy">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.KeypointsDataFrameAccessor.xy">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">xy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">keypoints_xyc</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">sanitize_keypoints</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">rounded</span><span class="p">)[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span>
@@ -205,19 +209,19 @@
 
 
 <div class="viewcode-block" id="KeypointsDataFrameAccessor.c">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.KeypointsDataFrameAccessor.c">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.KeypointsDataFrameAccessor.c">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">keypoints_xyc</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="KeypointsDataFrameAccessor.conf">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.KeypointsDataFrameAccessor.conf">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.KeypointsDataFrameAccessor.conf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">conf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">keypoints_conf</span></div>
 
 
 <div class="viewcode-block" id="KeypointsDataFrameAccessor.in_bbox_coord">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.KeypointsDataFrameAccessor.in_bbox_coord">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.KeypointsDataFrameAccessor.in_bbox_coord">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">in_bbox_coord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bbox_ltwh</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">keypoints_xyc</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">keypoints_in_bbox_coord</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">bbox_ltwh</span><span class="p">)</span>
@@ -225,7 +229,7 @@
 
 
 <div class="viewcode-block" id="KeypointsDataFrameAccessor.keypoints_bbox_xyc">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.KeypointsDataFrameAccessor.keypoints_bbox_xyc">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.KeypointsDataFrameAccessor.keypoints_bbox_xyc">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">keypoints_bbox_xyc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Converts from keypoints in image coordinates to keypoints in bbox coordinates&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
@@ -234,7 +238,7 @@
 
 
 <div class="viewcode-block" id="KeypointsSeriesAccessor">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.KeypointsSeriesAccessor">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.KeypointsSeriesAccessor">[docs]</a>
 <span class="nd">@pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">register_series_accessor</span><span class="p">(</span><span class="s2">&quot;keypoints&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">KeypointsSeriesAccessor</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pandas_obj</span><span class="p">):</span>
@@ -249,13 +253,13 @@
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Must have &#39;keypoints_conf&#39;.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="KeypointsSeriesAccessor.xyc">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.KeypointsSeriesAccessor.xyc">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.KeypointsSeriesAccessor.xyc">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">xyc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">sanitize_keypoints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">keypoints_xyc</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">rounded</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="KeypointsSeriesAccessor.xy">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.KeypointsSeriesAccessor.xy">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.KeypointsSeriesAccessor.xy">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">xy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">sanitize_keypoints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">keypoints_xyc</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">image_shape</span><span class="p">,</span> <span class="n">rounded</span><span class="p">)[</span>
             <span class="p">:,</span> <span class="p">:</span><span class="mi">2</span>
@@ -263,25 +267,25 @@
 
 
 <div class="viewcode-block" id="KeypointsSeriesAccessor.c">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.KeypointsSeriesAccessor.c">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.KeypointsSeriesAccessor.c">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">keypoints_xyc</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="KeypointsSeriesAccessor.conf">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.KeypointsSeriesAccessor.conf">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.KeypointsSeriesAccessor.conf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">conf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">keypoints_conf</span></div>
 
 
 <div class="viewcode-block" id="KeypointsSeriesAccessor.in_bbox_coord">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.KeypointsSeriesAccessor.in_bbox_coord">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.KeypointsSeriesAccessor.in_bbox_coord">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">in_bbox_coord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bbox_ltwh</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">keypoints_in_bbox_coord</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">keypoints_xyc</span><span class="p">,</span> <span class="n">bbox_ltwh</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="KeypointsSeriesAccessor.keypoints_bbox_xyc">
-<a class="viewcode-back" href="../../api/pbtrack.utils.html#tracklab.utils.KeypointsSeriesAccessor.keypoints_bbox_xyc">[docs]</a>
+<a class="viewcode-back" href="../../api/tracklab.utils.html#tracklab.utils.KeypointsSeriesAccessor.keypoints_bbox_xyc">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">keypoints_bbox_xyc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Converts from keypoints in image coordinates to keypoints in bbox coordinates&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">keypoints_in_bbox_coord</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">keypoints_xyc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">bbox_ltwh</span><span class="p">)</span></div>

@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
@@ -120,14 +124,14 @@
 
 
 <div class="viewcode-block" id="VideoReader">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.VideoReader">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.VideoReader">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">VideoReader</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cap</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># cv2.VideoCapture(filename)</span>
 
 <div class="viewcode-block" id="VideoReader.set_filename">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.VideoReader.set_filename">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.VideoReader.set_filename">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cap</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -150,7 +154,7 @@
 <span class="n">video_reader</span> <span class="o">=</span> <span class="n">VideoReader</span><span class="p">()</span>
 
 <div class="viewcode-block" id="cv2_load_image">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.cv2_load_image">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.cv2_load_image">[docs]</a>
 <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">cv2_load_image</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
     <span class="n">file_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
@@ -167,7 +171,7 @@
 
 
 <div class="viewcode-block" id="crop_bbox_ltwh">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.crop_bbox_ltwh">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.crop_bbox_ltwh">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">crop_bbox_ltwh</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">bbox</span><span class="p">):</span>
     <span class="n">bbox</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span><span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
@@ -176,7 +180,7 @@
     
 
 <div class="viewcode-block" id="draw_keypoints">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.draw_keypoints">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.draw_keypoints">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">draw_keypoints</span><span class="p">(</span>
     <span class="n">detection</span><span class="p">,</span>
     <span class="n">patch</span><span class="p">,</span>
@@ -242,7 +246,7 @@
 
 
 <div class="viewcode-block" id="draw_bbox">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.draw_bbox">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.draw_bbox">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">draw_bbox</span><span class="p">(</span>
     <span class="n">detection</span><span class="p">,</span>
     <span class="n">patch</span><span class="p">,</span>
@@ -302,7 +306,7 @@
 
 
 <div class="viewcode-block" id="draw_bbox_stats">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.draw_bbox_stats">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.draw_bbox_stats">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">draw_bbox_stats</span><span class="p">(</span>
     <span class="n">detection</span><span class="p">,</span>
     <span class="n">patch</span><span class="p">,</span>
@@ -341,7 +345,7 @@
 
 
 <div class="viewcode-block" id="pretty_print">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.pretty_print">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.pretty_print">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">pretty_print</span><span class="p">(</span><span class="n">stat</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">stat</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;hits&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;time_since_update&quot;</span><span class="p">]:</span>
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;N/A&quot;</span>
@@ -358,7 +362,7 @@
 
 
 <div class="viewcode-block" id="draw_bpbreid_heatmaps">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.draw_bpbreid_heatmaps">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.draw_bpbreid_heatmaps">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">draw_bpbreid_heatmaps</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">heatmaps_display_threshold</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="s2">&quot;body_masks&quot;</span><span class="p">):</span>
         <span class="n">l</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">(</span>
@@ -379,7 +383,7 @@
 
 
 <div class="viewcode-block" id="overlay_heatmap">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.overlay_heatmap">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.overlay_heatmap">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">overlay_heatmap</span><span class="p">(</span>
     <span class="n">img</span><span class="p">,</span> <span class="n">heatmap</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">mask_threshold</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">color_map</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">COLORMAP_JET</span><span class="p">,</span> <span class="n">rgb</span><span class="o">=</span><span class="kc">False</span>
 <span class="p">):</span>
@@ -418,7 +422,7 @@
 
 
 <div class="viewcode-block" id="draw_ignore_region">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.draw_ignore_region">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.draw_ignore_region">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">draw_ignore_region</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="n">image_metadata</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">image_metadata</span><span class="p">,</span> <span class="s2">&quot;ignore_regions_x&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">image_metadata</span><span class="p">,</span> <span class="s2">&quot;ignore_regions_y&quot;</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">image_metadata</span><span class="p">[</span><span class="s2">&quot;ignore_regions_x&quot;</span><span class="p">],</span> <span class="n">image_metadata</span><span class="p">[</span><span class="s2">&quot;ignore_regions_y&quot;</span><span class="p">]):</span>
@@ -433,7 +437,7 @@
 
 
 <div class="viewcode-block" id="print_count_frame">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.print_count_frame">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.print_count_frame">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">print_count_frame</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">nframes</span><span class="p">):</span>
     <span class="n">draw_text</span><span class="p">(</span>
         <span class="n">patch</span><span class="p">,</span>
@@ -452,14 +456,14 @@
 
 
 <div class="viewcode-block" id="final_patch">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.final_patch">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.final_patch">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">final_patch</span><span class="p">(</span><span class="n">patch</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_RGB2BGR</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="draw_text">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.draw_text">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.draw_text">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">draw_text</span><span class="p">(</span>
     <span class="n">img</span><span class="p">,</span>
     <span class="n">text</span><span class="p">,</span>
@@ -528,7 +532,7 @@
 
 
 <div class="viewcode-block" id="scale_lightness">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.scale_lightness">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.scale_lightness">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">scale_lightness</span><span class="p">(</span><span class="n">rgb</span><span class="p">,</span> <span class="n">scale_l</span><span class="o">=</span><span class="mf">1.4</span><span class="p">):</span>
     <span class="c1"># convert rgb to hls</span>
     <span class="n">h</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">colorsys</span><span class="o">.</span><span class="n">rgb_to_hls</span><span class="p">(</span><span class="o">*</span><span class="n">rgb</span><span class="p">)</span>
@@ -537,7 +541,7 @@
 
 
 <div class="viewcode-block" id="colored_body_parts_overlay">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.cv2.colored_body_parts_overlay">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.cv2.colored_body_parts_overlay">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">colored_body_parts_overlay</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_CUBIC</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.28</span><span class="p">,</span> <span class="n">mask_threshold</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">weight_scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">rgb</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">white_bckg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span>

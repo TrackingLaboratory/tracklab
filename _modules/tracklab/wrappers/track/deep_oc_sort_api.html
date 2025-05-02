@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../additional/citation.html">Citation</a></li>
@@ -102,7 +106,7 @@
 
 
 <div class="viewcode-block" id="DeepOCSORT">
-<a class="viewcode-back" href="../../../../api/pbtrack.wrappers.track.html#tracklab.wrappers.track.deep_oc_sort_api.DeepOCSORT">[docs]</a>
+<a class="viewcode-back" href="../../../../api/tracklab.wrappers.track.html#tracklab.wrappers.track.deep_oc_sort_api.DeepOCSORT">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DeepOCSORT</span><span class="p">(</span><span class="n">ImageLevelModule</span><span class="p">):</span>
     <span class="n">input_columns</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;bbox_ltwh&quot;</span><span class="p">,</span>
@@ -118,7 +122,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 
 <div class="viewcode-block" id="DeepOCSORT.reset">
-<a class="viewcode-back" href="../../../../api/pbtrack.wrappers.track.html#tracklab.wrappers.track.deep_oc_sort_api.DeepOCSORT.reset">[docs]</a>
+<a class="viewcode-back" href="../../../../api/tracklab.wrappers.track.html#tracklab.wrappers.track.deep_oc_sort_api.DeepOCSORT.reset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset the tracker state to start tracking in a new video.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">ocsort</span><span class="o">.</span><span class="n">OCSort</span><span class="p">(</span>
@@ -130,7 +134,7 @@
 
 
 <div class="viewcode-block" id="DeepOCSORT.preprocess">
-<a class="viewcode-back" href="../../../../api/pbtrack.wrappers.track.html#tracklab.wrappers.track.deep_oc_sort_api.DeepOCSORT.preprocess">[docs]</a>
+<a class="viewcode-back" href="../../../../api/tracklab.wrappers.track.html#tracklab.wrappers.track.deep_oc_sort_api.DeepOCSORT.preprocess">[docs]</a>
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
         <span class="n">processed_detections</span> <span class="o">=</span> <span class="p">[]</span>
@@ -150,7 +154,7 @@
 
 
 <div class="viewcode-block" id="DeepOCSORT.process">
-<a class="viewcode-back" href="../../../../api/pbtrack.wrappers.track.html#tracklab.wrappers.track.deep_oc_sort_api.DeepOCSORT.process">[docs]</a>
+<a class="viewcode-back" href="../../../../api/tracklab.wrappers.track.html#tracklab.wrappers.track.deep_oc_sort_api.DeepOCSORT.process">[docs]</a>
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">metadatas</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>

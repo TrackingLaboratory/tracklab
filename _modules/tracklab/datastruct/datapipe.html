@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
@@ -90,7 +94,7 @@
 
 
 <div class="viewcode-block" id="EngineDatapipe">
-<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.datapipe.EngineDatapipe">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.datastruct.html#tracklab.datastruct.datapipe.EngineDatapipe">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">EngineDatapipe</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
@@ -99,7 +103,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">detections</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="EngineDatapipe.update">
-<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.datapipe.EngineDatapipe.update">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.datastruct.html#tracklab.datastruct.datapipe.EngineDatapipe.update">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_filepaths</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">img_metadatas</span><span class="p">,</span> <span class="n">detections</span><span class="p">):</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">img_metadatas</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">detections</span>

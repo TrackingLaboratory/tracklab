@@ -1,0 +1,413 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tracklab.visualization package &mdash; TrackLab  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tracklab.wrappers package" href="tracklab.wrappers.html" />
+    <link rel="prev" title="tracklab.utils package" href="tracklab.utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TrackLab
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation guide </a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">PbTrack Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Available_features.html">Available features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/Yolov8_pose_estimation.html">Integrating a new module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/MOT_dataset.html">New dataset integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/MOT_eval.html">New evaluator integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="tracklab.html">tracklab package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tracklab.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="tracklab.callbacks.html">tracklab.callbacks package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.configs.html">tracklab.configs package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.datastruct.html">tracklab.datastruct package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.engine.html">tracklab.engine package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.pipeline.html">tracklab.pipeline package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html">tracklab.utils package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">tracklab.visualization package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-tracklab.visualization.detection">tracklab.visualization.detection module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-tracklab.visualization.image">tracklab.visualization.image module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-tracklab.visualization.keypoints">tracklab.visualization.keypoints module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-tracklab.visualization.tracking">tracklab.visualization.tracking module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-tracklab.visualization.visualization_engine">tracklab.visualization.visualization_engine module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-tracklab.visualization.visualizer">tracklab.visualization.visualizer module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.wrappers.html">tracklab.wrappers package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.html#module-tracklab.main">tracklab.main module</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../additional/citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/coming_soon.html">Coming soon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/contribute.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/licence.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TrackLab</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="tracklab.html">tracklab package</a></li>
+      <li class="breadcrumb-item active">tracklab.visualization package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/tracklab.visualization.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tracklab.visualization">
+<span id="tracklab-visualization-package"></span><h1>tracklab.visualization package<a class="headerlink" href="#module-tracklab.visualization" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-tracklab.visualization.detection">
+<span id="tracklab-visualization-detection-module"></span><h2>tracklab.visualization.detection module<a class="headerlink" href="#module-tracklab.visualization.detection" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.detection.DebugDetection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.detection.</span></span><span class="sig-name descname"><span class="pre">DebugDetection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/detection.html#DebugDetection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.detection.DebugDetection" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.visualization.visualizer.DetectionVisualizer" title="tracklab.visualization.visualizer.DetectionVisualizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionVisualizer</span></code></a></p>
+<dl class="simple">
+<dt>Detections are classified by colors:</dt><dd><ul class="simple">
+<li><p>Green is True Positive</p></li>
+<li><p>Yellow is False Positive</p></li>
+<li><p>Red is False Negative</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.detection.DebugDetection.draw_detection">
+<span class="sig-name descname"><span class="pre">draw_detection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/detection.html#DebugDetection.draw_detection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.detection.DebugDetection.draw_detection" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.detection.DefaultDetection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.detection.</span></span><span class="sig-name descname"><span class="pre">DefaultDetection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">print_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_confidence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/detection.html#DefaultDetection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.detection.DefaultDetection" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.visualization.visualizer.DetectionVisualizer" title="tracklab.visualization.visualizer.DetectionVisualizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionVisualizer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.detection.DefaultDetection.draw_detection">
+<span class="sig-name descname"><span class="pre">draw_detection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/detection.html#DefaultDetection.draw_detection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.detection.DefaultDetection.draw_detection" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.detection.DetectionStats">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.detection.</span></span><span class="sig-name descname"><span class="pre">DetectionStats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">print_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['state',</span> <span class="pre">'hits',</span> <span class="pre">'age',</span> <span class="pre">'time_since_update',</span> <span class="pre">'matched_with']</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/detection.html#DetectionStats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.detection.DetectionStats" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.visualization.visualizer.DetectionVisualizer" title="tracklab.visualization.visualizer.DetectionVisualizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionVisualizer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.detection.DetectionStats.draw_detection">
+<span class="sig-name descname"><span class="pre">draw_detection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/detection.html#DetectionStats.draw_detection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.detection.DetectionStats.draw_detection" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.detection.EllipseDetection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.detection.</span></span><span class="sig-name descname"><span class="pre">EllipseDetection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">print_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/detection.html#EllipseDetection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.detection.EllipseDetection" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.visualization.visualizer.DetectionVisualizer" title="tracklab.visualization.visualizer.DetectionVisualizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionVisualizer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.detection.EllipseDetection.draw_detection">
+<span class="sig-name descname"><span class="pre">draw_detection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/detection.html#EllipseDetection.draw_detection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.detection.EllipseDetection.draw_detection" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.detection.FullDetection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.detection.</span></span><span class="sig-name descname"><span class="pre">FullDetection</span></span><a class="reference internal" href="../_modules/tracklab/visualization/detection.html#FullDetection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.detection.FullDetection" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.visualization.detection.DefaultDetection" title="tracklab.visualization.detection.DefaultDetection"><code class="xref py py-class docutils literal notranslate"><span class="pre">DefaultDetection</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.detection.SimpleDetectionStats">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.detection.</span></span><span class="sig-name descname"><span class="pre">SimpleDetectionStats</span></span><a class="reference internal" href="../_modules/tracklab/visualization/detection.html#SimpleDetectionStats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.detection.SimpleDetectionStats" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.visualization.detection.DetectionStats" title="tracklab.visualization.detection.DetectionStats"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionStats</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-tracklab.visualization.image">
+<span id="tracklab-visualization-image-module"></span><h2>tracklab.visualization.image module<a class="headerlink" href="#module-tracklab.visualization.image" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.image.FrameCount">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.image.</span></span><span class="sig-name descname"><span class="pre">FrameCount</span></span><a class="reference internal" href="../_modules/tracklab/visualization/image.html#FrameCount"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.image.FrameCount" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.visualization.visualizer.ImageVisualizer" title="tracklab.visualization.visualizer.ImageVisualizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageVisualizer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.image.FrameCount.draw_frame">
+<span class="sig-name descname"><span class="pre">draw_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_gt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/image.html#FrameCount.draw_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.image.FrameCount.draw_frame" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.image.IgnoreRegions">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.image.</span></span><span class="sig-name descname"><span class="pre">IgnoreRegions</span></span><a class="reference internal" href="../_modules/tracklab/visualization/image.html#IgnoreRegions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.image.IgnoreRegions" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.visualization.visualizer.ImageVisualizer" title="tracklab.visualization.visualizer.ImageVisualizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageVisualizer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.image.IgnoreRegions.draw_frame">
+<span class="sig-name descname"><span class="pre">draw_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_gt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/image.html#IgnoreRegions.draw_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.image.IgnoreRegions.draw_frame" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-tracklab.visualization.keypoints">
+<span id="tracklab-visualization-keypoints-module"></span><h2>tracklab.visualization.keypoints module<a class="headerlink" href="#module-tracklab.visualization.keypoints" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.keypoints.DefaultKeypoints">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.keypoints.</span></span><span class="sig-name descname"><span class="pre">DefaultKeypoints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_confidence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/keypoints.html#DefaultKeypoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.keypoints.DefaultKeypoints" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.visualization.visualizer.DetectionVisualizer" title="tracklab.visualization.visualizer.DetectionVisualizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionVisualizer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.keypoints.DefaultKeypoints.draw_detection">
+<span class="sig-name descname"><span class="pre">draw_detection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/keypoints.html#DefaultKeypoints.draw_detection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.keypoints.DefaultKeypoints.draw_detection" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.keypoints.FullKeypoints">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.keypoints.</span></span><span class="sig-name descname"><span class="pre">FullKeypoints</span></span><a class="reference internal" href="../_modules/tracklab/visualization/keypoints.html#FullKeypoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.keypoints.FullKeypoints" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.visualization.keypoints.DefaultKeypoints" title="tracklab.visualization.keypoints.DefaultKeypoints"><code class="xref py py-class docutils literal notranslate"><span class="pre">DefaultKeypoints</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-tracklab.visualization.tracking">
+<span id="tracklab-visualization-tracking-module"></span><h2>tracklab.visualization.tracking module<a class="headerlink" href="#module-tracklab.visualization.tracking" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.tracking.TrackingLine">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.tracking.</span></span><span class="sig-name descname"><span class="pre">TrackingLine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertical_pos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/tracking.html#TrackingLine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.tracking.TrackingLine" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.visualization.visualizer.DetectionVisualizer" title="tracklab.visualization.visualizer.DetectionVisualizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionVisualizer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.tracking.TrackingLine.draw_detection">
+<span class="sig-name descname"><span class="pre">draw_detection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/tracking.html#TrackingLine.draw_detection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.tracking.TrackingLine.draw_detection" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.tracking.TrackingLine.draw_frame">
+<span class="sig-name descname"><span class="pre">draw_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_gt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/tracking.html#TrackingLine.draw_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.tracking.TrackingLine.draw_frame" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.tracking.TrackingLine.preproces">
+<span class="sig-name descname"><span class="pre">preproces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video_detections_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_detections_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_image_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_image_gt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/tracking.html#TrackingLine.preproces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.tracking.TrackingLine.preproces" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-tracklab.visualization.visualization_engine">
+<span id="tracklab-visualization-visualization-engine-module"></span><h2>tracklab.visualization.visualization_engine module<a class="headerlink" href="#module-tracklab.visualization.visualization_engine" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.visualization_engine.VisualizationEngine">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.visualization_engine.</span></span><span class="sig-name descname"><span class="pre">VisualizationEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">visualizers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#tracklab.visualization.visualizer.Visualizer" title="tracklab.visualization.visualizer.Visualizer"><span class="pre">Visualizer</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_videos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_fps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_n_videos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_n_frames_by_video</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualization_engine.html#VisualizationEngine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualization_engine.VisualizationEngine" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback" title="tracklab.callbacks.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a></p>
+<p>Visualization engine from list of visualizers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>visualizers</strong> – a list of visualizer instances, which must implement <cite>draw_frame</cite>,
+or subclass <code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionVisualizer</span></code> and implement
+<cite>draw_detection</cite>.</p></li>
+<li><p><strong>save_images</strong> – whether to save the visualization as image files (.jpeg)</p></li>
+<li><p><strong>save_videos</strong> – whether to save the visualization as video files (.mp4)</p></li>
+<li><p><strong>process_n_videos</strong> – number of videos to visualize. Will visualize the first N videos.</p></li>
+<li><p><strong>process_n_frames_by_video</strong> – number of frames per video to visualize. Will visualize
+frames every N/n frames (not first n frames)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.visualization_engine.VisualizationEngine.draw_frame">
+<span class="sig-name descname"><span class="pre">draw_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nframes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualization_engine.html#VisualizationEngine.draw_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualization_engine.VisualizationEngine.draw_frame" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.visualization_engine.VisualizationEngine.on_dataset_track_end">
+<span class="sig-name descname"><span class="pre">on_dataset_track_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">engine</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="tracklab.engine.html#tracklab.engine.engine.TrackingEngine" title="tracklab.engine.engine.TrackingEngine"><span class="pre">TrackingEngine</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualization_engine.html#VisualizationEngine.on_dataset_track_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualization_engine.VisualizationEngine.on_dataset_track_end" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.visualization_engine.VisualizationEngine.on_video_loop_end">
+<span class="sig-name descname"><span class="pre">on_video_loop_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">engine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualization_engine.html#VisualizationEngine.on_video_loop_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualization_engine.VisualizationEngine.on_video_loop_end" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.visualization_engine.VisualizationEngine.visualize">
+<span class="sig-name descname"><span class="pre">visualize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tracker_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState" title="tracklab.datastruct.tracker_state.TrackerState"><span class="pre">TrackerState</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualization_engine.html#VisualizationEngine.visualize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualization_engine.VisualizationEngine.visualize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tracklab.visualization.visualization_engine.create_draw_args">
+<span class="sig-prename descclassname"><span class="pre">tracklab.visualization.visualization_engine.</span></span><span class="sig-name descname"><span class="pre">create_draw_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_metadatas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_gts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nframes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualization_engine.html#create_draw_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualization_engine.create_draw_args" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tracklab.visualization.visualization_engine.get_group">
+<span class="sig-prename descclassname"><span class="pre">tracklab.visualization.visualization_engine.</span></span><span class="sig-name descname"><span class="pre">get_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualization_engine.html#get_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualization_engine.get_group" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tracklab.visualization.visualization_engine.process_frame">
+<span class="sig-prename descclassname"><span class="pre">tracklab.visualization.visualization_engine.</span></span><span class="sig-name descname"><span class="pre">process_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualization_engine.html#process_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualization_engine.process_frame" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-tracklab.visualization.visualizer">
+<span id="tracklab-visualization-visualizer-module"></span><h2>tracklab.visualization.visualizer module<a class="headerlink" href="#module-tracklab.visualization.visualizer" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.visualizer.DetectionVisualizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.visualizer.</span></span><span class="sig-name descname"><span class="pre">DetectionVisualizer</span></span><a class="reference internal" href="../_modules/tracklab/visualization/visualizer.html#DetectionVisualizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualizer.DetectionVisualizer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.visualization.visualizer.Visualizer" title="tracklab.visualization.visualizer.Visualizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Visualizer</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.visualizer.DetectionVisualizer.color">
+<span class="sig-name descname"><span class="pre">color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">detection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_prediction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualizer.html#DetectionVisualizer.color"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualizer.DetectionVisualizer.color" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.visualizer.DetectionVisualizer.draw_detection">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">draw_detection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualizer.html#DetectionVisualizer.draw_detection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualizer.DetectionVisualizer.draw_detection" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.visualizer.DetectionVisualizer.draw_frame">
+<span class="sig-name descname"><span class="pre">draw_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_gt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualizer.html#DetectionVisualizer.draw_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualizer.DetectionVisualizer.draw_frame" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.visualizer.DetectionVisualizer.post_init">
+<span class="sig-name descname"><span class="pre">post_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">colors</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualizer.html#DetectionVisualizer.post_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualizer.DetectionVisualizer.post_init" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.visualizer.ImageVisualizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.visualizer.</span></span><span class="sig-name descname"><span class="pre">ImageVisualizer</span></span><a class="reference internal" href="../_modules/tracklab/visualization/visualizer.html#ImageVisualizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualizer.ImageVisualizer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tracklab.visualization.visualizer.Visualizer" title="tracklab.visualization.visualizer.Visualizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Visualizer</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.visualization.visualizer.Visualizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.visualization.visualizer.</span></span><span class="sig-name descname"><span class="pre">Visualizer</span></span><a class="reference internal" href="../_modules/tracklab/visualization/visualizer.html#Visualizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualizer.Visualizer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.visualizer.Visualizer.draw_frame">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">draw_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detections_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_gt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualizer.html#Visualizer.draw_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualizer.Visualizer.draw_frame" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.visualizer.Visualizer.post_init">
+<span class="sig-name descname"><span class="pre">post_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualizer.html#Visualizer.post_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualizer.Visualizer.post_init" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.visualization.visualizer.Visualizer.preproces">
+<span class="sig-name descname"><span class="pre">preproces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video_detections_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_detections_gt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_image_pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_image_gt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualizer.html#Visualizer.preproces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualizer.Visualizer.preproces" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tracklab.visualization.visualizer.get_fixed_colors">
+<span class="sig-prename descclassname"><span class="pre">tracklab.visualization.visualizer.</span></span><span class="sig-name descname"><span class="pre">get_fixed_colors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/visualization/visualizer.html#get_fixed_colors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.visualization.visualizer.get_fixed_colors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tracklab.utils.html" class="btn btn-neutral float-left" title="tracklab.utils package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tracklab.wrappers.html" class="btn btn-neutral float-right" title="tracklab.wrappers package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Baptiste Standaert, Vladimir Somers, Victor Joos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

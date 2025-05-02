@@ -1,0 +1,557 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tracklab.wrappers.dataset.soccernet.soccernet_game_state &mdash; TrackLab  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            TrackLab
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../installation.html">Installation guide </a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../configuration.html">PbTrack Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Available_features.html">Available features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/Yolov8_pose_estimation.html">Integrating a new module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../api/tracklab.html">tracklab package</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../additional/citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../additional/coming_soon.html">Coming soon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../additional/contribute.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../additional/licence.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">TrackLab</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tracklab.wrappers.dataset.soccernet.soccernet_game_state</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tracklab.wrappers.dataset.soccernet.soccernet_game_state</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">SoccerNet.Downloader</span><span class="w"> </span><span class="kn">import</span> <span class="n">SoccerNetDownloader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rich.prompt</span><span class="w"> </span><span class="kn">import</span> <span class="n">Confirm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">tracklab.datastruct</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrackingDataset</span><span class="p">,</span> <span class="n">TrackingSet</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tracklab.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">xywh_to_ltwh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tracklab.utils.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">progress</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SoccerNetGameState">
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.dataset.soccernet.html#tracklab.wrappers.dataset.soccernet.soccernet_game_state.SoccerNetGameState">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SoccerNetGameState</span><span class="p">(</span><span class="n">TrackingDataset</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">dataset_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">nvid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">vids_dict</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">download_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_path</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span> <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_path</span><span class="si">}</span><span class="s2">&#39; directory does not exist. Please check the path or download the dataset following the instructions here: https://github.com/SoccerNet/sn-gamestate&quot;</span>
+
+        <span class="n">sets</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">split</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;valid&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;challenge&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_path</span> <span class="o">/</span> <span class="n">split</span><span class="p">):</span>
+                <span class="n">sets</span><span class="p">[</span><span class="n">split</span><span class="p">]</span> <span class="o">=</span> <span class="n">load_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_path</span> <span class="o">/</span> <span class="n">split</span><span class="p">,</span> <span class="n">nvid</span><span class="p">,</span> <span class="n">vids_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">split</span><span class="p">,</span> <span class="p">[]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: The &#39;</span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2">&#39; set does not exist in the SoccerNetGS dataset at &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_path</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;Please check the path or download the dataset following the instructions here: https://github.com/soccerNet/sn-gamestate#manual-downloading-of-soccernet-gamestate&quot;</span><span class="p">)</span>
+
+        <span class="c1"># We pass &#39;nvid=-1&#39;, &#39;vids_dict=None&#39; because video subsampling is already done in the load_set function</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">,</span> <span class="n">sets</span><span class="p">,</span> <span class="n">nvid</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">vids_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SoccerNetGameState.process_trackeval_results">
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.dataset.soccernet.html#tracklab.wrappers.dataset.soccernet.soccernet_game_state.SoccerNetGameState.process_trackeval_results">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_trackeval_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">dataset_config</span><span class="p">,</span> <span class="n">eval_config</span><span class="p">):</span>
+        <span class="n">combined_results</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;SUMMARIES&#39;</span><span class="p">][</span><span class="s1">&#39;cls_comb_det_av&#39;</span><span class="p">]</span>
+        <span class="n">combined_results</span><span class="p">[</span><span class="s1">&#39;GS-HOTA&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">combined_results</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;HOTA&#39;</span><span class="p">)</span>
+        <span class="c1"># In all keys, replace the substring &quot;HOTA&quot; with &quot;GS-HOTA&quot;</span>
+        <span class="n">combined_results</span><span class="p">[</span><span class="s1">&#39;GS-HOTA&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;HOTA&#39;</span><span class="p">,</span> <span class="s1">&#39;GS-HOTA&#39;</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span>
+                                       <span class="n">combined_results</span><span class="p">[</span><span class="s1">&#39;GS-HOTA&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SoccerNet Game State Reconstruction performance GS-HOTA = </span><span class="si">{</span><span class="n">combined_results</span><span class="p">[</span><span class="s1">&#39;GS-HOTA&#39;</span><span class="p">][</span><span class="s1">&#39;GS-HOTA&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">% (config: EVAL_SPACE=</span><span class="si">{</span><span class="n">dataset_config</span><span class="p">[</span><span class="s1">&#39;EVAL_SPACE&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, USE_JERSEY_NUMBERS=</span><span class="si">{</span><span class="n">dataset_config</span><span class="p">[</span><span class="s1">&#39;USE_JERSEY_NUMBERS&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, USE_TEAMS=</span><span class="si">{</span><span class="n">dataset_config</span><span class="p">[</span><span class="s1">&#39;USE_TEAMS&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, USE_ROLES=</span><span class="si">{</span><span class="n">dataset_config</span><span class="p">[</span><span class="s1">&#39;USE_ROLES&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, EVAL_DIST_TOL=</span><span class="si">{</span><span class="n">dataset_config</span><span class="p">[</span><span class="s1">&#39;EVAL_DIST_TOL&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Have a look at &#39;tracklab/tracklab/configs/dataset/soccernet_gs.yaml&#39; for more details about the GS-HOTA metric and the evaluation configuration.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">combined_results</span></div>
+
+
+<div class="viewcode-block" id="SoccerNetGameState.save_for_eval">
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.dataset.soccernet.html#tracklab.wrappers.dataset.soccernet.soccernet_game_state.SoccerNetGameState.save_for_eval">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_for_eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+                      <span class="n">image_metadatas</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+                      <span class="n">video_metadatas</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+                      <span class="n">save_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                      <span class="n">bbox_column_for_eval</span><span class="o">=</span><span class="s2">&quot;bbox_ltwh&quot;</span><span class="p">,</span>
+                      <span class="n">save_classes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                      <span class="n">is_ground_truth</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                      <span class="n">save_zip</span><span class="o">=</span><span class="kc">True</span>
+                      <span class="p">):</span>
+        <span class="k">if</span> <span class="n">is_ground_truth</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">save_folder</span><span class="p">)</span>
+        <span class="n">save_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">detections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">soccernet_encoding</span><span class="p">(</span><span class="n">detections</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">supercategory</span><span class="o">=</span><span class="s2">&quot;object&quot;</span><span class="p">)</span>
+        <span class="n">camera_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">soccernet_encoding</span><span class="p">(</span><span class="n">image_metadatas</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">supercategory</span><span class="o">=</span><span class="s2">&quot;camera&quot;</span><span class="p">)</span>
+        <span class="n">pitch_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">soccernet_encoding</span><span class="p">(</span><span class="n">image_metadatas</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">supercategory</span><span class="o">=</span><span class="s2">&quot;pitch&quot;</span><span class="p">)</span>
+        <span class="n">predictions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">detections</span><span class="p">,</span> <span class="n">camera_metadata</span><span class="p">,</span> <span class="n">pitch_metadata</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">zf_save_path</span> <span class="o">=</span> <span class="n">save_path</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">save_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.zip&quot;</span>
+        <span class="k">for</span> <span class="nb">id</span><span class="p">,</span> <span class="n">video</span> <span class="ow">in</span> <span class="n">video_metadatas</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">save_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">video</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.json&quot;</span>
+            <span class="n">video_predictions_df</span> <span class="o">=</span> <span class="n">predictions</span><span class="p">[</span><span class="n">predictions</span><span class="p">[</span><span class="s2">&quot;video_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">video_predictions_df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="n">video_predictions_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">video_predictions</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s1">&#39;track_id&#39;</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">notna</span><span class="p">(</span><span class="n">v</span><span class="p">))}</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span>
+                    <span class="n">video_predictions_df</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">&quot;records&quot;</span><span class="p">)]</span>
+                <span class="k">with</span> <span class="n">file_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+                    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">({</span><span class="s2">&quot;predictions&quot;</span><span class="p">:</span> <span class="n">video_predictions</span><span class="p">},</span> <span class="n">fp</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">save_zip</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">zf_save_path</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">)</span> <span class="k">as</span> <span class="n">zf</span><span class="p">:</span>
+                        <span class="n">zf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">arcname</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">save_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">file_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SoccerNetGameState.soccernet_encoding">
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.dataset.soccernet.html#tracklab.wrappers.dataset.soccernet.soccernet_game_state.SoccerNetGameState.soccernet_encoding">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">soccernet_encoding</span><span class="p">(</span><span class="n">dataframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">supercategory</span><span class="p">):</span>
+        <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;supercategory&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">supercategory</span>
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">:</span> <span class="kc">None</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">supercategory</span> <span class="o">==</span> <span class="s2">&quot;object&quot;</span><span class="p">:</span>
+            <span class="c1"># Remove detections that don&#39;t have mandatory columns</span>
+            <span class="c1"># Detections with no track_id will therefore be removed and not count as FP at evaluation</span>
+            <span class="n">dataframe</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span>
+                <span class="n">subset</span><span class="o">=</span><span class="p">[</span>
+                    <span class="s2">&quot;track_id&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;bbox_ltwh&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;bbox_pitch&quot;</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="n">how</span><span class="o">=</span><span class="s2">&quot;any&quot;</span><span class="p">,</span>
+                <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;bbox_ltwh&quot;</span><span class="p">:</span> <span class="s2">&quot;bbox_image&quot;</span><span class="p">,</span> <span class="s2">&quot;jersey_number&quot;</span><span class="p">:</span> <span class="s2">&quot;jersey&quot;</span><span class="p">})</span>
+            <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;track_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;track_id&quot;</span><span class="p">]</span>
+            <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;attributes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;role&quot;</span><span class="p">),</span> <span class="s2">&quot;jersey&quot;</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;jersey&quot;</span><span class="p">),</span> <span class="s2">&quot;team&quot;</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;team&quot;</span><span class="p">)}</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()]</span>
+            <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">index</span>
+            <span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">dataframe</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="s2">&quot;video_id&quot;</span><span class="p">,</span> <span class="s2">&quot;track_id&quot;</span><span class="p">,</span> <span class="s2">&quot;supercategory&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;category_id&quot;</span><span class="p">,</span> <span class="s2">&quot;attributes&quot;</span><span class="p">,</span> <span class="s2">&quot;bbox_image&quot;</span><span class="p">,</span> <span class="s2">&quot;bbox_pitch&quot;</span><span class="p">])]</span>
+
+            <span class="n">dataframe</span><span class="p">[</span><span class="s1">&#39;bbox_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="s1">&#39;bbox_image&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">transform_bbox_image</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">supercategory</span> <span class="o">==</span> <span class="s2">&quot;camera&quot;</span><span class="p">:</span>
+            <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">index</span>
+            <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;category_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">6</span>
+            <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;01&quot;</span><span class="p">)</span>
+            <span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">dataframe</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="s2">&quot;video_id&quot;</span><span class="p">,</span> <span class="s2">&quot;supercategory&quot;</span><span class="p">,</span> <span class="s2">&quot;category_id&quot;</span><span class="p">,</span> <span class="s2">&quot;parameters&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;relative_mean_reproj&quot;</span><span class="p">,</span> <span class="s2">&quot;accuracy@5&quot;</span><span class="p">])</span>
+            <span class="p">]</span>
+        <span class="k">elif</span> <span class="n">supercategory</span> <span class="o">==</span> <span class="s2">&quot;pitch&quot;</span><span class="p">:</span>
+            <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">index</span>
+            <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;category_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+            <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;00&quot;</span><span class="p">)</span>
+            <span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">dataframe</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="s2">&quot;video_id&quot;</span><span class="p">,</span> <span class="s2">&quot;supercategory&quot;</span><span class="p">,</span> <span class="s2">&quot;category_id&quot;</span><span class="p">,</span> <span class="s2">&quot;lines&quot;</span><span class="p">])]</span>
+        <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;video_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;video_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+        <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+        <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">else</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dataframe</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="transform_bbox_image">
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.dataset.soccernet.html#tracklab.wrappers.dataset.soccernet.soccernet_game_state.transform_bbox_image">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">transform_bbox_image</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;w&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;h&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">]}</span></div>
+
+
+
+<div class="viewcode-block" id="extract_category">
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.dataset.soccernet.html#tracklab.wrappers.dataset.soccernet.soccernet_game_state.extract_category">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_category</span><span class="p">(</span><span class="n">attributes</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;goalkeeper&#39;</span><span class="p">:</span>
+        <span class="n">team</span> <span class="o">=</span> <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;team&#39;</span><span class="p">]</span>
+        <span class="n">role</span> <span class="o">=</span> <span class="s2">&quot;goalkeeper&quot;</span>
+        <span class="n">jersey_number</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;jersey&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">jersey_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;jersey&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;jersey&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">team</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">jersey_number</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">jersey_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">team</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">elif</span> <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;player&quot;</span><span class="p">:</span>
+        <span class="n">team</span> <span class="o">=</span> <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;team&#39;</span><span class="p">]</span>
+        <span class="n">role</span> <span class="o">=</span> <span class="s2">&quot;player&quot;</span>
+        <span class="n">jersey_number</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;jersey&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">jersey_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;jersey&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;jersey&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">team</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">jersey_number</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">jersey_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">team</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">elif</span> <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;referee&quot;</span><span class="p">:</span>
+        <span class="n">team</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">role</span> <span class="o">=</span> <span class="s2">&quot;referee&quot;</span>
+        <span class="n">jersey_number</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># position = additional_info  # TODO no position for referee in json file (referee&#39;s position is not specified in the dataset)</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">elif</span> <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;ball&quot;</span><span class="p">:</span>
+        <span class="n">team</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">role</span> <span class="o">=</span> <span class="s2">&quot;ball&quot;</span>
+        <span class="n">jersey_number</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;other&quot;</span>
+        <span class="n">team</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">role</span> <span class="o">=</span> <span class="s2">&quot;other&quot;</span>
+        <span class="n">jersey_number</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">return</span> <span class="n">category</span></div>
+
+    
+    
+<div class="viewcode-block" id="dict_to_df_detections">
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.dataset.soccernet.html#tracklab.wrappers.dataset.soccernet.soccernet_game_state.dict_to_df_detections">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">dict_to_df_detections</span><span class="p">(</span><span class="n">annotation_dict</span><span class="p">,</span> <span class="n">categories_list</span><span class="p">):</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">annotation_dict</span><span class="p">)</span>
+
+    <span class="n">annotations_pitch_camera</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;supercategory&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;object&#39;</span><span class="p">]</span>   <span class="c1"># remove the rows with non-human categories</span>
+    
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;supercategory&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;object&#39;</span><span class="p">]</span>        <span class="c1"># remove the rows with non-human categories</span>
+    
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;bbox_ltwh&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">xywh_to_ltwh</span><span class="p">([</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;bbox_image&#39;</span><span class="p">][</span><span class="s1">&#39;x_center&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;bbox_image&#39;</span><span class="p">][</span><span class="s1">&#39;y_center&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;bbox_image&#39;</span><span class="p">][</span><span class="s1">&#39;w&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;bbox_image&#39;</span><span class="p">][</span><span class="s1">&#39;h&#39;</span><span class="p">]]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;team&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;attributes&#39;</span><span class="p">][</span><span class="s1">&#39;team&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;team_cluster&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;team&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;left&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;attributes&#39;</span><span class="p">][</span><span class="s1">&#39;role&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;jersey_number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;attributes&#39;</span><span class="p">][</span><span class="s1">&#39;jersey&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># df.apply(lambda row: row[&#39;attributes&#39;][&#39;position&#39;], axis=1)         for now there is no position in the json file</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">extract_category</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;attributes&#39;</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;track_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;track_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;image_id&#39;</span><span class="p">,</span> <span class="s1">&#39;track_id&#39;</span><span class="p">,</span> <span class="s1">&#39;bbox_ltwh&#39;</span><span class="p">,</span> <span class="s1">&#39;bbox_pitch&#39;</span><span class="p">,</span> <span class="s1">&#39;team_cluster&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;team&#39;</span><span class="p">,</span> <span class="s1">&#39;role&#39;</span><span class="p">,</span> <span class="s1">&#39;jersey_number&#39;</span><span class="p">,</span> <span class="s1">&#39;position&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">]</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span>
+    
+    <span class="n">video_level_categories</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+    
+    <span class="k">return</span> <span class="n">df</span><span class="p">,</span> <span class="n">annotations_pitch_camera</span><span class="p">,</span> <span class="n">video_level_categories</span>  </div>
+
+
+<div class="viewcode-block" id="read_json_file">
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.dataset.soccernet.html#tracklab.wrappers.dataset.soccernet.soccernet_game_state.read_json_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_json_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">file_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">file_json</span></div>
+
+
+<div class="viewcode-block" id="video_dir_to_dfs">
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.dataset.soccernet.html#tracklab.wrappers.dataset.soccernet.soccernet_game_state.video_dir_to_dfs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">video_dir_to_dfs</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="n">dataset_path</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;dataset_path&#39;</span><span class="p">]</span>
+    <span class="n">video_folder</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;video_folder&#39;</span><span class="p">]</span>
+    <span class="n">split</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;split&#39;</span><span class="p">]</span>
+    <span class="n">split_id</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;valid&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;challenge&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">split</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">annotation_pitch_camera_df</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">detections_df</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">video_level_categories</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">video_folder_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">,</span> <span class="n">video_folder</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">video_folder_path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">video_folder_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;Labels-GameState.json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">img_folder_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">video_folder_path</span><span class="p">,</span> <span class="s1">&#39;img1&#39;</span><span class="p">)</span>
+            <span class="n">video_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">video_folder</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">video_metadata</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">video_id</span><span class="p">,</span>
+                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">video_folder</span><span class="p">,</span>
+            <span class="p">}</span>
+            
+            <span class="n">nframes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">img_folder_path</span><span class="p">))</span>
+            <span class="n">img_metadata_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+                <span class="s1">&#39;frame&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nframes</span><span class="p">)],</span>
+                <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">split_id</span><span class="si">}{</span><span class="n">video_id</span><span class="si">}{</span><span class="n">i</span><span class="si">:</span><span class="s2">06d</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nframes</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)],</span>
+                <span class="s1">&#39;video_id&#39;</span><span class="p">:</span> <span class="n">video_id</span><span class="p">,</span>
+                <span class="s1">&#39;file_path&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">img_folder_path</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s1">06d</span><span class="si">}</span><span class="s1">.jpg&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nframes</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)],</span>
+                <span class="s1">&#39;nframes&#39;</span><span class="p">:</span> <span class="n">nframes</span><span class="p">,</span>
+            <span class="p">})</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Read the gamestate.json file</span>
+            <span class="n">gamestate_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">video_folder_path</span><span class="p">,</span> <span class="s1">&#39;Labels-GameState.json&#39;</span><span class="p">)</span>
+            <span class="n">gamestate_data</span> <span class="o">=</span> <span class="n">read_json_file</span><span class="p">(</span><span class="n">gamestate_path</span><span class="p">)</span>
+
+            <span class="n">info_data</span> <span class="o">=</span> <span class="n">gamestate_data</span><span class="p">[</span><span class="s1">&#39;info&#39;</span><span class="p">]</span>
+            <span class="n">images_data</span> <span class="o">=</span> <span class="n">gamestate_data</span><span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">]</span>
+            <span class="n">annotations_data</span> <span class="o">=</span> <span class="n">gamestate_data</span><span class="p">[</span><span class="s1">&#39;annotations&#39;</span><span class="p">]</span>
+            <span class="n">categories_data</span> <span class="o">=</span> <span class="n">gamestate_data</span><span class="p">[</span><span class="s1">&#39;categories&#39;</span><span class="p">]</span>
+            <span class="n">video_id</span> <span class="o">=</span> <span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">video_folder</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+
+            <span class="n">detections_df</span><span class="p">,</span> <span class="n">annotation_pitch_camera_df</span><span class="p">,</span> <span class="n">video_level_categories</span> <span class="o">=</span> <span class="n">dict_to_df_detections</span><span class="p">(</span><span class="n">annotations_data</span><span class="p">,</span> <span class="n">categories_data</span><span class="p">)</span>
+            <span class="c1"># detections_df[&#39;image_id&#39;] = detections_df[&#39;image_id&#39;] - 1 + image_counter</span>
+            <span class="n">detections_df</span><span class="p">[</span><span class="s1">&#39;video_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">video_id</span>
+            <span class="n">detections_df</span><span class="p">[</span><span class="s1">&#39;person_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections_df</span><span class="p">[</span><span class="s1">&#39;track_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="o">+</span> <span class="n">detections_df</span><span class="p">[</span><span class="s1">&#39;video_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+            <span class="n">detections_df</span><span class="p">[</span><span class="s1">&#39;visibility&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="c1"># detections_list.append(detections_df)</span>
+
+            <span class="c1"># Append video metadata</span>
+            <span class="n">nframes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;seq_length&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="n">video_metadata</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">video_id</span><span class="p">,</span>
+                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;nframes&#39;</span><span class="p">:</span> <span class="n">nframes</span><span class="p">,</span>
+                <span class="s1">&#39;frame_rate&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;frame_rate&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                <span class="s1">&#39;seq_length&#39;</span><span class="p">:</span> <span class="n">nframes</span><span class="p">,</span>
+                <span class="s1">&#39;im_width&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">images_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;width&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                <span class="s1">&#39;im_height&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">images_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;height&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                <span class="s1">&#39;game_id&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;gameID&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                <span class="s1">&#39;action_position&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;action_position&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                <span class="s1">&#39;action_class&#39;</span><span class="p">:</span> <span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;action_class&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;visibility&#39;</span><span class="p">:</span> <span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;visibility&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;clip_start&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clip_start&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                <span class="s1">&#39;game_time_start&#39;</span><span class="p">:</span> <span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;game_time_start&#39;</span><span class="p">,</span> <span class="s1">&#39; - &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; - &#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="c1"># Remove the half period index</span>
+                <span class="s1">&#39;game_time_stop&#39;</span><span class="p">:</span> <span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;game_time_stop&#39;</span><span class="p">,</span> <span class="s1">&#39; - &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; - &#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>  <span class="c1"># Remove the half period index</span>
+                <span class="s1">&#39;clip_stop&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clip_stop&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                <span class="s1">&#39;num_tracklets&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;num_tracklets&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                <span class="s1">&#39;half_period_start&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;game_time_start&#39;</span><span class="p">,</span> <span class="s1">&#39;0 - &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; - &#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="c1"># Add the half period start column</span>
+                <span class="s1">&#39;half_period_stop&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;game_time_stop&#39;</span><span class="p">,</span> <span class="s1">&#39;0 - &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; - &#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="c1"># Add the half period stop column</span>
+            <span class="p">}</span>
+            <span class="c1"># categories_list += video_level_categories</span>
+            <span class="n">img_folder_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">video_folder_path</span><span class="p">,</span> <span class="n">info_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;im_dir&#39;</span><span class="p">,</span> <span class="s1">&#39;img1&#39;</span><span class="p">))</span>
+            <span class="n">img_metadata_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+                <span class="s1">&#39;frame&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nframes</span><span class="p">)],</span>
+                <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="s1">&#39;image_id&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">images_data</span><span class="p">],</span>
+                <span class="c1"># &#39;id&#39;: [image_counter + i for i in range(0, nframes)],</span>
+                <span class="s1">&#39;video_id&#39;</span><span class="p">:</span> <span class="n">video_id</span><span class="p">,</span>
+                <span class="s1">&#39;file_path&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">img_folder_path</span><span class="p">,</span> <span class="n">i</span><span class="p">[</span><span class="s1">&#39;file_name&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span>
+                            <span class="n">images_data</span><span class="p">],</span>
+                <span class="s1">&#39;is_labeled&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="s1">&#39;is_labeled&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">images_data</span><span class="p">],</span>
+                <span class="s1">&#39;nframes&#39;</span><span class="p">:</span> <span class="n">nframes</span><span class="p">,</span>
+            <span class="p">})</span>
+            <span class="n">annotation_pitch_camera_df</span><span class="p">[</span><span class="s2">&quot;video_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">video_id</span>
+        
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;video_metadata&quot;</span><span class="p">:</span> <span class="n">video_metadata</span><span class="p">,</span>
+            <span class="s2">&quot;image_metadata&quot;</span><span class="p">:</span> <span class="n">img_metadata_df</span><span class="p">,</span>
+            <span class="s2">&quot;detections&quot;</span><span class="p">:</span> <span class="n">detections_df</span><span class="p">,</span>
+            <span class="s2">&quot;annotations_pitch_camera&quot;</span><span class="p">:</span> <span class="n">annotation_pitch_camera_df</span><span class="p">,</span>
+            <span class="s2">&quot;video_level_categories&quot;</span><span class="p">:</span> <span class="n">video_level_categories</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+    
+<div class="viewcode-block" id="load_set">
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.dataset.soccernet.html#tracklab.wrappers.dataset.soccernet.soccernet_game_state.load_set">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_set</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">,</span> <span class="n">nvid</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">vids_filter_set</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">video_metadatas_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">image_metadata_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">annotations_pitch_camera_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">detections_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">categories_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">split</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>  <span class="c1"># Get the split name from the dataset path</span>
+    <span class="n">video_list</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="n">video_list</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">vids_filter_set</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">vids_filter_set</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">missing_videos</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">vids_filter_set</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">video_list</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">missing_videos</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Warning: The following videos provided in config &#39;dataset.vids_dict&#39; do not exist in </span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2"> set: </span><span class="si">{</span><span class="n">missing_videos</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">video_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">video</span> <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="n">video_list</span> <span class="k">if</span> <span class="n">video</span> <span class="ow">in</span> <span class="n">vids_filter_set</span><span class="p">]</span>
+        
+    <span class="k">if</span> <span class="n">nvid</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">video_list</span> <span class="o">=</span> <span class="n">video_list</span><span class="p">[:</span><span class="n">nvid</span><span class="p">]</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">video_list</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;After applying filtering, no videos left in the &#39;</span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2">&#39; set, please fix the &#39;dataset.vids_dict&#39; config.&quot;</span>
+
+    <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">()</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;dataset_path&quot;</span><span class="p">:</span> <span class="n">dataset_path</span><span class="p">,</span> <span class="s2">&quot;video_folder&quot;</span><span class="p">:</span> <span class="n">video_folder</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="n">split</span><span class="p">}</span> <span class="k">for</span> <span class="n">video_folder</span> <span class="ow">in</span> <span class="n">video_list</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">progress</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">imap_unordered</span><span class="p">(</span><span class="n">video_dir_to_dfs</span><span class="p">,</span> <span class="n">args</span><span class="p">),</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Loading SoccerNetGS &#39;</span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2">&#39; set videos&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">video_metadatas_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;video_metadata&quot;</span><span class="p">])</span>
+            <span class="n">image_metadata_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;image_metadata&quot;</span><span class="p">])</span>
+            <span class="n">detections_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;detections&quot;</span><span class="p">])</span>
+            <span class="n">annotations_pitch_camera_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;annotations_pitch_camera&quot;</span><span class="p">])</span>
+            <span class="n">categories_list</span> <span class="o">+=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;video_level_categories&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">categories_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">video_metadata</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">video_metadatas_list</span><span class="p">)</span>
+        <span class="n">image_metadata</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">image_metadata_list</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">detections</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">image_metadata</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">image_gt</span> <span class="o">=</span> <span class="n">image_metadata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">video_metadata</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">categories_list</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span> <span class="s1">&#39;supercategory&#39;</span><span class="p">:</span> <span class="s1">&#39;person&#39;</span><span class="p">}</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">category</span> <span class="ow">in</span>
+                        <span class="nb">enumerate</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">categories_list</span><span class="p">)))]</span>
+
+        <span class="c1"># Assign the categories to the video metadata  # TODO at dataset level?</span>
+        <span class="k">for</span> <span class="n">video_metadata</span> <span class="ow">in</span> <span class="n">video_metadatas_list</span><span class="p">:</span>
+            <span class="n">video_metadata</span><span class="p">[</span><span class="s1">&#39;categories&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">categories_list</span>
+
+        <span class="c1"># Concatenate dataframes</span>
+        <span class="n">video_metadata</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">video_metadatas_list</span><span class="p">)</span>
+        <span class="n">image_metadata</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">image_metadata_list</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">detections</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">detections_list</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Person id as unique 0-based index</span>
+        <span class="n">detections</span><span class="p">[</span><span class="s1">&#39;person_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">factorize</span><span class="p">(</span><span class="n">detections</span><span class="p">[</span><span class="s1">&#39;person_id&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Use video_id, image_id, track_id as unique id</span>
+        <span class="n">detections</span> <span class="o">=</span> <span class="n">detections</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;video_id&#39;</span><span class="p">,</span> <span class="s1">&#39;image_id&#39;</span><span class="p">,</span> <span class="s1">&#39;track_id&#39;</span><span class="p">],</span> <span class="n">ascending</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">])</span>
+        <span class="n">detections</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections</span><span class="p">[</span><span class="s1">&#39;video_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">detections</span><span class="p">[</span><span class="s1">&#39;image_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">detections</span><span class="p">[</span><span class="s1">&#39;track_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+        <span class="c1"># add camera parameters and pitch as ground truth</span>
+        <span class="n">pitch_camera</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">annotations_pitch_camera_list</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">pitch_gt</span> <span class="o">=</span> <span class="p">(</span><span class="n">pitch_camera</span><span class="p">[[</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="s2">&quot;video_id&quot;</span><span class="p">,</span> <span class="s2">&quot;lines&quot;</span><span class="p">]]</span>
+                    <span class="p">[</span><span class="n">pitch_camera</span><span class="o">.</span><span class="n">supercategory</span><span class="o">==</span><span class="s2">&quot;pitch&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="n">image_gt</span> <span class="o">=</span> <span class="n">image_metadata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">image_gt</span><span class="p">[</span><span class="s2">&quot;lines&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pitch_gt</span><span class="p">[</span><span class="s2">&quot;lines&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Add category id to detections</span>
+        <span class="n">category_to_id</span> <span class="o">=</span> <span class="p">{</span><span class="n">category</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]:</span> <span class="n">category</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">categories_list</span><span class="p">}</span>
+        <span class="n">detections</span><span class="p">[</span><span class="s1">&#39;category_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detections</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">category_to_id</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+
+
+        <span class="n">detections</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">image_metadata</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">video_metadata</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+        <span class="c1"># Reorder columns in dataframes</span>
+        <span class="n">video_metadata_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;nframes&#39;</span><span class="p">,</span> <span class="s1">&#39;frame_rate&#39;</span><span class="p">,</span> <span class="s1">&#39;seq_length&#39;</span><span class="p">,</span> <span class="s1">&#39;im_width&#39;</span><span class="p">,</span> <span class="s1">&#39;im_height&#39;</span><span class="p">,</span> <span class="s1">&#39;game_id&#39;</span><span class="p">,</span> <span class="s1">&#39;action_position&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;action_class&#39;</span><span class="p">,</span> <span class="s1">&#39;visibility&#39;</span><span class="p">,</span> <span class="s1">&#39;clip_start&#39;</span><span class="p">,</span> <span class="s1">&#39;game_time_start&#39;</span><span class="p">,</span> <span class="s1">&#39;clip_stop&#39;</span><span class="p">,</span> <span class="s1">&#39;game_time_stop&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;num_tracklets&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;half_period_start&#39;</span><span class="p">,</span> <span class="s1">&#39;half_period_stop&#39;</span><span class="p">,</span> <span class="s1">&#39;categories&#39;</span><span class="p">]</span>
+        <span class="n">video_metadata_columns</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">video_metadata</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">video_metadata_columns</span><span class="p">))</span>
+        <span class="n">video_metadata</span> <span class="o">=</span> <span class="n">video_metadata</span><span class="p">[</span><span class="n">video_metadata_columns</span><span class="p">]</span>
+        <span class="n">image_metadata_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;video_id&#39;</span><span class="p">,</span> <span class="s1">&#39;frame&#39;</span><span class="p">,</span> <span class="s1">&#39;file_path&#39;</span><span class="p">,</span> <span class="s1">&#39;is_labeled&#39;</span><span class="p">,</span> <span class="s1">&#39;nframes&#39;</span><span class="p">]</span>
+        <span class="n">image_metadata_columns</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">image_metadata</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">image_metadata_columns</span><span class="p">))</span>
+        <span class="n">image_metadata</span> <span class="o">=</span> <span class="n">image_metadata</span><span class="p">[</span><span class="n">image_metadata_columns</span><span class="p">]</span>
+        <span class="n">detections_column_ordered</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;image_id&#39;</span><span class="p">,</span> <span class="s1">&#39;video_id&#39;</span><span class="p">,</span> <span class="s1">&#39;track_id&#39;</span><span class="p">,</span> <span class="s1">&#39;person_id&#39;</span><span class="p">,</span> <span class="s1">&#39;bbox_ltwh&#39;</span><span class="p">,</span> <span class="s1">&#39;visibility&#39;</span><span class="p">]</span>
+        <span class="n">detections_column_ordered</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">detections</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">detections_column_ordered</span><span class="p">))</span>
+        <span class="n">detections</span> <span class="o">=</span> <span class="n">detections</span><span class="p">[</span><span class="n">detections_column_ordered</span><span class="p">]</span>
+        <span class="n">detections</span><span class="p">[</span><span class="s1">&#39;bbox_conf&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">TrackingSet</span><span class="p">(</span>
+        <span class="n">video_metadata</span><span class="p">,</span>
+        <span class="n">image_metadata</span><span class="p">,</span>
+        <span class="n">detections</span><span class="p">,</span>
+        <span class="n">image_gt</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="download_dataset">
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.dataset.soccernet.html#tracklab.wrappers.dataset.soccernet.soccernet_game_state.download_dataset">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">download_dataset</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">,</span> <span class="n">splits</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;valid&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;challenge&quot;</span><span class="p">)):</span>
+    <span class="n">mySoccerNetDownloader</span> <span class="o">=</span> <span class="n">SoccerNetDownloader</span><span class="p">(</span><span class="n">LocalDirectory</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">))</span>
+    <span class="n">download</span> <span class="o">=</span> <span class="n">Confirm</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="s2">&quot;Do you want to download the &quot;</span>
+                           <span class="s2">&quot;datasets automatically ? [i]&quot;</span>
+                           <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">splits</span><span class="p">)</span><span class="si">}</span><span class="s2">)[/i]&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">download</span><span class="p">:</span>
+        <span class="n">mySoccerNetDownloader</span><span class="o">.</span><span class="n">downloadDataTask</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;gamestate-2025&quot;</span><span class="p">,</span>
+                                               <span class="n">split</span><span class="o">=</span><span class="n">splits</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">split</span> <span class="ow">in</span> <span class="n">splits</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unzipping </span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2"> split...&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">dataset_path</span><span class="o">/</span><span class="s2">&quot;gamestate-2025&quot;</span><span class="o">/</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2">.zip&quot;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">zf</span><span class="p">:</span>
+                <span class="n">zf</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">dataset_path</span> <span class="o">/</span> <span class="n">split</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Baptiste Standaert, Vladimir Somers, Victor Joos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

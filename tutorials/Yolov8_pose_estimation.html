@@ -59,6 +59,10 @@
 <li class="toctree-l1"><a class="reference internal" href="MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../additional/citation.html">Citation</a></li>
@@ -97,21 +101,21 @@
 [Yolov8](<a class="reference external" href="https://docs.ultralytics.com/tasks/pose/">https://docs.ultralytics.com/tasks/pose/</a>) proposes a pose detector
 which takes as input an image and provides as output the positions of the
 detected joints and the bounding boxes. To do this, we will start by extending
-the abstract class <a class="reference internal" href="../api/pbtrack.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule" title="tracklab.pipeline.imagelevel_module.ImageLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageLevelModule</span></code></a>.</p>
+the abstract class <a class="reference internal" href="../api/tracklab.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule" title="tracklab.pipeline.imagelevel_module.ImageLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageLevelModule</span></code></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The first thing we need to do is determine at what level we want to run the module :</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><a class="reference internal" href="../api/pbtrack.pipeline.html#tracklab.pipeline.videolevel_module.VideoLevelModule" title="tracklab.pipeline.videolevel_module.VideoLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">VideoLevelModule</span></code></a> : You get all the detections from a video at once.</p></li>
-<li><p><a class="reference internal" href="../api/pbtrack.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule" title="tracklab.pipeline.imagelevel_module.ImageLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageLevelModule</span></code></a> : You get all the detections from a single image.</p></li>
-<li><p><a class="reference internal" href="../api/pbtrack.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule" title="tracklab.pipeline.detectionlevel_module.DetectionLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionLevelModule</span></code></a> : You get the information of a single detection</p></li>
+<li><p><a class="reference internal" href="../api/tracklab.pipeline.html#tracklab.pipeline.videolevel_module.VideoLevelModule" title="tracklab.pipeline.videolevel_module.VideoLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">VideoLevelModule</span></code></a> : You get all the detections from a video at once.</p></li>
+<li><p><a class="reference internal" href="../api/tracklab.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule" title="tracklab.pipeline.imagelevel_module.ImageLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageLevelModule</span></code></a> : You get all the detections from a single image.</p></li>
+<li><p><a class="reference internal" href="../api/tracklab.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule" title="tracklab.pipeline.detectionlevel_module.DetectionLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionLevelModule</span></code></a> : You get the information of a single detection</p></li>
 </ul>
 </div></blockquote>
 </div>
 <section id="imagelevelmodule-extension">
 <h2><cite>ImageLevelModule</cite> extension<a class="headerlink" href="#imagelevelmodule-extension" title="Link to this heading"></a></h2>
-<p>The abstract class <a class="reference internal" href="../api/pbtrack.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule" title="tracklab.pipeline.imagelevel_module.ImageLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageLevelModule</span></code></a> is defined in the file <cite>pipeline/imagelevel_module.py</cite>.
+<p>The abstract class <a class="reference internal" href="../api/tracklab.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule" title="tracklab.pipeline.imagelevel_module.ImageLevelModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageLevelModule</span></code></a> is defined in the file <cite>pipeline/imagelevel_module.py</cite>.
 It allows to define a common interface for the different detectors and the
 automation of the aggregation of the results in the pipeline.</p>
 <p>Basically, its role is to take as input an image and to provide as output the

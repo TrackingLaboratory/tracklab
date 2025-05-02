@@ -1,0 +1,263 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tracklab.visualization.detection &mdash; TrackLab  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            TrackLab
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation guide </a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configuration.html">PbTrack Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Available_features.html">Available features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/Yolov8_pose_estimation.html">Integrating a new module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/coming_soon.html">Coming soon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/contribute.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/licence.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TrackLab</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tracklab.visualization.detection</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tracklab.visualization.detection</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">tracklab.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetectionVisualizer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tracklab.utils.cv2</span><span class="w"> </span><span class="kn">import</span> <span class="n">draw_bbox</span><span class="p">,</span> <span class="n">draw_bbox_stats</span><span class="p">,</span> <span class="n">draw_text</span>
+
+
+<div class="viewcode-block" id="DefaultDetection">
+<a class="viewcode-back" href="../../../api/tracklab.visualization.html#tracklab.visualization.detection.DefaultDetection">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DefaultDetection</span><span class="p">(</span><span class="n">DetectionVisualizer</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_id</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">print_confidence</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_id</span> <span class="o">=</span> <span class="n">print_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_confidence</span> <span class="o">=</span> <span class="n">print_confidence</span>
+
+<div class="viewcode-block" id="DefaultDetection.draw_detection">
+<a class="viewcode-back" href="../../../api/tracklab.visualization.html#tracklab.visualization.detection.DefaultDetection.draw_detection">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw_detection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">detection_pred</span><span class="p">,</span> <span class="n">detection_gt</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">detection</span><span class="p">,</span> <span class="n">is_pred</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">detection_pred</span><span class="p">,</span> <span class="n">detection_gt</span><span class="p">],</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">detection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">color_bbox</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="n">is_prediction</span><span class="o">=</span><span class="n">is_pred</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">color_bbox</span><span class="p">:</span>
+                    <span class="n">draw_bbox</span><span class="p">(</span>
+                        <span class="n">detection</span><span class="p">,</span>
+                        <span class="n">image</span><span class="p">,</span>
+                        <span class="n">color_bbox</span><span class="p">,</span>
+                        <span class="n">print_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">print_id</span><span class="p">,</span>
+                        <span class="n">print_confidence</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">print_confidence</span><span class="p">,</span>
+                    <span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="FullDetection">
+<a class="viewcode-back" href="../../../api/tracklab.visualization.html#tracklab.visualization.detection.FullDetection">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FullDetection</span><span class="p">(</span><span class="n">DefaultDetection</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">print_id</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">print_confidence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DebugDetection">
+<a class="viewcode-back" href="../../../api/tracklab.visualization.html#tracklab.visualization.detection.DebugDetection">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DebugDetection</span><span class="p">(</span><span class="n">DetectionVisualizer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Detections are classified by colors:</span>
+<span class="sd">        - Green is True Positive</span>
+<span class="sd">        - Yellow is False Positive</span>
+<span class="sd">        - Red is False Negative</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="DebugDetection.draw_detection">
+<a class="viewcode-back" href="../../../api/tracklab.visualization.html#tracklab.visualization.detection.DebugDetection.draw_detection">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw_detection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">detection_pred</span><span class="p">,</span> <span class="n">detection_gt</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">detection_gt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># GT exists</span>
+            <span class="k">if</span> <span class="n">detection_pred</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pred is not detected</span>
+                <span class="n">draw_bbox</span><span class="p">(</span><span class="n">detection_gt</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># FN</span>
+            <span class="k">elif</span> <span class="n">metric</span> <span class="ow">and</span> <span class="n">metric</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">detection_pred</span><span class="o">.</span><span class="n">track_id</span><span class="p">):</span>  <span class="c1"># pred is correct</span>
+                <span class="n">draw_bbox</span><span class="p">(</span><span class="n">detection_pred</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># TP</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># pred is not correct</span>
+                <span class="n">draw_bbox</span><span class="p">(</span><span class="n">detection_gt</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># FN</span>
+        <span class="k">elif</span> <span class="n">detection_pred</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">detection_pred</span><span class="o">.</span><span class="n">track_id</span><span class="p">):</span>  <span class="c1"># no GT and pred is assigned</span>
+            <span class="n">draw_bbox</span><span class="p">(</span><span class="n">detection_pred</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># FP</span></div>
+</div>
+
+
+<div class="viewcode-block" id="DetectionStats">
+<a class="viewcode-back" href="../../../api/tracklab.visualization.html#tracklab.visualization.detection.DetectionStats">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DetectionStats</span><span class="p">(</span><span class="n">DetectionVisualizer</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">print_stats</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="s2">&quot;hits&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;time_since_update&quot;</span><span class="p">,</span> <span class="s2">&quot;matched_with&quot;</span><span class="p">],</span>  <span class="c1"># FIXME &quot;costs&quot; is too long for display</span>
+     <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_stats</span> <span class="o">=</span> <span class="n">print_stats</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="DetectionStats.draw_detection">
+<a class="viewcode-back" href="../../../api/tracklab.visualization.html#tracklab.visualization.detection.DetectionStats.draw_detection">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw_detection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">detection_pred</span><span class="p">,</span> <span class="n">detection_gt</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">detection_pred</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">color_bbox</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">(</span><span class="n">detection_pred</span><span class="p">,</span> <span class="n">is_prediction</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">color_bbox</span><span class="p">:</span>
+                <span class="n">draw_bbox_stats</span><span class="p">(</span>
+                    <span class="n">detection_pred</span><span class="p">,</span>
+                    <span class="n">image</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">print_stats</span><span class="p">,</span>
+                    <span class="n">bbox_color</span><span class="o">=</span><span class="n">color_bbox</span><span class="p">,</span>
+                <span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="SimpleDetectionStats">
+<a class="viewcode-back" href="../../../api/tracklab.visualization.html#tracklab.visualization.detection.SimpleDetectionStats">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SimpleDetectionStats</span><span class="p">(</span><span class="n">DetectionStats</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">print_stats</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="s2">&quot;hits&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;time_since_update&quot;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="EllipseDetection">
+<a class="viewcode-back" href="../../../api/tracklab.visualization.html#tracklab.visualization.detection.EllipseDetection">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EllipseDetection</span><span class="p">(</span><span class="n">DetectionVisualizer</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_id</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_id</span> <span class="o">=</span> <span class="n">print_id</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="EllipseDetection.draw_detection">
+<a class="viewcode-back" href="../../../api/tracklab.visualization.html#tracklab.visualization.detection.EllipseDetection.draw_detection">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw_detection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">detection_pred</span><span class="p">,</span> <span class="n">detection_gt</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">detection</span><span class="p">,</span> <span class="n">is_pred</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">detection_pred</span><span class="p">,</span> <span class="n">detection_gt</span><span class="p">],</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">detection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="n">is_prediction</span><span class="o">=</span><span class="n">is_pred</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">color</span><span class="p">:</span>
+                    <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">detection</span><span class="o">.</span><span class="n">bbox</span><span class="o">.</span><span class="n">ltrb</span><span class="p">()</span>
+                    <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">((</span><span class="n">x1</span> <span class="o">+</span> <span class="n">x2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">y2</span><span class="p">))</span>
+                    <span class="n">width</span> <span class="o">=</span> <span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span>
+                    <span class="n">cv2</span><span class="o">.</span><span class="n">ellipse</span><span class="p">(</span>
+                        <span class="n">image</span><span class="p">,</span>
+                        <span class="n">center</span><span class="o">=</span><span class="n">center</span><span class="p">,</span>
+                        <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">width</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.35</span> <span class="o">*</span> <span class="n">width</span><span class="p">)),</span>
+                        <span class="n">angle</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                        <span class="n">startAngle</span><span class="o">=-</span><span class="mf">45.0</span><span class="p">,</span>
+                        <span class="n">endAngle</span><span class="o">=</span><span class="mf">235.0</span><span class="p">,</span>
+                        <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                        <span class="n">thickness</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                        <span class="n">lineType</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">LINE_AA</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_id</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">detection</span><span class="p">,</span> <span class="s2">&quot;track_id&quot;</span><span class="p">):</span>
+                        <span class="n">draw_text</span><span class="p">(</span>
+                            <span class="n">image</span><span class="p">,</span>
+                            <span class="sa">f</span><span class="s2">&quot;ID: </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">track_id</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                            <span class="n">center</span><span class="p">,</span>
+                            <span class="n">fontFace</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                            <span class="n">fontScale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                            <span class="n">thickness</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                            <span class="n">alignH</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span>
+                            <span class="n">alignV</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span>
+                            <span class="n">color_bg</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                            <span class="n">color_txt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">alpha_bg</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Baptiste Standaert, Vladimir Somers, Victor Joos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

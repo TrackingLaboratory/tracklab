@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
@@ -103,7 +107,7 @@
 
 
 <div class="viewcode-block" id="merge_dataframes">
-<a class="viewcode-back" href="../../../api/pbtrack.engine.html#tracklab.engine.engine.merge_dataframes">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.engine.html#tracklab.engine.engine.merge_dataframes">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">merge_dataframes</span><span class="p">(</span><span class="n">main_df</span><span class="p">,</span> <span class="n">appended_piece</span><span class="p">):</span>
     <span class="c1"># Convert appended_piece to a DataFrame if it&#39;s not already</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">appended_piece</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
@@ -132,7 +136,7 @@
 
 
 <div class="viewcode-block" id="TrackingEngine">
-<a class="viewcode-back" href="../../../api/pbtrack.engine.html#tracklab.engine.engine.TrackingEngine">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.engine.html#tracklab.engine.engine.TrackingEngine">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TrackingEngine</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Manages the full tracking pipeline.</span>
 
@@ -195,7 +199,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">dataloaders</span><span class="p">[</span><span class="n">model_name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;dataloader&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="o">...</span><span class="p">)(</span><span class="n">engine</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TrackingEngine.track_dataset">
-<a class="viewcode-back" href="../../../api/pbtrack.engine.html#tracklab.engine.engine.TrackingEngine.track_dataset">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.engine.html#tracklab.engine.engine.TrackingEngine.track_dataset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">track_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run tracking on complete dataset.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="s2">&quot;on_dataset_track_start&quot;</span><span class="p">)</span>
@@ -221,7 +225,7 @@
 
 
 <div class="viewcode-block" id="TrackingEngine.video_loop">
-<a class="viewcode-back" href="../../../api/pbtrack.engine.html#tracklab.engine.engine.TrackingEngine.video_loop">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.engine.html#tracklab.engine.engine.TrackingEngine.video_loop">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">video_loop</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">tracker_state</span><span class="p">:</span> <span class="n">TrackerState</span><span class="p">,</span> <span class="n">video_metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">video_id</span><span class="p">:</span> <span class="nb">int</span>
@@ -244,7 +248,7 @@
 
 
 <div class="viewcode-block" id="TrackingEngine.default_step">
-<a class="viewcode-back" href="../../../api/pbtrack.engine.html#tracklab.engine.engine.TrackingEngine.default_step">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.engine.html#tracklab.engine.engine.TrackingEngine.default_step">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">default_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
                      <span class="n">image_pred</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">task</span><span class="p">]</span>

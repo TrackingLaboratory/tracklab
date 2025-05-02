@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
@@ -96,7 +100,7 @@
 
 
 <div class="viewcode-block" id="VideoLevelModule">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.videolevel_module.VideoLevelModule">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.videolevel_module.VideoLevelModule">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">VideoLevelModule</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract class to implement a module that operates on whole videos, image per image.</span>
 
@@ -129,7 +133,7 @@
         <span class="k">pass</span>
 
 <div class="viewcode-block" id="VideoLevelModule.process">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.videolevel_module.VideoLevelModule.process">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.videolevel_module.VideoLevelModule.process">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">metadatas</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The main processing function. Runs on GPU.</span>

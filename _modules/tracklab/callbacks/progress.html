@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
@@ -99,7 +103,7 @@
 
 
 <div class="viewcode-block" id="Progressbar">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.Progressbar">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.Progressbar">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Progressbar</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">use_rich</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dummy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">dummy</span><span class="p">:</span>
@@ -110,7 +114,7 @@
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">RichProgressbar</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Progressbar.init_progress_bar">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.Progressbar.init_progress_bar">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.Progressbar.init_progress_bar">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">init_progress_bar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">desc</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
         <span class="k">pass</span></div>
 </div>
@@ -118,14 +122,14 @@
 
 
 <div class="viewcode-block" id="TQDMProgressbar">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TQDMProgressbar</span><span class="p">(</span><span class="n">Progressbar</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">tqdm</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task_pbars</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="TQDMProgressbar.on_dataset_track_start">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_dataset_track_start">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_dataset_track_start">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_dataset_track_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">):</span>
         <span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">video_metadatas</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Inference will be composed of the following steps: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">engine</span><span class="o">.</span><span class="n">module_names</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -133,13 +137,13 @@
 
 
 <div class="viewcode-block" id="TQDMProgressbar.on_dataset_track_end">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_dataset_track_end">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_dataset_track_end">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_dataset_track_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="TQDMProgressbar.on_video_loop_start">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_video_loop_start">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_video_loop_start">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_video_loop_start</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">,</span> <span class="n">video_metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span>
     <span class="p">):</span>
@@ -150,7 +154,7 @@
 
 
 <div class="viewcode-block" id="TQDMProgressbar.on_video_loop_end">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_video_loop_end">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_video_loop_end">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_video_loop_end</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">,</span>
@@ -164,7 +168,7 @@
 
 
 <div class="viewcode-block" id="TQDMProgressbar.on_module_start">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_module_start">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_module_start">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_module_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">):</span>
         <span class="n">desc</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">task</span><span class="p">],</span> <span class="s2">&quot;process_video&quot;</span><span class="p">):</span>
@@ -175,7 +179,7 @@
 
 
 <div class="viewcode-block" id="TQDMProgressbar.init_progress_bar">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.init_progress_bar">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.init_progress_bar">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">init_progress_bar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">desc</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task_pbars</span><span class="p">[</span><span class="n">task</span><span class="p">]:</span> <span class="n">tqdm</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span>
             <span class="n">total</span><span class="o">=</span><span class="n">length</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="n">desc</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="mi">1</span>
@@ -183,7 +187,7 @@
 
 
 <div class="viewcode-block" id="TQDMProgressbar.on_module_step_end">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_module_step_end">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_module_step_end">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_module_step_end</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
     <span class="p">):</span>
@@ -191,7 +195,7 @@
 
 
 <div class="viewcode-block" id="TQDMProgressbar.on_module_end">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_module_end">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_module_end">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_module_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task_pbars</span><span class="p">[</span><span class="n">task</span><span class="p">]</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 </div>
@@ -199,14 +203,14 @@
 
 
 <div class="viewcode-block" id="RichProgressbar">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.RichProgressbar">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RichProgressbar</span><span class="p">(</span><span class="n">Progressbar</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Progress</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="RichProgressbar.on_dataset_track_start">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_dataset_track_start">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_dataset_track_start">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_dataset_track_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">):</span>
         <span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">video_metadatas</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span> <span class="o">=</span> <span class="n">Progress</span><span class="p">(</span>
@@ -223,13 +227,13 @@
 
 
 <div class="viewcode-block" id="RichProgressbar.on_dataset_track_end">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_dataset_track_end">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_dataset_track_end">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_dataset_track_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="RichProgressbar.on_video_loop_start">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_video_loop_start">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_video_loop_start">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_video_loop_start</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">,</span> <span class="n">video_metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">video_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span>
     <span class="p">):</span>
@@ -238,7 +242,7 @@
 
 
 <div class="viewcode-block" id="RichProgressbar.on_video_loop_end">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_video_loop_end">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_video_loop_end">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_video_loop_end</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">,</span>
@@ -251,7 +255,7 @@
 
 
 <div class="viewcode-block" id="RichProgressbar.on_module_start">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_module_start">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_module_start">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_module_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">):</span>
         <span class="n">desc</span> <span class="o">=</span> <span class="n">task</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">task</span><span class="p">],</span> <span class="s2">&quot;process_video&quot;</span><span class="p">):</span>
@@ -262,13 +266,13 @@
 
 
 <div class="viewcode-block" id="RichProgressbar.init_progress_bar">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.RichProgressbar.init_progress_bar">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.init_progress_bar">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">init_progress_bar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">desc</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="n">task</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">length</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RichProgressbar.on_module_step_end">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_module_step_end">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_module_step_end">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_module_step_end</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
     <span class="p">):</span>
@@ -276,7 +280,7 @@
 
 
 <div class="viewcode-block" id="RichProgressbar.on_module_end">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_module_end">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_module_end">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_module_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span><span class="o">.</span><span class="n">stop_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="n">task</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span><span class="o">.</span><span class="n">remove_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="n">task</span><span class="p">])</span></div>

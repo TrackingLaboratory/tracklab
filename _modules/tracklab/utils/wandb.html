@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
@@ -127,7 +131,7 @@
 
 
 <div class="viewcode-block" id="normalize_subdict">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.wandb.normalize_subdict">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.wandb.normalize_subdict">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">normalize_subdict</span><span class="p">(</span><span class="n">subdict</span><span class="p">):</span>
     <span class="k">if</span> <span class="s2">&quot;_target_&quot;</span> <span class="ow">in</span> <span class="n">subdict</span><span class="p">:</span>
         <span class="n">subdict</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">subdict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_target_&quot;</span><span class="p">)</span>
@@ -140,7 +144,7 @@
 
 
 <div class="viewcode-block" id="init">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.wandb.init">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.wandb.init">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
     <span class="k">global</span> <span class="n">use_wandb</span>
     <span class="n">use_wandb</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">use_wandb</span>
@@ -154,7 +158,7 @@
 
 
 <div class="viewcode-block" id="log_metric">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.wandb.log_metric">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.wandb.log_metric">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">log_metric</span><span class="p">(</span><span class="n">res_dict</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">video_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">use_wandb</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
@@ -173,7 +177,7 @@
 
 
 <div class="viewcode-block" id="log">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.wandb.log">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.wandb.log">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span><span class="n">res_dict</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">use_wandb</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
@@ -185,7 +189,7 @@
 
 
 <div class="viewcode-block" id="apply_recursively">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.wandb.apply_recursively">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.wandb.apply_recursively">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">apply_recursively</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">v</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">always_filter</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Apply a function to leaf values of a dict recursively and/or filter dict</span>
@@ -220,7 +224,7 @@
 
 
 <div class="viewcode-block" id="finish">
-<a class="viewcode-back" href="../../../api/pbtrack.utils.html#tracklab.utils.wandb.finish">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.utils.html#tracklab.utils.wandb.finish">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">finish</span><span class="p">():</span>
     <span class="k">if</span> <span class="n">use_wandb</span><span class="p">:</span>
         <span class="n">wandb</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span></div>

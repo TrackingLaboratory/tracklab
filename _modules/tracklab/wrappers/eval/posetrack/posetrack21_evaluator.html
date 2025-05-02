@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../additional/citation.html">Citation</a></li>
@@ -122,13 +126,13 @@
 
 <span class="c1"># FIXME some parts can be cleaned but works for now</span>
 <div class="viewcode-block" id="PoseTrack21Evaluator">
-<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator">[docs]</a>
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PoseTrack21Evaluator</span><span class="p">(</span><span class="n">EvaluatorBase</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span>
 
 <div class="viewcode-block" id="PoseTrack21Evaluator.run">
-<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.run">[docs]</a>
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.run">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tracker_state</span><span class="p">):</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting evaluation on PoseTrack21&quot;</span><span class="p">)</span>
         <span class="n">image_metadatas</span> <span class="o">=</span> <span class="p">(</span>
@@ -456,14 +460,14 @@
         <span class="k">return</span> <span class="n">annotations</span>
 
 <div class="viewcode-block" id="PoseTrack21Evaluator.remove_not_visible_kps">
-<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.remove_not_visible_kps">[docs]</a>
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.remove_not_visible_kps">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">remove_not_visible_kps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="n">x</span><span class="p">[</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">vis_kp_threshold</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="k">return</span> <span class="n">x</span></div>
 
 
 <div class="viewcode-block" id="PoseTrack21Evaluator.has_enough_vis_kp">
-<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.has_enough_vis_kp">[docs]</a>
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.has_enough_vis_kp">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">has_enough_vis_kp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="n">x</span><span class="p">[</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">vis_kp_threshold</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -472,7 +476,7 @@
 
 
 <div class="viewcode-block" id="PoseTrack21Evaluator.check_if_tracklet">
-<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.check_if_tracklet">[docs]</a>
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.check_if_tracklet">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">check_if_tracklet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detections</span><span class="p">):</span>
         <span class="n">detections</span> <span class="o">=</span> <span class="n">detections</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;video_id&quot;</span><span class="p">,</span> <span class="s2">&quot;track_id&quot;</span><span class="p">])</span>
 
@@ -692,7 +696,7 @@
                 <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
 <div class="viewcode-block" id="PoseTrack21Evaluator.format_metric">
-<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.format_metric">[docs]</a>
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.format_metric">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">format_metric</span><span class="p">(</span><span class="n">metric_name</span><span class="p">,</span> <span class="n">metric_value</span><span class="p">,</span> <span class="n">scale_factor</span><span class="p">):</span>
         <span class="k">if</span> <span class="p">(</span>
@@ -737,7 +741,7 @@
             <span class="p">)</span>
 
 <div class="viewcode-block" id="PoseTrack21Evaluator.compute_bbox_map">
-<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.compute_bbox_map">[docs]</a>
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.compute_bbox_map">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_bbox_map</span><span class="p">(</span><span class="n">detections_pred</span><span class="p">,</span> <span class="n">detections_gt</span><span class="p">,</span> <span class="n">metadatas</span><span class="p">,</span> <span class="n">bbox_column</span><span class="p">):</span>
         <span class="n">images_ids</span> <span class="o">=</span> <span class="n">metadatas</span><span class="p">[</span><span class="n">metadatas</span><span class="o">.</span><span class="n">is_labeled</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
@@ -788,10 +792,10 @@
 
 
 <div class="viewcode-block" id="PoseTrack21Evaluator.PoseTrackEncoder">
-<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.PoseTrackEncoder">[docs]</a>
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.PoseTrackEncoder">[docs]</a>
     <span class="k">class</span><span class="w"> </span><span class="nc">PoseTrackEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
 <div class="viewcode-block" id="PoseTrack21Evaluator.PoseTrackEncoder.default">
-<a class="viewcode-back" href="../../../../../api/pbtrack.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.PoseTrackEncoder.default">[docs]</a>
+<a class="viewcode-back" href="../../../../../api/tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.PoseTrackEncoder.default">[docs]</a>
         <span class="k">def</span><span class="w"> </span><span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
                 <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>

@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
@@ -93,10 +97,10 @@
 
 
 <div class="viewcode-block" id="IgnoredRegions">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.handle_regions.IgnoredRegions">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.handle_regions.IgnoredRegions">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">IgnoredRegions</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
 <div class="viewcode-block" id="IgnoredRegions.on_video_loop_end">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.handle_regions.IgnoredRegions.on_video_loop_end">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.handle_regions.IgnoredRegions.on_video_loop_end">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_video_loop_end</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">,</span>
@@ -125,7 +129,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">max_intersection</span> <span class="o">=</span> <span class="n">max_intersection</span>
 
 <div class="viewcode-block" id="IgnoredRegions.mark_ignored">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.handle_regions.IgnoredRegions.mark_ignored">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.handle_regions.IgnoredRegions.mark_ignored">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">mark_ignored</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detection</span><span class="p">,</span> <span class="n">image_metadatas</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">image_metadatas</span><span class="p">,</span> <span class="s2">&quot;ignore_regions_x&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span>
             <span class="n">image_metadatas</span><span class="p">,</span> <span class="s2">&quot;ignore_regions_y&quot;</span>
@@ -140,7 +144,7 @@
 
 
 <div class="viewcode-block" id="IgnoredRegions.compute_iou">
-<a class="viewcode-back" href="../../../api/pbtrack.callbacks.html#tracklab.callbacks.handle_regions.IgnoredRegions.compute_iou">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.callbacks.html#tracklab.callbacks.handle_regions.IgnoredRegions.compute_iou">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_iou</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bbox_ltrb</span><span class="p">,</span> <span class="n">ignore_regions_x</span><span class="p">,</span> <span class="n">ignore_regions_y</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the intersection of a detection and a list of ignore regions and check whether</span>
 <span class="sd">        it is higher than a portion of the area or not.</span>

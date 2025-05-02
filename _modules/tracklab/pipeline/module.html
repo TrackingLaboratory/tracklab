@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
@@ -94,7 +98,7 @@
 
 
 <div class="viewcode-block" id="MetaModule">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.module.MetaModule">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.module.MetaModule">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MetaModule</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">):</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
@@ -110,7 +114,7 @@
 
 
 <div class="viewcode-block" id="Module">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.module.Module">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.module.Module">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Module</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
     <span class="n">input_columns</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">output_columns</span> <span class="o">=</span> <span class="kc">None</span>
@@ -129,7 +133,7 @@
         <span class="k">return</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Module.validate_input">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.module.Module.validate_input">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.module.Module.validate_input">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">validate_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Every model should define its inputs&quot;</span>
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_columns</span><span class="p">:</span>
@@ -138,7 +142,7 @@
 
 
 <div class="viewcode-block" id="Module.validate_output">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.module.Module.validate_output">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.module.Module.validate_output">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">validate_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Every model should define its outputs&quot;</span>
         <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_columns</span><span class="p">:</span>
@@ -147,7 +151,7 @@
 
 
 <div class="viewcode-block" id="Module.get_input_columns">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.module.Module.get_input_columns">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.module.Module.get_input_columns">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_input_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_columns</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_columns</span> <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="s2">&quot;detection&quot;</span> <span class="k">else</span> <span class="p">[]</span>
@@ -156,7 +160,7 @@
 
 
 <div class="viewcode-block" id="Module.get_output_columns">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.module.Module.get_output_columns">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.module.Module.get_output_columns">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_output_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_columns</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_columns</span> <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="s2">&quot;detection&quot;</span> <span class="k">else</span> <span class="p">[]</span>
@@ -167,14 +171,14 @@
 
 
 <div class="viewcode-block" id="Pipeline">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.module.Pipeline">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.module.Pipeline">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Pipeline</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Module</span><span class="p">]):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span> <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;skip&quot;</span><span class="p">]</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Pipeline: &quot;</span> <span class="o">+</span> <span class="s2">&quot; -&gt; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">))</span>
 
 <div class="viewcode-block" id="Pipeline.validate">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.module.Pipeline.validate">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.module.Pipeline.validate">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_columns</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">set</span><span class="p">]):</span>
         <span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">set</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">load_columns</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;detection&quot;</span><span class="p">]:</span>
@@ -200,7 +204,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Pipeline.is_empty">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.module.Pipeline.is_empty">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.module.Pipeline.is_empty">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span></div>
 </div>
@@ -208,7 +212,7 @@
 
 
 <div class="viewcode-block" id="Skip">
-<a class="viewcode-back" href="../../../api/pbtrack.pipeline.html#tracklab.pipeline.module.Skip">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.pipeline.html#tracklab.pipeline.module.Skip">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Skip</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">pass</span>

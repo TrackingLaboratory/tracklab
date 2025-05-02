@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
@@ -108,7 +112,7 @@
 
 
 <div class="viewcode-block" id="TrackerState">
-<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.tracker_state.TrackerState">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TrackerState</span><span class="p">(</span><span class="n">AbstractContextManager</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -210,7 +214,7 @@
 
 
 <div class="viewcode-block" id="TrackerState.load_groundtruth">
-<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.load_groundtruth">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.load_groundtruth">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_groundtruth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_columns</span><span class="p">):</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">tracklab.engine.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">merge_dataframes</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">is_empty</span><span class="p">():</span>
@@ -238,7 +242,7 @@
 
 
 <div class="viewcode-block" id="TrackerState.load_public_dets">
-<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.load_public_dets">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.load_public_dets">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_public_dets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_columns</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">detections_pred_public</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detections_public</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">image_pred_public</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_metadatas</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
@@ -246,7 +250,7 @@
 
 
 <div class="viewcode-block" id="TrackerState.load_detections_pred_from_json">
-<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.load_detections_pred_from_json">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.load_detections_pred_from_json">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_detections_pred_from_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_file</span><span class="p">):</span>
         <span class="n">anns_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
         <span class="n">anns_files_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">anns_path</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">))</span>
@@ -346,7 +350,7 @@
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__enter__</span><span class="p">()</span>
 
 <div class="viewcode-block" id="TrackerState.on_video_loop_end">
-<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.on_video_loop_end">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.on_video_loop_end">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_video_loop_end</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">,</span>
@@ -360,14 +364,14 @@
 
 
 <div class="viewcode-block" id="TrackerState.on_dataset_track_end">
-<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.on_dataset_track_end">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.on_dataset_track_end">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_dataset_track_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="s2">&quot;TrackingEngine&quot;</span><span class="p">):</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Tracking ended, final TrackerState stats:&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">display_stats</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="TrackerState.update">
-<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.update">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.update">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">image_metadata</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">detections_pred</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">detections_pred</span> <span class="o">=</span> <span class="n">detections</span>
@@ -389,7 +393,7 @@
 
 
 <div class="viewcode-block" id="TrackerState.save">
-<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.save">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.save">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Saves a pickle in a zip file if the video_id is not yet stored in it.</span>
@@ -430,7 +434,7 @@
 
 
 <div class="viewcode-block" id="TrackerState.load">
-<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.load">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.load">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns:</span>
@@ -488,7 +492,7 @@
             <span class="p">)</span>
 
 <div class="viewcode-block" id="TrackerState.display_stats">
-<a class="viewcode-back" href="../../../api/pbtrack.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.display_stats">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.display_stats">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">display_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total # detections: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detections_pred</span><span class="p">)</span><span class="si">}</span><span class="s2"> (GT=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detections_gt</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
         <span class="n">tracked_text</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Total # detections with track_id: &quot;</span><span class="p">]</span>

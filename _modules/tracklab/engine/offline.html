@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Additional</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
@@ -94,10 +98,10 @@
 
 
 <div class="viewcode-block" id="OfflineTrackingEngine">
-<a class="viewcode-back" href="../../../api/pbtrack.engine.html#tracklab.engine.offline.OfflineTrackingEngine">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.engine.html#tracklab.engine.offline.OfflineTrackingEngine">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OfflineTrackingEngine</span><span class="p">(</span><span class="n">TrackingEngine</span><span class="p">):</span>
 <div class="viewcode-block" id="OfflineTrackingEngine.video_loop">
-<a class="viewcode-back" href="../../../api/pbtrack.engine.html#tracklab.engine.offline.OfflineTrackingEngine.video_loop">[docs]</a>
+<a class="viewcode-back" href="../../../api/tracklab.engine.html#tracklab.engine.offline.OfflineTrackingEngine.video_loop">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">video_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tracker_state</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">video_id</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;reset&quot;</span><span class="p">):</span>

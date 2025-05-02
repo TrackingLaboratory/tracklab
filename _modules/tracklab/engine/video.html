@@ -1,0 +1,283 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tracklab.engine.video &mdash; TrackLab  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            TrackLab
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation guide </a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configuration.html">PbTrack Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Available_features.html">Available features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/Yolov8_pose_estimation.html">Integrating a new module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_dataset.html">New dataset integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/MOT_eval.html">New evaluator integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tracklab.html">tracklab package</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/coming_soon.html">Coming soon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/contribute.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../additional/licence.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TrackLab</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tracklab.engine.video</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tracklab.engine.video</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lightning</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fabric</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">tracklab.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrackingEngine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tracklab.engine.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">merge_dataframes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tracklab.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="VideoOnlineTrackingEngine">
+<a class="viewcode-back" href="../../../api/tracklab.engine.html#tracklab.engine.video.VideoOnlineTrackingEngine">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">VideoOnlineTrackingEngine</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">modules</span><span class="p">:</span> <span class="n">Pipeline</span><span class="p">,</span>
+        <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">target_fps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">tracker_state</span><span class="p">,</span>
+        <span class="n">num_workers</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">callbacks</span><span class="p">:</span> <span class="s2">&quot;Dict[Callback]&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># super().__init__()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">module</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">modules</span><span class="p">]</span>
+        <span class="n">callbacks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">callbacks</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="k">if</span> <span class="n">callbacks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fabric</span> <span class="o">=</span> <span class="n">Fabric</span><span class="p">(</span><span class="n">callbacks</span><span class="o">=</span><span class="n">callbacks</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fabric</span><span class="o">.</span><span class="n">call</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">=</span> <span class="n">num_workers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_fps</span> <span class="o">=</span> <span class="n">target_fps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tracker_state</span> <span class="o">=</span> <span class="n">tracker_state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img_metadatas</span> <span class="o">=</span> <span class="n">tracker_state</span><span class="o">.</span><span class="n">image_metadatas</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_metadatas</span> <span class="o">=</span> <span class="n">tracker_state</span><span class="o">.</span><span class="n">video_metadatas</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="p">{</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">model</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">modules</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datapipes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataloaders</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datapipes</span><span class="p">[</span><span class="n">model_name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;datapipe&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataloaders</span><span class="p">[</span><span class="n">model_name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;dataloader&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="o">...</span><span class="p">)(</span><span class="n">engine</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VideoOnlineTrackingEngine.track_dataset">
+<a class="viewcode-back" href="../../../api/tracklab.engine.html#tracklab.engine.video.VideoOnlineTrackingEngine.track_dataset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">track_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run tracking on complete dataset.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="s2">&quot;on_dataset_track_start&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span>
+            <span class="s2">&quot;on_video_loop_start&quot;</span><span class="p">,</span>
+            <span class="n">video_metadata</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video_filename</span><span class="p">),</span>
+            <span class="n">video_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">detections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video_loop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span>
+            <span class="s2">&quot;on_video_loop_end&quot;</span><span class="p">,</span>
+            <span class="n">video_metadata</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">video_filename</span><span class="p">),</span>
+            <span class="n">video_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">detections</span><span class="o">=</span><span class="n">detections</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="s2">&quot;on_dataset_track_end&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VideoOnlineTrackingEngine.video_loop">
+<a class="viewcode-back" href="../../../api/tracklab.engine.html#tracklab.engine.video.VideoOnlineTrackingEngine.video_loop">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">video_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;reset&quot;</span><span class="p">):</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">video_filename</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_filename</span><span class="p">)</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_filename</span><span class="p">)</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">()</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_filename</span><span class="p">)</span>
+        <span class="n">video_cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">video_filename</span><span class="p">)</span>
+        <span class="n">fps</span> <span class="o">=</span> <span class="n">video_cap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FPS</span><span class="p">)</span>
+        <span class="n">frame_modulo</span> <span class="o">=</span> <span class="n">fps</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_fps</span>
+        <span class="k">assert</span> <span class="n">video_cap</span><span class="o">.</span><span class="n">isOpened</span><span class="p">(),</span> <span class="sa">f</span><span class="s2">&quot;Error opening video stream or file </span><span class="si">{</span><span class="n">video_filename</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Linux&quot;</span><span class="p">:</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">namedWindow</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_filename</span><span class="p">),</span> <span class="n">cv2</span><span class="o">.</span><span class="n">WINDOW_NORMAL</span> <span class="o">|</span> <span class="n">cv2</span><span class="o">.</span><span class="n">WINDOW_KEEPRATIO</span><span class="p">)</span>
+            <span class="c1"># cv2.resizeWindow(str(self.video_filename))</span>
+
+        <span class="n">model_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_names</span>
+        <span class="c1"># print(&#39;in offline.py, model_names: &#39;, model_names)</span>
+        <span class="n">frame_idx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">detections</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="k">while</span> <span class="n">video_cap</span><span class="o">.</span><span class="n">isOpened</span><span class="p">():</span>
+            <span class="n">frame_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">ret</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">video_cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">frame_idx</span> <span class="o">%</span> <span class="n">frame_modulo</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">frame_idx</span><span class="p">,</span> <span class="s2">&quot;frame&quot;</span><span class="p">:</span> <span class="n">frame_idx</span><span class="p">,</span>
+                                  <span class="s2">&quot;video_id&quot;</span><span class="p">:</span> <span class="n">video_filename</span><span class="p">},</span> <span class="n">name</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="s2">&quot;on_image_loop_start&quot;</span><span class="p">,</span>
+                          <span class="n">image_metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">image_idx</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">model_name</span> <span class="ow">in</span> <span class="n">model_names</span><span class="p">:</span>
+                <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">model_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">dets</span> <span class="o">=</span> <span class="n">detections</span><span class="p">[</span><span class="n">detections</span><span class="o">.</span><span class="n">image_id</span> <span class="o">==</span> <span class="n">frame_idx</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dets</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s2">&quot;video&quot;</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="s2">&quot;Video-level not supported for online video tracking&quot;</span>
+                <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s2">&quot;image&quot;</span><span class="p">:</span>
+                    <span class="n">batch</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">detections</span><span class="o">=</span><span class="n">dets</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
+                    <span class="n">batch</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">([(</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">batch</span><span class="p">)])</span>
+                    <span class="n">detections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_step</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">detections</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s2">&quot;detection&quot;</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">detection</span> <span class="ow">in</span> <span class="n">dets</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                        <span class="n">batch</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">detection</span><span class="o">=</span><span class="n">detection</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
+                        <span class="n">batch</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">([(</span><span class="n">detection</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">batch</span><span class="p">)])</span>
+                        <span class="n">detections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_step</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">detections</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="s2">&quot;on_image_loop_end&quot;</span><span class="p">,</span>
+                          <span class="n">image_metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span>
+                          <span class="n">image_idx</span><span class="o">=</span><span class="n">frame_idx</span><span class="p">,</span> <span class="n">detections</span><span class="o">=</span><span class="n">detections</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">detections</span></div>
+
+
+<div class="viewcode-block" id="VideoOnlineTrackingEngine.default_step">
+<a class="viewcode-back" href="../../../api/tracklab.engine.html#tracklab.engine.video.VideoOnlineTrackingEngine.default_step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">default_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">detections</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">task</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;on_module_step_start&quot;</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">)</span>
+        <span class="n">idxs</span><span class="p">,</span> <span class="n">batch</span> <span class="o">=</span> <span class="n">batch</span>
+        <span class="n">idxs</span> <span class="o">=</span> <span class="n">idxs</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idxs</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="n">idxs</span>
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s2">&quot;image&quot;</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;step : </span><span class="si">{</span><span class="n">idxs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">batch_metadatas</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">metadata</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">detections</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">batch_input_detections</span> <span class="o">=</span> <span class="n">detections</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">detections</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span> <span class="n">batch_metadatas</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+                <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">batch_input_detections</span> <span class="o">=</span> <span class="n">detections</span>
+            <span class="n">batch_detections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">task</span><span class="p">]</span><span class="o">.</span><span class="n">process</span><span class="p">(</span>
+                <span class="n">batch</span><span class="p">,</span>
+                <span class="n">batch_input_detections</span><span class="p">,</span>
+                <span class="n">batch_metadatas</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">batch_detections</span> <span class="o">=</span> <span class="n">detections</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idxs</span><span class="p">]</span>
+            <span class="n">batch_detections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">task</span><span class="p">]</span><span class="o">.</span><span class="n">process</span><span class="p">(</span>
+                <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span>
+                <span class="n">detections</span><span class="o">=</span><span class="n">batch_detections</span><span class="p">,</span>
+                <span class="n">metadatas</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">detections</span> <span class="o">=</span> <span class="n">merge_dataframes</span><span class="p">(</span><span class="n">detections</span><span class="p">,</span> <span class="n">batch_detections</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;on_module_step_end&quot;</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">detections</span><span class="o">=</span><span class="n">detections</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">detections</span></div>
+</div>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Baptiste Standaert, Vladimir Somers, Victor Joos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

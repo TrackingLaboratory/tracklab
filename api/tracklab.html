@@ -1,0 +1,695 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tracklab package &mdash; TrackLab  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tracklab.callbacks package" href="tracklab.callbacks.html" />
+    <link rel="prev" title="New evaluator integration" href="../tutorials/MOT_eval.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TrackLab
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation guide </a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">PbTrack Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Available_features.html">Available features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/Yolov8_pose_estimation.html">Integrating a new module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/MOT_dataset.html">New dataset integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/MOT_eval.html">New evaluator integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">tracklab package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.callbacks.html">tracklab.callbacks package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.configs.html">tracklab.configs package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.datastruct.html">tracklab.datastruct package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.engine.html">tracklab.engine package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.pipeline.html">tracklab.pipeline package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html">tracklab.utils package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html">tracklab.visualization package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.wrappers.html">tracklab.wrappers package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-tracklab.main">tracklab.main module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tracklab.main.close_environment"><code class="docutils literal notranslate"><span class="pre">close_environment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tracklab.main.evaluate"><code class="docutils literal notranslate"><span class="pre">evaluate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tracklab.main.init_environment"><code class="docutils literal notranslate"><span class="pre">init_environment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tracklab.main.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tracklab.main.set_sharing_strategy"><code class="docutils literal notranslate"><span class="pre">set_sharing_strategy()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../additional/citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/coming_soon.html">Coming soon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/contribute.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/licence.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TrackLab</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">tracklab package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/tracklab.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tracklab">
+<span id="tracklab-package"></span><h1>tracklab package<a class="headerlink" href="#module-tracklab" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tracklab.callbacks.html">tracklab.callbacks package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.callbacks.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.callbacks.html#module-tracklab.callbacks.callback">tracklab.callbacks.callback module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback"><code class="docutils literal notranslate"><span class="pre">Callback</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback.after_saved_state"><code class="docutils literal notranslate"><span class="pre">Callback.after_saved_state</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback.on_dataset_track_end"><code class="docutils literal notranslate"><span class="pre">Callback.on_dataset_track_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback.on_dataset_track_start"><code class="docutils literal notranslate"><span class="pre">Callback.on_dataset_track_start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback.on_image_loop_end"><code class="docutils literal notranslate"><span class="pre">Callback.on_image_loop_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback.on_image_loop_start"><code class="docutils literal notranslate"><span class="pre">Callback.on_image_loop_start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback.on_module_end"><code class="docutils literal notranslate"><span class="pre">Callback.on_module_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback.on_module_start"><code class="docutils literal notranslate"><span class="pre">Callback.on_module_start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback.on_module_step_end"><code class="docutils literal notranslate"><span class="pre">Callback.on_module_step_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback.on_module_step_start"><code class="docutils literal notranslate"><span class="pre">Callback.on_module_step_start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback.on_video_loop_end"><code class="docutils literal notranslate"><span class="pre">Callback.on_video_loop_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.callback.Callback.on_video_loop_start"><code class="docutils literal notranslate"><span class="pre">Callback.on_video_loop_start()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.callbacks.html#module-tracklab.callbacks.handle_regions">tracklab.callbacks.handle_regions module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.handle_regions.IgnoredRegions"><code class="docutils literal notranslate"><span class="pre">IgnoredRegions</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.handle_regions.IgnoredRegions.compute_iou"><code class="docutils literal notranslate"><span class="pre">IgnoredRegions.compute_iou()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.handle_regions.IgnoredRegions.mark_ignored"><code class="docutils literal notranslate"><span class="pre">IgnoredRegions.mark_ignored()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.handle_regions.IgnoredRegions.on_video_loop_end"><code class="docutils literal notranslate"><span class="pre">IgnoredRegions.on_video_loop_end()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.callbacks.html#module-tracklab.callbacks.progress">tracklab.callbacks.progress module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.Progressbar"><code class="docutils literal notranslate"><span class="pre">Progressbar</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.Progressbar.init_progress_bar"><code class="docutils literal notranslate"><span class="pre">Progressbar.init_progress_bar()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar"><code class="docutils literal notranslate"><span class="pre">RichProgressbar</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.init_progress_bar"><code class="docutils literal notranslate"><span class="pre">RichProgressbar.init_progress_bar()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_dataset_track_end"><code class="docutils literal notranslate"><span class="pre">RichProgressbar.on_dataset_track_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_dataset_track_start"><code class="docutils literal notranslate"><span class="pre">RichProgressbar.on_dataset_track_start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_module_end"><code class="docutils literal notranslate"><span class="pre">RichProgressbar.on_module_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_module_start"><code class="docutils literal notranslate"><span class="pre">RichProgressbar.on_module_start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_module_step_end"><code class="docutils literal notranslate"><span class="pre">RichProgressbar.on_module_step_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_video_loop_end"><code class="docutils literal notranslate"><span class="pre">RichProgressbar.on_video_loop_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.RichProgressbar.on_video_loop_start"><code class="docutils literal notranslate"><span class="pre">RichProgressbar.on_video_loop_start()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar"><code class="docutils literal notranslate"><span class="pre">TQDMProgressbar</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.init_progress_bar"><code class="docutils literal notranslate"><span class="pre">TQDMProgressbar.init_progress_bar()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_dataset_track_end"><code class="docutils literal notranslate"><span class="pre">TQDMProgressbar.on_dataset_track_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_dataset_track_start"><code class="docutils literal notranslate"><span class="pre">TQDMProgressbar.on_dataset_track_start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_module_end"><code class="docutils literal notranslate"><span class="pre">TQDMProgressbar.on_module_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_module_start"><code class="docutils literal notranslate"><span class="pre">TQDMProgressbar.on_module_start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_module_step_end"><code class="docutils literal notranslate"><span class="pre">TQDMProgressbar.on_module_step_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_video_loop_end"><code class="docutils literal notranslate"><span class="pre">TQDMProgressbar.on_video_loop_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.progress.TQDMProgressbar.on_video_loop_start"><code class="docutils literal notranslate"><span class="pre">TQDMProgressbar.on_video_loop_start()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.callbacks.html#module-tracklab.callbacks.timer">tracklab.callbacks.timer module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.timer.Timer"><code class="docutils literal notranslate"><span class="pre">Timer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.timer.Timer.on_dataset_track_end"><code class="docutils literal notranslate"><span class="pre">Timer.on_dataset_track_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.timer.Timer.on_dataset_track_start"><code class="docutils literal notranslate"><span class="pre">Timer.on_dataset_track_start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.timer.Timer.on_module_end"><code class="docutils literal notranslate"><span class="pre">Timer.on_module_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.timer.Timer.on_module_start"><code class="docutils literal notranslate"><span class="pre">Timer.on_module_start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.timer.Timer.on_video_loop_end"><code class="docutils literal notranslate"><span class="pre">Timer.on_video_loop_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.callbacks.html#tracklab.callbacks.timer.Timer.on_video_loop_start"><code class="docutils literal notranslate"><span class="pre">Timer.on_video_loop_start()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tracklab.configs.html">tracklab.configs package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tracklab.datastruct.html">tracklab.datastruct package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.datastruct.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.datastruct.html#module-tracklab.datastruct.datapipe">tracklab.datastruct.datapipe module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.datapipe.EngineDatapipe"><code class="docutils literal notranslate"><span class="pre">EngineDatapipe</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.datapipe.EngineDatapipe.update"><code class="docutils literal notranslate"><span class="pre">EngineDatapipe.update()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.datastruct.html#module-tracklab.datastruct.tracker_state">tracklab.datastruct.tracker_state module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState"><code class="docutils literal notranslate"><span class="pre">TrackerState</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.display_stats"><code class="docutils literal notranslate"><span class="pre">TrackerState.display_stats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.load"><code class="docutils literal notranslate"><span class="pre">TrackerState.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.load_detections_pred_from_json"><code class="docutils literal notranslate"><span class="pre">TrackerState.load_detections_pred_from_json()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.load_groundtruth"><code class="docutils literal notranslate"><span class="pre">TrackerState.load_groundtruth()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.load_public_dets"><code class="docutils literal notranslate"><span class="pre">TrackerState.load_public_dets()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.on_dataset_track_end"><code class="docutils literal notranslate"><span class="pre">TrackerState.on_dataset_track_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.on_video_loop_end"><code class="docutils literal notranslate"><span class="pre">TrackerState.on_video_loop_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.save"><code class="docutils literal notranslate"><span class="pre">TrackerState.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracker_state.TrackerState.update"><code class="docutils literal notranslate"><span class="pre">TrackerState.update()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.datastruct.html#module-tracklab.datastruct.tracking_dataset">tracklab.datastruct.tracking_dataset module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracking_dataset.SetsDict"><code class="docutils literal notranslate"><span class="pre">SetsDict</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracking_dataset.TrackingDataset"><code class="docutils literal notranslate"><span class="pre">TrackingDataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracking_dataset.TrackingDataset.process_trackeval_results"><code class="docutils literal notranslate"><span class="pre">TrackingDataset.process_trackeval_results()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracking_dataset.TrackingDataset.save_for_eval"><code class="docutils literal notranslate"><span class="pre">TrackingDataset.save_for_eval()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracking_dataset.TrackingSet"><code class="docutils literal notranslate"><span class="pre">TrackingSet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracking_dataset.TrackingSet.detections_gt"><code class="docutils literal notranslate"><span class="pre">TrackingSet.detections_gt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracking_dataset.TrackingSet.filter_videos"><code class="docutils literal notranslate"><span class="pre">TrackingSet.filter_videos()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracking_dataset.TrackingSet.image_gt"><code class="docutils literal notranslate"><span class="pre">TrackingSet.image_gt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracking_dataset.TrackingSet.image_metadatas"><code class="docutils literal notranslate"><span class="pre">TrackingSet.image_metadatas</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.datastruct.html#tracklab.datastruct.tracking_dataset.TrackingSet.video_metadatas"><code class="docutils literal notranslate"><span class="pre">TrackingSet.video_metadatas</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tracklab.engine.html">tracklab.engine package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.engine.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.engine.html#module-tracklab.engine.engine">tracklab.engine.engine module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.engine.html#tracklab.engine.engine.TrackingEngine"><code class="docutils literal notranslate"><span class="pre">TrackingEngine</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.engine.html#tracklab.engine.engine.TrackingEngine.default_step"><code class="docutils literal notranslate"><span class="pre">TrackingEngine.default_step()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.engine.html#tracklab.engine.engine.TrackingEngine.track_dataset"><code class="docutils literal notranslate"><span class="pre">TrackingEngine.track_dataset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.engine.html#tracklab.engine.engine.TrackingEngine.video_loop"><code class="docutils literal notranslate"><span class="pre">TrackingEngine.video_loop()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.engine.html#tracklab.engine.engine.merge_dataframes"><code class="docutils literal notranslate"><span class="pre">merge_dataframes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.engine.html#module-tracklab.engine.offline">tracklab.engine.offline module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.engine.html#tracklab.engine.offline.OfflineTrackingEngine"><code class="docutils literal notranslate"><span class="pre">OfflineTrackingEngine</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.engine.html#tracklab.engine.offline.OfflineTrackingEngine.video_loop"><code class="docutils literal notranslate"><span class="pre">OfflineTrackingEngine.video_loop()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.engine.html#module-tracklab.engine.pipelined">tracklab.engine.pipelined module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.engine.html#tracklab.engine.pipelined.PipelinedTrackingEngine"><code class="docutils literal notranslate"><span class="pre">PipelinedTrackingEngine</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.engine.html#tracklab.engine.pipelined.PipelinedTrackingEngine.video_loop"><code class="docutils literal notranslate"><span class="pre">PipelinedTrackingEngine.video_loop()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.engine.html#module-tracklab.engine.video">tracklab.engine.video module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.engine.html#tracklab.engine.video.VideoOnlineTrackingEngine"><code class="docutils literal notranslate"><span class="pre">VideoOnlineTrackingEngine</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.engine.html#tracklab.engine.video.VideoOnlineTrackingEngine.default_step"><code class="docutils literal notranslate"><span class="pre">VideoOnlineTrackingEngine.default_step()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.engine.html#tracklab.engine.video.VideoOnlineTrackingEngine.track_dataset"><code class="docutils literal notranslate"><span class="pre">VideoOnlineTrackingEngine.track_dataset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.engine.html#tracklab.engine.video.VideoOnlineTrackingEngine.video_loop"><code class="docutils literal notranslate"><span class="pre">VideoOnlineTrackingEngine.video_loop()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tracklab.pipeline.html">tracklab.pipeline package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.pipeline.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.pipeline.html#module-tracklab.pipeline.datasetlevel_module">tracklab.pipeline.datasetlevel_module module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.pipeline.html#module-tracklab.pipeline.detectionlevel_module">tracklab.pipeline.detectionlevel_module module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule"><code class="docutils literal notranslate"><span class="pre">DetectionLevelModule</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule.collate_fn"><code class="docutils literal notranslate"><span class="pre">DetectionLevelModule.collate_fn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule.dataloader"><code class="docutils literal notranslate"><span class="pre">DetectionLevelModule.dataloader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule.datapipe"><code class="docutils literal notranslate"><span class="pre">DetectionLevelModule.datapipe</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule.input_columns"><code class="docutils literal notranslate"><span class="pre">DetectionLevelModule.input_columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule.output_columns"><code class="docutils literal notranslate"><span class="pre">DetectionLevelModule.output_columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule.preprocess"><code class="docutils literal notranslate"><span class="pre">DetectionLevelModule.preprocess()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.detectionlevel_module.DetectionLevelModule.process"><code class="docutils literal notranslate"><span class="pre">DetectionLevelModule.process()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.pipeline.html#module-tracklab.pipeline.evaluator">tracklab.pipeline.evaluator module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.evaluator.Evaluator"><code class="docutils literal notranslate"><span class="pre">Evaluator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.evaluator.Evaluator.run"><code class="docutils literal notranslate"><span class="pre">Evaluator.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.pipeline.html#module-tracklab.pipeline.imagelevel_module">tracklab.pipeline.imagelevel_module module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule"><code class="docutils literal notranslate"><span class="pre">ImageLevelModule</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule.collate_fn"><code class="docutils literal notranslate"><span class="pre">ImageLevelModule.collate_fn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule.dataloader"><code class="docutils literal notranslate"><span class="pre">ImageLevelModule.dataloader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule.datapipe"><code class="docutils literal notranslate"><span class="pre">ImageLevelModule.datapipe</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule.input_columns"><code class="docutils literal notranslate"><span class="pre">ImageLevelModule.input_columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule.output_columns"><code class="docutils literal notranslate"><span class="pre">ImageLevelModule.output_columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule.preprocess"><code class="docutils literal notranslate"><span class="pre">ImageLevelModule.preprocess()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.imagelevel_module.ImageLevelModule.process"><code class="docutils literal notranslate"><span class="pre">ImageLevelModule.process()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.pipeline.html#module-tracklab.pipeline.module">tracklab.pipeline.module module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.MetaModule"><code class="docutils literal notranslate"><span class="pre">MetaModule</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.MetaModule.level"><code class="docutils literal notranslate"><span class="pre">MetaModule.level</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.MetaModule.name"><code class="docutils literal notranslate"><span class="pre">MetaModule.name</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Module"><code class="docutils literal notranslate"><span class="pre">Module</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Module.forget_columns"><code class="docutils literal notranslate"><span class="pre">Module.forget_columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Module.get_input_columns"><code class="docutils literal notranslate"><span class="pre">Module.get_input_columns()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Module.get_output_columns"><code class="docutils literal notranslate"><span class="pre">Module.get_output_columns()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Module.input_columns"><code class="docutils literal notranslate"><span class="pre">Module.input_columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Module.level"><code class="docutils literal notranslate"><span class="pre">Module.level</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Module.name"><code class="docutils literal notranslate"><span class="pre">Module.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Module.output_columns"><code class="docutils literal notranslate"><span class="pre">Module.output_columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Module.training_enabled"><code class="docutils literal notranslate"><span class="pre">Module.training_enabled</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Module.validate_input"><code class="docutils literal notranslate"><span class="pre">Module.validate_input()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Module.validate_output"><code class="docutils literal notranslate"><span class="pre">Module.validate_output()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Pipeline.is_empty"><code class="docutils literal notranslate"><span class="pre">Pipeline.is_empty()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Pipeline.validate"><code class="docutils literal notranslate"><span class="pre">Pipeline.validate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Skip"><code class="docutils literal notranslate"><span class="pre">Skip</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.module.Skip.name"><code class="docutils literal notranslate"><span class="pre">Skip.name</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.pipeline.html#module-tracklab.pipeline.videolevel_module">tracklab.pipeline.videolevel_module module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.videolevel_module.VideoLevelModule"><code class="docutils literal notranslate"><span class="pre">VideoLevelModule</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.videolevel_module.VideoLevelModule.input_columns"><code class="docutils literal notranslate"><span class="pre">VideoLevelModule.input_columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.videolevel_module.VideoLevelModule.output_columns"><code class="docutils literal notranslate"><span class="pre">VideoLevelModule.output_columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.videolevel_module.VideoLevelModule.process"><code class="docutils literal notranslate"><span class="pre">VideoLevelModule.process()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tracklab.utils.html">tracklab.utils package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.BBoxDataFrameAccessor"><code class="docutils literal notranslate"><span class="pre">BBoxDataFrameAccessor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.BBoxDataFrameAccessor.conf"><code class="docutils literal notranslate"><span class="pre">BBoxDataFrameAccessor.conf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.BBoxDataFrameAccessor.ltrb"><code class="docutils literal notranslate"><span class="pre">BBoxDataFrameAccessor.ltrb()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.BBoxDataFrameAccessor.ltwh"><code class="docutils literal notranslate"><span class="pre">BBoxDataFrameAccessor.ltwh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.BBoxDataFrameAccessor.xywh"><code class="docutils literal notranslate"><span class="pre">BBoxDataFrameAccessor.xywh()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.BBoxSeriesAccessor"><code class="docutils literal notranslate"><span class="pre">BBoxSeriesAccessor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.BBoxSeriesAccessor.conf"><code class="docutils literal notranslate"><span class="pre">BBoxSeriesAccessor.conf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.BBoxSeriesAccessor.ltrb"><code class="docutils literal notranslate"><span class="pre">BBoxSeriesAccessor.ltrb()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.BBoxSeriesAccessor.ltwh"><code class="docutils literal notranslate"><span class="pre">BBoxSeriesAccessor.ltwh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.BBoxSeriesAccessor.xywh"><code class="docutils literal notranslate"><span class="pre">BBoxSeriesAccessor.xywh()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.KeypointsDataFrameAccessor"><code class="docutils literal notranslate"><span class="pre">KeypointsDataFrameAccessor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.KeypointsDataFrameAccessor.c"><code class="docutils literal notranslate"><span class="pre">KeypointsDataFrameAccessor.c()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.KeypointsDataFrameAccessor.conf"><code class="docutils literal notranslate"><span class="pre">KeypointsDataFrameAccessor.conf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.KeypointsDataFrameAccessor.in_bbox_coord"><code class="docutils literal notranslate"><span class="pre">KeypointsDataFrameAccessor.in_bbox_coord()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.KeypointsDataFrameAccessor.keypoints_bbox_xyc"><code class="docutils literal notranslate"><span class="pre">KeypointsDataFrameAccessor.keypoints_bbox_xyc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.KeypointsDataFrameAccessor.xy"><code class="docutils literal notranslate"><span class="pre">KeypointsDataFrameAccessor.xy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.KeypointsDataFrameAccessor.xyc"><code class="docutils literal notranslate"><span class="pre">KeypointsDataFrameAccessor.xyc()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.KeypointsSeriesAccessor"><code class="docutils literal notranslate"><span class="pre">KeypointsSeriesAccessor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.KeypointsSeriesAccessor.c"><code class="docutils literal notranslate"><span class="pre">KeypointsSeriesAccessor.c()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.KeypointsSeriesAccessor.conf"><code class="docutils literal notranslate"><span class="pre">KeypointsSeriesAccessor.conf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.KeypointsSeriesAccessor.in_bbox_coord"><code class="docutils literal notranslate"><span class="pre">KeypointsSeriesAccessor.in_bbox_coord()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.KeypointsSeriesAccessor.keypoints_bbox_xyc"><code class="docutils literal notranslate"><span class="pre">KeypointsSeriesAccessor.keypoints_bbox_xyc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.KeypointsSeriesAccessor.xy"><code class="docutils literal notranslate"><span class="pre">KeypointsSeriesAccessor.xy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.KeypointsSeriesAccessor.xyc"><code class="docutils literal notranslate"><span class="pre">KeypointsSeriesAccessor.xyc()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#module-tracklab.utils.attribute_voting">tracklab.utils.attribute_voting module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.attribute_voting.select_highest_voted_att"><code class="docutils literal notranslate"><span class="pre">select_highest_voted_att()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#module-tracklab.utils.collate">tracklab.utils.collate module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.collate.Unbatchable"><code class="docutils literal notranslate"><span class="pre">Unbatchable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.collate.default_collate"><code class="docutils literal notranslate"><span class="pre">default_collate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#module-tracklab.utils.coordinates">tracklab.utils.coordinates module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.bbox_ltwh2ltrb"><code class="docutils literal notranslate"><span class="pre">bbox_ltwh2ltrb()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.clip_bbox_ltrb_to_img_dim"><code class="docutils literal notranslate"><span class="pre">clip_bbox_ltrb_to_img_dim()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.clip_bbox_ltwh_to_img_dim"><code class="docutils literal notranslate"><span class="pre">clip_bbox_ltwh_to_img_dim()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.clip_bbox_ltwh_to_img_dim_old"><code class="docutils literal notranslate"><span class="pre">clip_bbox_ltwh_to_img_dim_old()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.clip_keypoints_to_image"><code class="docutils literal notranslate"><span class="pre">clip_keypoints_to_image()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.generate_bbox_from_keypoints"><code class="docutils literal notranslate"><span class="pre">generate_bbox_from_keypoints()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.keypoints_in_bbox_coord"><code class="docutils literal notranslate"><span class="pre">keypoints_in_bbox_coord()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.ltrb_to_ltwh"><code class="docutils literal notranslate"><span class="pre">ltrb_to_ltwh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.ltrb_to_xywh"><code class="docutils literal notranslate"><span class="pre">ltrb_to_xywh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.ltwh_to_ltrb"><code class="docutils literal notranslate"><span class="pre">ltwh_to_ltrb()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.ltwh_to_xywh"><code class="docutils literal notranslate"><span class="pre">ltwh_to_xywh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.rescale_keypoints"><code class="docutils literal notranslate"><span class="pre">rescale_keypoints()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.round_bbox_coordinates"><code class="docutils literal notranslate"><span class="pre">round_bbox_coordinates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.sanitize_bbox_ltrb"><code class="docutils literal notranslate"><span class="pre">sanitize_bbox_ltrb()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.sanitize_bbox_ltwh"><code class="docutils literal notranslate"><span class="pre">sanitize_bbox_ltwh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.sanitize_bbox_xywh"><code class="docutils literal notranslate"><span class="pre">sanitize_bbox_xywh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.sanitize_keypoints"><code class="docutils literal notranslate"><span class="pre">sanitize_keypoints()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.xywh_to_ltrb"><code class="docutils literal notranslate"><span class="pre">xywh_to_ltrb()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.coordinates.xywh_to_ltwh"><code class="docutils literal notranslate"><span class="pre">xywh_to_ltwh()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#module-tracklab.utils.cv2">tracklab.utils.cv2 module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.VideoReader"><code class="docutils literal notranslate"><span class="pre">VideoReader</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.VideoReader.set_filename"><code class="docutils literal notranslate"><span class="pre">VideoReader.set_filename()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.colored_body_parts_overlay"><code class="docutils literal notranslate"><span class="pre">colored_body_parts_overlay()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.crop_bbox_ltwh"><code class="docutils literal notranslate"><span class="pre">crop_bbox_ltwh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.cv2_load_image"><code class="docutils literal notranslate"><span class="pre">cv2_load_image()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.draw_bbox"><code class="docutils literal notranslate"><span class="pre">draw_bbox()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.draw_bbox_stats"><code class="docutils literal notranslate"><span class="pre">draw_bbox_stats()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.draw_bpbreid_heatmaps"><code class="docutils literal notranslate"><span class="pre">draw_bpbreid_heatmaps()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.draw_ignore_region"><code class="docutils literal notranslate"><span class="pre">draw_ignore_region()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.draw_keypoints"><code class="docutils literal notranslate"><span class="pre">draw_keypoints()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.draw_text"><code class="docutils literal notranslate"><span class="pre">draw_text()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.final_patch"><code class="docutils literal notranslate"><span class="pre">final_patch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.overlay_heatmap"><code class="docutils literal notranslate"><span class="pre">overlay_heatmap()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.pretty_print"><code class="docutils literal notranslate"><span class="pre">pretty_print()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.print_count_frame"><code class="docutils literal notranslate"><span class="pre">print_count_frame()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.cv2.scale_lightness"><code class="docutils literal notranslate"><span class="pre">scale_lightness()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#module-tracklab.utils.download">tracklab.utils.download module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.download.check_md5"><code class="docutils literal notranslate"><span class="pre">check_md5()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.download.download_file"><code class="docutils literal notranslate"><span class="pre">download_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#module-tracklab.utils.easyocr">tracklab.utils.easyocr module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.easyocr.bbox_easyocr_to_image_ltwh"><code class="docutils literal notranslate"><span class="pre">bbox_easyocr_to_image_ltwh()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#module-tracklab.utils.instantiate">tracklab.utils.instantiate module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.instantiate.call_target"><code class="docutils literal notranslate"><span class="pre">call_target()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#module-tracklab.utils.monkeypatch_hydra">tracklab.utils.monkeypatch_hydra module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.monkeypatch_hydra.new_call_target"><code class="docutils literal notranslate"><span class="pre">new_call_target()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.monkeypatch_hydra.new_resolve_target"><code class="docutils literal notranslate"><span class="pre">new_resolve_target()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#module-tracklab.utils.notebook">tracklab.utils.notebook module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.notebook.TrackEngine"><code class="docutils literal notranslate"><span class="pre">TrackEngine</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.notebook.TrackEngine.cfg"><code class="docutils literal notranslate"><span class="pre">TrackEngine.cfg</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.notebook.TrackEngine.dataset"><code class="docutils literal notranslate"><span class="pre">TrackEngine.dataset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.notebook.TrackEngine.engine"><code class="docutils literal notranslate"><span class="pre">TrackEngine.engine</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.notebook.TrackEngine.evaluator"><code class="docutils literal notranslate"><span class="pre">TrackEngine.evaluator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.notebook.TrackEngine.state"><code class="docutils literal notranslate"><span class="pre">TrackEngine.state</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.notebook.load_from_overrides"><code class="docutils literal notranslate"><span class="pre">load_from_overrides()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#module-tracklab.utils.openmmlab">tracklab.utils.openmmlab module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.openmmlab.get_checkpoint"><code class="docutils literal notranslate"><span class="pre">get_checkpoint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.openmmlab.get_config_path"><code class="docutils literal notranslate"><span class="pre">get_config_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.openmmlab.get_installed_path"><code class="docutils literal notranslate"><span class="pre">get_installed_path()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#module-tracklab.utils.progress">tracklab.utils.progress module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.progress.progress"><code class="docutils literal notranslate"><span class="pre">progress()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.utils.html#module-tracklab.utils.wandb">tracklab.utils.wandb module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.wandb.apply_recursively"><code class="docutils literal notranslate"><span class="pre">apply_recursively()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.wandb.finish"><code class="docutils literal notranslate"><span class="pre">finish()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.wandb.init"><code class="docutils literal notranslate"><span class="pre">init()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.wandb.log"><code class="docutils literal notranslate"><span class="pre">log()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.wandb.log_metric"><code class="docutils literal notranslate"><span class="pre">log_metric()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html#tracklab.utils.wandb.normalize_subdict"><code class="docutils literal notranslate"><span class="pre">normalize_subdict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tracklab.visualization.html">tracklab.visualization package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.visualization.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.visualization.html#module-tracklab.visualization.detection">tracklab.visualization.detection module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.detection.DebugDetection"><code class="docutils literal notranslate"><span class="pre">DebugDetection</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.detection.DebugDetection.draw_detection"><code class="docutils literal notranslate"><span class="pre">DebugDetection.draw_detection()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.detection.DefaultDetection"><code class="docutils literal notranslate"><span class="pre">DefaultDetection</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.detection.DefaultDetection.draw_detection"><code class="docutils literal notranslate"><span class="pre">DefaultDetection.draw_detection()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.detection.DetectionStats"><code class="docutils literal notranslate"><span class="pre">DetectionStats</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.detection.DetectionStats.draw_detection"><code class="docutils literal notranslate"><span class="pre">DetectionStats.draw_detection()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.detection.EllipseDetection"><code class="docutils literal notranslate"><span class="pre">EllipseDetection</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.detection.EllipseDetection.draw_detection"><code class="docutils literal notranslate"><span class="pre">EllipseDetection.draw_detection()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.detection.FullDetection"><code class="docutils literal notranslate"><span class="pre">FullDetection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.detection.SimpleDetectionStats"><code class="docutils literal notranslate"><span class="pre">SimpleDetectionStats</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.visualization.html#module-tracklab.visualization.image">tracklab.visualization.image module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.image.FrameCount"><code class="docutils literal notranslate"><span class="pre">FrameCount</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.image.FrameCount.draw_frame"><code class="docutils literal notranslate"><span class="pre">FrameCount.draw_frame()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.image.IgnoreRegions"><code class="docutils literal notranslate"><span class="pre">IgnoreRegions</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.image.IgnoreRegions.draw_frame"><code class="docutils literal notranslate"><span class="pre">IgnoreRegions.draw_frame()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.visualization.html#module-tracklab.visualization.keypoints">tracklab.visualization.keypoints module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.keypoints.DefaultKeypoints"><code class="docutils literal notranslate"><span class="pre">DefaultKeypoints</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.keypoints.DefaultKeypoints.draw_detection"><code class="docutils literal notranslate"><span class="pre">DefaultKeypoints.draw_detection()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.keypoints.FullKeypoints"><code class="docutils literal notranslate"><span class="pre">FullKeypoints</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.visualization.html#module-tracklab.visualization.tracking">tracklab.visualization.tracking module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.tracking.TrackingLine"><code class="docutils literal notranslate"><span class="pre">TrackingLine</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.tracking.TrackingLine.draw_detection"><code class="docutils literal notranslate"><span class="pre">TrackingLine.draw_detection()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.tracking.TrackingLine.draw_frame"><code class="docutils literal notranslate"><span class="pre">TrackingLine.draw_frame()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.tracking.TrackingLine.preproces"><code class="docutils literal notranslate"><span class="pre">TrackingLine.preproces()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.visualization.html#module-tracklab.visualization.visualization_engine">tracklab.visualization.visualization_engine module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualization_engine.VisualizationEngine"><code class="docutils literal notranslate"><span class="pre">VisualizationEngine</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualization_engine.VisualizationEngine.draw_frame"><code class="docutils literal notranslate"><span class="pre">VisualizationEngine.draw_frame()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualization_engine.VisualizationEngine.on_dataset_track_end"><code class="docutils literal notranslate"><span class="pre">VisualizationEngine.on_dataset_track_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualization_engine.VisualizationEngine.on_video_loop_end"><code class="docutils literal notranslate"><span class="pre">VisualizationEngine.on_video_loop_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualization_engine.VisualizationEngine.visualize"><code class="docutils literal notranslate"><span class="pre">VisualizationEngine.visualize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualization_engine.create_draw_args"><code class="docutils literal notranslate"><span class="pre">create_draw_args()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualization_engine.get_group"><code class="docutils literal notranslate"><span class="pre">get_group()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualization_engine.process_frame"><code class="docutils literal notranslate"><span class="pre">process_frame()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.visualization.html#module-tracklab.visualization.visualizer">tracklab.visualization.visualizer module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualizer.DetectionVisualizer"><code class="docutils literal notranslate"><span class="pre">DetectionVisualizer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualizer.DetectionVisualizer.color"><code class="docutils literal notranslate"><span class="pre">DetectionVisualizer.color()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualizer.DetectionVisualizer.draw_detection"><code class="docutils literal notranslate"><span class="pre">DetectionVisualizer.draw_detection()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualizer.DetectionVisualizer.draw_frame"><code class="docutils literal notranslate"><span class="pre">DetectionVisualizer.draw_frame()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualizer.DetectionVisualizer.post_init"><code class="docutils literal notranslate"><span class="pre">DetectionVisualizer.post_init()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualizer.ImageVisualizer"><code class="docutils literal notranslate"><span class="pre">ImageVisualizer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualizer.Visualizer"><code class="docutils literal notranslate"><span class="pre">Visualizer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualizer.Visualizer.draw_frame"><code class="docutils literal notranslate"><span class="pre">Visualizer.draw_frame()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualizer.Visualizer.post_init"><code class="docutils literal notranslate"><span class="pre">Visualizer.post_init()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualizer.Visualizer.preproces"><code class="docutils literal notranslate"><span class="pre">Visualizer.preproces()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html#tracklab.visualization.visualizer.get_fixed_colors"><code class="docutils literal notranslate"><span class="pre">get_fixed_colors()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tracklab.wrappers.html">tracklab.wrappers package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.wrappers.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.wrappers.bbox_detector.html">tracklab.wrappers.bbox_detector package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.bbox_detector.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.bbox_detector.html#tracklab-wrappers-bbox-detector-mmdetection-api-module">tracklab.wrappers.bbox_detector.mmdetection_api module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.bbox_detector.html#module-tracklab.wrappers.bbox_detector.rtmlib_api">tracklab.wrappers.bbox_detector.rtmlib_api module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.bbox_detector.html#module-tracklab.wrappers.bbox_detector.yolo_ultralytics_api">tracklab.wrappers.bbox_detector.yolo_ultralytics_api module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.wrappers.dataset.html">tracklab.wrappers.dataset package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.dataset.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.dataset.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.dataset.html#module-tracklab.wrappers.dataset.external_video">tracklab.wrappers.dataset.external_video module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.dataset.html#module-tracklab.wrappers.dataset.jrdb_pose">tracklab.wrappers.dataset.jrdb_pose module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.dataset.html#module-tracklab.wrappers.dataset.jta">tracklab.wrappers.dataset.jta module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.wrappers.eval.html">tracklab.wrappers.eval package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.eval.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.eval.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.eval.html#module-tracklab.wrappers.eval.trackeval_evaluator">tracklab.wrappers.eval.trackeval_evaluator module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.wrappers.pose_estimator.html">tracklab.wrappers.pose_estimator package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.pose_estimator.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.pose_estimator.html#tracklab-wrappers-pose-estimator-bottomup-mmpose-api-module">tracklab.wrappers.pose_estimator.bottomup_mmpose_api module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.pose_estimator.html#tracklab-wrappers-pose-estimator-openpifpaf-api-module">tracklab.wrappers.pose_estimator.openpifpaf_api module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.pose_estimator.html#tracklab-wrappers-pose-estimator-topdown-mmpose-api-module">tracklab.wrappers.pose_estimator.topdown_mmpose_api module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.pose_estimator.html#module-tracklab.wrappers.pose_estimator.yolo_ultralytics_pose_api">tracklab.wrappers.pose_estimator.yolo_ultralytics_pose_api module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.wrappers.reid.html">tracklab.wrappers.reid package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.reid.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.reid.html#tracklab-wrappers-reid-kpreid-api-module">tracklab.wrappers.reid.kpreid_api module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.reid.html#tracklab-wrappers-reid-kpreid-dataset-module">tracklab.wrappers.reid.kpreid_dataset module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.wrappers.track.html">tracklab.wrappers.track package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.track.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.track.html#module-tracklab.wrappers.track.bot_sort_api">tracklab.wrappers.track.bot_sort_api module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.track.html#module-tracklab.wrappers.track.bpbreid_strong_sort_api">tracklab.wrappers.track.bpbreid_strong_sort_api module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.track.html#module-tracklab.wrappers.track.byte_track_api">tracklab.wrappers.track.byte_track_api module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.track.html#module-tracklab.wrappers.track.deep_oc_sort_api">tracklab.wrappers.track.deep_oc_sort_api module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.track.html#module-tracklab.wrappers.track.oc_sort_api">tracklab.wrappers.track.oc_sort_api module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.track.html#module-tracklab.wrappers.track.strong_sort_api">tracklab.wrappers.track.strong_sort_api module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.wrappers.tracklet_agg.html">tracklab.wrappers.tracklet_agg package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.tracklet_agg.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.tracklet_agg.html#module-tracklab.wrappers.tracklet_agg.majority_vote_api">tracklab.wrappers.tracklet_agg.majority_vote_api module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-tracklab.main">
+<span id="tracklab-main-module"></span><h2>tracklab.main module<a class="headerlink" href="#module-tracklab.main" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tracklab.main.close_environment">
+<span class="sig-prename descclassname"><span class="pre">tracklab.main.</span></span><span class="sig-name descname"><span class="pre">close_environment</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/main.html#close_environment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.main.close_environment" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tracklab.main.evaluate">
+<span class="sig-prename descclassname"><span class="pre">tracklab.main.</span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracker_state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/main.html#evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.main.evaluate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tracklab.main.init_environment">
+<span class="sig-prename descclassname"><span class="pre">tracklab.main.</span></span><span class="sig-name descname"><span class="pre">init_environment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/main.html#init_environment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.main.init_environment" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tracklab.main.main">
+<span class="sig-prename descclassname"><span class="pre">tracklab.main.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/main.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.main.main" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tracklab.main.set_sharing_strategy">
+<span class="sig-prename descclassname"><span class="pre">tracklab.main.</span></span><span class="sig-name descname"><span class="pre">set_sharing_strategy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/main.html#set_sharing_strategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.main.set_sharing_strategy" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../tutorials/MOT_eval.html" class="btn btn-neutral float-left" title="New evaluator integration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tracklab.callbacks.html" class="btn btn-neutral float-right" title="tracklab.callbacks package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Baptiste Standaert, Vladimir Somers, Victor Joos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

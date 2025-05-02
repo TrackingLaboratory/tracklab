@@ -1,0 +1,218 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tracklab.wrappers.eval package &mdash; TrackLab  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tracklab.wrappers.eval.posetrack package" href="tracklab.wrappers.eval.posetrack.html" />
+    <link rel="prev" title="tracklab.wrappers.dataset.soccernet package" href="tracklab.wrappers.dataset.soccernet.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TrackLab
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation guide </a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">PbTrack Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Available_features.html">Available features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/Yolov8_pose_estimation.html">Integrating a new module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/MOT_dataset.html">New dataset integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/MOT_eval.html">New evaluator integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="tracklab.html">tracklab package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tracklab.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="tracklab.callbacks.html">tracklab.callbacks package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.configs.html">tracklab.configs package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.datastruct.html">tracklab.datastruct package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.engine.html">tracklab.engine package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.pipeline.html">tracklab.pipeline package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.utils.html">tracklab.utils package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.visualization.html">tracklab.visualization package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="tracklab.wrappers.html">tracklab.wrappers package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="tracklab.wrappers.html#subpackages">Subpackages</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.html#module-tracklab.main">tracklab.main module</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../additional/citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/coming_soon.html">Coming soon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/contribute.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional/licence.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TrackLab</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="tracklab.html">tracklab package</a></li>
+          <li class="breadcrumb-item"><a href="tracklab.wrappers.html">tracklab.wrappers package</a></li>
+      <li class="breadcrumb-item active">tracklab.wrappers.eval package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/tracklab.wrappers.eval.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tracklab.wrappers.eval">
+<span id="tracklab-wrappers-eval-package"></span><h1>tracklab.wrappers.eval package<a class="headerlink" href="#module-tracklab.wrappers.eval" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tracklab.wrappers.eval.posetrack.html">tracklab.wrappers.eval.posetrack package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.wrappers.eval.posetrack.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.wrappers.eval.posetrack.html#module-tracklab.wrappers.eval.posetrack.posetrack18_evaluator">tracklab.wrappers.eval.posetrack.posetrack18_evaluator module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack18_evaluator.PoseTrack18Evaluator"><code class="docutils literal notranslate"><span class="pre">PoseTrack18Evaluator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack18_evaluator.PoseTrack18Evaluator.run"><code class="docutils literal notranslate"><span class="pre">PoseTrack18Evaluator.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.wrappers.eval.posetrack.html#module-tracklab.wrappers.eval.posetrack.posetrack21_evaluator">tracklab.wrappers.eval.posetrack.posetrack21_evaluator module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator"><code class="docutils literal notranslate"><span class="pre">PoseTrack21Evaluator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.PoseTrackEncoder"><code class="docutils literal notranslate"><span class="pre">PoseTrack21Evaluator.PoseTrackEncoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.check_if_tracklet"><code class="docutils literal notranslate"><span class="pre">PoseTrack21Evaluator.check_if_tracklet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.compute_bbox_map"><code class="docutils literal notranslate"><span class="pre">PoseTrack21Evaluator.compute_bbox_map()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.format_metric"><code class="docutils literal notranslate"><span class="pre">PoseTrack21Evaluator.format_metric()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.has_enough_vis_kp"><code class="docutils literal notranslate"><span class="pre">PoseTrack21Evaluator.has_enough_vis_kp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.remove_not_visible_kps"><code class="docutils literal notranslate"><span class="pre">PoseTrack21Evaluator.remove_not_visible_kps()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.eval.posetrack.html#tracklab.wrappers.eval.posetrack.posetrack21_evaluator.PoseTrack21Evaluator.run"><code class="docutils literal notranslate"><span class="pre">PoseTrack21Evaluator.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tracklab.wrappers.eval.soccernet.html">tracklab.wrappers.eval.soccernet package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.wrappers.eval.soccernet.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tracklab.wrappers.eval.soccernet.html#module-tracklab.wrappers.eval.soccernet.soccer_accuracy">tracklab.wrappers.eval.soccernet.soccer_accuracy module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tracklab.wrappers.eval.soccernet.html#tracklab.wrappers.eval.soccernet.soccer_accuracy.SoccerAccuracy"><code class="docutils literal notranslate"><span class="pre">SoccerAccuracy</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tracklab.wrappers.eval.soccernet.html#tracklab.wrappers.eval.soccernet.soccer_accuracy.SoccerAccuracy.run"><code class="docutils literal notranslate"><span class="pre">SoccerAccuracy.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-tracklab.wrappers.eval.trackeval_evaluator">
+<span id="tracklab-wrappers-eval-trackeval-evaluator-module"></span><h2>tracklab.wrappers.eval.trackeval_evaluator module<a class="headerlink" href="#module-tracklab.wrappers.eval.trackeval_evaluator" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tracklab.wrappers.eval.trackeval_evaluator.TrackEvalEvaluator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tracklab.wrappers.eval.trackeval_evaluator.</span></span><span class="sig-name descname"><span class="pre">TrackEvalEvaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progressbar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracking_dataset</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/eval/trackeval_evaluator.html#TrackEvalEvaluator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.eval.trackeval_evaluator.TrackEvalEvaluator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="tracklab.pipeline.html#tracklab.pipeline.evaluator.Evaluator" title="tracklab.pipeline.evaluator.Evaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluator</span></code></a></p>
+<p>Evaluator using the TrackEval library (<a class="reference external" href="https://github.com/JonathonLuiten/TrackEval">https://github.com/JonathonLuiten/TrackEval</a>).
+Save on disk the tracking predictions and ground truth in MOT Challenge format and run the evaluation by calling TrackEval.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tracklab.wrappers.eval.trackeval_evaluator.TrackEvalEvaluator.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tracker_state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/eval/trackeval_evaluator.html#TrackEvalEvaluator.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.eval.trackeval_evaluator.TrackEvalEvaluator.run" title="Link to this definition"></a></dt>
+<dd><p>Run the evaluation
+:param tracker_state: the tracker state for the evaluation
+:type tracker_state: TrackerState</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tracklab.wrappers.eval.trackeval_evaluator.format_metric">
+<span class="sig-prename descclassname"><span class="pre">tracklab.wrappers.eval.trackeval_evaluator.</span></span><span class="sig-name descname"><span class="pre">format_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_factor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tracklab/wrappers/eval/trackeval_evaluator.html#format_metric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tracklab.wrappers.eval.trackeval_evaluator.format_metric" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tracklab.wrappers.dataset.soccernet.html" class="btn btn-neutral float-left" title="tracklab.wrappers.dataset.soccernet package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tracklab.wrappers.eval.posetrack.html" class="btn btn-neutral float-right" title="tracklab.wrappers.eval.posetrack package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Baptiste Standaert, Vladimir Somers, Victor Joos.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
