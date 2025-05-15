@@ -155,6 +155,7 @@ class MOT(TrackingDataset):
                 img_folder_path = os.path.join(video_folder_path, 'img1')
                 img_metadata_df = pd.DataFrame({
                     'frame': [i for i in range(0, nframes)],
+                    'nframes': nframes,
                     'id': [image_counter + i for i in range(0, nframes)],
                     'video_id': len(video_metadatas_list),
                     'file_path': [os.path.join(img_folder_path, f) for f in

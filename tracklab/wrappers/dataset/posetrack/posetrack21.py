@@ -99,7 +99,6 @@ def fix_formatting(
     video_metadatas.set_index("id", drop=True, inplace=True)
 
     # Images
-    image_metadatas.drop([image_id, "nframes"], axis=1, inplace=True)
     image_metadatas["file_name"] = image_metadatas["file_name"].apply(
         lambda x: os.path.join(dataset_path, x)
     )
