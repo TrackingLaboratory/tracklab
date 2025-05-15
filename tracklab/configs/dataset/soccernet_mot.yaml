@@ -9,6 +9,7 @@ eval_set: "val"
 
 track_eval:
   dataset_class: MotChallenge2DBox
+  BENCHMARK: "SoccerNetMOT"
   GT_FOLDER: "eval/gt" # Location of GT data
   GT_LOC_FORMAT: '{gt_folder}/{seq}.txt' # '{gt_folder}/{seq}/gt/gt.txt'
   TRACKERS_FOLDER: 'eval/pred' # Trackers location
