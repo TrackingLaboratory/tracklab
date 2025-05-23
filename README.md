@@ -7,18 +7,12 @@ TrackLab is an easy-to-use modular framework for Multi-Object pose/bbox Tracking
   <img src="https://raw.githubusercontent.com/TrackingLaboratory/tracklab/refs/heads/main/docs/assets/gifs/PoseTrack21_008827.gif" width="400" /> 
 </p>
 
-## News
-- [2024.02.05] Public release
-- [2025.05.02] [Released CAMELTrack: Context-Aware Multi-cue ExpLoitation for Online Multi-Object Tracking](https://github.com/TrackingLaboratory/CAMELTrack)
+## 🗞️ News
 - [2024.02.05] 🎉 Public release.
 - [2025.05.02] 🎊 Released [CAMELTrack: Context-Aware Multi-cue ExpLoitation for Online Multi-Object Tracking](https://github.com/TrackingLaboratory/CAMELTrack).
 - [2025.05.22] Many more detectors (`YOLO`, `YOLOX`, `RTMDet`, `RTDetr`) and pose estimators (`YOLO-pose`, `RTMO`, `VITPose`, `RTMPose`).
 
-## Upcoming
-- [x] Public release of the codebase
-- [x] Add support for more datasets (DanceTrack, MOTChallenge, SportsMOT, ...)
-- [ ] Add many more SOTA tracking methods and object detectors
-- [ ] Improve documentation and add more tutorials
+## 🚀 Upcoming
 - [x] Public release of the codebase.
 - [x] Add support for more datasets (`DanceTrack`, `MOTChallenge`, `SportsMOT`, `SoccerNet`, ...).
 - [x] Add many more object detectors and pose estimators.
@@ -52,9 +46,7 @@ Here's what makes TrackLab different from other existing tracking frameworks:
   - Multi-person pose estimation.
   - Person re-identification.
 
-## Documentation
-You can find the documentation at [https://trackinglaboratory.github.io/tracklab/](https://trackinglaboratory.github.io/tracklab/) or in the docs/ folder. After installing, you can run `make html` inside this folder
-to get an html version of the documentation.
+## 📖 Documentation
 You can find the documentation at [https://trackinglaboratory.github.io/tracklab/](https://trackinglaboratory.github.io/tracklab/) or in the docs/ folder. 
 After installing, you can run `make html` inside this folder to get an HTML version of the documentation.
 
@@ -150,10 +142,7 @@ You might need to redo this if you update the repository, and some dependencies 
 
 ### External dependencies
 
-- Get the **SoccerNet Tracking** dataset [here](https://github.com/SoccerNet/sn-tracking), rename the root folder as "SoccerNetMOT" and put it under the global dataset directory (specified under the `data_dir` config as explained below). Otherwise, you can modify the `dataset_path` config in [soccernet_mot.yaml](tracklab/configs/dataset/soccernet_mot.yaml) with your custom SoccerNet dataset directory.
-- Download the pretrained model weights [here](https://drive.google.com/drive/folders/1MmDkSHWJ1S-V9YcLMkFOjm3zo65UELjJ?usp=drive_link) and put the "pretrained_models" directory under the main project directory (i.e. "/path/to/tracklab/pretrained_models").
-
-### Setup
+### 🔨 Setup
 
 You will need to set up some variables before running the code : 
 
@@ -190,7 +179,7 @@ The first section contains the configuration groups, while the second section
 shows all the possible options you can modify.
 
 
-## Framework overview
+## 🔍 Framework Overview
 ### Hydra Configuration
 TODO: Describe TrackLab + Hydra configuration system.
 
@@ -235,7 +224,7 @@ At the end of the tracking process, the TrackerState object contains the trackin
 Visualizations (e.g. `.mp4` results videos) are generated during the TrackingEngine.run() call, after a video has been tracked and before the next video is processed.
 Finally, evaluation is performed via the evaluator.run() function once the TrackingEngine.run() call is completed, i.e. after all videos have been processed.
 
-## Tutorials
+## 🧐 Tutorials
 ### Dump and load the tracker state to save computation time
 When developing a new module, it is often useful to dump the tracker state to disk to save computation time and avoid running the other modules several times.
 Here is how to do it:
@@ -265,8 +254,8 @@ state:
 8. Run Tracklab again.
 
 
-## Citation
-If you use this repository for your research or wish to refer to our contributions, please use the following BibTeX entries:
+## 🖋️ Citation
+If you use this repository for your research or wish to refer to our contributions, please use the following BibTeX entry:
 
 [TrackLab](https://github.com/TrackingLaboratory/tracklab):
 ```
