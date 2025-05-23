@@ -89,7 +89,8 @@ conda activate tracklab
 pip install tracklab
 ```
 
-> [!NOTE] Make sure your system’s GPU and CUDA drivers are compatible with pytorch-cuda=12.4. Refer to the [PyTorch compatibility matrix](https://pytorch.org/get-started/previous-versions/) and change if needed.
+> [!NOTE]
+> Make sure your system’s GPU and CUDA drivers are compatible with pytorch-cuda=12.4. Refer to the [PyTorch compatibility matrix](https://pytorch.org/get-started/previous-versions/) and change if needed.
 
 To update later:
 ```bash
