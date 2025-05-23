@@ -3,7 +3,7 @@ _recursive_: false
 
 model:
   _target_: rtmlib.YOLOX
-  onnx_model: "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/yolox_m_8xb8-300e_humanart-c2c7a14a.zip"
+  onnx_model: "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/yolox_l_8xb8-300e_humanart-ce1d7a62.zip"
   model_input_size: [640, 640]
 
 # ----------- YOLOX -------------
