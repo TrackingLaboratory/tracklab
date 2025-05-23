@@ -1,7 +1,6 @@
 ![TrackLab](https://raw.githubusercontent.com/TrackingLaboratory/tracklab/refs/heads/main/docs/tracklab_banner.png)
 
-TrackLab is an easy-to-use modular framework for multi-object pose/segmentation/bbox tracking that supports many tracking datasets and evaluation metrics.
-
+TrackLab is an easy-to-use modular framework for Multi-Object pose/bbox Tracking that supports many methods, datasets and evaluation metrics.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/TrackingLaboratory/tracklab/refs/heads/main/docs/assets/gifs/PoseTrack21_016236.gif" width="400" />
@@ -11,12 +10,19 @@ TrackLab is an easy-to-use modular framework for multi-object pose/segmentation/
 ## News
 - [2024.02.05] Public release
 - [2025.05.02] [Released CAMELTrack: Context-Aware Multi-cue ExpLoitation for Online Multi-Object Tracking](https://github.com/TrackingLaboratory/CAMELTrack)
+- [2024.02.05] 🎉 Public release.
+- [2025.05.02] 🎊 Released [CAMELTrack: Context-Aware Multi-cue ExpLoitation for Online Multi-Object Tracking](https://github.com/TrackingLaboratory/CAMELTrack).
+- [2025.05.22] Many more detectors (`YOLO`, `YOLOX`, `RTMDet`, `RTDetr`) and pose estimators (`YOLO-pose`, `RTMO`, `VITPose`, `RTMPose`).
 
 ## Upcoming
 - [x] Public release of the codebase
 - [x] Add support for more datasets (DanceTrack, MOTChallenge, SportsMOT, ...)
 - [ ] Add many more SOTA tracking methods and object detectors
 - [ ] Improve documentation and add more tutorials
+- [x] Public release of the codebase.
+- [x] Add support for more datasets (`DanceTrack`, `MOTChallenge`, `SportsMOT`, `SoccerNet`, ...).
+- [x] Add many more object detectors and pose estimators.
+- [ ] Improve documentation and add more tutorials.
 
 #### 🤝 How You Can Help
 The TrackLab library is in its early stages, and we're eager to evolve it into a robust, mature tracking framework that can benefit the wider community.
@@ -29,24 +35,28 @@ Every component of TrackLab, such as detector, tracker, re-identifier, etc, is c
 TrackLab is designed to be easily extended to support new methods.
 
 TrackLab is composed of multiple modules:
-1. A detector (YOLOv8, ...)
-2. A re-identification model (BPBReID, ...)
-3. A tracker (DeepSORT, StrongSORT, OC-SORT, ...)
+1. Detectors (`YOLO`, `YOLOX`, `RTMDet`, `RTDETR`, ...).
+2. Pose Estimators (`RTMPose`, `RTMO`, `VITPose`, `YOLOPose`, ...).
+3. Re-identification models (`KPReID`, `BPBReID`, ...).
+4. Trackers (`DeepSORT`, `StrongSORT`, `OC-SORT`, ...).
 
 Here's what makes TrackLab different from other existing tracking frameworks:
-- Fully modular framework to quickly integrate any detection/reid/tracking method or develop your own
-- It allows supervised training of the ReID model on the tracking training set
-- It provides a fully configurable visualization tool with the possibility to display any dev/debug information
-- It supports online and offline tracking methods (compared to MMTracking, AlphaPose, LightTrack and other libs who only support online tracking)
+- Fully modular framework to quickly integrate any detection/reid/tracking method or develop your own.
+- It allows supervised training of the ReID model on the tracking training set.
+- It provides a fully configurable visualization tool with the possibility to display any dev/debug information.
+- It supports online and offline tracking methods (compared to `MMTracking`, `AlphaPose`, `LightTrack` and other libs who only support online tracking).
 - It supports many tracking-related tasks:
-  - multi-object (bbox) tracking
-  - multi-person pose tracking
-  - multi-person pose estimation
-  - person re-identification
+  - Multi-object detection.
+  - Multi-object (bbox) tracking.
+  - Multi-person pose tracking.
+  - Multi-person pose estimation.
+  - Person re-identification.
 
 ## Documentation
 You can find the documentation at [https://trackinglaboratory.github.io/tracklab/](https://trackinglaboratory.github.io/tracklab/) or in the docs/ folder. After installing, you can run `make html` inside this folder
 to get an html version of the documentation.
+You can find the documentation at [https://trackinglaboratory.github.io/tracklab/](https://trackinglaboratory.github.io/tracklab/) or in the docs/ folder. 
+After installing, you can run `make html` inside this folder to get an HTML version of the documentation.
 
 ## Installation guide[^1]
 
@@ -150,7 +160,7 @@ You will need to set up some variables before running the code :
 1. In configs/config.yaml :
    - `data_dir`: the directory where you will store the different datasets (must be an absolute path !)
    - All the parameters under the "Machine configuration" header
-2. In the corresponding modules (tracklab/configs/modules/.../....yaml) :
+2. In the corresponding modules (`tracklab/configs/modules/.../....yaml`) :
    - The `batch_size`
    - You might want to change the model hyperparameters
 
@@ -161,9 +171,9 @@ tracklab
 This command will create a directory called `outputs` which will have a `${experiment_name}/yyyy-mm-dd/hh-mm-ss/` structure.
 All the output files (logs, models, visualization, ...) from a run will be put inside this directory.
 
-If you want to override some configuration parameters, e.g. to use another detection module or dataset, you can do so by modifying the corresponding parameters directly in the .yaml files under configs/.
+If you want to override some configuration parameters, e.g. to use another detection module or dataset, you can do so by modifying the corresponding parameters directly in the .yaml files under `configs/`.
 
-All parameters are also configurable from the command-line, e.g. : (more info on Hydra's override grammar [here](https://hydra.cc/docs/advanced/override_grammar/basic/))
+All parameters are also configurable from the command-line, e.g.: (more info on Hydra's override grammar [here](https://hydra.cc/docs/advanced/override_grammar/basic/))
 ```bash
 tracklab 'data_dir=${project_dir}/data' 'model_dir=${project_dir}/models' modules/reid=bpbreid pipeline=[bbox_detector,reid,track]
 ```
@@ -182,9 +192,9 @@ shows all the possible options you can modify.
 
 ## Framework overview
 ### Hydra Configuration
-TODO Describe TrackLab + Hydra configuration system 
+TODO: Describe TrackLab + Hydra configuration system.
 
-### Architecture Overview
+### Architecture
 Here is an overview of the important TrackLab classes:
 - **[TrackingDataset](tracklab/datastruct/tracking_dataset.py)**: Abstract class to be instantiated when adding a new dataset. The `TrackingDataset` contains one `TrackingSet` for each split of the dataset (train, val, test, etc).
   - Example: [SoccerNetMOT](tracklab/wrappers/dataset/soccernet/soccernet_mot.py). The [SoccerNet Tracking](https://github.com/SoccerNet/sn-tracking) dataset.
@@ -197,22 +207,22 @@ Here is an overview of the important TrackLab classes:
 - **[TrackingEngine](tracklab/engine/engine.py)**: This class is responsible for executing the entire tracking pipeline on the dataset. It loops over all videos of the dataset and calls all modules defined in the pipeline sequentially. The exact execution order (e.g. online/offline/...) is defined by the TrackingEngine subclass.
   - Example: **[OfflineTrackingEngine](tracklab/engine/offline.py)**. The offline tracking engine performs tracking one module after another to speed up inference by leveraging large batch sizes and maximum GPU utilization. For instance, YoloV8 is first applied on an entire video by batching multiple images, then the re-identification model is applied on all detections in the video, etc. 
 - **[Pipeline](tracklab/pipeline/module.py)**: Define the order in which modules are executed by the TrackingEngine. If a tracker_state is loaded from disk, modules that should not be executed again must be removed.
-  - Example: [bbox_detector, reid, track]
+  - Example: `[bbox_detector, reid, track]`.
 - **[VideoLevelModule](tracklab/pipeline/videolevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on all frames simultaneously. Can be used to implement offline tracking strategies, tracklet level voting mechanisms, etc. 
-  - Example: [VotingTrackletJerseyNumber](tracklab/wrappers/jn_detector/voting_tracklet_jn_api.py). To perform majority voting within each tracklet and compute a consistent tracklet level attribute (an attribute can be, for instance, the result of a detection level classification task).
+  - Example: [VotingTrackletJerseyNumber](tracklab/wrappers/tracklet_agg/majority_vote_api.py). To perform majority voting within each tracklet and compute a consistent tracklet level attribute (an attribute can be, for instance, the result of a detection level classification task).
 - **[ImageLevelModule](tracklab/pipeline/imagelevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on a single frame. Can be used to implement online tracking strategies, pose/segmentation/bbox detectors, etc.
-  - Example 1: [YOLOv8](tracklab/wrappers/bbox_detector/yolov8_api.py). To perform object detection on each image with [YOLOv8](https://github.com/ultralytics/ultralytics). Creates a new row (i.e. detection) within `detections_pred`.
+  - Example 1: [YOLOv11](tracklab/wrappers/bbox_detector/yolo_ultralytics_api.py). To perform object detection on each image with [YOLOv11](https://github.com/ultralytics/ultralytics). Creates a new row (i.e. detection) within `detections_pred`.
   - Example 2: [StrongSORT](tracklab/wrappers/track/strong_sort_api.py). To perform online tracking with [StrongSORT](https://github.com/dyhBUPT/StrongSORT). Creates a new "track_id" column for each detection within `detections_pred`. 
 - **[DetectionLevelModule](tracklab/pipeline/detectionlevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on a single detection. Can be used to implement pose estimation for top-down strategies, re-identification, attributes recognition, etc. 
-  - Example 1: [EasyOCR](tracklab/wrappers/jn_detector/easyocr_api.py). To perform jersey number recognition on each detection with [EasyOCR](https://github.com/JaidedAI/EasyOCR). Creates a new "jersey_number" column within `detections_pred`.
+  - Example 1: [RTMPose](tracklab/wrappers/pose_estimator/rtmlib_api.py). To perform pose estimation on each detection with [RTMPose](https://github.com/Tau-J/rtmlib).
   - Example 2: [BPBReId](tracklab/wrappers/reid/bpbreid_api.py). To perform person re-identification on each detection with [BPBReID](https://github.com/VlSomers/bpbreid). Creates a new "embedding" column within `detections_pred`.
 - **[Callback](tracklab/callbacks/callback.py)**: Implement this class to add a callback that is triggered at a specific point during the tracking process, e.g. when dataset/video/module processing starts/ends.
-  - Example: [VisualizationEngine](tracklab/core/visualization_engine.py). Implements "on_video_loop_end" to save each video tracking results as a .mp4 or a list of .jpg. 
-- **[Evaluator](tracklab/core/evaluator.py)**: Implement this class to add a new evaluation metric, such as MOTA, HOTA, or any other (non-tracking related) metrics. 
+  - Example: [VisualizationEngine](tracklab/visualization/visualization_engine.py). Implements `on_video_loop_end` to save each video tracking results as a .mp4 or a list of .jpg. 
+- **[Evaluator](tracklab/pipeline/evaluator.py)**: Implement this class to add a new evaluation metric, such as MOTA, HOTA, or any other (non-tracking related) metrics. 
   - Example: [TrackEvalEvaluator](tracklab/wrappers/eval/trackeval_evaluator.py). Evaluate the performance of a tracker using the official [TrackEval library](https://github.com/JonathonLuiten/TrackEval).
 
-### Execution Flow Overview
-Here is an overview of what happen when you run TrackLab:
+### Execution Flow
+Here is an overview of what happens when you run TrackLab:
 [tracklab/main.py](tracklab/main.py) is the main entry point and receives the complete Hydra's configuration as input. 
 [tracklab/main.py](tracklab/main.py) is usually called via the following command through the root [main.py](main.py) file: `python main.py`.
 Within [tracklab/main.py](tracklab/main.py), all modules are first instantiated.
@@ -222,7 +232,7 @@ For each video in the evaluated set, the TrackingEngine calls the "run" method o
 The TrackingEngine is responsible for batching the input data (e.g. images, detections, ...) before calling the "run" method of each module with the correct input data.
 After a module has been called with a batch of input data, the TrackingEngine then updates the TrackerState object with the module outputs.
 At the end of the tracking process, the TrackerState object contains the tracking results of each video.
-Visualizations (e.g. .mp4 results videos) are generated during the TrackingEngine.run() call, after a video has been tracked and before the next video is processed.
+Visualizations (e.g. `.mp4` results videos) are generated during the TrackingEngine.run() call, after a video has been tracked and before the next video is processed.
 Finally, evaluation is performed via the evaluator.run() function once the TrackingEngine.run() call is completed, i.e. after all videos have been processed.
 
 ## Tutorials
