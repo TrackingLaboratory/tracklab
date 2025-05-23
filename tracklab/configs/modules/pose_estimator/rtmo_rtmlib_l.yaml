@@ -1,0 +1,15 @@
+_target_: tracklab.wrappers.pose_estimator.rtmlib_api.RTMO
+_recursive_: false
+
+min_confidence: 0.4
+model:
+  _target_: rtmlib.RTMO
+  onnx_model: "https://download.openmmlab.com/mmpose/v1/projects/rtmo/onnx_sdk/rtmo-l_16xb16-600e_body7-640x640-b37118ce_20231211.zip"
+  model_input_size: [640, 640]
+
+# ----------- RTMO -------------
+# |                                                                     ONNX Model                                                   | Input Size | AP (COCO) |      Description      |
+# | :------------------------------------------------------------------------------------------------------------------------------: | :--------: | :-------: | :-------------------: |
+# | [RTMO-s](https://download.openmmlab.com/mmpose/v1/projects/rtmo/onnx_sdk/rtmo-s_8xb32-600e_body7-640x640-dac2bf74_20231211.zip)  |  640x640   |   68.6    | trained on 7 datasets |
+# | [RTMO-m](https://download.openmmlab.com/mmpose/v1/projects/rtmo/onnx_sdk/rtmo-m_16xb16-600e_body7-640x640-39e78cc4_20231211.zip) |  640x640   |   72.6    | trained on 7 datasets |
+# | [RTMO-l](https://download.openmmlab.com/mmpose/v1/projects/rtmo/onnx_sdk/rtmo-l_16xb16-600e_body7-640x640-b37118ce_20231211.zip) |  640x640   |   74.8    | trained on 7 datasets |
