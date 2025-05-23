@@ -1,0 +1,12 @@
+_target_: tracklab.wrappers.bbox_detector.rtmlib_api.RTMLibDetector
+_recursive_: false
+
+model:
+  _target_: rtmlib.RTMDet
+  onnx_model: "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/rtmdet_nano_8xb32-300e_hand-267f9c8f.zip"
+  model_input_size: [320, 320]
+
+# ----------- RTMDET -------------
+#|                                                          ONNX Model                                                           | Input Size | AP (person) |       Description        |
+#| :---------------------------------------------------------------------------------------------------------------------------: | :--------: | :---------: | :----------------------: |
+#| [RTMDet](https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/rtmdet_nano_8xb32-300e_hand-267f9c8f.zip)       |  320x320   |      -      |              -           |
