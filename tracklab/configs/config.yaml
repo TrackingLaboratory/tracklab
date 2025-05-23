@@ -7,7 +7,7 @@ defaults:
   - dataset: video
   - eval: trackeval
   - engine: offline
-  - visualization: tracking
+  - visualization: bbox
   - modules/bbox_detector: yolo_ultralytics
   - modules/pose_estimator: yolo_ultralytics-pose
   - modules/reid: kpr
