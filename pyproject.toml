@@ -43,16 +43,9 @@ dependencies = [
     "scikit-image",
 ]
 
-yolox = [
-    "pixeltable-yolox"
-]
-
-
 [dependency-groups]
 dev = [
-    "tracklab[transformers,yolox]",
-    "twine>=6.1.0",
-    "huggingface_hub[cli]",
+    "tracklab",
     "sphinx",
     "sphinx_rtd_theme",
     "myst-parser",
@@ -67,29 +60,12 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = [".", "plugins/track"]
-include = ["tracklab*", "bot_sort*", "bpbreid_strong_sort*", "byte_track*", "deep_oc_sort*", "oc_sort*", "strong_sort*", "hydra_plugins.*"]
+include = ["tracklab*", "bot_sort*", "bpbreid_strong_sort*", "byte_track*",
+    "deep_oc_sort*", "oc_sort*", "strong_sort*", "hydra_plugins.*"]
 exclude = []
 
 [tool.setuptools.package-data]
 "*" = ["*.txt", "*.rst", "*.yaml"]
 
 [tool.uv]
-# Ensure that the setuptools v60.0.0 is used whenever a package has a build dependency
-# on setuptools.
 no-build-isolation-package = ["chumpy"]
-#find-links = ["https://download.openmmlab.com/mmcv/dist/cu121/torch2.1/index.html"]
-
-#[[tool.uv.index]]
-#name = "pytorch"
-#url = "https://download.pytorch.org/whl/cu121"
-#explicit = true
-#
-#[tool.uv.sources]
-#torch = { index = "pytorch" }
-#torchvision = {index = "pytorch"}
-#conflicts = [
-#    [
-#      { extra = "openmmlab" },
-#      { extra = "yolox" },
-#    ],
-#]
