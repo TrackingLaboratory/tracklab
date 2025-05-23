@@ -1,0 +1,7 @@
+_target_: tracklab.wrappers.pose_estimator.transformers_api.VITPose
+batch_size: 4
+model_name: vitpose-plus-huge
+
+# available models at https://huggingface.co/collections/usyd-community/vitpose-677fcfd0a0b2b5c8f79c4335
+# vitpose-plus-small / vitpose-plus-base / vitpose-plus-large / vitpose-plus-huge
+# vitpose-base-simple / vitpose-base / vitpose-base-coco-aic-mpii
