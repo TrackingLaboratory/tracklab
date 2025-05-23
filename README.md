@@ -268,33 +268,3 @@ If you use this repository for your research or wish to refer to our contributio
 	howpublished = {\url{https://github.com/TrackingLaboratory/tracklab}}
 }
 ```
-
-[SoccerNet Game State Reconstruction](https://arxiv.org/abs/2404.11335):
-```
-@inproceedings{Somers2024SoccerNetGameState,
-        title = {{SoccerNet} Game State Reconstruction: End-to-End Athlete Tracking and Identification on a Minimap},
-        author = {Somers, Vladimir and Joos, Victor and Giancola, Silvio and Cioppa, Anthony and Ghasemzadeh, Seyed Abolfazl and Magera, Floriane and Standaert, Baptiste and Mansourian, Amir Mohammad and Zhou, Xin and Kasaei, Shohreh and Ghanem, Bernard and Alahi, Alexandre and Van Droogenbroeck, Marc and De Vleeschouwer, Christophe},
-        booktitle = cvsports,
-        month = Jun,
-        year = {2024},
-        address = city-seattle,
-}
-```
-
-[BPBreID](https://arxiv.org/abs/2211.03679):
-```
-@article{bpbreid,
-    archivePrefix = {arXiv},
-    arxivId = {2211.03679},
-    author = {Somers, Vladimir and {De Vleeschouwer}, Christophe and Alahi, Alexandre},
-    doi = {10.48550/arxiv.2211.03679},
-    eprint = {2211.03679},
-    file = {:Users/vladimirsomers/Library/CloudStorage/OneDrive-SportradarAG/PhD/Scientific Literature/Mendeley/Somers, De Vleeschouwer, Alahi_2023_Body Part-Based Representation Learning for Occluded Person Re-Identification.pdf:pdf},
-    isbn = {2211.03679v1},
-    journal = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV23)},
-    month = {nov},
-    title = {{Body Part-Based Representation Learning for Occluded Person Re-Identification}},
-    url = {https://arxiv.org/abs/2211.03679v1 http://arxiv.org/abs/2211.03679},
-    year = {2023}
-}
-```
