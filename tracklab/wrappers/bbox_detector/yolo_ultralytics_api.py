@@ -1,12 +1,13 @@
 import logging
-import os
 from typing import Any
 
-import pandas as pd
 import torch
+import pandas as pd
+
+from ultralytics import YOLO
+
 from tracklab.pipeline.imagelevel_module import ImageLevelModule
 from tracklab.utils.coordinates import ltrb_to_ltwh
-from ultralytics import YOLO
 
 log = logging.getLogger(__name__)
 
