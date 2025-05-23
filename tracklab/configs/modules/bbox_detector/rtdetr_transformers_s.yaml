@@ -1,0 +1,10 @@
+_target_: tracklab.wrappers.bbox_detector.transformers_api.RTDetr
+batch_size: 16
+min_confidence: 0.4
+model_name: rtdetr_r18vd_coco_o365
+
+# available models at https://huggingface.co/PekingU?sort_models=downloads#models
+# rtdetr_r18vd / rtdetr_v2_r18vd / rtdetr_r18vd_coco_o365
+# rtdetr_r34vd
+# rtdetr_r50vd / rtdetr_v2_r50vd / rtdetr_r50vd_coco_o365
+# rtdetr_r101vd / rtdetr_v2_r101vd / rtdetr_r101vd_coco_o365
