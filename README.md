@@ -50,97 +50,73 @@ Here's what makes TrackLab different from other existing tracking frameworks:
 You can find the documentation at [https://trackinglaboratory.github.io/tracklab/](https://trackinglaboratory.github.io/tracklab/) or in the docs/ folder. 
 After installing, you can run `make html` inside this folder to get an HTML version of the documentation.
 
-## Installation guide[^1]
+## ⚙️ Installation Guide
 
-[^1]: Tested on `conda 22.11.1`, `Python 3.10.8`, `pip 22.3.1`, `g++ 11.3.0` and `gcc 11.3.0`
+### 🛠️ [Recommended] Using uv
 
-### Install using uv (recommended)
+Follow the [instructions to install uv](https://docs.astral.sh/uv/getting-started/installation/). 
+`uv` is a fast Python package and virtual environment manager that simplifies project setup and dependency management.
 
-[Install uv](https://docs.astral.sh/uv/getting-started/installation/).
-
-If you're creating a new project or using tracklab in an existing project, you can initialize a uv project with :
-
-```bash
-uv init
-```
-
-Then you can add tracklab : 
-
-```bash
-uv add tracklab
-```
-
-If you only want to use the virtual environment created by uv, you can use the following commands : 
+If you just want to use TrackLab directly:
 
 ```bash
 uv venv --python 3.12
 uv pip install tracklab
-```
-
-In both cases, you will then be able to run tracklab using the following command:
-```bash
 uv run tracklab
 ```
 
-To update & run : 
+If you’re integrating TrackLab into a project:
+
+```bash
+uv init
+uv add tracklab
+uv run tracklab
+```
+
+To update and run:
 ```bash
 uv run -U tracklab
 ```
 
-### Install using conda
+### 🐍 Using conda
 
-[Install conda](https://www.anaconda.com/docs/getting-started/miniconda/main).
+Follow the [instructions to install conda](https://www.anaconda.com/docs/getting-started/miniconda/main).
 
-Create a new virtual environment with conda, then install tracklab with pip : 
+Create a conda environment with the required dependencies and install TrackLab: 
 ```bash
-conda create -n tracklab pip python=3.10 pytorch==1.13.1 torchvision==0.14.1 pytorch-cuda=11.7 -c pytorch -c nvidia -y
+conda create -n tracklab pip python=3.12 pytorch==2.6 torchvision==0.21 pytorch-cuda=12.4 -c pytorch -c nvidia -y
 conda activate tracklab
 pip install tracklab
 ```
 
-You might need to change your torch installation depending on your hardware. Please check on 
-[Pytorch website](https://pytorch.org/get-started/previous-versions/) to find the right version for you.
+> [!NOTE] Make sure your system’s GPU and CUDA drivers are compatible with pytorch-cuda=12.4. Refer to the [PyTorch compatibility matrix](https://pytorch.org/get-started/previous-versions/) and change if needed.
 
-Update tracklab with : 
-
+To update later:
 ```bash
 pip install -U tracklab
 ```
 
-### Install additional dependencies
-We support multiple extra packages: openmmlabs, transformers, yolox, that you can install with the following commands :
+### 🧩 Manual Installation
 
-#### Transformers & YOLOX
-```bash
-(uv) pip install tracklab[transformers,yolox]
-```
-
-### Manual installation
-
-[Follow the above instructions to install uv](https://docs.astral.sh/uv/getting-started/installation/). Then clone the tracklab repository : 
-
+You can install TrackLab directly from source using `uv`:
 ```bash
 git clone https://github.com/TrackingLaboratory/tracklab.git
 cd tracklab
-```
-
-Run tracklab with : 
-
-```bash
 uv run tracklab
 ```
-
-Since we're using uv under the hood, uv will automatically create a virtual environment for you, and
+Since we're using `uv` under the hood, `uv` will automatically create a virtual environment for you, and
 update the dependencies as you change them. You can also choose to install using conda, you'll then have
 to run the following when inside a virtual environment:
-
 ```bash
 pip install -e .
 ```
 
-You might need to redo this if you update the repository, and some dependencies changed.
+### 📚 External Dependencies
 
-### External dependencies
+Some optional advanced modules and datasets require additional setup :
+- For [MMDet](https://github.com/open-mmlab/mmdetection), [MMPose](https://github.com/open-mmlab/mmpose), [OpenPifPaf](https://github.com/openpifpaf/openpifpaf): please refer to their respective documentation for installation instructions.
+- For [BPBReID](https://github.com/VlSomers/bpbreid) and [KPReID](https://github.com/VlSomers/keypoint_promptable_reidentification): install using `[uv] pip install "torchreid@git+https://github.com/victorjoos/keypoint_promptable_reidentification"`.
+- Get the **SoccerNet Tracking** dataset [here](https://github.com/SoccerNet/sn-tracking), rename the root folder as `SoccerNetMOT` and put it under the global dataset directory (specified under the `data_dir` config as explained below). Otherwise, you can modify the `dataset_path` config in [soccernet_mot.yaml](tracklab/configs/dataset/soccernet_mot.yaml) with your custom SoccerNet dataset directory.
 
 ### 🔨 Setup
 
