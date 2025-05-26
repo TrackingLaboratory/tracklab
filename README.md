@@ -173,23 +173,23 @@ Here is an overview of the important TrackLab classes:
   1. `video_metadatas`: contains one row of information per video (e.g. fps, width, height, etc).
   2. `image_metadatas`: contains one row of information per image (e.g. frame_id, video_id, etc).
   3. `detections_gt`: contains one row of information per ground truth detection (e.g. frame_id, video_id, bbox_ltwh, track_id, etc).
-- **[TrackerState](tracklab/datastruct/tracker_state.py)**: Core class that contains all the information about the current state of the tracker. All modules in the tracking pipeline update the tracker_state sequentially. The tracker_state contains one key dataframe:
+- **[TrackerState](tracklab/datastruct/tracker_state.py)**: Core class that contains all the information about the current state of the tracker. All modules in the tracking pipeline update the `tracker_state` sequentially. The `tracker_state` contains one key dataframe:
   1. `detections_pred`: contains one row of information per predicted detection (e.g. frame_id, video_id, bbox_ltwh, track_id, reid embedding, etc).
-- **[TrackingEngine](tracklab/engine/engine.py)**: This class is responsible for executing the entire tracking pipeline on the dataset. It loops over all videos of the dataset and calls all modules defined in the pipeline sequentially. The exact execution order (e.g. online/offline/...) is defined by the TrackingEngine subclass.
-  - Example: **[OfflineTrackingEngine](tracklab/engine/offline.py)**. The offline tracking engine performs tracking one module after another to speed up inference by leveraging large batch sizes and maximum GPU utilization. For instance, YoloV8 is first applied on an entire video by batching multiple images, then the re-identification model is applied on all detections in the video, etc. 
-- **[Pipeline](tracklab/pipeline/module.py)**: Define the order in which modules are executed by the TrackingEngine. If a tracker_state is loaded from disk, modules that should not be executed again must be removed.
+- **[TrackingEngine](tracklab/engine/engine.py)**: This class is responsible for executing the entire tracking pipeline on the dataset. It loops over all videos of the dataset and calls all modules defined in the pipeline sequentially. The exact execution order (e.g. online/offline/...) is defined by the `TrackingEngine` subclass.
+  - Example: **[OfflineTrackingEngine](tracklab/engine/offline.py)**. The offline tracking engine performs tracking one module after another to speed up inference by leveraging large batch sizes and maximum GPU utilization. For instance, `YoloV11` is first applied on an entire video by batching multiple images, then the re-identification model is applied on all detections in the video, etc. 
+- **[Pipeline](tracklab/pipeline/module.py)**: Define the order in which modules are executed by the `TrackingEngine`. If a `tracker_state` is loaded from disk, modules that should not be executed again must be removed.
   - Example: `[bbox_detector, reid, track]`.
 - **[VideoLevelModule](tracklab/pipeline/videolevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on all frames simultaneously. Can be used to implement offline tracking strategies, tracklet level voting mechanisms, etc. 
   - Example: [VotingTrackletJerseyNumber](tracklab/wrappers/tracklet_agg/majority_vote_api.py). To perform majority voting within each tracklet and compute a consistent tracklet level attribute (an attribute can be, for instance, the result of a detection level classification task).
 - **[ImageLevelModule](tracklab/pipeline/imagelevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on a single frame. Can be used to implement online tracking strategies, pose/segmentation/bbox detectors, etc.
   - Example 1: [YOLOv11](tracklab/wrappers/bbox_detector/yolo_ultralytics_api.py). To perform object detection on each image with [YOLOv11](https://github.com/ultralytics/ultralytics). Creates a new row (i.e. detection) within `detections_pred`.
-  - Example 2: [StrongSORT](tracklab/wrappers/track/strong_sort_api.py). To perform online tracking with [StrongSORT](https://github.com/dyhBUPT/StrongSORT). Creates a new "track_id" column for each detection within `detections_pred`. 
+  - Example 2: [StrongSORT](tracklab/wrappers/track/strong_sort_api.py). To perform online tracking with [StrongSORT](https://github.com/dyhBUPT/StrongSORT). Creates a new `track_id` column for each detection within `detections_pred`. 
 - **[DetectionLevelModule](tracklab/pipeline/detectionlevel_module.py)**: Abstract class to be instantiated when adding a new tracking module that operates on a single detection. Can be used to implement pose estimation for top-down strategies, re-identification, attributes recognition, etc. 
   - Example 1: [RTMPose](tracklab/wrappers/pose_estimator/rtmlib_api.py). To perform pose estimation on each detection with [RTMPose](https://github.com/Tau-J/rtmlib).
-  - Example 2: [BPBReId](tracklab/wrappers/reid/bpbreid_api.py). To perform person re-identification on each detection with [BPBReID](https://github.com/VlSomers/bpbreid). Creates a new "embedding" column within `detections_pred`.
+  - Example 2: [BPBReId](tracklab/wrappers/reid/bpbreid_api.py). To perform person re-identification on each detection with [BPBReID](https://github.com/VlSomers/bpbreid). Creates a new `embedding` column within `detections_pred`.
 - **[Callback](tracklab/callbacks/callback.py)**: Implement this class to add a callback that is triggered at a specific point during the tracking process, e.g. when dataset/video/module processing starts/ends.
   - Example: [VisualizationEngine](tracklab/visualization/visualization_engine.py). Implements `on_video_loop_end` to save each video tracking results as a .mp4 or a list of .jpg. 
-- **[Evaluator](tracklab/pipeline/evaluator.py)**: Implement this class to add a new evaluation metric, such as MOTA, HOTA, or any other (non-tracking related) metrics. 
+- **[Evaluator](tracklab/pipeline/evaluator.py)**: Implement this class to add a new evaluation metric, such as MOTA, HOTA, IDF1 or any other (non-tracking related) metrics. 
   - Example: [TrackEvalEvaluator](tracklab/wrappers/eval/trackeval_evaluator.py). Evaluate the performance of a tracker using the official [TrackEval library](https://github.com/JonathonLuiten/TrackEval).
 
 ### Execution Flow
@@ -198,13 +198,13 @@ Here is an overview of what happens when you run TrackLab:
 [tracklab/main.py](tracklab/main.py) is usually called via the following command through the root [main.py](main.py) file: `python main.py`.
 Within [tracklab/main.py](tracklab/main.py), all modules are first instantiated.
 Then training any tracking module (e.g. the re-identification model) on the tracking training set is supported by calling the "train" method of the corresponding module.
-Tracking is then performed on the validation or test set (depending on the configuration) via the TrackingEngine.run() function.
-For each video in the evaluated set, the TrackingEngine calls the "run" method of each module (e.g. detector, re-identifier, tracker, ...) sequentially.
-The TrackingEngine is responsible for batching the input data (e.g. images, detections, ...) before calling the "run" method of each module with the correct input data.
-After a module has been called with a batch of input data, the TrackingEngine then updates the TrackerState object with the module outputs.
-At the end of the tracking process, the TrackerState object contains the tracking results of each video.
-Visualizations (e.g. `.mp4` results videos) are generated during the TrackingEngine.run() call, after a video has been tracked and before the next video is processed.
-Finally, evaluation is performed via the evaluator.run() function once the TrackingEngine.run() call is completed, i.e. after all videos have been processed.
+Tracking is then performed on the validation or test set (depending on the configuration) via the `TrackingEngine.run()` function.
+For each video in the evaluated set, the `TrackingEngine` calls the "run" method of each module (e.g. detector, re-identifier, tracker, ...) sequentially.
+The `TrackingEngine` is responsible for batching the input data (e.g. images, detections, ...) before calling the "run" method of each module with the correct input data.
+After a module has been called with a batch of input data, the `TrackingEngine` then updates the `TrackerState` object with the module outputs.
+At the end of the tracking process, the `TrackerState` object contains the tracking results of each video.
+Visualizations (e.g. `.mp4` results videos) are generated during the `TrackingEngine.run()` call, after a video has been tracked and before the next video is processed.
+Finally, evaluation is performed via the `evaluator.run()` function once the `TrackingEngine.run()` call is completed, i.e. after all videos have been processed.
 
 ## 🧐 Tutorials
 ### Dump and load the tracker state to save computation time
@@ -212,25 +212,21 @@ When developing a new module, it is often useful to dump the tracker state to di
 Here is how to do it:
 1. First, save the tracker state by using the corresponding configuration in the config.yaml file:
 ```yaml
-defaults:
-    - state: save
 # ...
 state:
-  save_file: "states/${experiment_name}.pklz"  # 'null' to disable saving. This is the save path for the tracker_state object that contains all modules outputs (bboxes, reid embeddings, jersey numbers, roles, teams, etc)
+  save_file: "states/${experiment_name}.pklz"  # 'null' to disable saving. This is the save path for the tracker_state object that contains all modules outputs (bboxes, reid embeddings, jersey numbers, roles, teams, etc.)
   load_file: null
 ```
 2. Run Tracklab. The tracker state will be saved in the experiment folder as a .pklz file.
-3. Then modify the load_file key in "config.yaml" to specify the path to the tracker state file that has just been created  (`load_file: "..."` config).
+3. Then modify the `load_file` key in "config.yaml" to specify the path to the tracker state file that has just been created  (`load_file: "..."` config).
 5. In config.yaml, remove from the pipeline all modules that should not be executed again. For instance, if you want to use the detections and reid embeddings from the saved tracker state, remove the "bbox_detector" and "reid" modules from the pipeline. Use `pipeline: []` if no module should be run again.
 ```yaml
-defaults:
-    - state: save
 # ...
 pipeline:
   - track
 # ...
 state:
-  save_file: null  # 'null' to disable saving. This is the save path for the tracker_state object that contains all modules outputs (bboxes, reid embeddings, jersey numbers, roles, teams, etc)
+  save_file: null  # 'null' to disable saving. This is the save path for the tracker_state object that contains all modules outputs (bboxes, reid embeddings, jersey numbers, roles, teams, etc.)
   load_file: "path/to/tracker_state.pklz"
 ```
 8. Run Tracklab again.
