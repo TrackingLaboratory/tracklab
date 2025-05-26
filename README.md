@@ -3,8 +3,13 @@
 TrackLab is an easy-to-use modular framework for Multi-Object pose/bbox Tracking that supports many methods, datasets and evaluation metrics.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/TrackingLaboratory/tracklab/refs/heads/main/docs/assets/gifs/PoseTrack21_016236.gif" width="400" />
-  <img src="https://raw.githubusercontent.com/TrackingLaboratory/tracklab/refs/heads/main/docs/assets/gifs/PoseTrack21_008827.gif" width="400" /> 
+  <img src="docs/assets/gifs/dancetrack0080.gif" width="30%" style="margin:1%;" alt="DanceTrack">
+  <img src="docs/assets/gifs/SportsMOT-v_gQNyhv8y0QY_c003.gif" width="30%" style="margin:1%;" alt="SportsMOT">
+  <img src="docs/assets/gifs/MOT17-09.gif" width="30%" style="margin:1%;" alt="MOT17">
+  <br>
+  <img src="docs/assets/gifs/SportsMOT-v_4LXTUim5anY_c002.gif" width="30%" style="margin:1%;" alt="SportsMOT">
+  <img src="docs/assets/gifs/BEE24-13.gif" width="30%" style="margin:1%;" alt="BEE24">
+  <img src="docs/assets/gifs/SportsMOT-v_CW0mQbgYIF4_c004.gif" width="30%" style="margin:1%;" alt="SportsMOT">
 </p>
 
 ## 🗞️ News
