@@ -1,0 +1,7 @@
+_target_: tracklab.wrappers.bbox_detector.mmdetection_api.MMDetection
+
+config_name: "faster-rcnn_r101-caffe_fpn_1x_coco"  # or any MMDet config name
+path_to_checkpoint: "${model_dir}/bbox_detector/faster-rcnn_r101-caffe_fpn_1x_coco.pth"
+device: ${device}
+batch_size: 8
+min_confidence: 0.5

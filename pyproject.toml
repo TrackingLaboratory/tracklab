@@ -69,3 +69,4 @@ exclude = []
 
 [tool.uv]
 no-build-isolation-package = ["chumpy"]
+reinstall-package = ["tracklab"]
