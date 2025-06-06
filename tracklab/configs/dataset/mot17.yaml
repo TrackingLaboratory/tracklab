@@ -7,6 +7,12 @@ dataset_path: ${data_dir}/MOT17
 eval_set: "train"
 public_dets_subpath: "det/yolox_dets.txt"  # det.txt for public and yolox.txt for private
 
+# nframes: 100  # Number of frames to process; set to -1 or leave unset to process all frames
+# nvid: -1  # Number of videos to process; set to -1 or leave unset to process all videos
+# vids_dict:  # Video names for each split (e.g., train, val, test)
+#   train: []  # Use all videos if left empty
+#   val: []  # Use all videos if left empty
+
 track_eval:
   dataset_class: MotChallenge2DBox
   BENCHMARK: "MOT17"

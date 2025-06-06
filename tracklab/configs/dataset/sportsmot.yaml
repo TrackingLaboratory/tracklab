@@ -6,6 +6,12 @@ _target_: tracklab.wrappers.SportsMOT
 dataset_path: ${data_dir}/SportsMOT
 eval_set: "val"
 
+# nframes: 100  # Number of frames to process; set to -1 or leave unset to process all frames
+# nvid: -1  # Number of videos to process; set to -1 or leave unset to process all videos
+# vids_dict:  # Video names for each split (e.g., train, val, test)
+#   train: []  # Use all videos if left empty
+#   val: []  # Use all videos if left empty
+
 track_eval:
   dataset_class: MotChallenge2DBox
   BENCHMARK: "SportsMOT"
