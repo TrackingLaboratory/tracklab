@@ -1,5 +1,5 @@
-Integrating a new module
-========================
+Integrating a new module [outdated]
+===================================
 
 This tutorial aims to integrate a new pose detector in the framework. 
 [Yolov8](https://docs.ultralytics.com/tasks/pose/) proposes a pose detector 

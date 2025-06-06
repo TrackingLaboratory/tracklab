@@ -1,4 +1,4 @@
-# New dataset integration
+# New dataset integration [outdated]
 
 For this tutorial we are going to integrate the [MOT20](https://motchallenge.net/data/MOT20/) dataset. 
 Please refer to their documentation to download the dataset on your own machine. You can download all the 
