@@ -1,20 +1,20 @@
-Contributions
-=============
+Contributions [outdated]
+========================
 
-Thank you for your interest in contributing to the PBTrack project!
+Thank you for your interest in contributing to the TrackLab project!
 We welcome contributions from everyone, and appreciate your efforts to make our framework better.
 If you are interested in contributing, please consider the following guidelines.
 
 Getting Started
 ---------------
 
-1. **Fork the repository:** If you haven't already, start by creating your own fork of the PBTrack repository. You can do this by clicking the "Fork" button on the repository page.
+1. **Fork the repository:** If you haven't already, start by creating your own fork of the TrackLab repository. You can do this by clicking the "Fork" button on the repository page.
 
 2. **Clone the repository:** Clone your fork of the repository to your local machine using the ``git clone`` command. For example:
 
    .. code-block:: bash
 
-      git clone https://github.com/PbTrack/pb-track
+      git clone https://github.com/TrackingLaboratory/tracklab
 
 3. **Set up your development environment:** Follow the installation instructions to set up your development environment.
 
@@ -46,8 +46,8 @@ Submitting Your Contribution
 
       git push origin new-tracker
 
-2. **Create a pull request:** Go to the original PBTrack repository and create a pull request. Be sure to include a clear description of your changes and the problem they solve.
+2. **Create a pull request:** Go to the original TrackLab repository and create a pull request. Be sure to include a clear description of your changes and the problem they solve.
 
-3. **Wait for feedback:** A maintainer of the PBTrack repository will review your pull request and provide feedback.
+3. **Wait for feedback:** A maintainer of the TrackLab repository will review your pull request and provide feedback.
 
-4. **Merge your changes:** Once your changes have been approved, a maintainer will merge them into the PBTrack repository.
+4. **Merge your changes:** Once your changes have been approved, a maintainer will merge them into the TrackLab repository.

@@ -1,10 +1,18 @@
 Citation
 ========
 
-When using PBTrack in a publication or article, please cite the following paper:
+Please cite the following paper when using TrackLab:
 
-    TODO
+```
+@misc{Joos2024Tracklab,
+	title = {{TrackLab}},
+	author = {Joos, Victor and Somers, Vladimir and Standaert, Baptiste},
+	journal = {GitHub repository},
+	year = {2024},
+	howpublished = {\url{https://github.com/TrackingLaboratory/tracklab}}
+}
+```
 
-We also request that you include a link to the PBTrack repository ``https://github.com/PbTrack/pb-track`` in your publication, so that readers can access the code.
+Include a link to the repository ``https://github.com/TrackingLaboratory/tracklab`` in your publication for code access.
 
-Thank you for acknowledging PBTrack in your work, and helping to promote the use of open source software in research and development.
+Thank you for promoting open source software in research and development.
