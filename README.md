@@ -152,18 +152,20 @@ tracklab 'data_dir=${project_dir}/data' 'model_dir=${project_dir}/models' module
 it in a command, make sure to use single quotes (') as they would otherwise be seen as 
 environment variables.
 
+
+#### 📝 Configuration Options
 To find all the (many) configuration options you have, use :
 ```bash
 tracklab --help
 ```
 
-The first section contains the configuration groups, while the second section
+The first section contains the configuration groups with all the available `models`/`datasets`/`visualizations`/..., while the second section
 shows all the possible options you can modify.
 
 
 ## 🔍 Framework Overview
 ### Hydra Configuration
-TODO: Describe TrackLab + Hydra configuration system.
+👷‍♂️ TODO: Describe TrackLab + Hydra configuration system.
 
 ### Architecture
 Here is an overview of the important TrackLab classes:
