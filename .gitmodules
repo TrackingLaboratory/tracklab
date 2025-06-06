@@ -1,4 +1,0 @@
-[submodule "plugins/reid/bpbreid"]
-	path = plugins/reid/bpbreid
-	url = git@github.com:VlSomers/person-reid.git   # https://github.com/VlSomers/person-reid.git
-	branch = pbtrack
