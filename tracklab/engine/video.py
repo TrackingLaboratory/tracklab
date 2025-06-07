@@ -49,16 +49,17 @@ class VideoOnlineTrackingEngine:
     def track_dataset(self):
         """Run tracking on complete dataset."""
         self.callback("on_dataset_track_start")
+
         self.callback(
             "on_video_loop_start",
-            video_metadata=pd.Series(name=self.video_filename),
+            video_metadata=pd.Series({"name": self.video_filename}),
             video_idx=0,
             index=0,
         )
         detections = self.video_loop()
         self.callback(
             "on_video_loop_end",
-            video_metadata=pd.Series(name=self.video_filename),
+            video_metadata=pd.Series({"name": self.video_filename}),
             video_idx=0,
             detections=detections,
         )
@@ -81,6 +82,15 @@ class VideoOnlineTrackingEngine:
         # print('in offline.py, model_names: ', model_names)
         frame_idx = -1
         detections = pd.DataFrame()
+        
+        # Initialize module callbacks at the start
+        for model_name in model_names:
+            dummy_dataloader = []
+            self.callback("on_module_start", task=model_name, dataloader=dummy_dataloader)
+        
+        # Initialize image metadata for the current frame
+        image_metadata = pd.DataFrame()
+        
         while video_cap.isOpened():
             frame_idx += 1
             ret, frame = video_cap.read()
@@ -89,62 +99,86 @@ class VideoOnlineTrackingEngine:
             image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             if not ret:
                 break
-            metadata = pd.Series({"id": frame_idx, "frame": frame_idx,
-                                  "video_id": video_filename}, name=frame_idx)
+            
+            # Create base metadata for this frame
+            base_metadata = pd.Series({
+                "id": frame_idx, 
+                "frame": frame_idx,
+                "video_id": video_filename
+            }, name=frame_idx)
+            
+            # Reset image metadata for this frame with base metadata
+            image_metadata = pd.DataFrame([base_metadata])
+            
             self.callback("on_image_loop_start",
-                          image_metadata=metadata, image_idx=frame_idx, index=frame_idx)
+                          image_metadata=base_metadata, image_idx=frame_idx, index=frame_idx)
+            
             for model_name in model_names:
+                print('>>> model_name', model_name)
                 model = self.models[model_name]
                 if len(detections) > 0:
+                    print('>>> found detections', detections)
                     dets = detections[detections.image_id == frame_idx]
                 else:
                     dets = pd.DataFrame()
                 if model.level == "video":
                     raise "Video-level not supported for online video tracking"
                 elif model.level == "image":
-                    batch = model.preprocess(image=image, detections=dets, metadata=metadata)
+                    print('>>> model.level == "image"')
+                    batch = model.preprocess(image=image, detections=dets, metadata=image_metadata.iloc[0])
                     batch = type(model).collate_fn([(frame_idx, batch)])
-                    detections = self.default_step(batch, model_name, detections, metadata)
+                    detections, image_metadata = self.default_step(batch, model_name, detections, image_metadata)
                 elif model.level == "detection":
+                    print('>>> model.level == "detection"')
                     for idx, detection in dets.iterrows():
-                        batch = model.preprocess(image=image, detection=detection, metadata=metadata)
+                        batch = model.preprocess(image=image, detection=detection, metadata=image_metadata.iloc[0])
                         batch = type(model).collate_fn([(detection.name, batch)])
-                        detections = self.default_step(batch, model_name, detections, metadata)
+                        detections, image_metadata = self.default_step(batch, model_name, detections, image_metadata)
             self.callback("on_image_loop_end",
-                          image_metadata=metadata, image=image,
+                          image_metadata=image_metadata.iloc[0], image=image,
                           image_idx=frame_idx, detections=detections)
+
+        # Finalize module callbacks at the end
+        for model_name in model_names:
+            self.callback("on_module_end", task=model_name, detections=detections)
 
         return detections
 
-    def default_step(self, batch: Any, task: str, detections: pd.DataFrame, metadata, **kwargs):
+    def default_step(self, batch: Any, task: str, detections: pd.DataFrame, image_metadata: pd.DataFrame, **kwargs):
         model = self.models[task]
         self.callback(f"on_module_step_start", task=task, batch=batch)
         idxs, batch = batch
         idxs = idxs.cpu() if isinstance(idxs, torch.Tensor) else idxs
         if model.level == "image":
             log.info(f"step : {idxs}")
-            batch_metadatas = pd.DataFrame([metadata])
             if len(detections) > 0:
                 batch_input_detections = detections.loc[
-                    np.isin(detections.image_id, batch_metadatas.index)
+                    np.isin(detections.image_id, image_metadata.index)
                 ]
             else:
                 batch_input_detections = detections
             batch_detections = self.models[task].process(
                 batch,
                 batch_input_detections,
-                batch_metadatas)
+                image_metadata)
         else:
             batch_detections = detections.loc[idxs]
             batch_detections = self.models[task].process(
                 batch=batch,
                 detections=batch_detections,
-                metadatas=None,
+                metadatas=image_metadata,
                 **kwargs,
             )
+        
+        # Handle tuple return values (some modules return (detections, metadatas))
+        if isinstance(batch_detections, tuple):
+            batch_detections, batch_metadatas = batch_detections
+            # Update image metadata with outputs from this module
+            image_metadata = merge_dataframes(image_metadata, batch_metadatas)
+        
         detections = merge_dataframes(detections, batch_detections)
         self.callback(
             f"on_module_step_end", task=task, batch=batch, detections=detections
         )
-        return detections
+        return detections, image_metadata
 
