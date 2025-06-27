@@ -73,7 +73,7 @@ class ExternalVideo(TrackingDataset):
                 image_metadata.extend(
                     [
                         {
-                            "id": j+1000*i,
+                            "id": j+100_000*i, # TODO: read the number of frames to get the right factor
                             "name": f"{video_name}_{j}",
                             "frame": j,
                             "nframes": nframes,
