@@ -34,14 +34,10 @@ posetrack_human_skeleton = [
 class VideoReader:
     def __init__(self):
         self.filename = None
-        self.cap = None  # cv2.VideoCapture(filename)
 
     def set_filename(self, filename):
+        # TODO: remove this function, and set self.filename directly
         self.filename = filename
-        if self.cap is not None:
-            self.cap.release()
-        self.cap = cv2.VideoCapture(self.filename)
-        assert self.cap.isOpened(), "Error opening video stream or file"
 
     def __getitem__(self, idx):
         assert self.filename is not None, "You should first set the filename"
