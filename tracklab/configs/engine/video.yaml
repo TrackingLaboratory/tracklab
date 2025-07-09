@@ -6,4 +6,5 @@ num_workers: ${num_cores}
 callbacks:
   progress:
     _target_: tracklab.callbacks.Progressbar
+    use_rich: ${use_rich}
   vis: ${visualization}
