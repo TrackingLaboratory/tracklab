@@ -6,6 +6,8 @@ import logging
 
 import cv2
 import pandas as pd
+import numpy as np
+import platform
 
 from tracklab.callbacks import Progressbar, Callback
 from tracklab.visualization import Visualizer
@@ -23,6 +25,7 @@ class VisualizationEngine(Callback):
                      `draw_detection`.
         save_images: whether to save the visualization as image files (.jpeg)
         save_videos: whether to save the visualization as video files (.mp4)
+        show_online: whether to show online tracking in realtime (only work if the pipeline doesn't involve VideoLevelModule)
         process_n_videos: number of videos to visualize. Will visualize the first N videos.
         process_n_frames_by_video: number of frames per video to visualize. Will visualize
                                    frames every N/n frames (not first n frames)
@@ -32,6 +35,7 @@ class VisualizationEngine(Callback):
                  visualizers: Dict[str, Visualizer],
                  save_images: bool = False,
                  save_videos: bool = False,
+                 show_online: bool = False,
                  video_fps: int = 25,
                  process_n_videos: Optional[int] = None,
                  process_n_frames_by_video: Optional[int] = None,
@@ -41,13 +45,17 @@ class VisualizationEngine(Callback):
         self.save_dir = Path("visualization")
         self.save_images = save_images
         self.save_videos = save_videos
+        self.show_online = show_online
         self.video_fps = video_fps
         self.max_videos = process_n_videos
         self.max_frames = process_n_frames_by_video
+        self.windows = []
         for visualizer in visualizers.values():
             visualizer.post_init(**kwargs)
 
     def on_dataset_track_end(self, engine: "TrackingEngine"):
+        if self.show_online:
+            cv2.destroyAllWindows()
         if self.save_videos or self.save_images:
             log.info(f"Visualization output at : {self.save_dir.absolute()}")
 
@@ -58,31 +66,92 @@ class VisualizationEngine(Callback):
             self.visualize(engine.tracker_state, video_idx, detections, image_pred, progress)
             progress.on_module_end(None, "vis", None)
 
-    """ 
-    #TODO implement the online visualization
-    previous code:
-        if self.cfg.show_online:
-        tracker_state = engine.tracker_state
-        if tracker_state.detections_gt is not None:
-            ground_truths = tracker_state.detections_gt[
-                tracker_state.detections_gt.image_id == image_metadata.name
-            ]
-        else:
-            ground_truths = None
-        if len(detections) == 0:
-            image = image
-        else:
-            detections = detections[detections.image_id == image_metadata.name]
-            image = self.draw_frame(image_metadata,
-                                    detections, ground_truths, "inf", image=image)
-        if platform.system() == "Linux" and self.video_name not in self.windows:
-            self.windows.append(self.video_name)
-            cv2.namedWindow(str(self.video_name),
-                            cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)  # allow window resize (Linux)
-            cv2.resizeWindow(str(self.video_name), image.shape[1], image.shape[0])
-        cv2.imshow(str(self.video_name), image)
-        cv2.waitKey(1)
-    """
+    def on_image_loop_end(self, engine, image_metadata, image, image_idx, detections):
+        """
+        Handle real-time display during online video tracking.
+        """
+        if not self.show_online:
+            return
+
+        try:
+            # Filter detections for current frame
+            frame_detections = (
+                detections[detections.image_id == image_metadata.name]
+                if len(detections) > 0
+                else pd.DataFrame()
+            )
+
+            # Get ground truth (usually None for online tracking)
+            ground_truths = pd.DataFrame()
+
+            # Create dummy image metadata for compatibility
+            image_pred = pd.Series(
+                {
+                    "lines": getattr(image_metadata, "lines", {}),
+                    "keypoints": getattr(image_metadata, "keypoints", {}),
+                    "file_path": f"frame_{image_idx:06d}.jpg",  # Dummy path
+                },
+                name=image_metadata.name,
+            )
+
+            image_gt = pd.Series(
+                {
+                    "frame": image_idx,
+                    "nframes": -1,  # Unknown total frames in online mode
+                },
+                name=image_metadata.name,
+            )
+
+            # Draw frame with all visualizers
+            display_image = self.draw_online_frame(
+                image_metadata,
+                image,
+                frame_detections,
+                ground_truths,
+                image_pred,
+                image_gt,
+                nframes=-1,
+            )
+
+            # Display the image
+            video_name = str(engine.video_filename)
+            if platform.system() == "Linux" and video_name not in self.windows:
+                self.windows.append(video_name)
+                cv2.namedWindow(video_name, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
+                cv2.resizeWindow(
+                    video_name, display_image.shape[1], display_image.shape[0]
+                )
+
+            # Convert RGB to BGR for OpenCV display
+            cv2.imshow(video_name, display_image)
+            cv2.waitKey(1)  # Non-blocking wait
+
+        except Exception as e:
+            log.warning(f"Error in online visualization: {e}")
+
+    def draw_online_frame(
+        self,
+        image_metadata,
+        image,
+        detections_pred,
+        detections_gt,
+        image_pred,
+        image_gt,
+        nframes,
+    ):
+        """Draw frame using all configured visualizers."""
+        # Create a copy of the image to avoid modifying the original
+        image = np.copy(image)
+
+        for visualizer in self.visualizers.values():
+            try:
+                visualizer.draw_frame(
+                    image, detections_pred, detections_gt, image_pred, image_gt
+                )
+            except Exception as e:
+                log.warning(f"Visualizer {type(visualizer).__name__} raised error: {e}")
+
+        return final_patch(image)
 
     def visualize(self, tracker_state: TrackerState, video_id, detections, image_preds, progress=None):
         image_metadatas = tracker_state.image_metadatas[tracker_state.image_metadatas.video_id == video_id]
