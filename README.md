@@ -13,9 +13,9 @@ TrackLab is an easy-to-use modular framework for Multi-Object pose/bbox Tracking
 </p>
 
 ## 🗞️ News
-- [2024.02.05] 🎉 Public release.
 - [2025.05.02] 🎊 Released [CAMELTrack: Context-Aware Multi-cue ExpLoitation for Online Multi-Object Tracking](https://github.com/TrackingLaboratory/CAMELTrack).
 - [2025.05.22] Many more detectors (`YOLO`, `YOLOX`, `RTMDet`, `RTDetr`) and pose estimators (`YOLO-pose`, `RTMO`, `VITPose`, `RTMPose`).
+- [2024.02.05] 🎉 Public release.
 
 ## 🚀 Upcoming
 - [x] Public release of the codebase.
