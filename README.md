@@ -1,5 +1,12 @@
 ![TrackLab](https://raw.githubusercontent.com/TrackingLaboratory/tracklab/refs/heads/main/docs/tracklab_banner.png)
 
+<div align="center">
+
+[[CAMELTrack](https://github.com/TrackingLaboratory/CAMELTrack)] [[Soccernet-Gamestate](https://github.com/SoccerNet/sn-gamestate)] [[MOT-Taxonomy](https://github.com/VlSomers/multi-object-tracking-taxonomy)]
+	
+</div>
+
+
 TrackLab is an easy-to-use modular framework for Multi-Object pose/bbox Tracking that supports many methods, datasets and evaluation metrics.
 
 <p align="center">
