@@ -56,7 +56,7 @@ def cv2_load_image(file_path):
     file_path = str(file_path)
     if file_path.startswith("vid://"):
         file_path = file_path.removeprefix("vid://")
-        video_file, frame_id = file_path.split(":")
+        video_file, frame_id = file_path.rsplit(":", 1)
         if video_reader.filename != video_file:
             video_reader.set_filename(video_file)
         image = video_reader[int(frame_id)]
