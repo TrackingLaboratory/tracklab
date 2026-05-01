@@ -1,4 +1,5 @@
 import logging
+import pandas as pd
 
 from tracklab.engine import TrackingEngine
 from tracklab.utils.cv2 import cv2_load_image
@@ -31,5 +32,6 @@ class OfflineTrackingEngine(TrackingEngine):
                 detections, image_pred = self.default_step(batch, model_name, detections, image_pred)
             self.callback("on_module_end", task=model_name, detections=detections)
             if detections.empty:
+                detections = pd.DataFrame(columns=["image_id", "video_id"])
                 return detections, image_pred
         return detections, image_pred
